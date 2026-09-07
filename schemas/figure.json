@@ -1,0 +1,63 @@
+{
+  "$id": "phdude://figure",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.figure" },
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "caption": { "type": "string", "minLength": 1 },
+        "alt": { "type": "string", "minLength": 1 },
+        "generator": {
+          "type": "object",
+          "properties": {
+            "runtime": { "type": "string", "minLength": 1 },
+            "script": { "type": "string", "minLength": 1 },
+            "args": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["runtime", "script", "args"],
+          "additionalProperties": false
+        },
+        "inputs": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+        "outputs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": { "type": "string" },
+              "format": { "enum": ["svg", "png", "pdf"] }
+            },
+            "required": ["path", "format"],
+            "additionalProperties": false
+          }
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "exit": { "type": ["integer", "null"] },
+              "duration_ms": { "type": "integer", "minimum": 0 },
+              "input_hashes": {
+                "type": "object",
+                "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+              },
+              "output_hashes": {
+                "type": "object",
+                "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+              }
+            },
+            "required": ["at", "exit", "duration_ms", "input_hashes", "output_hashes"],
+            "additionalProperties": false
+          }
+        },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": ["name", "caption", "alt", "generator", "inputs", "outputs", "runs", "state"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

@@ -32,6 +32,12 @@ const LINES = [
   '  data add <path>|list|show <id>|profile <id>',
   '                                    register a file under data/ as a dataset: hash, format',
   '                                    and a deterministic column profile',
+  '  table add --json|list|show <id>|build <id>',
+  '                                    render a result or a dataset as Markdown, LaTeX and CSV',
+  '        [--format md,latex,csv]     under tables/out/, recording what it read',
+  '  figure add --json|list|show <id>|build <id>|check',
+  '                                    declare a figure with alt text, build it through its',
+  '         [--allow-exec]             generator, and report what has gone stale',
   '  prose <section> | --file <path>   academic prose quality report: six scores, located',
   '        [--lang c]                  observations, and what to do about each one',
   '  write <section> [--voice id]      assemble the writing context and the draft contract',
@@ -59,7 +65,7 @@ const LINES = [
   '                                    override the recorded actor',
   '  --version                         print the version',
   '',
-  'Exit codes: 0 ok, 1 usage, 2 validation, 3 policy, 4 external tool missing.',
+  'Exit codes: 0 ok, 1 usage, 2 validation, 3 policy, 4 external tool missing or a script that failed.',
   'Full reference: docs/cli.md',
 ];
 

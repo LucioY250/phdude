@@ -11,6 +11,8 @@ import {
   newDecision,
   newMethod,
   newDataset,
+  newTable,
+  newFigure,
 } from '../../../src/domain/entities.js';
 import { assertValid } from '../../../src/schemas/index.js';
 import { PhdudeError } from '../../../src/domain/errors.js';
@@ -486,5 +488,99 @@ test('newDataset: an empty path is refused', () => {
         created,
       }),
     PhdudeError,
+  );
+});
+
+test('newTable: schema-valid, named by its slug, with an output per declared format', () => {
+  const table = newTable({
+    name: 'mean-weight',
+    caption: 'Mean weight by group.',
+    source: { result: 'RESULT-0123456789' },
+    columns: [{ key: 'key', label: 'Group' }],
+    formats: ['csv', 'md'],
+    actor,
+    created,
+  });
+
+  assertValid('table', table);
+  assert.match(table.id, /^TABLE-[0-9a-f]{10}$/);
+  assert.deepEqual(table.formats, ['md', 'csv']);
+  assert.deepEqual(table.outputs, {
+    md: 'tables/out/mean-weight.md',
+    csv: 'tables/out/mean-weight.csv',
+  });
+  assert.deepEqual(table.runs, []);
+  assert.equal(table.state, 'candidate');
+});
+
+test('newTable: the name is the identity, and a bad name or an empty caption is refused', () => {
+  const base = {
+    caption: 'Mean weight by group.',
+    source: { result: 'RESULT-0123456789' },
+    actor,
+    created,
+  };
+  assert.equal(
+    newTable({ ...base, name: 'mean-weight' }).id,
+    newTable({ ...base, name: 'mean-weight', caption: 'Something else.' }).id,
+  );
+  assert.notEqual(
+    newTable({ ...base, name: 'mean-weight' }).id,
+    newTable({ ...base, name: 'mean-height' }).id,
+  );
+  assert.throws(() => newTable({ ...base, name: 'Mean Weight' }), PhdudeError);
+  assert.throws(() => newTable({ ...base, name: 'x', caption: '  ' }), PhdudeError);
+});
+
+test('newTable: no declared format means all three', () => {
+  const table = newTable({
+    name: 'mean-weight',
+    caption: 'Mean weight by group.',
+    source: { dataset: 'DATASET-0123456789', limit: 10 },
+    actor,
+    created,
+  });
+  assert.deepEqual(table.formats, ['md', 'latex', 'csv']);
+  assert.deepEqual(Object.keys(table.outputs), ['md', 'latex', 'csv']);
+  assertValid('table', table);
+});
+
+test('newFigure: schema-valid, named by its slug, alt carried through', () => {
+  const figure = newFigure({
+    name: 'mean-weight',
+    caption: 'Mean weight by group.',
+    alt: "Bar chart: group b averages 75.5 kg against group a's 71.4 kg.",
+    generator: { runtime: 'node', script: 'phdude:bar-chart', args: ['--key', 'mean'] },
+    inputs: ['RESULT-0123456789'],
+    outputs: [{ path: 'figures/out/mean-weight.svg', format: 'svg' }],
+    actor,
+    created,
+  });
+
+  assertValid('figure', figure);
+  assert.match(figure.id, /^FIG-[0-9a-f]{10}$/);
+  assert.equal(figure.alt, "Bar chart: group b averages 75.5 kg against group a's 71.4 kg.");
+  assert.deepEqual(figure.runs, []);
+  assert.equal(figure.state, 'candidate');
+});
+
+test('newFigure: a figure without alt text never becomes a record', () => {
+  assert.throws(
+    () =>
+      newFigure({
+        name: 'mean-weight',
+        caption: 'Mean weight by group.',
+        alt: '',
+        generator: { runtime: 'node', script: 'phdude:bar-chart', args: [] },
+        inputs: [],
+        outputs: [{ path: 'figures/out/mean-weight.svg', format: 'svg' }],
+        actor,
+        created,
+      }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.match(err.message, /alt text/);
+      return true;
+    },
   );
 });

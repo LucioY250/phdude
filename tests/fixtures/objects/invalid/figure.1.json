@@ -1,0 +1,16 @@
+{
+  "schema": "phdude.figure",
+  "version": 1,
+  "id": "FIG-0123456789",
+  "created": "2026-09-07T00:00:00Z",
+  "actor": { "researcher": "ada", "agent": "cli" },
+  "tags": [],
+  "name": "mean-weight",
+  "caption": "Mean weight by group.",
+  "alt": "",
+  "generator": { "runtime": "node", "script": "phdude:bar-chart", "args": [] },
+  "inputs": [],
+  "outputs": [{ "path": "figures/out/mean-weight.svg", "format": "svg" }],
+  "runs": [],
+  "state": "candidate"
+}

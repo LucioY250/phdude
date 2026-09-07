@@ -36,8 +36,10 @@ test('makeSeqId and parseId', () => {
   assert.deepEqual(parseId('CAND-0123456789'), { type: 'candidate', suffix: '0123456789' });
   assert.deepEqual(parseId('SEARCH-0123456789'), { type: 'search', suffix: '0123456789' });
   assert.deepEqual(parseId('DATASET-0123456789'), { type: 'dataset', suffix: '0123456789' });
+  assert.deepEqual(parseId('TABLE-0123456789'), { type: 'table', suffix: '0123456789' });
+  assert.deepEqual(parseId('FIG-0123456789'), { type: 'figure', suffix: '0123456789' });
   assert.equal(parseId('nope'), null);
-  assert.equal(Object.keys(ID_PREFIXES).length, 13);
+  assert.equal(Object.keys(ID_PREFIXES).length, 15);
 });
 
 test('makeHashId takes the first ten characters of a content hash', () => {

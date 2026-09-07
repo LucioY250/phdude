@@ -2,6 +2,8 @@ import { identityKey } from './candidates.js';
 import { makeHashId, makeId, makeSeqId } from './ids.js';
 import { normalizeKey, stableStringify } from './normalize.js';
 import { PhdudeError } from './errors.js';
+import { validateFigure } from './figures.js';
+import { tableFormats, tableName, tableOutputs } from './tables.js';
 
 function requireText(label, value) {
   const text = String(value ?? '').trim();
@@ -616,4 +618,69 @@ export function newDataset({
   if (description !== undefined) dataset.description = description;
   if (license !== undefined) dataset.license = license;
   return dataset;
+}
+
+/**
+ * A rendered table. Its name is its identity — a study has one "mean weight by group" table,
+ * and changing its caption or its columns must correct that record rather than mint a second
+ * one whose file would sit next to the first under `tables/out/`.
+ * @param {object} p
+ * @param {string} p.name - lowercase words joined by "-"
+ * @param {string} p.caption
+ * @param {{result?: string, dataset?: string, columns?: string[], limit?: number}} p.source
+ * @param {{key: string, label: string, format?: string}[]} [p.columns]
+ * @param {string[]} [p.formats] - md|latex|csv; all three when omitted
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.table`
+ */
+export function newTable({ name, caption, source, columns = [], formats, actor, created }) {
+  const slug = tableName(name);
+  const wanted = tableFormats(formats);
+  return {
+    schema: 'phdude.table',
+    version: 1,
+    id: makeId('table', slug),
+    created,
+    actor,
+    tags: [],
+    name: slug,
+    caption: requireText('caption', caption),
+    source,
+    columns,
+    formats: wanted,
+    outputs: tableOutputs(slug, wanted),
+    runs: [],
+    state: 'candidate',
+  };
+}
+
+/**
+ * A generated figure. Like a table, its name is its identity. `alt` is required and non-empty
+ * before the record exists at all (PRD §100): the sentence a reader who cannot see the figure
+ * needs is written while the finding is fresh, not at submission.
+ * @param {object} p
+ * @param {string} p.name
+ * @param {string} p.caption
+ * @param {string} p.alt
+ * @param {{runtime: string, script: string, args?: string[]}} p.generator
+ * @param {string[]} [p.inputs] - RESULT or DATASET ids
+ * @param {{path: string, format: string}[]} p.outputs
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.figure`
+ */
+export function newFigure({ name, caption, alt, generator, inputs, outputs, actor, created }) {
+  const fields = validateFigure({ name, caption, alt, generator, inputs, outputs });
+  return {
+    schema: 'phdude.figure',
+    version: 1,
+    id: makeId('figure', fields.name),
+    created,
+    actor,
+    tags: [],
+    ...fields,
+    runs: [],
+    state: 'candidate',
+  };
 }

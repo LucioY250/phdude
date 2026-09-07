@@ -27,6 +27,8 @@ export const SCHEMA_TYPES = [
   'result',
   'candidate',
   'dataset',
+  'table',
+  'figure',
   'search',
   'decision',
   'manuscript',

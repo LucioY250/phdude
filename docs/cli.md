@@ -36,7 +36,7 @@ answer. The global options above are accepted everywhere.
 | 1 | Usage | unknown command, missing argument, id not found |
 | 2 | Validation | an object that fails its JSON Schema, malformed `--json` |
 | 3 | Policy | `promote` to canonical without an approved decision |
-| 4 | External tool missing | every search provider failed on a `phdude research` run |
+| 4 | External tool missing, or a script that failed | every search provider failed on a `phdude research` run; a figure generator exited non-zero or timed out |
 
 Errors print the message on stderr, followed by a `Suggested action:` line when the error
 carries a hint. With `--json` they print `{"error":{"code","message","hint","details"}}` on
@@ -711,6 +711,102 @@ the missing counts and the distinct counts stay.
 versions. `data show` prints the whole record as YAML. `data profile` prints the column table.
 Only `data add` writes: one `data` event per registration, naming the new dataset and every
 version it superseded. The three readers write nothing.
+
+### `phdude table add --json '<declaration>' | list | show <id> | build <id>`
+
+```
+phdude table add --json '{"name":"mean-weight","caption":"Mean weight by group.","source":{"result":"RESULT-…"}}'
+phdude table add --file table.json
+phdude table list
+phdude table show TABLE-…
+phdude table build TABLE-… --format csv
+phdude table build TABLE-… --force
+```
+
+A table is a declaration, not a file: which source it renders, which columns, in which formats.
+`build` turns it into files under `tables/out/` and records what it read and what it wrote, so a
+reader months later can tell which numbers a table in the manuscript came from.
+
+| Field | Meaning |
+|---|---|
+| `name` | Lowercase words joined by `-`. It is the identity, and it is the filename under `tables/out/`. |
+| `caption` | The sentence under the table. Required. |
+| `source` | Exactly one of `{"result":"RESULT-…"}` or `{"dataset":"DATASET-…","columns":["…"],"limit":n}`. |
+| `columns` | `[{"key":…,"label":…,"format":…}]`. Omit it and every key the source has becomes a column. |
+| `formats` | Any of `md`, `latex`, `csv`. All three when omitted. |
+
+`format` is `text`, `number:<0-9>` or `percent:<0-9>`. `number:2` prints `71.40`; `percent:1`
+reads the value as a fraction and prints `42.4%`. A cell the format cannot read as a number is
+printed as it was written — the renderer reports the analysis, it does not correct it.
+
+A **result** source renders one row per key of its `values` (columns `key` and `value`), in the
+order the analysis wrote them; a result whose `values` is a list of row objects renders those
+rows. A **dataset** source renders the parsed file, header first, narrowed by `columns` and
+`limit`. A dataset PhDude cannot parse into a table is a validation error rather than an empty
+table.
+
+The Markdown form is a pipe table with a `Table:` caption line and numeric columns right-aligned.
+The LaTeX form is a `booktabs` `table` with a `\caption`, a `\label{tab:<name>}` and `& % $ # _
+{ } ~ ^ \` escaped. The CSV form is the header and the rows, quoted per RFC 4180, with no caption.
+
+Declaring the same name again corrects the declaration in place — same id, same build history —
+and a declaration identical to the recorded one writes nothing and records no event.
+
+`build` is up to date, and writes nothing, when the source hashes to what the last run recorded
+*and* every output file already holds exactly the bytes this build would write. `--force` builds
+anyway. `--format` narrows the build to some of the formats the table declares; a format it does
+not declare exits 2. One `table` event per declaration and per build; `list` and `show` write
+nothing.
+
+The recorded `source_hash` is the source as it is now: a dataset hashes to the bytes on disk, not
+to the bytes registered with `phdude data add`. Editing the file is what has to make everything
+built from it stale, and nothing watches the file for that to happen.
+
+### `phdude figure add --json '<declaration>' | list | show <id> | build <id> | check`
+
+```
+phdude figure add --file figure.json
+phdude figure list
+phdude figure show FIG-…
+phdude figure build FIG-… --allow-exec
+phdude figure check
+```
+
+A figure is a declaration too: its alt text, the generator that draws it, what it is drawn from,
+and the files it writes.
+
+| Field | Meaning |
+|---|---|
+| `name` | Lowercase words joined by `-`; the identity. |
+| `caption` | The sentence under the figure. Required. |
+| `alt` | What the figure **shows**, in one sentence (PRD §100). Required and non-empty; a figure without it never becomes a record. |
+| `generator` | `{"runtime":…,"script":…,"args":[…]}`. |
+| `inputs` | `RESULT` and `DATASET` ids. What the run hashes, and what makes the figure stale. |
+| `outputs` | `[{"path":"figures/out/….svg","format":"svg\|png\|pdf"}]`, at least one, all under `figures/`. |
+
+`script` is either `phdude:bar-chart` — the accessible SVG generator the package ships — or a
+script the workspace holds under `figures/`. Nothing else runs. `runtime` is resolved through
+`execution.runtimes` in `.phdude/research-policy.yaml`; a runtime the workspace never named exits
+2. The generator is run with `execFile` and an argument array, never a shell, with the workspace
+as its working directory and an environment holding `PATH`, `HOME`, `LANG`, `PHDUDE_WORKSPACE`
+and `PHDUDE_FIGURE` — nothing else of yours reaches it.
+
+`build` refuses with exit 3 unless `execution.enabled: true` or `--allow-exec`. After the
+generator exits it verifies that every declared output is on disk, hashes each one, and appends a
+run `{at, exit, duration_ms, input_hashes, output_hashes}`. Every build is recorded and every
+build is one `figure` event, including the ones that failed:
+
+- A non-zero exit records the run with its exit code, hashes nothing, prints the generator's last
+  lines of output, and exits 4.
+- A generator that exits 0 without writing what it declared is treated the same way: the run is
+  recorded, nothing is hashed, and the missing paths are named. Exit 4.
+- A generator that outruns `execution.timeout_seconds` records the run with `exit: null` and
+  exits 4 pointing at the policy key.
+
+`check` reports, for every figure: `up-to-date`, `stale` (an input hashes differently from the
+last successful run, or is gone), `missing-output` (a declared file is not on disk) or
+`never-run`, plus `missing-alt` for a figure whose alt text was edited away. It runs nothing,
+writes nothing and always exits 0 — a stale figure is a state to fix, not a failure.
 
 ### `phdude prose <section> | --file <path>`
 
