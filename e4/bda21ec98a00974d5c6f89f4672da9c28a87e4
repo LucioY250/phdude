@@ -1,0 +1,82 @@
+src/domain/lineage.js
+  s_946fc7502759d8::t_ba588e25b8044d 97-99,106-117
+  s_946fc7502759d8::t_def0bb3308980b 19-43,70-72
+  s_0690fd0bbb54b8::t_d9d3f6726097c5 73
+docs/cli.md
+  s_946fc7502759d8::t_3f1e0613eac646 290-291,295
+  s_946fc7502759d8::t_44abeba51773d6 120-122
+  s_946fc7502759d8::t_df01120e469c1d 237-257
+  s_946fc7502759d8::t_38e2db766da37b 288-289,292-294,296
+  s_946fc7502759d8::t_61edb6ab1a485b 123-127
+commands/link.md
+  s_946fc7502759d8::t_6eec93e8a23ca7 20-29
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_8fa9fe1ebca951 54-69
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_2119e082085dc5 234
+  s_946fc7502759d8::t_e0343fc08337f6 37-41
+examples/generic-thesis/.phdude/skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_8fa9fe1ebca951 67-71
+src/domain/contradictions.js
+  s_946fc7502759d8::t_2be8025826f35a 1-69
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_3e2009f31fe0a1 26-28
+src/application/link.js
+  s_946fc7502759d8::t_a5d440e1a3ee8a 1
+  s_946fc7502759d8::t_6d4ddbbf52aaab 19-57,64-65,67,70-79
+  s_0690fd0bbb54b8::t_42d7d32b5dc84e 80
+src/application/decide.js
+  s_946fc7502759d8::t_b3db4415ed77ab 245-279
+tests/unit/domain/contradictions.test.js
+  s_946fc7502759d8::t_bc394808140960 1-99,109-150
+  s_946fc7502759d8::t_834789e49a0e0a 100-108
+src/adapters/cli/commands/link.js
+  s_946fc7502759d8::t_d800f3cf1f3c6c 10-13,15-22
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_6b0c51e2f87a38 54-69
+docs/workspace.md
+  s_946fc7502759d8::t_23cf40accad8da 102-103
+  s_946fc7502759d8::t_d75acb2da6ca4b 121-136
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_59660285418bc6 27-36
+  s_946fc7502759d8::t_3d0ef79fe66edf 66-75
+skills/decisions/SKILL.md
+  s_946fc7502759d8::t_aec445e4a8cf36 65-85
+skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_17f740ddf8cc56 67-71
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_d25dace66251b8 725-813
+examples/generic-thesis/.phdude/skills/decisions/SKILL.md
+  s_946fc7502759d8::t_8fa9fe1ebca951 65-85
+tests/integration/contradictions.test.js
+  s_946fc7502759d8::t_be600ea50879e8 161-162
+  s_946fc7502759d8::t_834789e49a0e0a 101-105
+  s_946fc7502759d8::t_9e6e9950135b29 1-100,106-160,163-229
+src/application/status.js
+  s_946fc7502759d8::t_a8d6ead235af74 3
+  s_946fc7502759d8::t_fc5a199f0bd3b6 32,40-46,65-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e4bda21ec98a00974d5c6f89f4672da9c28a87e4",
+  "prompts": {},
+  "sessions": {
+    "s_0690fd0bbb54b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06d6a-70d5-7793-9200-19966b38bc18",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    },
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
