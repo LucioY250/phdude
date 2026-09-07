@@ -718,6 +718,7 @@ one implementation of every rule.
 **No detector scores, ever.** PhDude does not compute, accept or target an AI-detection score
 (PRD §30c). Any option whose name contains "detect" or "humaniz" — on this or any other command —
 is refused with a policy error and exit 3.
+
 ### `phdude write <section>`
 
 ```
@@ -851,6 +852,7 @@ it (PRD §3.4 — approved manuscript text is the researcher's).
 
 Every mutation records exactly one event: `manuscript initialized (N sections)`,
 `submitted <section> (<status>)`, `approved <section> (<DEC-id>)`, `reopened <section> (revised)`.
+
 ### `phdude authors list|show <id>|add --json|learn <id> --from <path…>|consensus`
 
 ```

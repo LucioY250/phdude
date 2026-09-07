@@ -9,7 +9,7 @@
 Your AI can write. PhDude helps make the research worth publishing.
 
 [![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.3.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.4.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
@@ -37,51 +37,50 @@ It makes no assumptions about your field. A clinical trial, an archival history 
 empirical software-engineering paper get the same treatment; discipline-specific vocabulary
 and review questions arrive as packs.
 
-> **Where things stand.** This is v0.3. The deterministic core is done and tested: workspace,
+> **Where things stand.** This is v0.4. The deterministic core is done and tested: workspace,
 > ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the
-> citation registry, the literature matrix and gap report, workspace migrations, and the Claude
-> Code and Codex adapters. New in this release, PhDude can go and *find* literature: five search
-> providers, candidate review, freshness tracking. The network is off until you turn it on, and
-> nothing from your documents ever leaves the machine. Analysis execution and the writing engine
-> come next; see the [roadmap](#roadmap).
+> citation registry, the literature matrix and gap report, workspace migrations, five literature
+> search providers, and the Claude Code and Codex adapters. New in this release, PhDude helps
+> *write*: a manuscript with per-section status, a bounded writing context, six deterministic
+> gates every draft goes through, and a prose report that shows its arithmetic. Analysis
+> execution and document rendering come next; see the [roadmap](#roadmap).
 
-## What's new in 0.3
+## What's new in 0.4
 
-v0.3 is the Research Engine. Until now PhDude only knew what you gave it. Now it can go and
-look — carefully, under a policy you control, and with a receipt for every call.
+v0.4 is the Co-Author. PhDude does not write your prose — your agent still does that — but a
+draft now has to get past the workspace before it becomes a section of your manuscript.
 
-- **Literature search.** `phdude research "…" --question RQ-1` queries OpenAlex, Crossref,
-  arXiv, Semantic Scholar and PubMed, merges what comes back into one candidate per paper, and
-  records the search. Two providers returning the same work give you one row, not two: they
-  match on DOI, or on title and year.
-- **Candidate review.** A search result is not a source. It lands as a `CAND-` record and stays
-  there until you say otherwise. `phdude research accept` turns one into a `SRC-` with its
-  identifiers and its provenance; `phdude research dismiss --reason "…"` records why one is not
-  going in, so the next reader knows it was read rather than missed.
-- **The network is off by default.** Nothing reaches a provider unless
-  `.phdude/research-policy.yaml` says `network.enabled: true` or the call carries
-  `--allow-network`. Nothing from your documents goes with the query; [what actually leaves your
-  machine](#what-actually-leaves-your-machine) is the exact list. Every call appends an event
-  with the provider, the query and a result count — never a result payload — so the workspace
-  can always say exactly what it asked, of whom, and when.
-- **Freshness.** `phdude freshness` reports the last search behind every research question, how
-  long ago it ran, and whether the policy calls that stale. `phdude research-fresh` re-runs the
-  stale ones exactly as they ran the first time and reports **only what is new** — "nothing has
-  changed since March" is a real answer, and a better one than the same twenty papers again.
-  `gaps` and `next` learned the matching rules.
-- **Editing, finally.** `phdude edit <id> --json '{"venue":"…"}'` corrects the non-identity
-  fields of a non-canonical object in place. It refuses three things, and each refusal is the
-  point: a canonical object (propose a decision), an identity field (the id is derived from it),
-  and a field the schema does not know.
+- **A manuscript with a status per section.** `phdude manuscript init` plans the six standard
+  sections; each one moves `planned → draft → revised → approved` and carries the hash of the
+  text that status applies to. Prose only ever reaches `manuscript/` through the CLI.
+- **A bounded writing context.** `phdude write introduction` assembles what the agent needs and
+  nothing else: the section's claims with their strongest evidence and locators, the citation
+  keys that resolve, the writing policy, your voice profile, and the verb table for each claim's
+  state. It stops at a character budget and tells you what it left out.
+- **Six gates on every submit.** Citations must resolve. Claim markers must name real claims,
+  and a rejected claim may not be asserted. The prose lint reports the patterns that read as
+  filler. On a revision, the meaning gate compares the old text with the new and refuses one
+  that drops a claim, a citation, a number or a negation. A blocking finding writes nothing at
+  all — you get line numbers instead.
+- **`phdude deslop`.** The revision half: what this section's prose is doing, and the explicit
+  list of what a rewrite may not change. The agent revises, `deslop --file` runs the gates.
+- **Author voice profiles.** `phdude authors learn <id> --from <sample…>` computes descriptive
+  statistics from writing you have approved — sentence length and its spread, opening diversity,
+  transition and hedge rates, the terminology you keep. Every field is a number or a word you
+  can read and correct. Never an embedding.
+- **An explainable prose report.** `phdude prose <section>` prints six sub-scores, the formula
+  behind each one, and the located observations that moved it.
+- **No AI-detector score, and there never will be one.** See [why](#the-one-number-phdude-will-not-give-you).
 
 ## Contents
 
-- [What's new in 0.3](#whats-new-in-03)
+- [What's new in 0.4](#whats-new-in-04)
 - [How it works](#how-it-works)
 - [Install](#install)
 - [Set up your agent](#set-up-your-agent) (Claude Code, Codex, anything else)
 - [A first session](#a-first-session)
 - [Finding literature](#finding-literature)
+- [Writing with PhDude](#writing-with-phdude)
 - [What's in the box](#whats-in-the-box)
 - [Your workspace](#your-workspace)
 - [Commands](#commands)
@@ -135,13 +134,13 @@ command that does it. There is no hidden score.
 
 ## Install
 
-v0.3 is not on npm yet. Install it from the repository:
+v0.4 is not on npm yet. Install it from the repository:
 
 ```
 git clone https://github.com/LucioY250/phdude && cd phdude
 npm ci
 npm link
-phdude --version      # phdude 0.3.0
+phdude --version      # phdude 0.4.0
 ```
 
 Node 22 or newer. `pdftotext` (poppler-utils) is optional: without it PDFs are still
@@ -362,6 +361,178 @@ Your agent is held to the same rule: the core skill forbids it from fetching a p
 abstract or a DOI on its own, by any means. If the policy is closed, it reports that and asks
 you — it does not pass `--allow-network` on your behalf.
 
+## Writing with PhDude
+
+PhDude does not write your prose. Your agent does, and it is good at it. What PhDude adds is
+everything around the draft: what the agent is allowed to know while writing, and what the text
+has to survive before it becomes a section of your manuscript.
+
+<p align="center"><img src="docs/assets/diagrams/writing.svg" alt="The writing loop: write assembles the context, the agent drafts, submit runs the gates, a block returns findings and writes nothing, deslop revises, and a decision approves the section" width="900"></p>
+
+Start by planning the document:
+
+```
+phdude manuscript init --title "Adaptive scheduling in edge clusters" --voice lucio
+phdude manuscript status
+```
+
+That writes `manuscript/manuscript.yaml` with the six standard sections — abstract,
+introduction, methods, results, discussion, conclusions — all `planned`. Nothing else exists
+yet; a section file appears the first time a draft gets past the gates.
+
+### The writing context
+
+```
+phdude write introduction
+```
+
+This is the step that decides what the draft can say. It gathers the section's claims with
+their state and their strongest evidence (excerpt and locator included), the citation keys that
+actually resolve, your writing policy, the active voice profile, and the verb table for each
+claim's state — in that priority order, stopping at a character budget and telling you what it
+left out. The context lands in `.phdude/cache/writing/introduction/context.md`, and the command
+prints the contract the draft has to meet: this section only, `[@bibkey]` for citations,
+`<!-- claim: CLAIM-… -->` on every paragraph that asserts one, `<!-- fact: FACT-… -->` on every
+number that came from your data, no source or finding the context did not carry.
+
+`phdude write` never writes prose. It writes cache, and it records no event.
+
+### Submitting through the gates
+
+The agent drafts to a file and submits it:
+
+```
+phdude manuscript submit introduction --file draft.md
+```
+
+Six gates are registered. Five run on a first draft, and `gate-meaning` joins them on a
+revision, because it needs something to compare against:
+
+| Gate | Blocks when |
+|---|---|
+| `gate-citations` | a `[@key]` resolves to no source, or cites a candidate you dismissed |
+| `gate-evidence` | a marker names nothing, a rejected claim is asserted, or a verb outruns the claim's state |
+| `gate-prose` | never in `full` mode — it reports and scores; in `ruthless` mode every warning blocks |
+| `gate-voice` | never — it reports how far the draft sits from the active voice profile |
+| `gate-meaning` | a revision drops a claim, a citation, a number or a negation |
+| `gate-profile` | a section runs past its venue profile's word limit |
+
+A block writes nothing at all — not the section, not the report, not an event. You get the
+findings with line numbers and exit code 2, and the workspace is exactly where it was:
+
+```
+  - gate-citations:6 [@nobody2020] does not resolve to a recorded source
+  - gate-meaning:1 the revision drops the negation not
+section blocked by gate-citations, gate-meaning: 3 finding(s)
+```
+
+A clean submit writes the section file with its hash, updates the manuscript entry to `draft`,
+stores the gate report in `manuscript/reports/introduction.yaml`, and appends one event.
+
+### Revising without losing the argument
+
+```
+phdude deslop introduction                      # what to change, and what not to
+phdude deslop introduction --file revised.md    # the revision, through every gate
+```
+
+Without a file, `deslop` prints the section's prose observations and the revision contract: the
+sentences to rewrite, and the explicit list of what a rewrite may not touch. With a file, it
+runs the gates again with meaning preservation on. That last gate is the one that matters. It
+extracts from the old text and the new one the multiset of claim ids, citation keys, numerals
+and negation cues, and refuses a revision that lost any of them. Rewording a negated sentence is
+fine; dropping its "not" reverses the finding, and PhDude will not let a cleanup pass do that
+quietly.
+
+### The prose report
+
+```
+phdude prose introduction
+```
+
+```
+Academic Prose Quality: 91/100
+
+Specificity             70
+Evidence Alignment      100
+Epistemic Precision     100
+Structural Variation    100
+Author Voice            n/a (needs manuscript context)
+Conciseness             80
+
+Observations (3):
+
+WARN (3):
+  - 5: It is important to note that the literature suggests adoption of these tools is significa…
+    empty-phrase: filler that can be deleted without losing meaning: "it is important to note"
+    Hint: delete the phrase and keep the sentence
+```
+
+Six sub-scores, each one arithmetic over counts you can check, with the formula written down in
+[docs/cli.md](docs/cli.md) and the located observations behind it. `phdude prose --file <path>`
+runs the same report over any text file and needs no workspace at all.
+
+### Approval is yours
+
+A section becomes `approved` the same way a claim becomes canonical: through a decision you
+approved by name.
+
+```
+phdude decide propose --title "Approve the revised introduction" \
+  --rationale "…" --affects manuscript:introduction
+phdude decide approve DEC-419673dd70 --by lucio
+phdude manuscript approve introduction --decision DEC-419673dd70
+```
+
+A decision that nobody approved, or one that does not name the section, is refused with exit 3.
+An approved section is not overwritten either: a later submit is refused until you run
+`phdude manuscript reopen`, which records the withdrawal of the approval rather than quietly
+discarding it.
+
+### Your voice, as numbers you can read
+
+```
+phdude authors add --json '{
+  "id": "lucio",
+  "language": "en",
+  "tone": { "academic": true, "assertiveness": "moderate", "first_person": "sparing" },
+  "sentences": { "length": "varied", "openings": "varied" },
+  "paragraphs": { "density": "medium" },
+  "transitions": "minimal",
+  "terminology": { "preserve": ["placement policy"], "avoid": ["leverage", "robust"] }
+}'
+phdude authors learn lucio --from papers/2024-thesis-ch3.md --approved
+phdude authors show lucio
+```
+
+`learn` reads writing you have approved and computes descriptive statistics from it: mean
+sentence length and its spread, opening diversity, paragraph density, transition rate, first-person
+rate, hedge rate, and the terminology you keep using. They land under `learned:` in
+`authors/lucio.yaml` as plain numbers and word lists. You can read every one of them, disagree
+with one, and edit it. There is no embedding anywhere in the file, which is the point: a voice
+profile you cannot inspect is a voice profile you cannot correct.
+
+On a project with several authors, `phdude authors consensus` merges the profiles — median for
+the numbers, union of what everyone preserves, intersection of what everyone avoids — into
+`authors/project-consensus.yaml`, and proposes a decision when the merge changes.
+
+### The one number PhDude will not give you
+
+PhDude does not compute an AI-detector score, does not estimate one, and does not optimize for
+one. Any option that looks like it is asking for one — `--detector`, `--humanize-to`,
+`--ai-detection-score` — exits 3 on every command, including commands that do not exist.
+
+This is a deliberate refusal, not a missing feature. Detector scores are unreliable, they are
+biased against people writing in a second language, and optimizing for one teaches a tool to
+disguise text rather than improve it. The failure mode is precise: a section that scores well
+on a detector and still asserts a claim the evidence does not support is worse than the honest
+draft it replaced, because it now reads as though someone checked.
+
+So the prose report measures things that are true or false about your text — a citation that
+resolves, a claim whose evidence is all weak, a number with no source, a paragraph of filler —
+and each one comes with the line it is on and the arithmetic behind it. Fix those and the writing
+gets better for readers, which happens to be the only audience that matters.
+
 ## What's in the box
 
 ```
@@ -403,7 +574,7 @@ my-research/
 │   ├── events.jsonl     # append-only audit log
 │   └── cache/           # extracted text, gitignored, rebuildable
 ├── sources/             # the raw materials you drop in
-├── authors/             # voice profiles (v0.4)
+├── authors/             # voice profiles, learned from approved samples
 ├── knowledge/
 │   ├── artifacts/       # ART-*.yaml   one per unique file
 │   ├── sources/         # SRC-*.yaml   bibliographic sources
@@ -415,8 +586,9 @@ my-research/
 ├── research/            # questions/ RQ-*.yaml · hypotheses/ H-*.yaml · methods/ METH-*.yaml
 │                        # searches/  SEARCH-*.yaml  what was asked, of whom, and when
 ├── decisions/           # DEC-*.yaml
+├── manuscript/          # manuscript.yaml, one .md per section, reports/ per section
 ├── references.bib       # written by `phdude cite export`; derived, not knowledge
-└── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
+└── data/ analysis/ figures/ tables/ templates/ outputs/
 ```
 
 One object per file, content-derived ids, schema on every file. Plain YAML and Markdown under
@@ -493,8 +665,8 @@ The reasoning behind the big calls is in [docs/adr/](docs/adr/).
 |---|---|---|
 | v0.1 | MVP | workspace, ingestion, knowledge graph, decisions, conflicts, status, next, packs, Claude Code and Codex adapters |
 | v0.2 | Research Brain | citation registry, literature matrix, research gaps, contradictions, methods, provenance, workspace migrations, skill contracts |
-| **v0.3** | Research Engine | fresh literature search, five provider adapters, candidate review, freshness tracking, `phdude edit` |
-| v0.4 | Co-Author | author voice profiles, section writing, the `academic-prose` skill, `/phdude deslop`, writing gates |
+| v0.3 | Research Engine | fresh literature search, five provider adapters, candidate review, freshness tracking, `phdude edit` |
+| **v0.4** | Co-Author | the manuscript model, the writing context, six writing gates, `deslop`, author voice profiles, the Academic Prose Quality report |
 | v0.5 | Analysis & Visualization | analysis skills, tables, charts, figures, reproducibility lineage |
 | v0.6 | Document Factory | DOCX, PDF, LaTeX, PPTX and XLSX output, venue packs (IEEE, ACM) |
 | v0.7 | Reviewer | citation auditor, methodology reviewer, Reviewer #2, Research Health, submission readiness |

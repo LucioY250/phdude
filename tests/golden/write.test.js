@@ -21,7 +21,11 @@ test('write golden: the introduction context on examples/generic-thesis is byte-
   const store = new FsStore(WORKSPACE);
   const snapshot = await loadSnapshot(store, FIXED_NOW);
   const policy = await store.readYaml(join('.phdude', 'writing-policy.yaml'));
+  // The same two files `write()` reads for the manuscript's active voice, so the golden is what
+  // a researcher running `phdude write introduction` on the example actually gets.
+  const profile = await store.readYaml(join('authors', `${snapshot.manuscript.voice.author}.yaml`));
   const context = assembleContext(snapshot, 'introduction', {
+    profile,
     policy,
     budgetChars: BUDGET,
     bibkeys: assignBibkeys(snapshot.sources),

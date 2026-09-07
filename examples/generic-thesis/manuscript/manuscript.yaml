@@ -3,7 +3,8 @@ version: 1
 title: Generic Thesis Example
 language: en
 voice:
-  kind: consensus
+  kind: author
+  author: researcher-a
 sections:
   - id: abstract
     title: Abstract
@@ -17,10 +18,11 @@ sections:
     title: Introduction
     file: manuscript/introduction.md
     order: 2
-    status: draft
-    hash: 036123f10393fa6dcb16e59cf3bed201c142f6beb62e33a207bf7cf6d6884eb9
+    status: approved
+    hash: fbdfb605abdfbedbd66cbd862bcaa7eb4796ea5abf48e97727895426b638987d
     claims: []
     questions: []
+    approved_by: DEC-2567086fc6
   - id: methods
     title: Methods
     file: manuscript/methods.md

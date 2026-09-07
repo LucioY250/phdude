@@ -39,8 +39,12 @@ my-research/
 │   ├── methods/    METH-*.yaml
 │   └── searches/   SEARCH-*.yaml # what was asked, of whom, and when
 ├── decisions/      DEC-*.yaml
+├── manuscript/
+│   ├── manuscript.yaml           # schema phdude.manuscript v1: the plan and every section
+│   ├── <section>.md              # the prose, front matter + Markdown body
+│   └── reports/<section>.yaml    # schema phdude.section-report v1: the last gate run
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
-├── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
+├── data/ analysis/ figures/ tables/ templates/ outputs/
 └── .gitignore
 ```
 
@@ -81,7 +85,7 @@ something that happens to your files while you were asking for something else.
 
 | Path | On re-run |
 |---|---|
-| `phdude.yaml`, `.phdude/*.yaml`, and everything under `knowledge/`, `research/`, `decisions/`, `sources/` | yours; never overwritten |
+| `phdude.yaml`, `.phdude/*.yaml`, and everything under `knowledge/`, `research/`, `decisions/`, `sources/`, `authors/`, `manuscript/` | yours; never overwritten |
 | `.gitignore` | yours; only the missing default lines are appended |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/commands/*` | rewritten only while they carry the `phdude:managed` marker on the first line or in their front matter |
 | the installed skills under `.phdude/skills/` | PhDude-managed; refreshed every time, and a changed file is reported under `updated` |

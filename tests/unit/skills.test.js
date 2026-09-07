@@ -34,12 +34,24 @@ for (const name of readdirSync(SKILLS_DIR)) {
 
 // Every `phdude add <type> --json '<obj>'` the documentation tells an agent to run must
 // survive addEntity's unknown-field check, or the docs teach a command that exits 2.
-const ADD_EXAMPLE_RE = /phdude add (\S+) --json '(\{.*\})'/g;
+// A worked example starts its payload with a quoted field name; `--json '{…}'` in prose is a
+// placeholder for one, not an example of one, and there is nothing in it to check.
+const ADD_EXAMPLE_RE = /phdude add (\S+) --json '(\{".*\})'/g;
+
+// The README and the guides teach the same commands to a human, and drifted the same way the
+// skills did until v0.4: a flag renamed in `COMMAND_OPTIONS` left a worked example that exits 1.
+const GUIDES = [
+  'README.md',
+  join('docs', 'cli.md'),
+  join('docs', 'workspace.md'),
+  join('docs', 'extending.md'),
+];
 
 function markdownFiles() {
   const files = [];
   for (const name of readdirSync(SKILLS_DIR)) files.push(join(SKILLS_DIR, name, 'SKILL.md'));
   for (const name of readdirSync(COMMANDS_DIR)) files.push(join(COMMANDS_DIR, name));
+  for (const rel of GUIDES) files.push(join(ROOT, rel));
   return files;
 }
 

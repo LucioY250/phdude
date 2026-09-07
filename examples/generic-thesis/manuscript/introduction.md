@@ -1,14 +1,17 @@
 ---
 section: introduction
-status: draft
-hash: 036123f10393fa6dcb16e59cf3bed201c142f6beb62e33a207bf7cf6d6884eb9
-updated: 2026-09-01T00:01:07.000Z
+status: revised
+hash: fbdfb605abdfbedbd66cbd862bcaa7eb4796ea5abf48e97727895426b638987d
+updated: 2026-09-01T00:01:08.000Z
 ---
 
 Undergraduates report using note-taking applications daily, and the pattern holds across
 three independently recruited samples [@alpha2025survey].
 <!-- claim: CLAIM-ab73621987 -->
 
-How far that generalises is the open question. The three surveys recruited through different
-channels, and the sample sizes they report do not agree, so this thesis asks whether adoption
-differs by recruitment channel and campus.
+The three surveys did not recruit the same way: one used the university mailing list, one a
+campus social media group, and one a stratified sample across three campuses.
+
+How far the pattern generalises is therefore the open question. The sample sizes the three
+surveys report do not agree either, so this thesis asks whether adoption differs by
+recruitment channel and campus.
