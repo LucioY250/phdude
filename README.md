@@ -9,7 +9,7 @@
 Your AI can write. PhDude helps make the research worth publishing.
 
 [![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.4.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
@@ -37,13 +37,15 @@ It makes no assumptions about your field. A clinical trial, an archival history 
 empirical software-engineering paper get the same treatment; discipline-specific vocabulary
 and review questions arrive as packs.
 
-> **Where things stand.** This is v0.4. The deterministic core is done and tested: workspace,
+> **Where things stand.** This is v0.5. The deterministic core is done and tested: workspace,
 > ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the
 > citation registry, the literature matrix and gap report, workspace migrations, five literature
-> search providers, and the Claude Code and Codex adapters. New in this release, PhDude helps
-> *write*: a manuscript with per-section status, a bounded writing context, six deterministic
-> gates every draft goes through, and a prose report that shows its arithmetic. Analysis
-> execution and document rendering come next; see the [roadmap](#roadmap).
+> search providers, and the Claude Code and Codex adapters. v0.4 taught PhDude to help *write*:
+> a manuscript with per-section status, a bounded writing context, six deterministic gates every
+> draft goes through, and a prose report that shows its arithmetic. New in this release, it runs
+> the *analysis* — datasets, scripts under an execution policy, results with lineage, tables,
+> figures and `phdude repro check`. Document rendering comes next; see the
+> [roadmap](#roadmap).
 
 ## What's new in 0.5
 
@@ -74,8 +76,9 @@ it — all recorded, all hashed, and all checkable in one command.
   core skill forbids your agent from running a script any other way. Migration 0002 brings an
   older workspace to version 3.
 
-See [what 0.4 added](CHANGELOG.md#040--2026-09-07) for the writing pipeline, and
-[why there is no detector score](#the-one-number-phdude-will-not-give-you).
+See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
+
+### What 0.4 added: the writing pipeline
 
 - **A manuscript with a status per section.** `phdude manuscript init` plans the six standard
   sections; each one moves `planned → draft → revised → approved` and carries the hash of the
@@ -162,13 +165,13 @@ command that does it. There is no hidden score.
 
 ## Install
 
-v0.4 is not on npm yet. Install it from the repository:
+v0.5 is not on npm yet. Install it from the repository:
 
 ```
 git clone https://github.com/LucioY250/phdude && cd phdude
 npm ci
 npm link
-phdude --version      # phdude 0.4.0
+phdude --version      # phdude 0.5.0
 ```
 
 Node 22 or newer. `pdftotext` (poppler-utils) is optional: without it PDFs are still
@@ -486,11 +489,16 @@ FIG-843c619df9       respondents-by-channel  up-to-date
 3 item(s): 3 up-to-date
 ```
 
-Edit `data/survey.csv` and run it again, and the analysis says `stale` with the reason
-`input DATASET-bc43bf3439 bytes changed on disk` — nothing was watching the file; the check
+Edit `data/survey.csv` and run it again, and all three say `stale`: the analysis because
+`input DATASET-bc43bf3439 bytes changed on disk`, the table and the figure because the result
+they draw comes from an analysis that is itself stale. Nothing was watching the file; the check
 simply re-hashes it. `phdude repro check` always exits 0. It is a report, not a gate: it tells
 you the numbers in your manuscript no longer follow from the data under them, and what to do
 about that is yours to decide.
+
+Until the file is registered again, `phdude analyze run` refuses it rather than recording a hash
+for bytes it never read. `phdude next` prints the three commands that clear it: register the
+file, re-declare the analysis against the new `DATASET` id, re-run.
 
 `phdude status` counts the same things in its `Analysis:` block, `phdude next` raises a stale
 analysis to high impact once a supported or canonical claim rests on one of its results, and

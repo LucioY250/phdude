@@ -36,7 +36,8 @@ does any of this still hold? See
 - **Analyses and results.** `phdude analyze add --json`, `analyze list|show <id>|runs <id>`,
   `analyze run <id> [--allow-exec] [--force]`. An analysis declares a script under `analysis/`,
   the datasets it reads, and where it leaves `results.json`. A run records `at`, `exit`,
-  `duration_ms`, the hash of every input and every output, and the results it wrote; a run whose
+  `duration_ms`, the hash of every input and every output, and the results it wrote — plus
+  `stderr_tail` (the last 2000 characters), `timed_out` and `signal` when they apply; a run whose
   inputs have not changed since the last successful one is refused as "up to date", and a run
   whose input file no longer matches its `DATASET` record is refused outright. Each entry
   in `results.json` becomes a citable `RESULT` with `from` pointing at the analysis. A re-run
@@ -50,10 +51,12 @@ does any of this still hold? See
   specials escaped. A build whose source has not moved and whose files already hold these bytes
   writes nothing.
 - **Figures, with alt text that is not optional.** `phdude figure add --json`,
-  `figure list|show <id>|build <id> [--allow-exec]|check`. `alt` is required and non-empty: a
-  figure without a sentence saying what it shows never becomes a record. `build` runs the
-  generator through the runner, verifies every declared output exists, and hashes it; a
-  generator that exits 0 without writing what it declared is treated as a failure.
+  `figure list|show <id>|build <id> [--allow-exec] [--force]|check`. `alt` is required and
+  non-empty: a figure without a sentence saying what it shows never becomes a record. `build`
+  runs the generator through the runner, verifies every declared output exists, and hashes it; a
+  generator that exits 0 without writing what it declared is treated as a failure. A build whose
+  inputs, generator script and output files are all what the last successful run recorded reports
+  `up to date` and spawns nothing; `--force` builds anyway.
 - **A reference generator.** `generators/bar-chart.mjs` — plain Node, no dependencies — draws an
   accessible SVG with a title, a description carrying the alt text, real axis labels, one
   colourblind-safe hue and no timestamp, from a result's values or a dataset column. A figure
@@ -102,6 +105,15 @@ does any of this still hold? See
   wearing an id that no longer describes it.
 - `analysis/out/`, `tables/out/` and `figures/out/` are gitignored in a new workspace, and
   migration 0002 appends those rules to an existing `.gitignore` that has one.
+- **Symlink confinement.** Every path a record hands PhDude to run, read or hash is resolved
+  against the real workspace, not only checked as a string: a dataset, an analysis script, a
+  results file, a declared output file and a figure generator or output are each refused (exit 1)
+  when the link behind them leaves the workspace. Analyses and figures are checked at declaration
+  *and* again after the script has run, because a link planted mid-run would otherwise be the one
+  PhDude reads.
+- **A run a signal ended is a failure, never a quiet success.** `RunResult` carries `signal`
+  alongside `timedOut`, and `exit: null` with no timeout is named as what it is — `the analysis
+  script was killed by SIGKILL` — rather than read as a run that returned nothing.
 
 ### Notes
 
