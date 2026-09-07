@@ -708,6 +708,63 @@ one implementation of every rule.
 **No detector scores, ever.** PhDude does not compute, accept or target an AI-detection score
 (PRD §30c). Any option whose name contains "detect" or "humaniz" — on this or any other command —
 is refused with a policy error and exit 3.
+### `phdude manuscript init|list|show <s>|status|submit <s>|approve <s>|reopen <s>`
+
+```
+phdude manuscript init [--title "…"] [--language en] [--voice <author-id>|consensus]
+phdude manuscript list
+phdude manuscript show <section>
+phdude manuscript status
+phdude manuscript submit <section> --file <draft.md> [--revision]
+phdude manuscript approve <section> --decision <DEC-id>
+phdude manuscript reopen <section>
+```
+
+The manuscript model of PRD §33 and spec §3.1: `manuscript/manuscript.yaml` holds the title,
+the language, the voice and one entry per section; the prose lives in `manuscript/<section>.md`
+next to it. See [the workspace guide](workspace.md#the-manuscript) for the file layout.
+
+`init` writes `manuscript.yaml` with the six standard sections — abstract, introduction,
+methods, results, discussion, conclusions — all `planned`, and writes no section file: a section
+file appears the first time a draft passes `submit`. `--title` defaults to the project title and
+`--language` to the project language. `--voice` takes an author profile id or `consensus` (the
+default), which is the project voice of PRD §30.2. A workspace holds one manuscript: `init`
+exits 3 rather than overwriting an existing one.
+
+`list` prints the sections in order; `status` adds the counts by status; `show <section>` prints
+the entry and the body of the section file.
+
+`submit` is the only way prose enters `manuscript/`. It reads the draft at `--file` (a path
+relative to your shell, not to the workspace), strips any front matter it carries, and runs the
+deterministic writing gates over the body. A gate finding of severity `block` means **nothing is
+written**: the command prints each finding as `<gate>:<line> <message>` and exits 2. When the
+draft is clean, `submit` writes the section file with its front matter, updates the section's
+status and hash in `manuscript.yaml`, stores the gate report at
+`manuscript/reports/<section>.yaml`, and appends one `manuscript` event.
+
+v0.4 runs one gate here, the citation audit (`gate-citations`): every `[@key]` must resolve to a
+recorded source by bibkey or by `SRC-` id, and a source accepted from a candidate the researcher
+later dismissed may not be cited. Both failures block.
+
+The section's status becomes `draft`, or `revised` with `--revision`. The transitions are
+`planned → draft`, `draft → revised|approved` and `revised → revised|approved`; `--revision` on a
+`planned` section is a policy error, because there is no draft to revise.
+
+`approve` records the researcher's approval of a section. It requires an **approved** Decision
+whose `affects` lists `manuscript:<section>` — the one place the decision schema accepts a
+string that is not an object id. Propose that decision and let the researcher approve it (see
+[`phdude decide`](#phdude-decide-proposeapproverejectsupersede)), then run
+`phdude manuscript approve introduction --decision DEC-…`.
+
+Anything less exits 3: no decision, a decision that is still proposed, or one that affects a
+different section. The section's hash is frozen at that point.
+
+`reopen` takes an approved section back to `revised` and drops its `approved_by`, which is the
+only way out of `approved`: a `submit` over an approved section exits 3 instead of overwriting
+it (PRD §3.4 — approved manuscript text is the researcher's).
+
+Every mutation records exactly one event: `manuscript initialized (N sections)`,
+`submitted <section> (<status>)`, `approved <section> (<DEC-id>)`, `reopened <section> (revised)`.
 
 ### `phdude packs list|detect|apply <name>`
 

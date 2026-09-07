@@ -1,0 +1,31 @@
+{
+  "schema": "phdude.manuscript",
+  "version": 1,
+  "title": "AI adoption among small and medium enterprises",
+  "language": "en",
+  "voice": { "kind": "author", "author": "researcher-a" },
+  "target_profile": "generic-thesis",
+  "sections": [
+    {
+      "id": "introduction",
+      "title": "Introduction",
+      "file": "manuscript/introduction.md",
+      "order": 1,
+      "status": "approved",
+      "hash": "3a7bd3e2360a3d29eea436fcfb7e44c735d117c42d1c1835420b6b9942dd4f1b",
+      "claims": ["CLAIM-0123456789"],
+      "questions": ["RQ-1"],
+      "approved_by": "DEC-0123456789"
+    },
+    {
+      "id": "methods",
+      "title": "Methods",
+      "file": "manuscript/methods.md",
+      "order": 2,
+      "status": "planned",
+      "hash": null,
+      "claims": [],
+      "questions": []
+    }
+  ]
+}

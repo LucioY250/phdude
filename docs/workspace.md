@@ -257,6 +257,55 @@ machine, so the log still says so.
 It is committed, append-only, and independent of git history, so a rebase cannot erase who
 recorded what. Git history complements it with the full content of each change.
 
+## The manuscript
+
+`manuscript/` holds the prose and the plan behind it (PRD §33):
+
+```text
+manuscript/
+├── manuscript.yaml     # title, language, voice, one entry per section
+├── introduction.md     # the prose, with a small front matter block
+├── methods.md
+└── reports/
+    └── introduction.yaml   # the gate report behind the last accepted submit
+```
+
+`phdude manuscript init` writes `manuscript.yaml` with the six standard sections — abstract,
+introduction, methods, results, discussion, conclusions — all `planned`. Each entry carries its
+`id`, `title`, `file`, `order`, `status`, `hash`, the `claims` and `questions` it covers, and
+`approved_by` once a decision approves it. A section file is written the first time a draft
+passes `phdude manuscript submit`, never by `init`.
+
+Every section file starts with four flat keys:
+
+```markdown
+---
+section: introduction
+status: draft
+hash: 3a7bd3e2…
+updated: 2026-09-07T10:00:00.000Z
+---
+
+# Introduction
+
+SMEs adopt AI slowly [@zeta2020study].
+```
+
+The `hash` is the sha256 of the body with the front matter removed, line endings normalized and
+trailing whitespace dropped, so reformatting a file does not look like a rewrite. It is what
+tells a later version which sections still need their gates re-run.
+
+`manuscript/reports/<section>.yaml` records what the gates found on the submit that was
+accepted: the section, the hash it applies to, the timestamp, one row per gate with its finding
+count, the prose scores, and the warning and block counts. It carries counts, never prose, and
+it is rewritten by the next accepted submit.
+
+Everything under `manuscript/` is yours, but it is not hand-edited: prose reaches a section
+through `phdude manuscript submit <section> --file <draft.md>`, which runs the writing gates
+first and writes nothing when one blocks. A section that has been approved is only editable
+after `phdude manuscript reopen`, which is the approval being withdrawn on the record rather
+than quietly overwritten.
+
 ## Derived files
 
 Two things in the workspace are outputs rather than knowledge, and both can be deleted and

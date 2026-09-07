@@ -1,0 +1,11 @@
+{
+  "schema": "phdude.section-report",
+  "version": 1,
+  "section": "introduction",
+  "hash": "3a7bd3e2360a3d29eea436fcfb7e44c735d117c42d1c1835420b6b9942dd4f1b",
+  "at": "2026-09-07T10:00:00.000Z",
+  "gates": [{ "gate": "gate-citations", "findings": 0, "blocked": false }],
+  "scores": {},
+  "warnings": 0,
+  "blocks": 0
+}

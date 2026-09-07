@@ -146,6 +146,10 @@ export const COMMAND_ROWS = [
     'prose --file <path>',
     'Academic Prose Quality report over a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
   ],
+  [
+    'manuscript init|list|show|status|submit|approve|reopen',
+    'The manuscript: its sections, their status, submitting a draft through the writing gates, and the approval the researcher decides.',
+  ],
   ['packs list|detect|apply', 'List, recommend, or apply field/method research packs.'],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
