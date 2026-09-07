@@ -1,0 +1,32 @@
+docs/cli.md
+  s_946fc7502759d8::t_58b24960cd450b 87-90
+docs/adr/0009-execution-policy-and-results-contract.md
+  s_946fc7502759d8::t_a13600d723a98d 83-86
+tests/integration/init.test.js
+  s_946fc7502759d8::t_b5c64444f31a3c 267,272,281,304,327,359
+docs/extending.md
+  s_946fc7502759d8::t_58b24960cd450b 165,168-170,173-174,219-224
+  s_946fc7502759d8::t_a13600d723a98d 187
+tests/unit/application/skills.test.js
+  s_946fc7502759d8::t_4952a47475b98d 95-97,100
+CHANGELOG.md
+  s_946fc7502759d8::t_c86ce2cb9c6b89 73-78
+skills/figures/SKILL.md
+  s_946fc7502759d8::t_53261cd63afe49 10,16-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b5d9d21b4afe60601be798bad6bb867a585d6e7c",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
