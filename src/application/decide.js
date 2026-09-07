@@ -143,6 +143,9 @@ export async function reject({ store, clock, actor }, id, { by, reason } = {}) {
  */
 export async function supersede({ store, clock, actor }, id, { by } = {}) {
   const newDecisionId = by;
+  if (newDecisionId === id) {
+    throw new PhdudeError('USAGE', 'a decision cannot supersede itself', null, null);
+  }
   const decision = await getDecision(store, id);
   await getDecision(store, newDecisionId);
 

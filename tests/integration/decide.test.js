@@ -96,6 +96,16 @@ test('approve: requires "by"', async () => {
   });
 });
 
+test('addEntity: "decision" is rejected with USAGE pointing at decide propose', async () => {
+  const deps = makeDeps(await newRoot());
+  await assert.rejects(addEntity(deps, 'decision', { title: 'x', rationale: 'y' }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'USAGE');
+    assert.ok(err.hint.includes('phdude decide propose'));
+    return true;
+  });
+});
+
 test('approve: idempotent for the same approver, one event only', async () => {
   const deps = makeDeps(await newRoot());
   const { obj: decision } = await propose(deps, { title: 'Idempotent approval', rationale: 'r' });
@@ -109,6 +119,27 @@ test('approve: idempotent for the same approver, one event only', async () => {
 
   const onDisk = await deps.store.readEntity(decision.id);
   assert.deepEqual(onDisk.approved_by, ['a']);
+});
+
+test('approve: two different approvers both land in approved_by, one event each', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: decision } = await propose(deps, {
+    title: 'Multi-approver decision',
+    rationale: 'r',
+  });
+
+  await approve(deps, decision.id, { by: 'alice' });
+  await approve(deps, decision.id, { by: 'bob' });
+
+  const onDisk = await deps.store.readEntity(decision.id);
+  assert.deepEqual(onDisk.approved_by, ['alice', 'bob']);
+  assert.equal(onDisk.status, 'approved');
+
+  const events = await deps.store.readEvents();
+  const aliceEvents = events.filter((e) => e.summary === 'decision approved by alice');
+  const bobEvents = events.filter((e) => e.summary === 'decision approved by bob');
+  assert.equal(aliceEvents.length, 1);
+  assert.equal(bobEvents.length, 1);
 });
 
 test('approve: rejected decisions cannot be approved', async () => {
@@ -151,6 +182,16 @@ test('reject: cannot reject an approved decision', async () => {
   });
 });
 
+test('reject: requires "by"', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: decision } = await propose(deps, { title: 'Needs a rejector', rationale: 'r' });
+  await assert.rejects(reject(deps, decision.id, { reason: 'no reason given' }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'USAGE');
+    return true;
+  });
+});
+
 test('reject: stores the rejection reason under change.rejection_reason', async () => {
   const deps = makeDeps(await newRoot());
   const { obj: decision } = await propose(deps, { title: 'Reject me', rationale: 'r' });
@@ -174,6 +215,20 @@ test('supersede: marks the old decision superseded and links the new one', async
   const superseded = await supersede(deps, original.id, { by: replacement.id });
   assert.equal(superseded.status, 'superseded');
   assert.equal(superseded.change.superseded_by, replacement.id);
+});
+
+test('supersede: a decision cannot supersede itself', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: decision } = await propose(deps, {
+    title: 'Self-superseding decision',
+    rationale: 'r',
+  });
+
+  await assert.rejects(supersede(deps, decision.id, { by: decision.id }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'USAGE');
+    return true;
+  });
 });
 
 test('promote: to "supported" needs no decision', async () => {
