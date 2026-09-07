@@ -1,0 +1,25 @@
+src/application/deslop.js
+  s_946fc7502759d8::t_8fca340dc423a7 3,91
+docs/superpowers/specs/2026-09-07-phdude-v0.4-design.md
+  s_946fc7502759d8::t_8fca340dc423a7 47
+docs/cli.md
+  s_946fc7502759d8::t_8fca340dc423a7 826
+tests/integration/write.test.js
+  s_946fc7502759d8::t_20533f2cc6f2e7 227-230
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "2c186b161538f9be363041eb71882152f3b30753",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
