@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { createRequire } from 'node:module';
-const { version } = createRequire(import.meta.url)('../package.json');
-if (process.argv.includes('--version') || process.argv.includes('-v')) {
-  console.log(`phdude ${version}`);
-  process.exit(0);
-}
-console.error('phdude: no command given (try --help)');
-process.exit(1);
+import { run } from '../src/adapters/cli/run.js';
+
+process.exitCode = await run(process.argv.slice(2), {
+  stdout: process.stdout,
+  stderr: process.stderr,
+  cwd: process.cwd(),
+  env: process.env,
+});

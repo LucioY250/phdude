@@ -11,6 +11,7 @@
  * @property {(evt: object) => Promise<void>} appendEvent
  * @property {(limit?: number) => Promise<object[]>} readEvents
  * @property {(artId: string) => string} cacheDir
+ * @property {() => Promise<string[]>} listCacheEntries
  * @property {(artId: string) => Promise<string|null>} readCacheText
  * @property {(relPath: string) => Promise<boolean>} exists
  */

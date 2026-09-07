@@ -136,6 +136,20 @@ export class FsStore {
     return join(this.paths.cache, artId);
   }
 
+  async listCacheEntries() {
+    let entries;
+    try {
+      entries = await readdir(this.paths.cache, { withFileTypes: true });
+    } catch (err) {
+      if (err.code === 'ENOENT') return [];
+      throw err;
+    }
+    return entries
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort();
+  }
+
   async readCacheText(artId) {
     try {
       return await readFile(join(this.cacheDir(artId), 'text.md'), 'utf8');

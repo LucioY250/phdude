@@ -1,4 +1,4 @@
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, readdir, realpath, stat } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
@@ -20,6 +20,10 @@ async function exists(path) {
   }
 }
 
+function escapes(relBack) {
+  return relBack === '' || relBack.startsWith('..') || isAbsolute(relBack);
+}
+
 /**
  * @param {string} dir
  * @returns {Promise<object>} the pack, plus `dir` and absolute `skillPaths`
@@ -30,10 +34,17 @@ export async function loadPack(dir) {
   assertValid('pack', pack);
 
   const skillPaths = [];
+  const realDir = await realpath(dir);
   for (const rel of pack.skills) {
+    if (rel.includes('\0')) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `pack ${pack.name}: skill path contains a NUL byte`,
+        'remove the NUL byte from pack.yaml',
+      );
+    }
     const abs = resolve(dir, rel);
-    const relBack = relative(dir, abs);
-    if (isAbsolute(rel) || relBack === '' || relBack.startsWith('..') || isAbsolute(relBack)) {
+    if (isAbsolute(rel) || escapes(relative(dir, abs))) {
       throw new PhdudeError(
         'VALIDATION',
         `pack ${pack.name}: skill path escapes the pack directory: ${rel}`,
@@ -41,6 +52,13 @@ export async function loadPack(dir) {
     }
     if (!(await exists(abs))) {
       throw new PhdudeError('VALIDATION', `pack ${pack.name}: missing skill file ${rel}`);
+    }
+    // The lexical check above cannot see a symlink inside the pack dir pointing out of it.
+    if (escapes(relative(realDir, await realpath(abs)))) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `pack ${pack.name}: skill path escapes the pack directory: ${rel}`,
+      );
     }
     skillPaths.push(abs);
   }
