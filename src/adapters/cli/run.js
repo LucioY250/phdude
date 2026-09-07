@@ -34,6 +34,7 @@ import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
 import promote from './commands/promote.js';
+import prose from './commands/prose.js';
 import research from './commands/research.js';
 import researchFresh from './commands/research-fresh.js';
 import status from './commands/status.js';
@@ -59,6 +60,7 @@ const COMMANDS = {
   next,
   packs,
   promote,
+  prose,
   research,
   'research-fresh': researchFresh,
   status,

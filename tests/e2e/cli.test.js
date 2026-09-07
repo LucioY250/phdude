@@ -1442,3 +1442,75 @@ test('e2e: research, accept, dismiss, cite check, edit, freshness and research-f
     ['accepted', 'accepted', 'dismissed'],
   );
 });
+
+test('e2e: prose reports on any text file, in either language, and refuses detector flags', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-prose-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  const slop = join(REPO_ROOT, 'tests', 'fixtures', 'prose', 'en', 'slop.md');
+  const clean = join(REPO_ROOT, 'tests', 'fixtures', 'prose', 'en', 'clean.md');
+
+  // No workspace is needed: the report is over a text file, and the academic-prose skill's
+  // wrapper script reaches this command from anywhere.
+  const report = await runJson(ws, ['prose', '--file', slop]);
+  assert.equal(report.file, slop);
+  assert.ok(report.observations.length >= 9, 'the slop fixture trips most of the rules');
+  assert.deepEqual(Object.keys(report.scores), [
+    'specificity',
+    'evidenceAlignment',
+    'epistemicPrecision',
+    'structuralVariation',
+    'authorVoice',
+    'conciseness',
+  ]);
+  assert.equal(report.scores.evidenceAlignment, null, 'a bare file has no evidence graph');
+  assert.equal(typeof report.formulas.specificity, 'string');
+  for (const o of report.observations) {
+    assert.ok(Number.isInteger(o.line) && o.line >= 1);
+    assert.equal(o.severity, 'warn');
+  }
+
+  const text = await run(ws, ['prose', '--file', slop]);
+  assert.match(text.stdout, /^Academic Prose Quality: \d+\/100/);
+  assert.match(text.stdout, /Evidence Alignment {6}n\/a \(needs manuscript context\)/);
+  assert.match(text.stdout, /vague-literature: /);
+
+  // A report never blocks: clean prose and sloppy prose both exit 0.
+  const cleanReport = await runJson(ws, ['prose', '--file', clean]);
+  assert.deepEqual(cleanReport.observations, []);
+  assert.equal(cleanReport.scores.specificity, 100);
+
+  const spanish = await runJson(ws, [
+    'prose',
+    '--file',
+    join(REPO_ROOT, 'tests', 'fixtures', 'prose', 'es', 'slop.md'),
+    '--lang',
+    'es',
+  ]);
+  assert.equal(spanish.lang, 'es');
+  assert.ok(spanish.observations.some((o) => o.rule === 'banned-phrase'));
+
+  const german = await runJson(ws, ['prose', '--file', clean, '--lang', 'de']);
+  assert.ok(
+    german.observations.some((o) => o.rule === 'unsupported-language' && o.severity === 'info'),
+    'an unsupported language says so instead of reporting nothing',
+  );
+
+  // PRD §30c: PhDude has no AI-detector score, so the flag that asks for one is a policy error.
+  for (const flag of ['--detector', '--humanize-to', '--detector-target=0.1']) {
+    const refused = await phdude(ws, ['prose', '--file', clean, flag, '--json', ...ACTOR]);
+    assert.equal(refused.code, 3, `${flag} should exit 3`);
+    const err = JSON.parse(refused.stderr).error;
+    assert.equal(err.code, 'POLICY');
+    assert.equal(err.message, 'PhDude does not measure or target AI-detector scores');
+    assert.match(err.hint, /§30c/);
+  }
+
+  const missing = await phdude(ws, ['prose', '--json', ...ACTOR]);
+  assert.equal(missing.code, 1, 'prose without --file is a usage error');
+  assert.equal(JSON.parse(missing.stderr).error.code, 'USAGE');
+
+  const notThere = await phdude(ws, ['prose', '--file', 'nope.md', '--json', ...ACTOR]);
+  assert.equal(notThere.code, 1);
+  assert.match(JSON.parse(notThere.stderr).error.message, /^not found: /);
+});

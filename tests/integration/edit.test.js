@@ -268,3 +268,47 @@ test('edit: a reference that does not resolve is refused, the way add refuses it
     question.id,
   ]);
 });
+
+test('edit: provenance.derived_from is checked like any other reference (v0.3 carry-over)', async () => {
+  const deps = makeDeps(await newRoot());
+  const source = await aSource(deps);
+  const { obj: claim } = await addEntity(deps, 'claim', {
+    statement: 'Pre-registration reduces analytic flexibility.',
+    kind: 'empirical',
+  });
+  const { obj: evidence } = await addEntity(deps, 'evidence', {
+    source: source.id,
+    locator: 'p. 4',
+    excerpt: 'Pre-registered studies reported fewer post-hoc analyses.',
+    strength: 'moderate',
+  });
+
+  // `knowledge trace` walks provenance to answer "where did this come from"; an id that does
+  // not resolve would break that trace long after the edit, with nothing to trace it back to.
+  // A method carries no provenance in its schema, so the three types that do are the whole set.
+  for (const target of [claim, evidence, source]) {
+    await assert.rejects(
+      edit(deps, target.id, {
+        provenance: { method: 'agent-extraction', derived_from: ['ART-0123456789'] },
+      }),
+      (err) => {
+        assert.equal(err.code, 'VALIDATION');
+        assert.equal(err.message, 'unknown reference ART-0123456789');
+        assert.equal(err.hint, 'run phdude knowledge list');
+        return true;
+      },
+      `${target.id} should refuse a dangling derived_from`,
+    );
+  }
+
+  assert.deepEqual(
+    (await deps.store.readEntity(claim.id)).provenance.derived_from,
+    [],
+    'the refused edit never reached disk',
+  );
+
+  const updated = await edit(deps, claim.id, {
+    provenance: { method: 'manual', derived_from: [source.id] },
+  });
+  assert.deepEqual(updated.provenance, { method: 'manual', derived_from: [source.id] });
+});

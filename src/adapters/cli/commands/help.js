@@ -29,6 +29,8 @@ const LINES = [
   '  matrix [--format md|csv]          literature matrix: one row per source',
   '         [--question RQ-n]          (optionally filtered to a research question)',
   '  gaps                              research gaps: questions, claims, sources, conflicts',
+  '  prose --file <path> [--lang c]    academic prose quality report: six scores, located',
+  '                                    observations, and what to do about each one',
   '  packs list|detect|apply <name>    field and method packs',
   '  mode lite|full|ruthless|off       set the review mode',
   '  migrate [--dry-run] [--force]     upgrade the workspace to the current schema version',

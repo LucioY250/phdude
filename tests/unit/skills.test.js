@@ -12,6 +12,12 @@ const SKILLS_DIR = join(ROOT, 'skills');
 const COMMANDS_DIR = join(ROOT, 'commands');
 const FRONT_MATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 
+// A skill writes nothing: the CLI is the only writer of recorded state. `academic-prose` is the
+// one exception the PRD carves out (§30b), and even there the writes go through
+// `phdude manuscript submit`, never through a file edit - so the declaration is `manuscript/**`
+// and nothing else.
+const DECLARED_WRITES = { 'academic-prose': ['manuscript/**'] };
+
 for (const name of readdirSync(SKILLS_DIR)) {
   test(`skills/${name}/SKILL.md has valid phdude front matter`, () => {
     const text = readFileSync(join(SKILLS_DIR, name, 'SKILL.md'), 'utf8');
@@ -22,7 +28,7 @@ for (const name of readdirSync(SKILLS_DIR)) {
     assert.equal(typeof meta.description, 'string');
     assert.ok(meta.description.length > 0);
     assert.equal(meta.phdude.version, 1);
-    assert.deepEqual(meta.phdude.writes, []);
+    assert.deepEqual(meta.phdude.writes, DECLARED_WRITES[name] ?? []);
   });
 }
 

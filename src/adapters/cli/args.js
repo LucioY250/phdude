@@ -78,8 +78,36 @@ export const COMMAND_OPTIONS = {
   mode: {},
   migrate: {},
   doctor: {},
+  prose: { lang: { type: 'string' } },
   help: {},
 };
+
+// PhDude never measures, reports or targets an AI-detector score (PRD §30c), so no command may
+// take a flag that names one. The guard is global and matches on the option name alone, before
+// any command-specific parsing: refusing `--humanize-to` only where it was expected would leave
+// every other command to answer for it.
+const DETECTOR_OPTION = /detect|humaniz/i;
+
+function optionName(arg) {
+  if (typeof arg !== 'string' || !arg.startsWith('--') || arg === '--') return null;
+  return arg.slice(2).split('=')[0];
+}
+
+/**
+ * @param {string[]} argv
+ * @throws {PhdudeError} POLICY, when an option names an AI detector or a humanizer
+ */
+export function assertNoDetectorOptions(argv) {
+  for (const arg of argv) {
+    const name = optionName(arg);
+    if (name === null || !DETECTOR_OPTION.test(name)) continue;
+    throw new PhdudeError(
+      'POLICY',
+      'PhDude does not measure or target AI-detector scores',
+      'see PRD §30c: the goal is better academic prose, not detector evasion',
+    );
+  }
+}
 
 /**
  * @param {string|null} command
@@ -260,6 +288,7 @@ function build(argv, { variadicTo = false, command = null, strict = false } = {}
       to: variadicTo ? to : values.to,
       contradicts: values.contradicts,
       format: values.format,
+      lang: values.lang,
       question: values.question,
       file: values.file,
       rationale: values.rationale,
@@ -279,6 +308,7 @@ function build(argv, { variadicTo = false, command = null, strict = false } = {}
  * @returns {{command: string|null, sub: string|null, positionals: string[], flags: object}}
  */
 export function parseCli(argv) {
+  assertNoDetectorOptions(argv);
   // Which command it is decides both how `--to` is parsed and which options are legal, and
   // only parsing tells us the command, so a lenient pass runs first and the real one follows.
   // An unrecognised command is parsed leniently too, so `phdude frobnicate --x` reports the

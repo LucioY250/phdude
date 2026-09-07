@@ -70,16 +70,23 @@ const REFERENCE_FIELDS = {
   hypothesis: ['questions'],
 };
 
+async function assertIdExists(store, id) {
+  if (!(await store.readEntity(id))) {
+    throw new PhdudeError('VALIDATION', `unknown reference ${id}`, 'run phdude knowledge list');
+  }
+}
+
 async function assertReferencesExist(store, type, fields) {
   for (const name of REFERENCE_FIELDS[type] ?? []) {
     if (fields[name] === undefined) continue;
     const ids = Array.isArray(fields[name]) ? fields[name] : [fields[name]];
-    for (const id of ids) {
-      if (!(await store.readEntity(id))) {
-        throw new PhdudeError('VALIDATION', `unknown reference ${id}`, 'run phdude knowledge list');
-      }
-    }
+    for (const id of ids) await assertIdExists(store, id);
   }
+  // `provenance` is editable on a claim, evidence, a source and a method, and its
+  // `derived_from` holds ids like any other reference field - it is checked here rather than in
+  // REFERENCE_FIELDS only because it is nested. An unresolvable id here would break `knowledge
+  // trace`, which walks provenance to answer "where did this come from".
+  for (const id of fields.provenance?.derived_from ?? []) await assertIdExists(store, id);
 }
 
 function assertEditableType(type, id) {

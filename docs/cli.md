@@ -660,6 +660,55 @@ among the higher-impact rules. `next`'s closing `consistent` line reads
 `N open gap(s); run phdude gaps` whenever the report is not empty, and claims the workspace is
 consistent only when it is.
 
+### `phdude prose --file <path>`
+
+```
+phdude prose --file draft.md
+phdude prose --file borrador.md --lang es
+phdude prose --file draft.md --json
+```
+
+The Academic Prose Quality report of PRD §39.1 over any text file: six sub-scores, each derived
+from located observations a researcher can open and dispute, followed by every observation with
+its line, the sentence it names, what is wrong and what to do about it. It reports; it never
+blocks, and it always exits 0.
+
+`--lang` picks the language resources (`en` and `es` ship). A language with no resources runs
+only the structural rules and says so as an `info` observation.
+
+| Sub-score | Built from |
+|---|---|
+| Specificity | vague-literature, banned-phrase and empty-phrase findings per 100 words |
+| Evidence Alignment | the evidence graph — `n/a (needs manuscript context)` for a bare file |
+| Epistemic Precision | claim states and the epistemic-verb table — `n/a` for a bare file |
+| Structural Variation | sentence-length SD, opening diversity, transition rate |
+| Author Voice | the active voice profile — `n/a` for a bare file |
+| Conciseness | empty-phrase and intensifier density, plus mean sentence length above 30 words |
+
+The exact formula behind every sub-score is in the report's `formulas` object under `--json`,
+and the aggregate is their weighted mean over the sub-scores that could be computed.
+
+| Rule | Fires when |
+|---|---|
+| `transition-density` | Over 40% of a paragraph's sentences open with a connective (paragraphs of 3+ sentences). |
+| `sentence-monotony` | 5+ sentences in a paragraph whose lengths vary by under 3 words. |
+| `repeated-openings` | 3+ sentences in a paragraph open with the same two words. |
+| `banned-phrase` | A phrase from the language's generic-register list. |
+| `empty-phrase` | Filler that can be deleted without losing meaning. |
+| `unsupported-intensifier` | An intensifier in a sentence with no citation and no `fact:`/`result:` marker. |
+| `vague-literature` | A claim about a body of work with no citation in the sentence. |
+| `symmetrical-lists` | 3+ consecutive list items open with the same word. |
+| `excessive-hedging` | 3+ hedges in one sentence. |
+
+Every rule is a `warn`; the `ruthless` review mode turns them into `block` inside the writing
+pipeline (PRD §40). The same rules run as the writing pipeline's prose gate, and the
+`academic-prose` skill's `scripts/prose-lint.mjs` reaches them through this command, so there is
+one implementation of every rule.
+
+**No detector scores, ever.** PhDude does not compute, accept or target an AI-detection score
+(PRD §30c). Any option whose name contains "detect" or "humaniz" — on this or any other command —
+is refused with a policy error and exit 3.
+
 ### `phdude packs list|detect|apply <name>`
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's

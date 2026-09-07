@@ -281,6 +281,55 @@ export function renderFreshness(report) {
   return lines.join('\n') + '\n';
 }
 
+const PROSE_SCORES = [
+  ['specificity', 'Specificity'],
+  ['evidenceAlignment', 'Evidence Alignment'],
+  ['epistemicPrecision', 'Epistemic Precision'],
+  ['structuralVariation', 'Structural Variation'],
+  ['authorVoice', 'Author Voice'],
+  ['conciseness', 'Conciseness'],
+];
+
+const PROSE_SEVERITIES = ['block', 'warn', 'info'];
+
+// Three of the six sub-scores are computed against the evidence graph and the voice profile
+// (PRD §39.1), which a bare text file does not carry. Saying so beats printing a bare `n/a`,
+// and beats inventing a number from the prose alone.
+const NEEDS_CONTEXT = 'n/a (needs manuscript context)';
+
+/**
+ * @param {object} report - an Academic Prose Quality report, see application/prose.js
+ * @returns {string}
+ */
+export function renderProse(report) {
+  const aggregate = report.aggregate === null ? 'n/a' : `${report.aggregate}/100`;
+  const lines = [`Academic Prose Quality: ${aggregate}`, ''];
+
+  for (const [key, label] of PROSE_SCORES) {
+    const score = report.scores[key];
+    lines.push(`${label.padEnd(24)}${score === null ? NEEDS_CONTEXT : score}`);
+  }
+
+  lines.push('', `Observations (${report.observations.length}):`);
+  if (report.observations.length === 0) {
+    lines.push('  (none)');
+    return lines.join('\n') + '\n';
+  }
+
+  for (const severity of PROSE_SEVERITIES) {
+    const group = report.observations.filter((o) => o.severity === severity);
+    if (group.length === 0) continue;
+    lines.push('', `${severity.toUpperCase()} (${group.length}):`);
+    for (const o of group) {
+      lines.push(o.excerpt === '' ? `  - ${o.line}: ${o.message}` : `  - ${o.line}: ${o.excerpt}`);
+      if (o.excerpt !== '') lines.push(`    ${o.rule}: ${o.message}`);
+      if (o.hint) lines.push(`    Hint: ${o.hint}`);
+    }
+  }
+
+  return lines.join('\n') + '\n';
+}
+
 /**
  * @param {object} obj
  * @returns {string}

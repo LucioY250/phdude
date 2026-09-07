@@ -303,3 +303,51 @@ test('parseCli: --allow-network is a usage error on any command but research', (
     },
   );
 });
+
+test('parseCli: prose takes --file and --lang', () => {
+  const cli = parseCli(['prose', '--file', 'draft.md', '--lang', 'es']);
+  assert.equal(cli.command, 'prose');
+  assert.equal(cli.flags.file, 'draft.md');
+  assert.equal(cli.flags.lang, 'es');
+});
+
+// PRD §30c: an AI-detector score is not a quality metric, a test oracle or a skill input, so
+// the flag that would ask for one is refused before any command sees it.
+const DETECTOR_FLAGS = [
+  '--detector',
+  '--detector-target',
+  '--detector=gptzero',
+  '--humanize',
+  '--humanize-to',
+  '--humanize-to=0.2',
+  '--no-detection',
+  '--ai-detection-score',
+];
+
+for (const flag of DETECTOR_FLAGS) {
+  test(`parseCli: ${flag} is refused as a policy violation, on any command`, () => {
+    for (const argv of [
+      ['prose', '--file', 'draft.md', flag],
+      ['status', flag],
+      ['frobnicate', flag],
+    ]) {
+      assert.throws(
+        () => parseCli(argv),
+        (err) => {
+          assert.ok(err instanceof PhdudeError);
+          assert.equal(err.code, 'POLICY');
+          assert.equal(err.message, 'PhDude does not measure or target AI-detector scores');
+          assert.match(err.hint, /PRD §30c/);
+          return true;
+        },
+        `${argv.join(' ')} should be refused`,
+      );
+    }
+  });
+}
+
+test('parseCli: the detector guard reads option names, not option values', () => {
+  const cli = parseCli(['prose', '--file', 'notes-on-detection.md']);
+  assert.equal(cli.flags.file, 'notes-on-detection.md');
+  assert.equal(parseCli(['packs', 'detect']).sub, 'detect');
+});

@@ -142,6 +142,10 @@ export const COMMAND_ROWS = [
     'gaps',
     'Research gaps: questions, claims, sources, artifacts, and conflicts needing attention.',
   ],
+  [
+    'prose --file <path>',
+    'Academic Prose Quality report over a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
+  ],
   ['packs list|detect|apply', 'List, recommend, or apply field/method research packs.'],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
