@@ -1,0 +1,33 @@
+docs/adr/0009-execution-policy-and-results-contract.md
+  s_946fc7502759d8::t_c0f40b4af09576 35-37,50-56
+src/adapters/execution/local.js
+  s_946fc7502759d8::t_830d43eb2fa12a 1,9-12,16-18,27-38,54-56,64-83,86-137
+src/ports/analysis-runner.js
+  s_946fc7502759d8::t_970fc21ea45883 6,8-9,30,61,117-131
+tests/fixtures/scripts/flood.mjs
+  s_946fc7502759d8::t_a0b17cb5fd584f 1-2
+tests/fixtures/scripts/signal.mjs
+  s_946fc7502759d8::t_f9ba39b0940e31 1-2
+tests/fixtures/scripts/spawner.mjs
+  s_946fc7502759d8::t_d73c11f6fd11ca 1-6
+tests/fixtures/scripts/trap.mjs
+  s_946fc7502759d8::t_b00aee1f18bfe0 1-3
+tests/unit/adapters/local-runner.test.js
+  s_946fc7502759d8::t_9a9c394935ccac 1-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "30c10807b8fd326b7740d52a2d21f2439bdd339c",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
