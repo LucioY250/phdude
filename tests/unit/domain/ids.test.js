@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { makeId, makeSeqId, parseId, ID_PREFIXES } from '../../../src/domain/ids.js';
+import { makeHashId, makeId, makeSeqId, parseId, ID_PREFIXES } from '../../../src/domain/ids.js';
 import { normalizeText, normalizeKey, stableStringify } from '../../../src/domain/normalize.js';
 import { sha256 } from '../../../src/domain/hash.js';
 
@@ -35,8 +35,19 @@ test('makeSeqId and parseId', () => {
   assert.deepEqual(parseId('METH-0123456789'), { type: 'method', suffix: '0123456789' });
   assert.deepEqual(parseId('CAND-0123456789'), { type: 'candidate', suffix: '0123456789' });
   assert.deepEqual(parseId('SEARCH-0123456789'), { type: 'search', suffix: '0123456789' });
+  assert.deepEqual(parseId('DATASET-0123456789'), { type: 'dataset', suffix: '0123456789' });
   assert.equal(parseId('nope'), null);
-  assert.equal(Object.keys(ID_PREFIXES).length, 12);
+  assert.equal(Object.keys(ID_PREFIXES).length, 13);
+});
+
+test('makeHashId takes the first ten characters of a content hash', () => {
+  const bytes = new Uint8Array([1, 2, 3]);
+  assert.equal(
+    makeHashId('dataset', sha256(bytes)),
+    `DATASET-${makeId('artifact', bytes).slice(4)}`,
+  );
+  assert.match(makeHashId('dataset', sha256(bytes)), /^DATASET-[0-9a-f]{10}$/);
+  assert.throws(() => makeHashId('bogus', sha256(bytes)), /unknown entity type/);
 });
 
 test('stableStringify sorts keys at every depth and matches JSON.stringify semantics', () => {

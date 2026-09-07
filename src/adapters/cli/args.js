@@ -90,6 +90,7 @@ export const COMMAND_OPTIONS = {
     'allow-additions': { type: 'boolean' },
   },
   gaps: {},
+  data: {},
   authors: {
     from: { type: 'string', multiple: true },
     approved: { type: 'boolean' },

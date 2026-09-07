@@ -1,5 +1,5 @@
 import { identityKey } from './candidates.js';
-import { makeId, makeSeqId } from './ids.js';
+import { makeHashId, makeId, makeSeqId } from './ids.js';
 import { normalizeKey, stableStringify } from './normalize.js';
 import { PhdudeError } from './errors.js';
 
@@ -566,4 +566,54 @@ export function newSearch({
     runs,
     last_run,
   };
+}
+
+/**
+ * A file under `data/` registered as a research object. Its identity is the bytes: the same
+ * file re-added lands on the same record, and an edited one is a different dataset that
+ * `versions_of` links back to the first (see domain/datasets.js `linkDatasetVersions`).
+ * @param {object} p
+ * @param {string} p.path - workspace-relative, under `data/`
+ * @param {string} p.hash - sha256 of the file bytes
+ * @param {number} p.bytes
+ * @param {string} p.format - csv|tsv|json|xlsx|other
+ * @param {{rows: number, columns: object[]}} p.profile
+ * @param {string} [p.description]
+ * @param {string} [p.license]
+ * @param {boolean} [p.sensitive]
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.dataset`
+ */
+export function newDataset({
+  path,
+  hash,
+  bytes,
+  format,
+  profile,
+  description,
+  license,
+  sensitive = false,
+  actor,
+  created,
+}) {
+  const rel = requireText('path', path);
+  const dataset = {
+    schema: 'phdude.dataset',
+    version: 1,
+    id: makeHashId('dataset', hash),
+    created,
+    actor,
+    tags: [],
+    path: rel,
+    hash,
+    bytes,
+    format,
+    profile,
+    sensitive,
+    state: 'candidate',
+  };
+  if (description !== undefined) dataset.description = description;
+  if (license !== undefined) dataset.license = license;
+  return dataset;
 }

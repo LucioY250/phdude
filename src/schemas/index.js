@@ -26,6 +26,7 @@ export const SCHEMA_TYPES = [
   'method',
   'result',
   'candidate',
+  'dataset',
   'search',
   'decision',
   'manuscript',

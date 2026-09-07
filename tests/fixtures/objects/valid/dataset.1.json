@@ -1,0 +1,29 @@
+{
+  "schema": "phdude.dataset",
+  "version": 1,
+  "id": "DATASET-0123456789",
+  "created": "2026-09-07T00:00:00Z",
+  "actor": { "researcher": "ada", "agent": "cli" },
+  "tags": [],
+  "path": "data/survey.csv",
+  "hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "bytes": 128,
+  "format": "csv",
+  "profile": {
+    "rows": 3,
+    "columns": [
+      {
+        "name": "age",
+        "inferred_type": "number",
+        "missing": 0,
+        "distinct": 3,
+        "distinct_truncated": false,
+        "samples": ["31", "44", "52"]
+      }
+    ]
+  },
+  "description": "Pilot survey responses",
+  "license": "CC-BY-4.0",
+  "sensitive": false,
+  "state": "candidate"
+}

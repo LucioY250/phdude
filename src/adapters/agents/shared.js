@@ -143,6 +143,11 @@ export const COMMAND_ROWS = [
     'Research gaps: questions, claims, sources, artifacts, and conflicts needing attention.',
   ],
   [
+    'data add|list|show|profile',
+    'Register a file under data/ as a dataset: its bytes are its identity, and its profile ' +
+      'reports rows, column types, missing cells and distinct values.',
+  ],
+  [
     'prose <section> | --file <path>',
     'Academic Prose Quality report over a manuscript section or a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
   ],
