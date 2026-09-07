@@ -13,6 +13,7 @@ import { initWorkspace } from '../src/application/init.js';
 import { ingest } from '../src/application/ingest.js';
 import { addEntity } from '../src/application/add.js';
 import { promote, propose } from '../src/application/decide.js';
+import { link } from '../src/application/link.js';
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ROOT = join(PACKAGE_ROOT, 'examples', 'generic-thesis');
@@ -71,6 +72,13 @@ sample size, using stratified sampling across three campuses.
 Findings are broadly consistent with Survey Alpha.
 `,
   'sources/participants.csv': `metric,value\ncountry,Peru\n`,
+  // Classified below as `notes`, and deliberately never mined: no source, fact or evidence
+  // points at it, which is the `artifact-unmined` gap.
+  'sources/lab-notebook.md': `# Reading notes
+
+Loose notes taken while reading the three surveys. Nothing here has been turned into a source,
+a fact or an evidence item yet.
+`,
 };
 
 // DOS/FAT timestamps aside, a plain fixed mtime keeps ingest's artifact.mtime field (and hence
@@ -112,6 +120,11 @@ export async function generate(root) {
   const artBeta = artifactIdFor(artifacts, 'sources/survey-beta.md');
   const artGamma = artifactIdFor(artifacts, 'sources/survey-gamma.md');
   const artCsv = artifactIdFor(artifacts, 'sources/participants.csv');
+  const artNotes = artifactIdFor(artifacts, 'sources/lab-notebook.md');
+
+  // Classifying an artifact is bootstrap's first step, and it is what separates an unclassified
+  // file from one that is classified but never mined (`phdude gaps`' `artifact-unmined`).
+  await addEntity(deps, 'artifact-role', { id: artNotes, role: 'notes' });
 
   const { obj: source1 } = await addEntity(deps, 'source', {
     title: 'Survey Alpha and Beta: Note-Taking App Adoption',
@@ -154,9 +167,21 @@ export async function generate(root) {
   });
   // No claim addresses this question and no method covers it - `phdude gaps` reports both
   // `question-without-claims` and `question-without-method` for it.
-  await addEntity(deps, 'question', {
+  const { obj: rq2 } = await addEntity(deps, 'question', {
     text: 'Does note-taking app adoption correlate with academic performance?',
     objectives: ['Assess correlation between reported app usage and course outcomes.'],
+  });
+  // Exactly one claim addresses this question, and it is still `candidate` - the
+  // `question-only-candidates` gap. The method below covers it, so that is the only gap it has.
+  const { obj: rq3 } = await addEntity(deps, 'question', {
+    text: 'How consistent are reported adoption rates across institutions?',
+    objectives: ['Compare adoption estimates reported by independent institutions.'],
+  });
+
+  // No claim addresses RQ-2, so nothing tests this hypothesis - `hypothesis-untested`.
+  await addEntity(deps, 'hypothesis', {
+    text: 'Students who report heavier note-taking app use also report better course outcomes.',
+    questions: [rq2.id],
   });
 
   await addEntity(deps, 'method', {
@@ -167,7 +192,7 @@ export async function generate(root) {
     instruments: ['note-taking app adoption questionnaire'],
     analysis: ['descriptive comparison of reported daily use'],
     limitations: ['self-reported use', 'one university system'],
-    questions: [rq.id],
+    questions: [rq.id, rq3.id],
   });
 
   const { obj: evidence1 } = await addEntity(deps, 'evidence', {
@@ -206,6 +231,15 @@ export async function generate(root) {
     strength: 'weak',
   });
 
+  // Cites Survey Beta's artifact directly, so it is the second half of the contradiction below
+  // and a second claim depending on a conflicting artifact.
+  const { obj: evidenceBeta } = await addEntity(deps, 'evidence', {
+    source: artBeta,
+    locator: 'Results',
+    excerpt: 'Reported daily use was slightly lower than in Survey Alpha (Survey Beta).',
+    strength: 'moderate',
+  });
+
   const { obj: claim1 } = await addEntity(deps, 'claim', {
     statement:
       'Daily use of mobile note-taking apps is common among surveyed undergraduate students.',
@@ -234,6 +268,30 @@ export async function generate(root) {
     questions: [rq.id],
     sections: ['Discussion'],
   });
+
+  // The only claim addressing RQ-3, and still `candidate` - `question-only-candidates`.
+  await addEntity(deps, 'claim', {
+    statement: 'Cross-institutional evidence points to consistently high adoption.',
+    kind: 'literature',
+    supported_by: [evidence3.id],
+    questions: [rq3.id],
+  });
+
+  // Two claims that cannot both be true, each with its own moderate evidence. Recording the
+  // contradiction moves both to `disputed` with no Decision (PRD S3.5), and they stay there:
+  // resolving one is the researcher's call, and `phdude gaps` reports the open `disputed-pair`.
+  const { obj: claimAgree } = await addEntity(deps, 'claim', {
+    statement: 'Daily note-taking app use is comparable across all three surveyed samples.',
+    kind: 'empirical',
+    supported_by: [evidence1.id],
+  });
+  const { obj: claimDisagree } = await addEntity(deps, 'claim', {
+    statement:
+      'Daily note-taking app use is materially lower in the sample recruited through social media.',
+    kind: 'empirical',
+    supported_by: [evidenceBeta.id],
+  });
+  await link(deps, claimAgree.id, { contradicts: claimDisagree.id });
 
   // Fact ids are content-derived from `key + value + from.artifact` (see domain/ids.js), so
   // this is the PRD §38 pattern: 312 from Alpha, 300 from Beta, 312 from Gamma - three distinct

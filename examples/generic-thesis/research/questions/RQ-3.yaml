@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-3
+created: 2026-09-01T00:00:20.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: How consistent are reported adoption rates across institutions?
+objectives:
+  - Compare adoption estimates reported by independent institutions.
+state: candidate

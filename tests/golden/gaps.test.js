@@ -25,12 +25,22 @@ test('gaps golden: examples/generic-thesis renders exactly like tests/golden/exp
   assert.equal(text, expected);
 });
 
-test('gaps golden: several gap kinds appear on the example', async () => {
+// The example is generated (scripts/make-example.mjs) to reach every gap kind the report can
+// produce, so the golden above is a worked example of each rather than a sample of a few.
+test('gaps golden: every gap kind appears on the example', async () => {
   const store = new FsStore(WORKSPACE);
   const report = await gaps({ store });
-  const kinds = new Set(report.gaps.map((g) => g.kind));
-  assert.ok(
-    kinds.size >= 3,
-    `expected at least 3 distinct gap kinds, got: ${[...kinds].join(', ')}`,
-  );
+  const kinds = [...new Set(report.gaps.map((g) => g.kind))].sort();
+  assert.deepEqual(kinds, [
+    'artifact-unmined',
+    'claim-weak-evidence',
+    'claim-without-evidence',
+    'disputed-pair',
+    'hypothesis-untested',
+    'open-conflict',
+    'question-only-candidates',
+    'question-without-claims',
+    'question-without-method',
+    'source-uncited',
+  ]);
 });

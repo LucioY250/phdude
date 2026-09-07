@@ -4,7 +4,7 @@ Resolve the conflicting value(s) for "sample_size"
 
 Why:
 - sample_size: 312 participants (ART-35146e2f6d, ART-0772a215de) vs 300 participants (ART-f7ced78004)
-- 1 claim(s) depend on the conflicting artifacts
+- 3 claim(s) depend on the conflicting artifacts
 
 Expected impact:
 HIGH

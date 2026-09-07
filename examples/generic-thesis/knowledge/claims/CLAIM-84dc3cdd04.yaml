@@ -1,0 +1,21 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-84dc3cdd04
+created: 2026-09-01T00:00:49.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Daily note-taking app use is materially lower in the sample recruited through social media.
+kind: empirical
+state: disputed
+supported_by:
+  - EVID-6c03150777
+questions: []
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-f7ced78004
+contradicts:
+  - CLAIM-9f7abf99e9

@@ -1,0 +1,12 @@
+schema: phdude.hypothesis
+version: 1
+id: H-1
+created: 2026-09-01T00:00:22.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Students who report heavier note-taking app use also report better course outcomes.
+questions:
+  - RQ-2
+state: candidate

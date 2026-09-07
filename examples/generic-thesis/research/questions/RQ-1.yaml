@@ -1,7 +1,7 @@
 schema: phdude.question
 version: 1
 id: RQ-1
-created: 2026-09-01T00:00:14.000Z
+created: 2026-09-01T00:00:16.000Z
 actor:
   researcher: example
   agent: script

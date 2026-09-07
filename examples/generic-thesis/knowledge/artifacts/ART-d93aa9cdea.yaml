@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-d93aa9cdea
+created: 2026-09-01T00:00:01.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/lab-notebook.md
+paths:
+  - sources/lab-notebook.md
+hash: d93aa9cdeaf8b24fd6d9ba556b6ed4a90c7f1d455855aac37d6d2a285756fd67
+bytes: 144
+mime: text/markdown
+kind: md
+role: notes
+extracted:
+  status: ok
+  method: text
+  text_chars: 144
+  sections: 1
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z
