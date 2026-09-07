@@ -1,0 +1,23 @@
+docs/superpowers/plans/2026-09-07-phdude-v0.1.md
+  s_946fc7502759d8::t_247b5d44a758d6 361-542
+  s_946fc7502759d8::t_18daa8bf09027f 719-834
+  s_946fc7502759d8::t_141f319c0df497 543-718
+  s_946fc7502759d8::t_c0094c175171b8 1-360
+  s_946fc7502759d8::t_82e3708a333305 835-878
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e05ca1f70ae49438c3b57cecf8578bcd9386b4ff",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
