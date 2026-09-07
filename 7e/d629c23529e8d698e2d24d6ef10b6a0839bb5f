@@ -1,0 +1,123 @@
+src/domain/entities.js
+  s_946fc7502759d8::t_da26af576ced83 208-211,226-229,251-254
+tests/unit/domain/bibkey.test.js
+  s_946fc7502759d8::t_9954878b698a92 1-19,24-108
+  s_946fc7502759d8::t_4f40087b7d3d7a 20-23
+examples/generic-thesis/.phdude/skills/literature/SKILL.md
+  s_946fc7502759d8::t_b23ddf553c0b8a 1-62
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_bf1ce3f65de906 17
+  s_946fc7502759d8::t_ca168bb5493bd1 167-170
+  s_946fc7502759d8::t_97d6f768b6ca5b 37
+examples/generic-thesis/knowledge/claims/CLAIM-3d035aa05b.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+src/application/cite.js
+  s_946fc7502759d8::t_85241b0d0ca55e 1-193
+src/adapters/cli/commands/cite.js
+  s_946fc7502759d8::t_340b7687b723f8 1-57
+examples/generic-thesis/knowledge/facts/FACT-270dc9059c.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+examples/generic-thesis/knowledge/facts/FACT-f62e1a2f34.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+README.md
+  s_946fc7502759d8::t_87b5a5d359e5d9 305
+examples/generic-thesis/.gitignore
+  s_946fc7502759d8::t_be07cbf229d3c0 6-7
+examples/generic-thesis/research/methods/METH-b137e5e2a3.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+commands/cite.md
+  s_946fc7502759d8::t_23a3a0488ec6e7 1-18
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_0cb3ad8dfe4291 249-255
+src/domain/bibkey.js
+  s_946fc7502759d8::t_606c9c3d5cea70 1-8,10-16,20-89
+  s_946fc7502759d8::t_4f40087b7d3d7a 17-19
+  s_946fc7502759d8::t_01073b5b6f59dc 9
+examples/generic-thesis/knowledge/evidence/EVID-09913dd0eb.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 1-18
+tests/golden/cite.test.js
+  s_946fc7502759d8::t_99a7dba0e243f0 1-35
+docs/cli.md
+  s_946fc7502759d8::t_41b66cd7c77c25 300-341
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_b23ddf553c0b8a 5-20
+src/adapters/agents/claude-code.js
+  s_946fc7502759d8::t_d5b7392d880631 20-21
+scripts/make-example.mjs
+  s_946fc7502759d8::t_471c3b7909f460 116,130-148
+  s_946fc7502759d8::t_ce23eaaa9a55b5 149,175-191
+examples/generic-thesis/decisions/DEC-7aa12a7b78.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+examples/generic-thesis/knowledge/claims/CLAIM-ab73621987.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+examples/generic-thesis/knowledge/evidence/EVID-495666361d.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 1-16
+examples/generic-thesis/knowledge/sources/SRC-8295946d20.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 1-15
+tests/golden/expected/references.bib
+  s_946fc7502759d8::t_89f6c4abf5a624 1-25
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_544f3df3af4d7c 4
+  s_946fc7502759d8::t_a12b4d5235fb0c 841-871,878-887,894-895,899,901,907-908,910-913
+  s_946fc7502759d8::t_c0c59d815345e5 872-877,888-893,896-898,900,902-906,909
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_9e8709c7d34d95 57
+  s_946fc7502759d8::t_6f2ef6f7055c0f 236
+src/domain/bibtex.js
+  s_946fc7502759d8::t_4f40087b7d3d7a 56-57
+  s_946fc7502759d8::t_a1da38ae73a239 1-55,58-122
+schemas/source.json
+  s_946fc7502759d8::t_734ddd62f2fd37 29-43
+examples/generic-thesis/knowledge/claims/CLAIM-8ad284d305.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+tests/integration/cite.test.js
+  s_946fc7502759d8::t_99f700a31dbd5a 1-2,4-45,47-52,54-155,158-161,163-192,206,210,213-217,219-238,240-243,245-296,308-318
+  s_946fc7502759d8::t_4f40087b7d3d7a 218,239
+  s_946fc7502759d8::t_c562600301bff7 244
+  s_946fc7502759d8::t_b8cc987b7598b5 3
+  s_946fc7502759d8::t_af78184d489857 46,53
+  s_946fc7502759d8::t_aa63e22ac439e0 156-157,162
+  s_946fc7502759d8::t_b6c3af6d28e822 297-307
+  s_946fc7502759d8::t_30e3dd46e1ad1b 193-205,207-209,211-212
+examples/generic-thesis/knowledge/facts/FACT-2bc4462edb.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+examples/generic-thesis/knowledge/facts/FACT-54af7fa906.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+examples/generic-thesis/research/questions/RQ-1.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+docs/workspace.md
+  s_946fc7502759d8::t_94259b916dbafb 81
+tests/unit/domain/bibtex.test.js
+  s_946fc7502759d8::t_397d098d00d5fd 1-43,60-162,166-181,186
+  s_946fc7502759d8::t_4f40087b7d3d7a 44-59,163-165,182-185
+examples/generic-thesis/knowledge/evidence/EVID-93cd3745fc.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 4
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_fef149d574ef28 19
+examples/generic-thesis/knowledge/sources/SRC-077426a939.yaml
+  s_946fc7502759d8::t_b23ddf553c0b8a 1-18
+skills/literature/SKILL.md
+  s_946fc7502759d8::t_e4ee18c43e9a78 1-62
+src/application/add.js
+  s_946fc7502759d8::t_5c37e70f9cb650 48-62
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_0a1335a4adac94 14,16
+defaults/workspace.gitignore
+  s_946fc7502759d8::t_4c4da2991ec280 6-7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "7ed629c23529e8d698e2d24d6ef10b6a0839bb5f",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
