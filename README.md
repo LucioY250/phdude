@@ -55,7 +55,9 @@ opinion about the literature it holds.
   and claims its evidence reaches, the strongest evidence citing it, the facts drawn from its
   artifacts. A row with no questions is a source you have cited but never actually used.
 - **Research gaps.** `phdude gaps` reports ten kinds of gap by severity, each with the reason it
-  fired and a command that addresses it. `phdude next` recommends it once three accumulate.
+  fired and a command that addresses it. `phdude next` recommends it on the first high-severity
+  gap, or once three of any severity accumulate, and never calls a workspace with open gaps
+  consistent.
 - **Contradictions.** `phdude link CLAIM-a --contradicts CLAIM-b` moves both claims to
   `disputed` with no decision needed, because surfacing a contradiction should never wait for
   approval. Getting one back out does: the decision has to name which claim survives.

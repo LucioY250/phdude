@@ -407,7 +407,10 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 | `disputed-pair` | high | A pair of claims that contradict each other with neither side `rejected` (same rule as `status`'s disputed pairs). |
 
 `gaps` is read-only; it writes no event. `next` recommends running it (rule `gaps`, medium)
-once 3 or more gaps exist and no higher-impact rule has already fired.
+once one high-severity gap or 3 gaps of any severity exist; the ranking decides where that lands
+among the higher-impact rules. `next`'s closing `consistent` line reads
+`N open gap(s); run phdude gaps` whenever the report is not empty, and claims the workspace is
+consistent only when it is.
 
 ### `phdude packs list|detect|apply <name>`
 

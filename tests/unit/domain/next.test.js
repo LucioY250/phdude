@@ -186,22 +186,7 @@ test('recommendNext: unsupported-claims suggests a link command naming the claim
 });
 
 test('recommendNext: fully consistent workspace -> only consistent action', () => {
-  const rq = question('RQ-1');
-  const addressingClaim = claim('CLAIM-0000000001', {
-    state: 'supported',
-    supported_by: ['EVID-0000000001'],
-    questions: [rq.id],
-  });
-  const ev = evidence('EVID-0000000001', 'ART-a');
-  const art = artifact('ART-a', 'ok');
-  art.role = 'paper';
-
-  const snapshot = emptySnapshot({
-    questions: [rq],
-    claims: [addressingClaim],
-    evidence: [ev],
-    artifacts: [art],
-  });
+  const snapshot = uncitedSourcesSnapshot(0);
 
   const actions = recommendNext(snapshot, []);
   assert.equal(actions.length, 1);
@@ -391,12 +376,42 @@ test('recommendNext: gaps does not fire below the 3-gap threshold', () => {
   assert.ok(!actions.some((a) => a.rule === 'gaps'));
 });
 
-test('recommendNext: gaps does not fire once a high-impact rule has already fired, even at >= 3 gaps', () => {
+test('recommendNext: gaps still fires when a high-impact rule has already fired', () => {
   const snapshot = uncitedSourcesSnapshot(3);
   snapshot.artifacts.push(artifact('ART-bad', 'failed', ['boom']));
   const actions = recommendNext(snapshot, []);
   assert.ok(actions.some((a) => a.rule === 'extraction-unavailable' && a.impact === 'high'));
-  assert.ok(!actions.some((a) => a.rule === 'gaps'));
+  assert.ok(
+    actions.some((a) => a.rule === 'gaps'),
+    'the ranking, not the rule, decides order',
+  );
+});
+
+test('recommendNext: gaps fires on a single high-severity gap, below the 3-gap threshold', () => {
+  const snapshot = uncitedSourcesSnapshot(0);
+  snapshot.questions.push(question('RQ-2'));
+  const actions = recommendNext(snapshot, []);
+  const gapsAction = actions.find((a) => a.rule === 'gaps');
+  assert.ok(gapsAction, 'an unaddressed question is a high gap and outranks the count');
+  assert.ok(gapsAction.why.some((w) => /high=1/.test(w)));
+  assert.ok(gapsAction.dependents < 3);
+});
+
+test('recommendNext: consistent reports the open gaps rather than claiming consistency', () => {
+  const actions = recommendNext(uncitedSourcesSnapshot(2), []);
+  assert.ok(!actions.some((a) => a.rule === 'gaps'), '2 low gaps stay below the threshold');
+
+  const consistent = actions.at(-1);
+  assert.equal(consistent.rule, 'consistent');
+  assert.equal(consistent.action, '2 open gap(s); run phdude gaps');
+  assert.equal(consistent.impact, 'low');
+  assert.deepEqual(consistent.why, ['2 gap(s) found: high=0, medium=0, low=2']);
+});
+
+test('recommendNext: consistent claims consistency only with zero gaps', () => {
+  const actions = recommendNext(uncitedSourcesSnapshot(0), []);
+  assert.equal(actions.length, 1);
+  assert.equal(actions[0].action, 'Workspace is consistent; add new sources or refine claims');
 });
 
 test('recommendNext: gaps is ordered after question-gaps and before consistent', () => {

@@ -23,7 +23,8 @@ model anywhere in the runtime, and still no network call.
   it directly, the facts drawn from its artifacts, and any pack-declared method tags.
 - **Research gaps.** `phdude gaps` reports ten kinds of gap grouped by severity, each with the
   reason it fired and a runnable command. `phdude next` gained a matching rule that recommends
-  the report once three or more gaps exist and nothing higher-impact has fired.
+  the report once one high-severity gap or three gaps of any severity exist, and its closing
+  line reports the open gap count rather than claiming the workspace is consistent.
 - **Claim contradictions.** `phdude link CLAIM-a --contradicts CLAIM-b` records that two claims
   cannot both be true. The relation is symmetric and moves both sides to `disputed` with no
   decision required — a `canonical` claim included, because surfacing a contradiction should not

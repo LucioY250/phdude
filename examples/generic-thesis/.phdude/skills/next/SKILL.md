@@ -23,11 +23,12 @@ phdude next --json
 Returns `{ actions, top }`, where `actions` is every candidate action ranked by impact, then by
 how many objects depend on it, then by rule order (PRD S45).
 
-One rule is worth knowing by name. `gaps` fires only when the workspace has three or more
-research gaps *and* no high-impact rule fired this run, and its command is `phdude gaps`. Seeing
-it at the top means nothing urgent is outstanding and the useful next move is to work the gap
-report — follow `[[literature]]` for how to read one. Seeing it absent while gaps exist means
-something higher-impact already points at the same underlying problem; do that instead.
+Two rules are worth knowing by name. `gaps` fires when the workspace has at least one
+high-severity research gap or three or more gaps in total, and its command is `phdude gaps`.
+Seeing it at the top means the useful next move is to work the gap report — follow
+`[[literature]]` for how to read one. The last entry is always `consistent`: it reads
+`Workspace is consistent` only when the gap report is empty, and `N open gap(s); run phdude
+gaps` otherwise, so never present a workspace as settled on the strength of that line alone.
 
 ## Present the top 3
 
