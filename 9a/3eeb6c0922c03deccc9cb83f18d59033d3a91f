@@ -1,0 +1,21 @@
+tests/unit/domain/textstats.test.js
+  s_946fc7502759d8::t_aecef4d423afbc 121-137
+src/domain/textstats.js
+  s_946fc7502759d8::t_2a0a2b66d42fd7 76-79,81-83,86-103,105,107-116,118-122
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "9a3eeb6c0922c03deccc9cb83f18d59033d3a91f",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
