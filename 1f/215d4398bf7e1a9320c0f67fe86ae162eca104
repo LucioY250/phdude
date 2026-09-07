@@ -1,0 +1,22 @@
+CHANGELOG.md
+  s_946fc7502759d8::t_3fd74a895da475 31-32,63-71,78-88
+  s_946fc7502759d8::t_7cc5ba4425df51 9-30,33-62,72-77,89-97,143-144
+package.json
+  s_946fc7502759d8::t_7cc5ba4425df51 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "1f215d4398bf7e1a9320c0f67fe86ae162eca104",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
