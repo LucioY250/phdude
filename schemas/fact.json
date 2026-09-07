@@ -1,0 +1,27 @@
+{
+  "$id": "phdude://fact",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.fact" },
+        "key": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+        "value": { "type": ["string", "number", "boolean"] },
+        "unit": { "type": "string" },
+        "from": {
+          "type": "object",
+          "properties": {
+            "artifact": { "$ref": "phdude://common#/$defs/id" },
+            "locator": { "type": "string" }
+          },
+          "required": ["artifact"],
+          "additionalProperties": false
+        },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": ["key", "value", "from", "state"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

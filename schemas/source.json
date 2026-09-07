@@ -1,0 +1,35 @@
+{
+  "$id": "phdude://source",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.source" },
+        "title": { "type": "string" },
+        "authors": { "type": "array", "items": { "type": "string" } },
+        "year": { "type": "integer" },
+        "venue": { "type": "string" },
+        "doi": { "type": "string" },
+        "url": { "type": "string" },
+        "type": {
+          "enum": [
+            "article",
+            "book",
+            "chapter",
+            "thesis",
+            "report",
+            "preprint",
+            "web",
+            "dataset",
+            "other"
+          ]
+        },
+        "artifacts": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": ["title", "authors", "type", "artifacts", "state"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

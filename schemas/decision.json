@@ -1,0 +1,30 @@
+{
+  "$id": "phdude://decision",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.decision" },
+        "title": { "type": "string" },
+        "rationale": { "type": "string" },
+        "proposed_by": { "$ref": "phdude://common#/$defs/actor" },
+        "approved_by": { "type": "array", "items": { "type": "string" } },
+        "status": { "enum": ["proposed", "approved", "rejected", "superseded"] },
+        "change": { "type": "object" },
+        "affects": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+        "resolved": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "title",
+        "rationale",
+        "proposed_by",
+        "approved_by",
+        "status",
+        "change",
+        "affects"
+      ]
+    }
+  ],
+  "unevaluatedProperties": false
+}

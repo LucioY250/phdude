@@ -1,0 +1,9 @@
+{
+  "schema": "phdude.project",
+  "version": 1,
+  "title": "Untitled Study",
+  "fields": ["information-systems"],
+  "methods": ["survey"],
+  "outputs": ["thesis"],
+  "agents": ["researcher"]
+}

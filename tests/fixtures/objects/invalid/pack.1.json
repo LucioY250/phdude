@@ -1,0 +1,13 @@
+{
+  "schema": "phdude.pack",
+  "version": 1,
+  "name": "Quantitative_Survey",
+  "kind": "method",
+  "description": "Bad pack name.",
+  "terminology": ["sample size"],
+  "detect": { "keywords": ["survey"] },
+  "reviewers": ["stats-reviewer"],
+  "recommended_checks": ["sample-size-reported"],
+  "skills": ["survey-design-review"],
+  "schemas": ["fact"]
+}

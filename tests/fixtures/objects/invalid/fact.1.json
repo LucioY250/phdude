@@ -1,0 +1,11 @@
+{
+  "schema": "phdude.fact",
+  "version": 1,
+  "id": "FACT-9c4e2a7b15",
+  "created": "2026-08-12T14:30:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "key": "Sample Size",
+  "value": 312,
+  "from": { "artifact": "ART-4f2a9c1d7e" },
+  "state": "canonical"
+}

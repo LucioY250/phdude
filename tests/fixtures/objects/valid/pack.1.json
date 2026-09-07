@@ -1,0 +1,13 @@
+{
+  "schema": "phdude.pack",
+  "version": 1,
+  "name": "quantitative-survey",
+  "kind": "method",
+  "description": "Conventions and checks for survey-based quantitative research designs.",
+  "terminology": ["sample size", "response rate", "Likert scale", "construct validity"],
+  "detect": { "keywords": ["survey", "questionnaire", "respondents", "Likert"] },
+  "reviewers": ["stats-reviewer"],
+  "recommended_checks": ["sample-size-reported", "response-rate-reported"],
+  "skills": ["survey-design-review"],
+  "schemas": ["fact", "result"]
+}

@@ -1,0 +1,50 @@
+{
+  "$id": "phdude://artifact",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.artifact" },
+        "path": { "type": "string" },
+        "paths": { "type": "array", "items": { "type": "string" } },
+        "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer" },
+        "mime": { "type": "string" },
+        "kind": {
+          "enum": ["pdf", "docx", "pptx", "xlsx", "csv", "md", "txt", "bib", "tex", "other"]
+        },
+        "role": {
+          "enum": [
+            "paper",
+            "thesis-draft",
+            "presentation",
+            "dataset",
+            "questionnaire",
+            "notes",
+            "report",
+            "unknown"
+          ]
+        },
+        "extracted": {
+          "type": "object",
+          "properties": {
+            "status": { "enum": ["ok", "partial", "unavailable", "failed"] },
+            "method": { "type": "string" },
+            "text_chars": { "type": "integer" },
+            "sections": { "type": "integer" },
+            "tables": { "type": "integer" },
+            "warnings": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["status", "method", "text_chars", "sections", "tables", "warnings"],
+          "additionalProperties": false
+        },
+        "versions_of": { "$ref": "phdude://common#/$defs/id" },
+        "latest": { "type": "boolean" },
+        "mtime": { "type": "string", "format": "date-time" }
+      },
+      "required": ["path", "paths", "hash", "bytes", "mime", "kind", "role", "extracted", "mtime"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

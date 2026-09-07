@@ -1,0 +1,19 @@
+{
+  "$id": "phdude://project",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": { "const": "phdude.project" },
+    "version": { "const": 1 },
+    "title": { "type": "string" },
+    "language": { "type": "string" },
+    "fields": { "type": "array", "items": { "type": "string" } },
+    "methods": { "type": "array", "items": { "type": "string" } },
+    "outputs": { "type": "array", "items": { "type": "string" } },
+    "mode": { "enum": ["lite", "full", "ruthless", "off"] },
+    "agents": { "type": "array", "items": { "type": "string" } },
+    "packs_recommended": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["schema", "version", "title", "fields", "methods", "outputs", "mode", "agents"],
+  "additionalProperties": false
+}

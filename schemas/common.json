@@ -1,0 +1,33 @@
+{
+  "$id": "phdude://common",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^(ART|SRC|CLAIM|EVID|FACT|RESULT|DEC)-[0-9a-f]{10}$|^(RQ|H)-[0-9]+$"
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "researcher": { "type": "string" },
+        "agent": { "type": "string" }
+      },
+      "required": ["researcher"],
+      "additionalProperties": false
+    },
+    "state": { "enum": ["canonical", "supported", "candidate", "disputed", "rejected"] },
+    "base": {
+      "type": "object",
+      "properties": {
+        "schema": { "type": "string" },
+        "version": { "const": 1 },
+        "id": { "$ref": "#/$defs/id" },
+        "created": { "type": "string", "format": "date-time" },
+        "actor": { "$ref": "#/$defs/actor" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "ext": { "type": "object" }
+      },
+      "required": ["schema", "version", "id", "created", "actor"]
+    }
+  }
+}

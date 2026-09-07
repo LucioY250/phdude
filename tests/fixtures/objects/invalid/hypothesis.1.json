@@ -1,0 +1,10 @@
+{
+  "schema": "phdude.hypothesis",
+  "version": 1,
+  "id": "H-1",
+  "created": "2026-08-05T08:10:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "text": "Smaller SMEs are less likely to adopt AI tools.",
+  "questions": ["QUESTION-1"],
+  "state": "candidate"
+}

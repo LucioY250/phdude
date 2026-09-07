@@ -1,0 +1,14 @@
+{
+  "$id": "phdude://event",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "ts": { "type": "string", "format": "date-time" },
+    "op": { "type": "string" },
+    "actor": { "$ref": "phdude://common#/$defs/actor" },
+    "ids": { "type": "array", "items": { "type": "string" } },
+    "summary": { "type": "string" }
+  },
+  "required": ["ts", "op", "actor", "ids", "summary"],
+  "additionalProperties": false
+}
