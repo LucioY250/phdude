@@ -2,8 +2,9 @@ import { PhdudeError } from './errors.js';
 
 // Nothing leaves the machine unless the workspace says so (PRD S71): the policy is read as
 // closed whenever it is absent, unreadable or says anything other than a literal true.
-const NETWORK_HINT =
-  'set network.enabled: true in .phdude/research-policy.yaml or pass --allow-network';
+export const ENABLE_NETWORK = 'set network.enabled: true in .phdude/research-policy.yaml';
+
+const NETWORK_HINT = `${ENABLE_NETWORK} or pass --allow-network`;
 
 export const DEFAULT_PROVIDERS = ['openalex', 'crossref', 'arxiv'];
 

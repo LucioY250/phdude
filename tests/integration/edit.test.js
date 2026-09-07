@@ -209,3 +209,26 @@ test('edit: an artifact takes only role and tags', async () => {
     code: 'VALIDATION',
   });
 });
+
+test("edit: a result's `from` is editable, its `summary` is not", async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: result } = await addEntity(deps, 'result', {
+    summary: 'Adoption rose 12% between waves.',
+    from: 'analysis/wave-comparison.R',
+    values: { delta: 0.12 },
+  });
+
+  const updated = await edit(deps, result.id, { from: 'analysis/wave-comparison-v2.R' });
+  assert.equal(updated.id, result.id, `only \`summary\` is the result's identity`);
+  assert.equal(updated.from, 'analysis/wave-comparison-v2.R');
+
+  await assert.rejects(
+    () => edit(deps, result.id, { summary: 'Adoption fell.' }),
+    (err) => {
+      assert.equal(err.code, 'VALIDATION');
+      assert.match(err.message, /cannot edit the identity field\(s\) of a result: summary/);
+      assert.match(err.hint, /a result is identified by summary/);
+      return true;
+    },
+  );
+});

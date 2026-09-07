@@ -517,3 +517,38 @@ test('recommendNext: candidates-pending does not fire below 5, and counts only u
     'an accepted candidate is not waiting for a verdict',
   );
 });
+
+test('recommendNext: stale-search opens the network policy first when it is closed', () => {
+  const rq = question('RQ-1');
+  const never = recommendNext(emptySnapshot({ questions: [rq], networkEnabled: false }), []).find(
+    (a) => a.rule === 'stale-search',
+  );
+
+  assert.equal(
+    never.command,
+    'set network.enabled: true in .phdude/research-policy.yaml, then phdude research "text RQ-1" --question RQ-1',
+  );
+
+  const aged = recommendNext(
+    emptySnapshot({
+      questions: [rq],
+      searches: [search('SEARCH-0000000001', rq.id, '2026-01-01T12:00:00Z')],
+      networkEnabled: false,
+    }),
+    [],
+  ).find((a) => a.rule === 'stale-search');
+
+  assert.equal(
+    aged.command,
+    'set network.enabled: true in .phdude/research-policy.yaml, then phdude research-fresh --question RQ-1',
+  );
+});
+
+test('recommendNext: stale-search recommends the search itself when the network is open', () => {
+  const rq = question('RQ-1');
+  const action = recommendNext(emptySnapshot({ questions: [rq], networkEnabled: true }), []).find(
+    (a) => a.rule === 'stale-search',
+  );
+
+  assert.equal(action.command, `phdude research "text RQ-1" --question RQ-1`);
+});

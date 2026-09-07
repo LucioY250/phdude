@@ -545,14 +545,24 @@ export async function fresh(deps, { question = null, all = false, allowNetwork =
   const warnings = [];
 
   for (const record of due) {
-    const result = await search(deps, {
-      query: record.query,
-      question: record.question,
-      providers: record.providers,
-      from: record.filters?.from,
-      limit: record.filters?.limit ?? undefined,
-      allowNetwork,
-    });
+    let result;
+    try {
+      result = await search(deps, {
+        query: record.query,
+        question: record.question,
+        providers: record.providers,
+        from: record.filters?.from,
+        limit: record.filters?.limit ?? undefined,
+        allowNetwork,
+      });
+    } catch (err) {
+      // A stored search can outlive what it points at - a question deleted by hand, say. That
+      // is one unrunnable record, not a reason to throw away every re-run already done in this
+      // invocation, so it is reported the way a failing provider is and the loop carries on.
+      if (err?.code !== 'VALIDATION') throw err;
+      warnings.push(`skipped ${record.id}: ${err.message}`);
+      continue;
+    }
     reran.push(record.id);
     newCandidates.push(...result.candidates.created);
     warnings.push(...result.warnings);

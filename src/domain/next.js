@@ -2,7 +2,7 @@ import { buildGraph } from './lineage.js';
 import { openConflicts } from './conflicts.js';
 import { questionFreshness } from './freshness.js';
 import { findGaps } from './gaps.js';
-import { DEFAULT_FILTERS } from './policy.js';
+import { DEFAULT_FILTERS, ENABLE_NETWORK } from './policy.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
 const CANDIDATE_BACKLOG_THRESHOLD = 5;
@@ -234,15 +234,18 @@ function ruleStaleSearch(snapshot) {
 
   const first = stale[0];
   const text = questions.find((q) => q.id === first.question)?.text ?? '…';
+  const command =
+    first.lastSearch === null
+      ? `phdude research "${text}" --question ${first.question}`
+      : `phdude research-fresh --question ${first.question}`;
   return {
     rule: 'stale-search',
     action: 'Refresh the literature behind the research questions',
     why,
     impact: 'medium',
-    command:
-      first.lastSearch === null
-        ? `phdude research "${text}" --question ${first.question}`
-        : `phdude research-fresh --question ${first.question}`,
+    // With the network closed the search command would refuse, so the step before it is the
+    // recommendation: the policy is the researcher's to open, not the agent's.
+    command: snapshot.networkEnabled === false ? `${ENABLE_NETWORK}, then ${command}` : command,
     dependents: stale.length,
   };
 }

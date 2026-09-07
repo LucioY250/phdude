@@ -4,7 +4,7 @@
 import { openConflicts } from './conflicts.js';
 import { disputedPairs } from './contradictions.js';
 import { questionFreshness } from './freshness.js';
-import { DEFAULT_FILTERS } from './policy.js';
+import { DEFAULT_FILTERS, ENABLE_NETWORK } from './policy.js';
 
 const SEVERITY_RANK = { high: 0, medium: 1, low: 2 };
 
@@ -64,16 +64,22 @@ function gapsForSearches(snapshot) {
   const staleAfterDays = snapshot.staleAfterDays ?? DEFAULT_FILTERS.staleAfterDays;
   const rows = questionFreshness(questions, snapshot.searches ?? [], snapshot.now, staleAfterDays);
   const textById = new Map(questions.map((q) => [q.id, q.text]));
+  // A workspace that has closed the network has not overlooked the literature, it has decided
+  // where the literature comes from. Never-searched stays on the report - it is still true -
+  // but it drops to `low` and the command opens the policy first, because the search command
+  // on its own would refuse.
+  const closed = snapshot.networkEnabled === false;
   const gaps = [];
 
   for (const row of rows) {
     if (row.lastSearch === null) {
+      const search = `phdude research "${textById.get(row.question) ?? '…'}" --question ${row.question}`;
       gaps.push({
         kind: 'question-never-searched',
         id: row.question,
         why: `${row.question} has never been searched for literature`,
-        command: `phdude research "${textById.get(row.question) ?? '…'}" --question ${row.question}`,
-        severity: 'medium',
+        command: closed ? `${ENABLE_NETWORK}, then ${search}` : search,
+        severity: closed ? 'low' : 'medium',
       });
     } else if (row.stale) {
       gaps.push({

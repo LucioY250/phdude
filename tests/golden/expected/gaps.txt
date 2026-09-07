@@ -15,19 +15,13 @@ HIGH (5):
     Why: RQ-2 has 0 claims addressing it
     Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-2"]}'
 
-MEDIUM (6):
+MEDIUM (4):
   - [claim-weak-evidence] CLAIM-a07065ff83
     Why: CLAIM-a07065ff83 is supported only by weak evidence: EVID-76dc191034
     Command: phdude add evidence --json '{"source":"<SRC-id>","excerpt":"…","strength":"strong"}'
   - [hypothesis-untested] H-1
     Why: H-1 has no claim addressing any of its question(s): RQ-2
     Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-2"]}'
-  - [question-never-searched] RQ-2
-    Why: RQ-2 has never been searched for literature
-    Command: phdude research "Does note-taking app adoption correlate with academic performance?" --question RQ-2
-  - [question-never-searched] RQ-3
-    Why: RQ-3 has never been searched for literature
-    Command: phdude research "How consistent are reported adoption rates across institutions?" --question RQ-3
   - [question-only-candidates] RQ-3
     Why: RQ-3's 1 claim(s) are all still candidate: CLAIM-e53f6d83dc
     Command: phdude promote CLAIM-e53f6d83dc --to supported
@@ -35,10 +29,16 @@ MEDIUM (6):
     Why: RQ-2 has no method addressing it
     Command: phdude add method --json '{"name":"…","design":"…","paradigm":"quantitative","questions":["RQ-2"]}'
 
-LOW (3):
+LOW (5):
   - [artifact-unmined] ART-d93aa9cdea
     Why: ART-d93aa9cdea (role: notes) is not referenced by any source, fact, or evidence
     Command: phdude add fact --json '{"key":"…","value":"…","from":{"artifact":"ART-d93aa9cdea"}}'
+  - [question-never-searched] RQ-2
+    Why: RQ-2 has never been searched for literature
+    Command: set network.enabled: true in .phdude/research-policy.yaml, then phdude research "Does note-taking app adoption correlate with academic performance?" --question RQ-2
+  - [question-never-searched] RQ-3
+    Why: RQ-3 has never been searched for literature
+    Command: set network.enabled: true in .phdude/research-policy.yaml, then phdude research "How consistent are reported adoption rates across institutions?" --question RQ-3
   - [stale-search] RQ-1
     Why: RQ-1's last search ran 463 day(s) ago (stale after 180)
     Command: phdude research-fresh --question RQ-1

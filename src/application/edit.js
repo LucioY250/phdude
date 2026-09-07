@@ -11,7 +11,7 @@ const IDENTITY_FIELDS = {
   evidence: ['source', 'locator', 'excerpt'],
   fact: ['key', 'value', 'from'],
   source: ['title', 'year'],
-  result: ['summary', 'from'],
+  result: ['summary'],
   decision: ['title', 'rationale', 'affects', 'change'],
   method: ['name'],
   question: ['text'],
@@ -42,7 +42,7 @@ const EDITABLE_FIELDS = {
     'provenance',
     'tags',
   ],
-  result: ['values', 'tags'],
+  result: ['from', 'values', 'tags'],
   decision: ['tags'],
   method: [
     'design',
@@ -91,7 +91,7 @@ function assertEditableFields(type, fields) {
     throw new PhdudeError(
       'VALIDATION',
       `cannot edit the identity field(s) of a ${type}: ${identity.join(', ')}`,
-      `a ${type}'s id is derived from ${IDENTITY_FIELDS[type].join(', ')} - add a corrected object with phdude add instead`,
+      `a ${type} is identified by ${IDENTITY_FIELDS[type].join(', ')} - add a corrected object with phdude add instead`,
     );
   }
 

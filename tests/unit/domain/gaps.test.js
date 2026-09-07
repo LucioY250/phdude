@@ -455,3 +455,23 @@ test('findGaps: the staleness threshold comes from the snapshot, not a constant'
   );
   assert.ok(!lenient.some((g) => g.kind === 'stale-search'), '37 days is fresh after 90');
 });
+
+test('findGaps: a closed network policy drops question-never-searched to low and opens it first', () => {
+  const gaps = findGaps(snapshot({ questions: [question('RQ-1')], networkEnabled: false }), []);
+  const gap = gaps.find((g) => g.kind === 'question-never-searched');
+
+  assert.ok(gap);
+  assert.equal(gap.severity, 'low');
+  assert.equal(
+    gap.command,
+    'set network.enabled: true in .phdude/research-policy.yaml, then phdude research "text RQ-1" --question RQ-1',
+  );
+});
+
+test('findGaps: an open network policy leaves question-never-searched at medium', () => {
+  const gaps = findGaps(snapshot({ questions: [question('RQ-1')], networkEnabled: true }), []);
+  const gap = gaps.find((g) => g.kind === 'question-never-searched');
+
+  assert.equal(gap.severity, 'medium');
+  assert.equal(gap.command, `phdude research "text RQ-1" --question RQ-1`);
+});

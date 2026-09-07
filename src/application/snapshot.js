@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { buildGraph } from '../domain/lineage.js';
-import { researchFilters } from '../domain/policy.js';
+import { networkAllowed, researchFilters } from '../domain/policy.js';
 import { migrationWarning } from './guard.js';
 
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
@@ -53,6 +53,7 @@ export async function loadSnapshot(store, clock = () => new Date().toISOString()
   }
 
   const events = await store.readEvents(20);
+  const policy = await store.readYaml(POLICY_PATH);
 
   return {
     project,
@@ -61,6 +62,9 @@ export async function loadSnapshot(store, clock = () => new Date().toISOString()
     graph,
     warnings,
     now: clock(),
-    staleAfterDays: researchFilters(await store.readYaml(POLICY_PATH)).staleAfterDays,
+    staleAfterDays: researchFilters(policy).staleAfterDays,
+    // Whether a search is even runnable here. The reports that recommend one read this so they
+    // recommend opening the policy first rather than a command that would refuse.
+    networkEnabled: networkAllowed(policy, {}),
   };
 }

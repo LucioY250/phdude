@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mkdtemp, writeFile, mkdir } from 'node:fs/promises';
+import { mkdtemp, writeFile, mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
@@ -678,4 +678,90 @@ test('fresh: refuses a question that does not exist', async () => {
   const root = await newRoot();
   const deps = makeDepsAt(root, '2026-09-07T00:00:00Z');
   await assert.rejects(() => research.fresh(deps, { question: 'RQ-9' }), { code: 'VALIDATION' });
+});
+
+test('fresh: skips a search whose question is gone and re-runs the rest', async () => {
+  const root = await newRoot();
+  await addQuestion(new FsStore(root), 1, 'How do open science practices spread?');
+  await addQuestion(new FsStore(root), 2, 'What makes a pipeline reproducible?');
+
+  const old = makeDepsAt(root, '2025-01-01T00:00:00Z');
+  const orphaned = await research.search(old, { query: 'open science', question: 'RQ-1' });
+  const kept = await research.search(makeDepsAt(root, '2025-01-01T00:00:00Z'), {
+    query: 'reproducible pipelines',
+    question: 'RQ-2',
+  });
+
+  // Nothing in the CLI deletes a question, but a hand-edited workspace can, and one unrunnable
+  // record must not throw away the searches that ran before it in the same invocation.
+  await rm(join(root, 'research', 'questions', 'RQ-1.yaml'));
+
+  const now = makeDepsAt(root, '2026-09-07T00:00:00Z');
+  const result = await research.fresh(now, {});
+
+  assert.deepEqual(result.reran, [kept.search.id], 'the runnable search still ran');
+  assert.deepEqual(result.warnings, [`skipped ${orphaned.search.id}: unknown question RQ-1`]);
+});
+
+test('fresh: an error that is not VALIDATION still aborts the run', async () => {
+  const root = await newRoot();
+  await addQuestion(new FsStore(root), 1, 'How do open science practices spread?');
+  await research.search(makeDepsAt(root, '2025-01-01T00:00:00Z'), {
+    query: 'open science',
+    question: 'RQ-1',
+  });
+
+  const deps = makeDepsAt(root, '2026-09-07T00:00:00Z');
+  deps.providers = [];
+  await assert.rejects(() => research.fresh(deps, {}), { code: 'USAGE' });
+});
+
+test('search: the same title and year under a different DOI is a different work', async () => {
+  const root = await newRoot();
+  const first = makeDeps(
+    root,
+    [{ match: OPENALEX, body: fixture('openalex/search.json') }],
+    ['openalex'],
+  );
+  await research.search(first, { query: 'open science' });
+
+  const recorded = (await research.list(first)).find((c) => c.doi !== null);
+  assert.ok(recorded, 'the fixture records at least one candidate with a DOI');
+
+  // Same title, same year, a DOI that disagrees. Two DOIs are two registered works, so this is
+  // not the null-DOI carry-over - filling one in here would merge two different papers.
+  const rival = makeDeps(
+    root,
+    [
+      {
+        match: OPENALEX,
+        body: {
+          results: [
+            {
+              id: 'https://openalex.org/W9999999999',
+              doi: 'https://doi.org/10.9999/rival.2021.0001',
+              display_name: recorded.title,
+              publication_year: recorded.year,
+              language: 'en',
+              type: 'article',
+              authorships: [{ author: { display_name: 'Rival Author' } }],
+            },
+          ],
+        },
+      },
+    ],
+    ['openalex'],
+    60,
+  );
+  const second = await research.search(rival, { query: 'open science' });
+
+  assert.equal(second.candidates.created.length, 1, 'the rival DOI is a new candidate');
+  const stored = (await research.list(rival)).filter(
+    (c) => c.title === recorded.title && c.year === recorded.year,
+  );
+  assert.equal(stored.length, 2, 'two DOIs under one title stay two records');
+  assert.deepEqual(
+    stored.map((c) => c.doi).sort(),
+    [recorded.doi, '10.9999/rival.2021.0001'].sort(),
+  );
 });
