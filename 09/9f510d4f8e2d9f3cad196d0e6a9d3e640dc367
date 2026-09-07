@@ -1,0 +1,23 @@
+tests/unit/domain/lineage.test.js
+  s_946fc7502759d8::t_571e037e255db5 125-136
+  s_946fc7502759d8::t_d274c3c9743d66 123-124
+src/domain/lineage.js
+  s_946fc7502759d8::t_ce0b4afc946c66 1-2
+  s_946fc7502759d8::t_178bcbebc9be40 65-67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "099f510d4f8e2d9f3cad196d0e6a9d3e640dc367",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
