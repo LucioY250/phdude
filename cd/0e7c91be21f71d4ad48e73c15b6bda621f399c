@@ -1,0 +1,29 @@
+tests/unit/domain/conflicts.test.js
+  s_946fc7502759d8::t_28011fb9f3d263 258,285-339
+  s_946fc7502759d8::t_86d18ed3c6ae4d 94-99,204,206-207,220-225,237-242,253-257
+src/domain/conflicts.js
+  s_946fc7502759d8::t_199f191ce5ec10 39-41,43-48
+docs/workspace.md
+  s_946fc7502759d8::t_e83fe99245a424 91-102
+tests/integration/pdf-large.test.js
+  s_946fc7502759d8::t_27e54b7516667b 13
+  s_946fc7502759d8::t_0a2b1f15ed3131 1-12,14-88
+src/adapters/documents/pdf.js
+  s_946fc7502759d8::t_73c4428f6af6e9 40-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "cd0e7c91be21f71d4ad48e73c15b6bda621f399c",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
