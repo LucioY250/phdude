@@ -1,0 +1,229 @@
+docs/workspace.md
+  s_946fc7502759d8::t_b4f960f9301d37 309-315,335
+  s_946fc7502759d8::t_a34f7206eec36d 336-338
+  s_946fc7502759d8::t_00390f7a3f301f 339
+skills/academic-prose/references/academic-style.md
+  s_946fc7502759d8::t_0a73002d78f064 1-71
+examples/generic-thesis/.phdude/skills/academic-prose/references/examples.md
+  s_946fc7502759d8::t_70a4736c555c48 1-129
+src/domain/gates/evidence.js
+  s_946fc7502759d8::t_1f3f4d79d7c481 1-93
+commands/write.md
+  s_946fc7502759d8::t_758a39015cd170 1-28
+src/domain/gates/index.js
+  s_946fc7502759d8::t_5f68e9efb36dce 2-3,7-41,45-48,51-55,58,61-63,66-67,71
+src/adapters/cli/commands/prose.js
+  s_946fc7502759d8::t_1edd46520233b5 6-16,19-20,23-28
+src/domain/lang/en.js
+  s_946fc7502759d8::t_d904e650637d3e 200-203,235,266
+src/application/manuscript.js
+  s_946fc7502759d8::t_586d480c7162e0 125,262-299,302-338,340-343,347-348,392-408
+  s_946fc7502759d8::t_340002926ef1bc 17
+  s_946fc7502759d8::t_81a7ecfac2a852 68-76,79-83,95-97,102-110
+  s_946fc7502759d8::t_db24aefbe8b3b9 300-301
+  s_946fc7502759d8::t_0015cc1d95a104 19-24,32-38,118-124
+  s_946fc7502759d8::t_7aa142adf5c36f 126
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_93624f4070b5df 57-58,65-80
+src/domain/gates/citations.js
+  s_946fc7502759d8::t_d9839a7bdf7ef9 6
+  s_946fc7502759d8::t_bcef537ca226ed 8-13,22-28
+  s_946fc7502759d8::t_3e293e325cbb1b 7
+src/domain/gates/profile.js
+  s_946fc7502759d8::t_2f7712a78d81b5 1-64
+src/application/snapshot.js
+  s_946fc7502759d8::t_79f9d676ecc745 58-70,74-76
+tests/unit/domain/prose-lint.test.js
+  s_946fc7502759d8::t_5a9062438122ea 73,77-94,148-150
+tests/unit/domain/gaps.test.js
+  s_946fc7502759d8::t_d987584bab2f17 478-565
+commands/prose.md
+  s_946fc7502759d8::t_758a39015cd170 2,15-16,23-24
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_9ee6f481ec2d4e 124
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_d5890c1fb96fb4 82,85-91,310,312
+src/domain/prose-lint.js
+  s_946fc7502759d8::t_94c17ecd08d992 171,174-179,181-182,282-283,287,406,415-419,441
+  s_946fc7502759d8::t_263e2ca623342d 293-308
+  s_946fc7502759d8::t_8b8d8bc7a55864 76,78
+  s_946fc7502759d8::t_d0dd90fc50d5a7 336-338,341
+  s_946fc7502759d8::t_7d6e261227607f 369-372
+tests/unit/domain/gates/pipeline.test.js
+  s_946fc7502759d8::t_7a3082039082a2 19-20,22
+  s_946fc7502759d8::t_32eac1820cb40b 1-18,21,23-55,70,75-93,98-138
+  s_946fc7502759d8::t_865130c66b9a80 56-69,71-74,94-97
+examples/generic-thesis/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_70a4736c555c48 26,42-50
+skills/write/SKILL.md
+  s_946fc7502759d8::t_c2e2ac8dccfea2 1-83
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_70a4736c555c48 57-58,65-80
+tests/golden/expected/write-context.md
+  s_946fc7502759d8::t_ca78671ef70ab8 1-17,27-50
+  s_946fc7502759d8::t_919c74a396b77c 18-26,51-53
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_91da88f40705df 34-35
+tests/unit/domain/gates/citations.test.js
+  s_946fc7502759d8::t_865130c66b9a80 107
+  s_946fc7502759d8::t_a1a9e8f89887ce 101-106,108-135
+  s_946fc7502759d8::t_5a9062438122ea 97
+tests/unit/domain/gates/meaning.test.js
+  s_946fc7502759d8::t_4e9820e1c97ad9 1-100
+skills/academic-prose/references/voice-matching.md
+  s_946fc7502759d8::t_0a73002d78f064 1-51
+src/domain/gaps.js
+  s_946fc7502759d8::t_5aaba69d5bc267 134-159
+  s_946fc7502759d8::t_c9473e97bdb736 10,293
+src/domain/gates/prose.js
+  s_946fc7502759d8::t_3a5712270ea663 29-32
+  s_946fc7502759d8::t_2de0d09536de5a 1-28,33-46
+examples/generic-thesis/.phdude/skills/academic-prose/references/academic-style.md
+  s_946fc7502759d8::t_70a4736c555c48 1-71
+packs/venues/generic-thesis/profile.yaml
+  s_946fc7502759d8::t_d88e471d1787bb 1-19
+examples/generic-thesis/.phdude/skills/write/SKILL.md
+  s_946fc7502759d8::t_70a4736c555c48 1-83
+examples/generic-thesis/manuscript/introduction.md
+  s_946fc7502759d8::t_91da88f40705df 5
+  s_946fc7502759d8::t_70a4736c555c48 1-4,6-14
+src/application/write.js
+  s_946fc7502759d8::t_899bcfec1c96db 1-114
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_d3ad9a254b9baf 567-661
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_967e3281e9c010 146-155
+tests/golden/expected/next.txt
+  s_946fc7502759d8::t_b306b86452b376 21-22
+src/adapters/cli/commands/write.js
+  s_946fc7502759d8::t_d6cfc39f774864 1-20
+scripts/make-example.mjs
+  s_946fc7502759d8::t_91da88f40705df 462-463
+  s_946fc7502759d8::t_70a4736c555c48 5,18,198-217,225-227
+  s_946fc7502759d8::t_919c74a396b77c 379-381
+  s_946fc7502759d8::t_865130c66b9a80 218-224
+src/domain/lang/es.js
+  s_946fc7502759d8::t_d904e650637d3e 151-153,203
+src/domain/gates/meaning.js
+  s_946fc7502759d8::t_e5d13b4ed66d78 18-29
+  s_946fc7502759d8::t_f1e6ebe2efde86 1-17,30-41,43-108,113-114,119-170
+  s_946fc7502759d8::t_865130c66b9a80 42,109-112,115-118
+src/domain/next.js
+  s_946fc7502759d8::t_84557a722983c1 277-284,291,293-299,301-352
+  s_946fc7502759d8::t_dd55a8c35fdc18 2,285-290,292,300
+  s_946fc7502759d8::t_afd4a047b2ee8c 424-426
+README.md
+  s_946fc7502759d8::t_6931e1352d386a 174,447-449
+skills/academic-prose/references/examples.md
+  s_946fc7502759d8::t_d68f7ecb914dda 1-129
+src/domain/gates/voice.js
+  s_946fc7502759d8::t_be9849cefeb76f 1-17
+src/application/prose.js
+  s_946fc7502759d8::t_771d348533548e 2-3,5
+  s_946fc7502759d8::t_77745a4f298ac0 47-58,61-80,82-93,95-106
+  s_946fc7502759d8::t_004370358b86af 6,59-60,81,94
+src/domain/gates/markers.js
+  s_946fc7502759d8::t_865130c66b9a80 48-50,104-108,116-122
+  s_946fc7502759d8::t_7343e51cb6483d 10,134
+  s_946fc7502759d8::t_b61c28978b6964 1-9,11-47,51-103,109-115,123-133,135-161
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_c16ae081a08374 333-379
+tests/unit/domain/context-budget.test.js
+  s_946fc7502759d8::t_c0f937359cbd3f 165,167-169
+  s_946fc7502759d8::t_94bb2fb02bf765 1-9,16-97,102-131,135-141,143-164,166,170-201,203-234
+  s_946fc7502759d8::t_865130c66b9a80 10-15,98-101,132-134,142,202
+tests/unit/domain/gates/evidence.test.js
+  s_946fc7502759d8::t_865130c66b9a80 28-29
+  s_946fc7502759d8::t_ce48eb810df779 1-27,30-145
+skills/academic-prose/SKILL.md
+  s_946fc7502759d8::t_c25fe0a76af95a 69-73,86,98-99,106-110,116-119,124-126,130-132
+examples/generic-thesis/manuscript/reports/introduction.yaml
+  s_946fc7502759d8::t_91da88f40705df 5
+  s_946fc7502759d8::t_70a4736c555c48 1-4,6-29
+src/adapters/cli/commands/deslop.js
+  s_946fc7502759d8::t_d6cfc39f774864 1-47
+docs/cli.md
+  s_946fc7502759d8::t_a34f7206eec36d 829-833
+  s_946fc7502759d8::t_e920f5c9f61f85 663,666-667,672-675,677-684,689-690,710-714,721-780,788,815-827
+  s_946fc7502759d8::t_0f7d149ad254eb 828
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_6c4861e8260cf5 8,22,43,52,72,128-129,158-160
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_865130c66b9a80 1722-1729
+  s_946fc7502759d8::t_22b5d976dbae3e 1642-1670,1672-1683,1686-1688,1690-1707,1709-1719,1721,1730-1742,1744-1779,1781-1811,1813-1816,1818-1837,1839-1842
+  s_946fc7502759d8::t_5a9062438122ea 1470
+  s_946fc7502759d8::t_38d48d6b4fbec5 1671,1684-1685,1689,1708,1720,1743,1780,1812,1817,1838
+tests/golden/write.test.js
+  s_946fc7502759d8::t_c2b189bed45e5d 1-58,61,66,69-70,73-74
+  s_946fc7502759d8::t_919c74a396b77c 59-60,62-65,67-68,71-72
+examples/generic-thesis/manuscript/manuscript.yaml
+  s_946fc7502759d8::t_70a4736c555c48 1-55
+tests/integration/manuscript.test.js
+  s_946fc7502759d8::t_bac535ee7110e3 147-153
+src/adapters/packs/loader.js
+  s_946fc7502759d8::t_905c42469d0c5a 69-106
+commands/deslop.md
+  s_946fc7502759d8::t_758a39015cd170 1-31
+src/domain/context-budget.js
+  s_946fc7502759d8::t_8ab20197d20389 10
+  s_946fc7502759d8::t_c40c51d3ba3d7e 64-77,272
+  s_946fc7502759d8::t_865130c66b9a80 15,60,173-175,212-214
+  s_946fc7502759d8::t_3b5831b7e240a9 80-83,85-88,90
+  s_946fc7502759d8::t_c4d6fa08b48bc8 79,84,89,99
+  s_946fc7502759d8::t_3cb72f224c481d 1-9,11-14,16-59,61-63,78,91-98,100-172,176-211,215-271,273-309
+examples/generic-thesis/.phdude/skills/academic-prose/SKILL.md
+  s_946fc7502759d8::t_70a4736c555c48 69-73,86,98-99,106-110,116-119,124-126,130-132
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_865130c66b9a80 224
+  s_946fc7502759d8::t_d5b62d3b8239b7 215-223,225-255
+src/application/deslop.js
+  s_946fc7502759d8::t_7b85f41b8917a7 1-116
+src/adapters/cli/commands/manuscript.js
+  s_946fc7502759d8::t_3df24dbb1d7f5f 81,123
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_f47e2fd33326d0 32-37,40
+tests/integration/write.test.js
+  s_946fc7502759d8::t_526e40d6f91cde 160-161
+  s_946fc7502759d8::t_fbe3354448de5d 1-7,9-125,131-152,154-155,159,162-321,328-334
+  s_946fc7502759d8::t_13f5829399d62b 8,322-327
+  s_946fc7502759d8::t_d74542f670d11a 153,156-158
+  s_946fc7502759d8::t_865130c66b9a80 126-130
+src/domain/textstats.js
+  s_946fc7502759d8::t_af2bef38b6064b 341-343
+  s_946fc7502759d8::t_939732e737b52b 24-26
+  s_946fc7502759d8::t_60cfdb6aaaf817 380
+  s_946fc7502759d8::t_a90a8d7df7f7eb 117-133
+tests/contracts/packs.test.js
+  s_946fc7502759d8::t_5843daef9b4521 27-31
+  s_946fc7502759d8::t_b6fa3c2aa97dbc 157-173
+  s_946fc7502759d8::t_bcf219ab61b86e 3,6-11
+commands/manuscript.md
+  s_946fc7502759d8::t_758a39015cd170 16,19-20
+skills/next/SKILL.md
+  s_946fc7502759d8::t_9ee6f481ec2d4e 26,42-50
+examples/generic-thesis/.phdude/skills/academic-prose/references/voice-matching.md
+  s_946fc7502759d8::t_70a4736c555c48 1-51
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_b306b86452b376 41-42
+examples/generic-thesis/knowledge/claims/CLAIM-ab73621987.yaml
+  s_946fc7502759d8::t_919c74a396b77c 18
+src/domain/manuscript.js
+  s_946fc7502759d8::t_362c0ff2c276e3 7-9,11-45,48-55
+  s_946fc7502759d8::t_c7deaaa8929f35 56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "62327387b1d96658c2952fd005f8690fd0554eda",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
