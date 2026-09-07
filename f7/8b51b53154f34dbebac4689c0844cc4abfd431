@@ -1,0 +1,46 @@
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_96e5046427bb16 4-5,11,94-103
+  s_946fc7502759d8::t_bb254278dfa739 104-107
+skills/literature/SKILL.md
+  s_946fc7502759d8::t_973d0a63f9e660 119-123
+  s_946fc7502759d8::t_31437ce7e5a442 50-51
+examples/generic-thesis/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_a2ed33bc896811 36-38
+examples/generic-thesis/.phdude/skills/literature/SKILL.md
+  s_946fc7502759d8::t_a2ed33bc896811 50-51,119-123
+docs/assets/diagrams/next.excalidraw
+  s_946fc7502759d8::t_a607ba520ff47f 135-136
+README.md
+  s_946fc7502759d8::t_c6ee69baa8ec4a 48-74,78,83
+  s_946fc7502759d8::t_2cd1369c63d45d 272-346
+  s_946fc7502759d8::t_18b00da811a5ff 353-354,356,360,369-372,459-460,472-473
+  s_946fc7502759d8::t_d64948419ec506 395-396,398
+  s_946fc7502759d8::t_3b61de66e4d21c 12,40,43-45,137,143
+  s_946fc7502759d8::t_186d0fd0cea6ef 252-257
+scripts/make-diagrams.mjs
+  s_946fc7502759d8::t_0929fab21b453b 755,778
+skills/next/SKILL.md
+  s_946fc7502759d8::t_32fe8fd127e83d 36-38
+docs/cli.md
+  s_946fc7502759d8::t_ee14ea24beb71d 398-405,503-505
+  s_946fc7502759d8::t_53461802a4d8f9 544,553,616,631-636,721
+  s_946fc7502759d8::t_c93cc86c47ed19 506
+docs/assets/diagrams/next.svg
+  s_946fc7502759d8::t_a607ba520ff47f 1-2,8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f78b51b53154f34dbebac4689c0844cc4abfd431",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
