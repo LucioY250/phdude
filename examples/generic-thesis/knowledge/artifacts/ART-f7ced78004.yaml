@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-f7ced78004
+created: 2026-09-01T00:00:03.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/survey-beta.md
+paths:
+  - sources/survey-beta.md
+hash: f7ced78004b056d22733f1610a40c34ed301535dd2d015742dad943c0b1f4270
+bytes: 248
+mime: text/markdown
+kind: md
+role: unknown
+extracted:
+  status: ok
+  method: text
+  text_chars: 248
+  sections: 3
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

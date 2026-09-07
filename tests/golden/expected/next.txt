@@ -1,0 +1,17 @@
+Highest-impact next action:
+
+Resolve the conflicting value(s) for "sample_size"
+
+Why:
+- sample_size: 300 participants (ART-f7ced78004) vs 312 participants (ART-35146e2f6d)
+
+Expected impact:
+HIGH
+
+Command:
+phdude decide propose --title "Resolve sample_size" --affects FACT-11330aa999 FACT-3130238a7e --change '{"fact_key":"sample_size","canonical_value":…}'
+
+Other candidates:
+1. (medium) Classify artifacts with unknown role
+2. (medium) Approve or reject pending decisions
+3. (low) Workspace is consistent; add new sources or refine claims

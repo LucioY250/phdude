@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-1
+created: 2026-09-01T00:00:10.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Does mobile note-taking app adoption differ across recruitment channels and campuses?
+objectives:
+  - Compare adoption rates across independently recruited student surveys.
+state: candidate

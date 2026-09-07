@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-0772a215de
+created: 2026-09-01T00:00:04.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/survey-gamma.md
+paths:
+  - sources/survey-gamma.md
+hash: 0772a215de7c6f726367efc3b944ab9ad2c07994a1ee8c7a80eb4f4e04765d04
+bytes: 243
+mime: text/markdown
+kind: md
+role: unknown
+extracted:
+  status: ok
+  method: text
+  text_chars: 243
+  sections: 3
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

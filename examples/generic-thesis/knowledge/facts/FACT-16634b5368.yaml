@@ -1,0 +1,14 @@
+schema: phdude.fact
+version: 1
+id: FACT-16634b5368
+created: 2026-09-01T00:00:27.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+key: sampling_method
+value: stratified
+from:
+  artifact: ART-0772a215de
+  locator: Methods
+state: candidate
