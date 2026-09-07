@@ -141,11 +141,9 @@ test('swapping one negation cue for another preserves the meaning the gate measu
   const after = 'The trial failed to recruit the same way in the second wave [@smith2020].';
   assert.deepEqual(run(before, after), []);
   assert.deepEqual(
-    run(
-      'La adopción no es uniforme [@smith2020].',
-      'La adopción nunca es uniforme [@smith2020].',
-      { lang: 'es' },
-    ),
+    run('La adopción no es uniforme [@smith2020].', 'La adopción nunca es uniforme [@smith2020].', {
+      lang: 'es',
+    }),
     [],
   );
 });

@@ -446,14 +446,7 @@ test('prose: a section edited by hand is reported as drifted, with a report that
   assert.notEqual(stored.at, submitted.at);
   assert.deepEqual(
     stored.gates.map((row) => row.gate),
-    [
-      'gate-citations',
-      'gate-evidence',
-      'gate-prose',
-      'gate-voice',
-      'gate-meaning',
-      'gate-profile',
-    ],
+    ['gate-citations', 'gate-evidence', 'gate-prose', 'gate-voice', 'gate-meaning', 'gate-profile'],
   );
   assert.equal(
     stored.warnings,
