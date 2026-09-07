@@ -1,0 +1,21 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-a032970371
+created: 2026-04-02T08:30:00Z
+actor:
+  researcher: legacy
+  agent: cli
+tags: []
+statement: Sediment grain size decreases with distance from the river mouth.
+kind: empirical
+state: candidate
+supported_by:
+  - EVID-fc70a8ef30
+questions:
+  - RQ-1
+sections:
+  - Results
+provenance:
+  method: imported
+  derived_from: []
+contradicts: []

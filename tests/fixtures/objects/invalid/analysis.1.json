@@ -1,0 +1,16 @@
+{
+  "schema": "phdude.analysis",
+  "version": 1,
+  "id": "ANALYSIS-3f9a10c2b7",
+  "created": "2026-09-07T10:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "name": "describe survey",
+  "runtime": "bash",
+  "script": "analysis/describe.sh",
+  "args": [],
+  "inputs": [],
+  "outputs": { "results": "analysis/out/describe/results.json", "files": [] },
+  "params": {},
+  "runs": [],
+  "state": "candidate"
+}

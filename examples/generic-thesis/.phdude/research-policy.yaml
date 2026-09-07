@@ -37,5 +37,14 @@ research:
 
   limit: 20
 
+execution:
+  enabled: false
+  runtimes:
+    node: node
+    python3: python3
+    Rscript: Rscript
+  timeout_seconds: 600
+
 skills:
   allow_network: false
+  allow_execution: false

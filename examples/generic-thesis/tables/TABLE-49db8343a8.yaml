@@ -1,0 +1,34 @@
+schema: phdude.table
+version: 1
+id: TABLE-49db8343a8
+created: 2026-09-01T00:01:21.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: daily-use-by-channel
+caption: Reported daily use of a note-taking application, by recruitment channel.
+source:
+  result: RESULT-d09b2158fb
+columns:
+  - key: key
+    label: Recruitment channel
+  - key: value
+    label: Daily use
+    format: percent:0
+formats:
+  - md
+  - latex
+  - csv
+outputs:
+  md: tables/out/daily-use-by-channel.md
+  latex: tables/out/daily-use-by-channel.tex
+  csv: tables/out/daily-use-by-channel.csv
+runs:
+  - at: 2026-09-01T00:01:23.000Z
+    source_hash: fcaa074c098b0c5e949e83fd129078ff463ca0a0828453a2d8b467e8408ef4b8
+    output_hashes:
+      tables/out/daily-use-by-channel.md: bbb3305e785ba119f601d0a34030c36fd0c190f521c0acdd4fca062afda6daea
+      tables/out/daily-use-by-channel.tex: d0b14724de19287f29addc6f73d6de40ed902b31812dbe49997e1c303a06fd32
+      tables/out/daily-use-by-channel.csv: 4d58dc186b21e58185668d7b22162b8946bba911918e244a48b2b40f17462f28
+state: candidate

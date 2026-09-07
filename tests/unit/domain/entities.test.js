@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   newClaim,
   newEvidence,
@@ -10,7 +11,12 @@ import {
   newHypothesis,
   newDecision,
   newMethod,
+  newDataset,
+  newAnalysis,
+  newTable,
+  newFigure,
 } from '../../../src/domain/entities.js';
+import { makeId } from '../../../src/domain/ids.js';
 import { assertValid } from '../../../src/schemas/index.js';
 import { PhdudeError } from '../../../src/domain/errors.js';
 
@@ -436,4 +442,235 @@ test('newEvidence: provenance defaults the same way and stays out of the id mate
   assert.equal(manual.provenance.method, 'manual');
   assert.equal(extracted.provenance.method, 'agent-extraction');
   assert.equal(manual.id, extracted.id, 'provenance is not part of the id');
+});
+
+test('newDataset: schema-valid, id derived from the file hash, candidate by default', () => {
+  const hash = 'a'.repeat(64);
+  const dataset = newDataset({
+    path: 'data/survey.csv',
+    hash,
+    bytes: 128,
+    format: 'csv',
+    profile: { rows: 0, columns: [] },
+    actor,
+    created,
+  });
+  assertValid('dataset', dataset);
+  assert.equal(dataset.id, `DATASET-${'a'.repeat(10)}`);
+  assert.equal(dataset.state, 'candidate');
+  assert.equal(dataset.sensitive, false);
+  assert.equal(Object.hasOwn(dataset, 'description'), false);
+  assert.equal(Object.hasOwn(dataset, 'license'), false);
+});
+
+test('newDataset: the same bytes at a different path is the same id', () => {
+  const base = {
+    hash: 'b'.repeat(64),
+    bytes: 4,
+    format: 'csv',
+    profile: { rows: 0, columns: [] },
+    actor,
+    created,
+  };
+  assert.equal(
+    newDataset({ ...base, path: 'data/a.csv' }).id,
+    newDataset({ ...base, path: 'data/b.csv' }).id,
+  );
+});
+
+test('newDataset: an empty path is refused', () => {
+  assert.throws(
+    () =>
+      newDataset({
+        path: '  ',
+        hash: 'c'.repeat(64),
+        bytes: 0,
+        format: 'other',
+        profile: { rows: 0, columns: [] },
+        actor,
+        created,
+      }),
+    PhdudeError,
+  );
+});
+
+test('newResult: the analysis it came from is part of the id', () => {
+  const base = { summary: 'Mean age is 38.4 years', actor, created };
+  const a = newResult({ ...base, from: 'ANALYSIS-0123456789' });
+  const b = newResult({ ...base, from: 'ANALYSIS-9999999999' });
+  assert.notEqual(a.id, b.id);
+  assert.equal(a.id, newResult({ ...base, from: 'ANALYSIS-0123456789' }).id);
+});
+
+test('newResult: a result with no `from` keeps the id v0.4 gave it', () => {
+  const summary = 'A notable finding';
+  const bare = newResult({ summary, from: '', actor, created });
+  assert.equal(bare.id, makeId('result', summary));
+  assert.equal(newResult({ summary, from: undefined, actor, created }).id, bare.id);
+});
+
+test('newResult: a `from` that is not an analysis keeps the v0.4 id', () => {
+  const v04 = JSON.parse(
+    readFileSync(new URL('../../fixtures/objects/v0.4-result.json', import.meta.url), 'utf8'),
+  );
+  const readded = newResult({
+    summary: v04.summary,
+    from: v04.from,
+    values: v04.values,
+    actor,
+    created,
+  });
+  assert.equal(readded.id, v04.id);
+  assert.equal(readded.id, makeId('result', v04.summary));
+});
+
+test('newAnalysis: schema-valid, id derived from the name, no runs yet', () => {
+  const analysis = newAnalysis({
+    name: 'describe survey',
+    runtime: 'node',
+    script: 'analysis/describe.mjs',
+    inputs: ['DATASET-0123456789'],
+    outputs: { results: 'analysis/out/describe-survey/results.json', files: [] },
+    actor,
+    created,
+  });
+
+  assertValid('analysis', analysis);
+  assert.equal(analysis.id, makeId('analysis', 'describe survey'));
+  assert.match(analysis.id, /^ANALYSIS-[0-9a-f]{10}$/);
+  assert.deepEqual(analysis.runs, []);
+  assert.deepEqual(analysis.args, []);
+  assert.deepEqual(analysis.params, {});
+  assert.deepEqual(analysis.tags, []);
+  assert.equal(analysis.state, 'candidate');
+});
+
+test('newAnalysis: the name alone is the identity', () => {
+  const outputs = { results: 'analysis/out/x/results.json', files: [] };
+  const a = newAnalysis({
+    name: 'Describe  Survey',
+    runtime: 'node',
+    script: 'analysis/a.mjs',
+    outputs,
+    actor,
+    created,
+  });
+  const b = newAnalysis({
+    name: 'describe survey',
+    runtime: 'python3',
+    script: 'analysis/b.py',
+    outputs,
+    actor,
+    created,
+  });
+  assert.equal(a.id, b.id);
+});
+
+test('newAnalysis: rejects an empty name', () => {
+  assert.throws(
+    () =>
+      newAnalysis({
+        name: '  ',
+        runtime: 'node',
+        script: 'analysis/a.mjs',
+        outputs: { results: 'analysis/out/x/results.json', files: [] },
+        actor,
+        created,
+      }),
+    PhdudeError,
+  );
+});
+
+test('newTable: schema-valid, named by its slug, with an output per declared format', () => {
+  const table = newTable({
+    name: 'mean-weight',
+    caption: 'Mean weight by group.',
+    source: { result: 'RESULT-0123456789' },
+    columns: [{ key: 'key', label: 'Group' }],
+    formats: ['csv', 'md'],
+    actor,
+    created,
+  });
+
+  assertValid('table', table);
+  assert.match(table.id, /^TABLE-[0-9a-f]{10}$/);
+  assert.deepEqual(table.formats, ['md', 'csv']);
+  assert.deepEqual(table.outputs, {
+    md: 'tables/out/mean-weight.md',
+    csv: 'tables/out/mean-weight.csv',
+  });
+  assert.deepEqual(table.runs, []);
+  assert.equal(table.state, 'candidate');
+});
+
+test('newTable: the name is the identity, and a bad name or an empty caption is refused', () => {
+  const base = {
+    caption: 'Mean weight by group.',
+    source: { result: 'RESULT-0123456789' },
+    actor,
+    created,
+  };
+  assert.equal(
+    newTable({ ...base, name: 'mean-weight' }).id,
+    newTable({ ...base, name: 'mean-weight', caption: 'Something else.' }).id,
+  );
+  assert.notEqual(
+    newTable({ ...base, name: 'mean-weight' }).id,
+    newTable({ ...base, name: 'mean-height' }).id,
+  );
+  assert.throws(() => newTable({ ...base, name: 'Mean Weight' }), PhdudeError);
+  assert.throws(() => newTable({ ...base, name: 'x', caption: '  ' }), PhdudeError);
+});
+
+test('newTable: no declared format means all three', () => {
+  const table = newTable({
+    name: 'mean-weight',
+    caption: 'Mean weight by group.',
+    source: { dataset: 'DATASET-0123456789', limit: 10 },
+    actor,
+    created,
+  });
+  assert.deepEqual(table.formats, ['md', 'latex', 'csv']);
+  assert.deepEqual(Object.keys(table.outputs), ['md', 'latex', 'csv']);
+  assertValid('table', table);
+});
+
+test('newFigure: schema-valid, named by its slug, alt carried through', () => {
+  const figure = newFigure({
+    name: 'mean-weight',
+    caption: 'Mean weight by group.',
+    alt: "Bar chart: group b averages 75.5 kg against group a's 71.4 kg.",
+    generator: { runtime: 'node', script: 'phdude:bar-chart', args: ['--key', 'mean'] },
+    inputs: ['RESULT-0123456789'],
+    outputs: [{ path: 'figures/out/mean-weight.svg', format: 'svg' }],
+    actor,
+    created,
+  });
+
+  assertValid('figure', figure);
+  assert.match(figure.id, /^FIG-[0-9a-f]{10}$/);
+  assert.equal(figure.alt, "Bar chart: group b averages 75.5 kg against group a's 71.4 kg.");
+  assert.deepEqual(figure.runs, []);
+  assert.equal(figure.state, 'candidate');
+});
+
+test('newFigure: a figure without alt text never becomes a record', () => {
+  assert.throws(
+    () =>
+      newFigure({
+        name: 'mean-weight',
+        caption: 'Mean weight by group.',
+        alt: '',
+        generator: { runtime: 'node', script: 'phdude:bar-chart', args: [] },
+        inputs: [],
+        outputs: [{ path: 'figures/out/mean-weight.svg', format: 'svg' }],
+        actor,
+        created,
+      }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.match(err.message, /alt text/);
+      return true;
+    },
+  );
 });

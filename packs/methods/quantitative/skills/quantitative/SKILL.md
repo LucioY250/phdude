@@ -35,6 +35,37 @@ A p-value alone, without an effect size and sample description, is incomplete ev
   association (correlation, regression).
 - **Longitudinal/panel** - repeated measures over time on the same units.
 
+## Analysis
+
+An analysis is a declared object, not a conversation. Register the data with `phdude data add`,
+declare the script with `phdude analyze add`, and let `phdude analyze run` execute it - the run
+records what it read and what it wrote, and every finding becomes a `RESULT` you can cite. Never
+run a script yourself: a number nobody can reproduce is not evidence.
+
+What the scripts in this paradigm usually do, in the order they usually do it:
+
+- **Describe before testing.** N per group, missing data and how it was handled, distributions,
+  and the outliers you decided to keep or drop. A test reported without this is unreadable.
+- **Check the assumptions the test makes**, and report the check rather than the conclusion:
+  normality, homoscedasticity, independence, and for regression the collinearity and the
+  residuals.
+- **Run the pre-specified test**, and say plainly when a test was chosen after seeing the data.
+- **Estimate the effect**, not only its significance: the effect size with its confidence
+  interval, in the units a reader thinks in.
+- **Say what would change the answer.** A sensitivity analysis, an alternative specification, or
+  the subgroup where the effect disappears.
+
+What a `RESULT` from this paradigm has to carry in its `values`: the statistic and its degrees of
+freedom, the p-value, the effect size and its interval, and the n behind it. The `summary` is the
+finding in one sentence, in the language the design licenses - "associated with" for a survey,
+"increased" only for a randomized manipulation. Two runs that disagree are two results, and the
+older one is superseded rather than quietly overwritten.
+
+Report every analysis you ran, not only the one that worked. A table of the pre-registered
+comparison plus a figure of the effect is usually enough; both are declared with `phdude table
+add` and `phdude figure add`, the figure carries alt text that states the finding, and
+`phdude repro check` stays clean so the numbers in the manuscript are the numbers on disk.
+
 ## Review questions
 
 - Was a power analysis (a priori or reported post hoc) used to justify the sample size?

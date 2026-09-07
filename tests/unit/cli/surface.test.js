@@ -141,6 +141,20 @@ test('the no-detector rule is stated on every surface a researcher reads', () =>
   }
 });
 
+// `repro check` is the report a researcher is told to read before citing a number, so the skill
+// has to name it among the commands that only read - or an agent will treat it as a mutator and
+// avoid it.
+test('the phdude-core skill lists the reporting commands as read-only', () => {
+  const skill = read('skills', 'phdude-core', 'SKILL.md');
+  const section = skill.slice(skill.indexOf('## The only way to write'));
+  for (const command of ['repro check', 'figure list|show|check', 'analyze list|show|runs']) {
+    assert.ok(
+      section.includes(`\`${command}\``),
+      `skills/phdude-core/SKILL.md does not name ${command} as read-only`,
+    );
+  }
+});
+
 test('the phdude-core skill lists every write command as CLI-only', () => {
   // Only these commands mutate recorded research state; the skill's "the only way to write"
   // section has to name each of them, or an agent will reach for a file edit instead.
@@ -157,10 +171,17 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'authors add',
     'authors learn',
     'authors consensus',
+    'data add',
+    'table add',
+    'table build',
+    'figure add',
+    'figure build',
     'manuscript init',
     'manuscript submit',
     'manuscript approve',
     'manuscript reopen',
+    'analyze add',
+    'analyze run',
     'deslop',
   ];
   const skill = read('skills', 'phdude-core', 'SKILL.md');

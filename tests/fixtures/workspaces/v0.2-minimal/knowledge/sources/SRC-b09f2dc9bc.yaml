@@ -1,0 +1,15 @@
+schema: phdude.source
+version: 1
+id: SRC-b09f2dc9bc
+created: 2026-04-02T08:30:00Z
+actor:
+  researcher: legacy
+  agent: cli
+tags: []
+title: Estuary Grain-Size Survey 2024
+authors:
+  - R. Rho
+type: report
+artifacts: []
+state: candidate
+year: 2024

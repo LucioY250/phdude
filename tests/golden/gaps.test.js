@@ -45,6 +45,7 @@ test('gaps golden: every gap kind appears on the example', async () => {
     'question-only-candidates',
     'question-without-claims',
     'question-without-method',
+    'result-uncited',
     'stale-search',
     'uncited-source',
   ]);

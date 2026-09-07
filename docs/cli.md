@@ -15,8 +15,16 @@ phdude <command> [sub-command] [arguments] [options]
 | `--json` | Print JSON instead of text. Every command supports it. |
 | `--workspace <dir>` | Run against another workspace instead of the current directory. |
 | `--actor researcher=<name>,agent=<host>` | Override the recorded actor. Defaults to `git config user.name` (then `$USER`, then `unknown`) and `$PHDUDE_AGENT` (then `cli`). |
+| `--file <path>` | Read a JSON payload from a file, where the command takes one. |
+| `--force` | Do the work anyway, where the command would otherwise skip or refuse it. |
+| `--dry-run` | Report what would happen and write nothing, where the command supports it. |
 | `--version`, `-v` | Print the version and exit. |
 | `--help`, `-h` | Print the usage summary and exit. |
+
+The last three parse everywhere, and each is acted on by the commands documented below as taking
+it: `--file` by `add`, `edit`, `data add`, `analyze add`, `table add`, `figure add`, `prose`,
+`deslop` and `manuscript submit`; `--force` by `ingest`, `analyze run`, `table build`,
+`figure build` and `migrate`; `--dry-run` by `migrate`.
 
 `PHDUDE_DEBUG=1` prints a stack trace for unexpected internal errors; without it, users see
 the message only.
@@ -36,14 +44,58 @@ answer. The global options above are accepted everywhere.
 | 1 | Usage | unknown command, missing argument, id not found |
 | 2 | Validation | an object that fails its JSON Schema, malformed `--json` |
 | 3 | Policy | `promote` to canonical without an approved decision |
-| 4 | External tool missing | every search provider failed on a `phdude research` run |
+| 4 | External tool missing, or a script that failed | every search provider failed on a `phdude research` run; the script behind `phdude analyze run` or a figure generator exited non-zero or timed out |
 
 Errors print the message on stderr, followed by a `Suggested action:` line when the error
 carries a hint. With `--json` they print `{"error":{"code","message","hint","details"}}` on
 stderr instead. Exit code 4 is rare, because degradation is the rule: a missing `pdftotext`
 produces a warning and a partial extraction, and one failed search provider produces a warning
-and the other providers' results. Only a `phdude research` run where every provider failed
-exits 4.
+and the other providers' results. A `phdude research` run where every provider failed exits 4,
+and so does an analysis whose script exited non-zero or was killed by a signal (`EXECUTION`),
+or ran past `execution.timeout_seconds` (`TOOL_MISSING`) - PhDude did its part, and the thing it
+called did not come back.
+
+## Script execution
+
+`phdude analyze run` and `phdude figure build` are the only commands that run code. Both read
+the same block in `.phdude/research-policy.yaml`:
+
+```yaml
+execution:
+  enabled: false
+  runtimes:
+    node: node
+    python3: python3
+    Rscript: Rscript
+  timeout_seconds: 600
+skills:
+  allow_execution: false
+```
+
+`phdude analyze run` and `phdude figure build` refuse with exit 3 unless `enabled: true` or
+`--allow-exec` is passed:
+
+```
+script execution is disabled
+Suggested action: set execution.enabled: true in .phdude/research-policy.yaml or pass --allow-exec
+```
+
+`runtimes` maps the name an analysis or a figure declares to the executable that runs it, so a
+workspace can point `node` at a specific binary, or add one of its own, without rewriting a
+single record. A runtime the map does not name exits 2. `timeout_seconds` bounds every run; a
+script that outruns it is killed along with anything it started, the run is recorded with
+`exit: null` and `timed_out: true`, and the command exits 4.
+
+A run gets an argument array and no shell, ever. It starts with the workspace as its working
+directory and an environment holding `PATH`, `HOME`, `LANG`, `PHDUDE_WORKSPACE` and one of
+`PHDUDE_ANALYSIS` or `PHDUDE_FIGURE` — nothing else of yours reaches it. Its stdout is not the
+contract: what a script produces is the files it declares.
+
+`skills.allow_execution` is a different switch for a different thing. It gates whether a skill
+that declares `permissions.execution: allowed` is *installed* — `skills/analysis` and
+`skills/figures`, the two that drive a command which spawns something — and it has no effect on
+whether a run is permitted. A workspace can hold both skills and still refuse every script, which
+is the useful default. `phdude doctor` prints both.
 
 ## Commands
 
@@ -130,8 +182,16 @@ text output prints one line per inventory entry, with `+` marking the ones writt
 ### `phdude status`
 
 Project settings, artifact inventory by kind and extraction status, knowledge counts by type
-and state, a Literature block, open and resolved fact conflicts, disputed claim pairs, pending
-decisions, and the last events. Every number is derived on read; nothing is cached.
+and state, an Analysis block, a Literature block, open and resolved fact conflicts, disputed
+claim pairs, pending decisions, and the last events. Every number is derived on read; nothing is
+cached.
+
+The **Analysis** block counts the datasets, analyses, tables and figures the workspace holds, and
+`Results (from analyses): n` — only the results an analysis produced. That is deliberately a
+different number from the Knowledge block's `result: total`, which also counts every finding a
+researcher recorded by hand. It closes with `Stale or unbuilt: n of m` — the same items
+`phdude repro check` lists, where `m` is every analysis, table and figure and `n` is how many of
+them are not `up-to-date`.
 
 The **Literature** block counts candidates by state, how many searches are recorded, and how
 many research questions have a stale or missing search — the same staleness rule
@@ -155,6 +215,16 @@ every research question with no current literature behind it — never searched,
 longer ago than `research.freshness.stale_after_days` — and points at a first
 `phdude research` or at `phdude research-fresh`, whichever the first such question needs.
 `candidates-pending` (medium) fires at five or more candidates still awaiting a verdict.
+
+Three rules read the reproducibility report (`phdude repro check`). `analysis-stale` fires for
+every analysis whose inputs have moved since its last successful run; it is **high** when a
+supported or canonical claim rests on one of that analysis's results, because a stale number is
+already in the argument, and **medium** otherwise. Its command follows the reason: `phdude data
+add <path>` when the file no longer matches the `DATASET` record, since re-running would read
+bytes nobody registered, and `phdude analyze run <id>` otherwise. `figure-missing-alt` (medium)
+fires for a figure whose alt text was edited away — `figure add` refuses one without it, so the
+record was changed by hand. `never-run` (low) covers everything declared and never produced,
+including an output that has been deleted since.
 
 ### `phdude knowledge list|show|trace`
 
@@ -202,12 +272,16 @@ existing record and writes no event. What counts as "the same object" is the id 
 | `fact` | `key`, `value`, `from.artifact` |
 | `source` | `title`, `year` |
 | `method` | `name` |
-| `result` | `summary` |
+| `result` | `summary`, plus `from` when it names an analysis |
 | `question`, `hypothesis` | sequential `RQ-<n>` / `H-<n>`, deduplicated on normalized `text` |
 
 The same excerpt attributed to a different source or page is therefore different evidence,
 and the same value reported by two artifacts is deliberately two facts — that pair is the
-conflict `status` reports. See [ADR 3](adr/0003-content-derived-ids.md).
+conflict `status` reports. A result's `from` counts only when it names an analysis: two analyses
+can reach the same finding and each owns its record, while a result whose `from` is prose
+(`"logistic regression on survey sample"`, the v0.4 shape) keeps the id v0.4 gave it, so adding
+it again after `phdude migrate` finds the record already there instead of a second copy.
+See [ADR 3](adr/0003-content-derived-ids.md).
 
 `artifact-role` is the exception: it sets `role` on an existing artifact rather than
 creating a new object, and takes `{"id":"ART-…","role":"paper"}`. Text mode prints
@@ -570,7 +644,7 @@ Three refusals, and they are the point of the command:
 | `evidence` | `source`, `locator`, `excerpt` | `strength`, `provenance`, `tags` |
 | `fact` | `key`, `value`, `from` | `unit`, `tags` |
 | `source` | `title`, `year` | `authors`, `venue`, `doi`, `url`, `type`, `artifacts`, `bibkey`, `abstract`, `keywords`, `identifiers`, `provenance`, `tags` |
-| `result` | `summary` | `from`, `values`, `tags` |
+| `result` | `summary`, `from` | `values`, `tags` |
 | `decision` | `title`, `rationale`, `affects`, `change` | `tags` |
 | `method` | `name` | `design`, `paradigm`, `sampling`, `instruments`, `analysis`, `limitations`, `questions`, `tags` |
 | `question` | `text` | `objectives`, `tags` |
@@ -639,6 +713,7 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 | `claim-weak-evidence` | medium | Every evidence item supporting the claim has `strength: weak`. |
 | `hypothesis-untested` | medium | No claim addresses any of the hypothesis's questions. |
 | `uncited-source` | low | No evidence item's `source` is this SRC id directly - the same rule, and the same name, as `cite check`'s `uncited-source` finding. |
+| `result-uncited` | low | No evidence item cites this RESULT. A superseded result is skipped: a later run replaced it, and citing a number that is no longer current is not the fix. |
 | `artifact-unmined` | low | The artifact's role is classified (not `unknown`), but no source, fact, or evidence references it. |
 | `open-conflict` | high | An unresolved fact conflict (see `status` above), one gap per conflict key. |
 | `disputed-pair` | high | A pair of claims that contradict each other with neither side `rejected` (same rule as `status`'s disputed pairs). |
@@ -659,6 +734,316 @@ once one high-severity gap or 3 gaps of any severity exist; the ranking decides 
 among the higher-impact rules. `next`'s closing `consistent` line reads
 `N open gap(s); run phdude gaps` whenever the report is not empty, and claims the workspace is
 consistent only when it is.
+
+### `phdude data add <path> | list | show <id> | profile <id>`
+
+```
+phdude data add data/survey.csv
+phdude data add data/interviews.csv --json '{"description":"Round 1","license":"CC-BY-4.0","sensitive":true}'
+phdude data list
+phdude data show DATASET-…
+phdude data profile DATASET-…
+```
+
+Registers a file under `data/` as a research object (spec §3.2) and profiles it, so an analysis
+can say which data it ran on and `repro` can say when that data changed.
+
+The file's bytes are the identity: the id is `DATASET-<first 10 of the sha256 of the bytes>`.
+Adding the same file again is a no-op — no event, no second record, and the reply says
+`Unchanged`. Editing the file and adding it again records a *new* dataset, whose `versions_of`
+points at the first one at that path and whose `latest` is `true`; every earlier version has
+`latest: false`. That is the same shape `phdude ingest` uses for artifact versions, and it is
+why an analysis that ran on the old bytes still names the dataset it actually read.
+
+| Field | Where it comes from |
+|---|---|
+| `path` | The argument, workspace-relative. It must resolve inside `data/`, or the command exits 2, and its real path must stay inside the workspace, or it exits 1: a symlink is not a way in. |
+| `hash`, `bytes` | The file itself. |
+| `format` | The extension: `csv`, `tsv`, `json`, `xlsx`, anything else `other`. |
+| `profile` | The parsed table (see below). |
+| `description`, `license`, `sensitive` | `--json '<object>'` or `--file <path>.json`. Nothing else is accepted. |
+| `state` | Always `candidate` on registration, like every other new object. |
+
+The profile is a count of what is in the file, never a finding about it. `csv` and `tsv` are
+read as delimited text, `xlsx` through the OOXML parser (first sheet), and `json` only when it
+is an array of objects, whose keys become the columns. Any other shape — `other`, a bare JSON
+object, an array of numbers — is registered and hashed with an empty profile, because PhDude
+will not guess at a table that is not there.
+
+Per column, over the non-empty cells: `inferred_type` is `number` when every cell is numeric,
+then `boolean` (`true`/`false`/`yes`/`no`), then `date` (`YYYY-MM-DD` or a full ISO timestamp),
+`empty` when the column has no values at all, and `string` otherwise. A column of `0`s and `1`s
+is a `number`: the report says what the cells hold, not what they might have meant. `missing`
+counts the blank cells, including the ones a short row never had. `distinct` is capped at 50,
+and `distinct_truncated: true` says the real count is higher. `samples` carries up to five
+distinct values.
+
+With `sensitive: true` the `samples` are omitted entirely, everywhere. The profile is committed
+to the repository, and five values are enough to expose the column they came from; the types,
+the missing counts and the distinct counts stay.
+
+`data list` prints one line per dataset with its path, format and shape, marking superseded
+versions. `data show` prints the whole record as YAML. `data profile` prints the column table.
+Only `data add` writes: one `data` event per registration, naming the new dataset and every
+version it superseded. The three readers write nothing.
+
+### `phdude analyze add --json | list | show <id> | run <id> | runs <id>`
+
+```
+phdude analyze add --json '{"name":"describe survey","runtime":"node","script":"analysis/describe.mjs","inputs":["DATASET-8f0a1c2b3d"]}'
+phdude analyze add --file analysis.json
+phdude analyze list
+phdude analyze show ANALYSIS-…
+phdude analyze run ANALYSIS-… --allow-exec
+phdude analyze run ANALYSIS-… --force
+phdude analyze runs ANALYSIS-…
+```
+
+Declares a script as a research object, runs it under the workspace execution policy, and turns
+what it reports into `RESULT-` objects (spec §3.3). `add` never runs anything; `run` is the only
+command in PhDude that executes a researcher's code. `add` takes the declaration inline with
+`--json` or from a file with `--file <path>.json`, exactly like `data`, `table` and `figure`.
+
+| Field | What it holds |
+|---|---|
+| `name` | The identity. `ANALYSIS-<first 10 of the sha256 of the normalized name>`. |
+| `runtime` | `node`, `python3`, `Rscript` or `other`. Which executable it resolves to is `execution.runtimes` in the policy, not the record. |
+| `script` | Workspace-relative, and it must resolve inside `analysis/`. Anything that leaves that directory exits 2, and a link whose real path leaves the workspace exits 1 — at `add`, and again before every run. |
+| `args` | Passed to the script after the script path, as an argument array. Never a shell. |
+| `inputs` | `DATASET-` ids. Each one must already be registered with `phdude data add`. |
+| `outputs.results` | Where the script writes `results.json`. Defaults to `analysis/out/<name>/results.json`, and must also stay inside `analysis/` — real path included, checked again after the run before PhDude reads it. |
+| `outputs.files` | Anything else the run produces — a figure, a table. Workspace-relative; hashed after every successful run, once the real path is confirmed inside the workspace. |
+| `params` | A free object. PhDude records it and never interprets it. |
+| `runs` | One entry per run: `at`, `exit`, `duration_ms`, `input_hashes`, `output_hashes`, `results`, plus `stderr_tail`, `timed_out` and `signal` when it failed. |
+
+Declaring the same name again corrects the declaration in place — a mistyped script path is
+fixed with the command that made it — and the record keeps its creation time, its state and
+every run already on it. A re-declaration that changes nothing writes nothing.
+
+#### The script contract
+
+A script gets `PHDUDE_WORKSPACE` and `PHDUDE_ANALYSIS` in its environment, `PATH`, `HOME` and
+`LANG` from the parent, and nothing else: an API key in your shell is not one `os.environ` away
+from a script the workspace declared. It runs with the workspace root as its working directory,
+through `spawn` with an argument array, never a shell.
+
+It reads its inputs from `data/` and writes:
+
+```json
+{
+  "results": [
+    { "key": "mean_age", "summary": "Mean respondent age is 38.4 years", "values": { "mean": 38.4, "n": 312 }, "unit": "years" }
+  ],
+  "notes": ["optional"]
+}
+```
+
+`schemas/results-json.json` is that contract. Each entry becomes a `RESULT-` with `from` set to
+the analysis, `values` as written, and `ext.analysis: { key, run_at, unit? }`.
+
+#### What a run does, in order
+
+1. The workspace must be current, or the run stops and asks for `phdude migrate`.
+2. The id must resolve to a declared analysis, or: exit 1.
+3. `execution.enabled` must be true, or `--allow-exec` must be passed. Otherwise: exit 3.
+4. Every input dataset's file must still hash to what its `DATASET` record was registered
+   against. A file edited without `phdude data add` is refused — exit 2, no run, no event —
+   because the run would write down the registered hash for bytes it did not read. `--force`
+   does not override this: there is no reading of "run it anyway" that leaves the record true.
+5. If every input dataset is at the same bytes as the last **successful** run, the run is
+   refused as up to date — exit 0, no event, nothing written. `--force` runs it anyway.
+6. The runner spawns the script with the policy's `timeout_seconds`.
+7. A non-zero exit records the run with its exit code and the last 2000 characters of stderr,
+   writes no result, and exits 4. A run that outran the timeout is recorded the same way with
+   `timed_out: true`, and one a signal ended with `exit: null` and `signal: SIGKILL` — never as
+   a success, because a killed run is shaped like a clean one apart from the missing code.
+   Either way the analysis stays stale, so the next run is not refused.
+8. On success, `results.json` is read and validated. A missing, unparseable or off-contract file
+   is a validation error (exit 2) that records **nothing** — a run PhDude cannot read the
+   results of must not count as the successful run that makes an analysis up to date.
+9. Each finding is matched against what this analysis already recorded, by its `key`:
+
+| The key came back… | What happens |
+|---|---|
+| for the first time | a new `RESULT-`, state `candidate` |
+| with identical values and unit | kept untouched; nothing is written |
+| with a different summary | a new `RESULT-`, and the old one becomes `rejected` with `superseded_by` pointing at it |
+| with new values under the same summary | the same record, corrected in place |
+
+The last row is the identity rule showing through: a result id is derived from its summary and
+its analysis, so a record cannot supersede itself. A script that wants version history puts the
+finding in the summary — `"Mean respondent age is 38.4 years"`, not `"Mean age"`.
+
+Then the run is appended and exactly one `analyze` event is recorded, naming the analysis and
+every result the run wrote.
+
+`analyze runs` prints the run table and the recorded stderr of any run that failed. `analyze
+list` and `analyze show` write nothing; `analyze add` and `analyze run` do.
+### `phdude table add --json '<declaration>' | list | show <id> | build <id>`
+
+```
+phdude table add --json '{"name":"mean-weight","caption":"Mean weight by group.","source":{"result":"RESULT-…"}}'
+phdude table add --file table.json
+phdude table list
+phdude table show TABLE-…
+phdude table build TABLE-… --format csv
+phdude table build TABLE-… --force
+```
+
+A table is a declaration, not a file: which source it renders, which columns, in which formats.
+`build` turns it into files under `tables/out/` and records what it read and what it wrote, so a
+reader months later can tell which numbers a table in the manuscript came from.
+
+| Field | Meaning |
+|---|---|
+| `name` | Lowercase words joined by `-`. It is the identity, and it is the filename under `tables/out/`. |
+| `caption` | The sentence under the table. Required. |
+| `source` | Exactly one of `{"result":"RESULT-…"}` or `{"dataset":"DATASET-…","columns":["…"],"limit":n}`. |
+| `columns` | `[{"key":…,"label":…,"format":…}]`. Omit it and every key the source has becomes a column. |
+| `formats` | Any of `md`, `latex`, `csv`. All three when omitted. |
+
+`format` is `text`, `number:<0-9>` or `percent:<0-9>`. `number:2` prints `71.40`; `percent:1`
+reads the value as a fraction and prints `42.4%`. A cell the format cannot read as a number is
+printed as it was written — the renderer reports the analysis, it does not correct it.
+
+A **result** source renders one row per key of its `values` (columns `key` and `value`), in the
+order the analysis wrote them; a result whose `values` is a list of row objects renders those
+rows. A **dataset** source renders the parsed file, header first, narrowed by `columns` and
+`limit`. A dataset PhDude cannot parse into a table is a validation error rather than an empty
+table.
+
+The Markdown form is a pipe table with a `Table:` caption line and numeric columns right-aligned.
+The LaTeX form is a `booktabs` `table` with a `\caption`, a `\label{tab:<name>}` and `& % $ # _
+{ } ~ ^ \` escaped. The CSV form is the header and the rows, quoted per RFC 4180, with no caption.
+
+Declaring the same name again corrects the declaration in place — same id, same build history —
+and a declaration identical to the recorded one writes nothing and records no event.
+
+`build` is up to date, and writes nothing, when the source hashes to what the last run recorded
+*and* every output file already holds exactly the bytes this build would write. `--force` builds
+anyway. `--format` narrows the build to some of the formats the table declares; a format it does
+not declare exits 2. One `table` event per declaration and per build; `list` and `show` write
+nothing.
+
+The recorded `source_hash` is the source as it is now: a dataset hashes to the bytes on disk, not
+to the bytes registered with `phdude data add`. Editing the file is what has to make everything
+built from it stale, and nothing watches the file for that to happen.
+
+### `phdude figure add --json '<declaration>' | list | show <id> | build <id> | check`
+
+```
+phdude figure add --json '{"name":"mean-weight","caption":"…","alt":"…","generator":{…},"inputs":["RESULT-…"],"outputs":[{"path":"figures/out/mean-weight.svg","format":"svg"}]}'
+phdude figure add --file figure.json
+phdude figure list
+phdude figure show FIG-…
+phdude figure build FIG-… --allow-exec
+phdude figure build FIG-… --allow-exec --force
+phdude figure check
+```
+
+A figure is a declaration too: its alt text, the generator that draws it, what it is drawn from,
+and the files it writes.
+
+| Field | Meaning |
+|---|---|
+| `name` | Lowercase words joined by `-`; the identity. |
+| `caption` | The sentence under the figure. Required. |
+| `alt` | What the figure **shows**, in one sentence (PRD §100). Required and non-empty; a figure without it never becomes a record. |
+| `generator` | `{"runtime":…,"script":…,"args":[…]}`. |
+| `inputs` | `RESULT` and `DATASET` ids. What the run hashes, and what makes the figure stale. |
+| `outputs` | `[{"path":"figures/out/….svg","format":"svg\|png\|pdf"}]`, at least one, all under `figures/` — real path included, checked again after the build before each one is hashed. |
+
+`script` is either `phdude:bar-chart` — the accessible SVG generator the package ships — or a
+script the workspace holds under `figures/`, whose real path must stay inside the workspace or
+`build` exits 1. Nothing else runs. `runtime` is resolved through
+`execution.runtimes` in `.phdude/research-policy.yaml`; a runtime the workspace never named exits
+2. The generator is run with `spawn` and an argument array, never a shell, with the workspace
+as its working directory and an environment holding `PATH`, `HOME`, `LANG`, `PHDUDE_WORKSPACE`
+and `PHDUDE_FIGURE` — nothing else of yours reaches it.
+
+`build` refuses with exit 3 unless `execution.enabled: true` or `--allow-exec`. A build whose
+inputs still hash to what the last successful run recorded, whose generator script has not
+changed, and whose declared files still hold exactly the bytes that run wrote, is reported as
+`up to date`: nothing is spawned, nothing is written, no run and no event are recorded, and
+`--json` says `"built": false`. `--force` builds anyway. A shipped generator has no `script_hash`
+on the run — it is PhDude's own code, versioned with the package, the way the table renderers are.
+
+After the generator exits, `build` verifies that every declared output is on disk, hashes each
+one, and appends a run `{at, exit, duration_ms, input_hashes, output_hashes}` plus `script_hash`
+for a workspace generator. Every build that ran is recorded and is one `figure` event, including
+the ones that failed:
+
+- A non-zero exit records the run with its exit code, hashes nothing, prints the generator's last
+  lines of output, and exits 4.
+- A generator that exits 0 without writing what it declared is treated the same way: the run is
+  recorded, nothing is hashed, and the missing paths are named. Exit 4.
+- A generator that outruns `execution.timeout_seconds` records the run with `exit: null` and
+  `timed_out: true`, and exits 4 pointing at the policy key.
+- A generator a signal ended records the run with `exit: null` and `signal`, and exits 4 naming
+  the signal — never as a run that returned nothing, which is the shape it otherwise has.
+
+`check` reports, for every figure: `up-to-date`, `stale`, `missing-output` (a declared file is
+not on disk) or `never-run`, plus `missing-alt` for a figure whose alt text was edited away. The
+rows are the figure rows of `phdude repro check`, taken from the same computation rather than a
+second one, so the two commands say the same thing about the same figure — including the drift
+reading (`bytes changed on disk`) and the upstream hop (`comes from ANALYSIS-…, which is stale`).
+`--json` reports each figure as `{kind, id, name, status, reasons}`, the shape `repro check` uses.
+It runs nothing, writes nothing and always exits 0 — a stale figure is a state to fix, not a
+failure.
+
+### `phdude repro check [--json]`
+
+```
+phdude repro check
+phdude repro check --json
+```
+
+One line per analysis, table and figure, saying whether what is on disk still follows from what
+is recorded:
+
+| Status | What it means |
+|---|---|
+| `up-to-date` | Every input still hashes to what the last successful run recorded, and every declared output is on disk. |
+| `stale` | An input moved: its bytes or its values are not what the run read, or it comes from an analysis that is itself stale or has never run. |
+| `never-run` | Nothing has been produced yet — no run, or none that succeeded. |
+| `missing-output` | The record claims a file that is not there. |
+
+Each line that is not `up-to-date` carries its reasons:
+
+```
+ANALYSIS-9d0e26cb51  daily-use-by-channel    stale
+  - input DATASET-f4b21a0c3d bytes changed on disk
+TABLE-58c0f31a72     daily-use-by-channel    stale
+  - input RESULT-1b90ce4a77 comes from ANALYSIS-9d0e26cb51, which is stale
+FIG-2a1c7e5b90       respondents-by-channel  never-run
+  - no successful run recorded
+```
+
+The three stale reasons are different problems with different fixes:
+
+- **`bytes changed on disk`** — the file is not the one its `DATASET` record was registered
+  against. Someone edited `data/survey.csv` and the workspace was never told. Until it is,
+  `phdude analyze run` refuses: recording the registered hash for bytes it did not read would
+  write down a lineage the run never had. The fix is three steps, and `phdude next` prints all
+  three: `phdude data add data/survey.csv`, then `phdude analyze add` with the new `DATASET` id,
+  then `phdude analyze run`.
+- **`changed since the last run`** — the input itself moved: a re-run produced different values,
+  or the analysis was re-pointed at a dataset its last run never read. `phdude analyze run`,
+  `phdude table build` or `phdude figure build` is the fix.
+- **`comes from ANALYSIS-…, which is stale`** — the table or figure reads a `RESULT` whose
+  analysis has not been re-run yet, so the numbers it renders are no longer the ones the data
+  supports. Deal with the analysis first, then rebuild.
+
+A dataset is hashed from its file's bytes, which is what makes an edit to `data/survey.csv`
+visible here without anything having to watch the file. A result is hashed from its `values`, so
+editing a result's summary does not ask for a rebuild — and staleness travels one hop through
+the analysis that wrote those values, so editing the data marks the analysis, the table and the
+figure in the same report.
+
+`repro check` runs nothing, writes nothing and **always exits 0**. It is a report: which stale
+item to deal with, and when, is the researcher's call. `phdude next` picks the same items up as
+its `analysis-stale`, `figure-missing-alt` and `never-run` recommendations, and `phdude status`
+counts them in its `Analysis:` block.
 
 ### `phdude prose <section> | --file <path>`
 
@@ -930,29 +1315,30 @@ records no event.
 
 Upgrades a workspace written by an older PhDude to the current workspace version.
 `phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
-current version is 2. Migration steps ship with the package, one module per step, and run in
+current version is 3. Migration steps ship with the package, one module per step, and run in
 order through the store; each applied step appends one `migrate` event.
 
-Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 2)`
+Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 3)`
 as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
 `packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
 
 A workspace written by a *newer* PhDude is the same problem from the other end, and this build
 cannot migrate its way out of it. Reads warn with
-`workspace version 3 is newer than this PhDude (2)`; the same writes exit 1 with that message
+`workspace version 4 is newer than this PhDude (3)`; the same writes exit 1 with that message
 and the hint `upgrade phdude`.
 
 `--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
 undo for an in-place rewrite, `migrate` exits 3 on a dirty git tree unless `--force` is given; a
 dry run is a read and stays available either way. Steps are idempotent, so running `migrate` on
-an up-to-date workspace prints `Workspace is up to date (2)` and records no event.
+an up-to-date workspace prints `Workspace is up to date (3)` and records no event.
 
 ### `phdude doctor`
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
-that version is `(current)`, `(needs migration → 2)` or `(newer than this phdude)`, whether
-network access is enabled and the configured search providers, the cache
+that version is `(current)`, `(needs migration → 3)` or `(newer than this phdude)`, whether
+network access is enabled and the configured search providers, whether script execution is
+enabled and under what limits, the cache
 entry count, the discoverable packs and the schema
 versions, plus warnings for anything missing. It is diagnostic only and never writes.
 
@@ -964,9 +1350,15 @@ provider PhDude can search — `openalex`, `crossref`, `arxiv`, `semantic-schola
 are all registered in `src/adapters/search/index.js` and can be added to `providers:` to enable
 them. See [SearchProvider](extending.md#searchprovider).
 
-A policy file that is not valid YAML replaces both lines with
+The `execution:` line reads the same file and reports the other switch the workspace holds
+shut: `enabled` only when `execution.enabled: true`, the runtime names it will resolve (the
+three built in, plus anything `execution.runtimes` adds), and `execution.timeout_seconds`. It
+answers "why did `analyze run` refuse" without running anything either. `--json` carries it as
+`execution: { enabled, runtimes[], timeoutSeconds }`.
+
+A policy file that is not valid YAML replaces all three lines with
 `policy: unreadable (malformed YAML: .phdude/research-policy.yaml)`, and `--json` reports it as
-`policyError` with `network: null` and `providers: []`. `doctor` still exits 0 — printing the
+`policyError` with `network: null`, `providers: []` and `execution: null`. `doctor` still exits 0 — printing the
 built-in defaults there would answer the question with a fiction. Every other command that
 reads the policy (`status`, `gaps`, `next`, `freshness`, `cite check`, `research`,
 `research-fresh`) exits 2 with that same message and the hint `fix the file`.

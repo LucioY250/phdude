@@ -4,7 +4,7 @@
   "$defs": {
     "id": {
       "type": "string",
-      "pattern": "^(ART|SRC|CLAIM|EVID|FACT|RESULT|DEC|METH|CAND|SEARCH)-[0-9a-f]{10}$|^(RQ|H)-[0-9]+$"
+      "pattern": "^(ART|SRC|CLAIM|EVID|FACT|RESULT|DEC|METH|CAND|SEARCH|DATASET|ANALYSIS|TABLE|FIG)-[0-9a-f]{10}$|^(RQ|H)-[0-9]+$"
     },
     "actor": {
       "type": "object",

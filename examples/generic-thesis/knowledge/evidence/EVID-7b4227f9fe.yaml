@@ -1,0 +1,16 @@
+schema: phdude.evidence
+version: 1
+id: EVID-7b4227f9fe
+created: 2026-09-01T00:01:27.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: RESULT-d09b2158fb
+locator: daily_use_by_channel
+excerpt: Daily use is reported by 75% of the mailing-list sample, 50% of the campus social media sample and 83% of the stratified campus sample.
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from: []

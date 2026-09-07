@@ -32,6 +32,34 @@ A "theme" asserted without excerpts tying it to the coded data is `candidate`, n
 - **Ethnography** - sustained observation and participation in a setting.
 - **Case study** - in-depth analysis of one bounded case using multiple data sources.
 
+## Analysis
+
+Qualitative analysis is still analysis: the coding is the method, and a claim that rests on it
+owes a record of how the codes were applied. Register transcripts and coding exports with
+`phdude data add`, declare the script that summarises them with `phdude analyze add`, and let
+`phdude analyze run` produce the `RESULT` objects you cite. Interpretation stays yours; what the
+workspace holds is the count, the code and the excerpt behind it.
+
+What the scripts in this paradigm usually do:
+
+- **Summarise the corpus.** How many interviews, of what length, from which participants, and how
+  much of it was coded.
+- **Report the coding, not only the themes.** Codes per transcript, the passages behind each
+  theme, and when a code was added, split or retired.
+- **Quantify agreement where more than one coder worked.** Inter-coder agreement per code, and
+  the codes it was worst on - the disagreement is a finding, not a defect to hide.
+- **Show saturation as evidence.** New codes per interview over the sequence, so "saturation was
+  reached" is a curve rather than an assertion.
+
+What a `RESULT` from this paradigm has to carry in its `values`: counts a reader can check - the
+transcripts, the coded segments, the participants a theme appears in - never a percentage that
+implies a sample it does not have. The `summary` names the pattern and its scope in one sentence:
+"participants in this study described...", not "most people".
+
+A figure here shows structure, not significance: codes per theme, or new codes over the interview
+sequence. Declare it with `phdude figure add` and write alt text that states what it shows.
+Quotes stay in the prose, tied to a code and a participant, and never in a chart.
+
 ## Review questions
 
 - Was saturation reached and justified with evidence (e.g., no new codes in the last N

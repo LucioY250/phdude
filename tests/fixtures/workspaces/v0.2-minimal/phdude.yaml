@@ -1,0 +1,11 @@
+schema: phdude.project
+version: 1
+workspace_version: 2
+title: Coastal Sediment Survey
+language: en
+fields: []
+methods: []
+outputs:
+  - thesis
+mode: full
+agents: []

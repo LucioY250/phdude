@@ -2,7 +2,7 @@ import { readFile, readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CURRENT_WORKSPACE_VERSION } from '../domain/versioning.js';
-import { SKILL_POLICY_HINT, skillPolicyViolation } from './skills.js';
+import { skillPolicyViolation } from './skills.js';
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEFAULTS_DIR = join(PACKAGE_ROOT, 'defaults');
@@ -18,6 +18,7 @@ const DIRS = [
   'knowledge/facts',
   'knowledge/results',
   'knowledge/candidates',
+  'knowledge/datasets',
   'research/questions',
   'research/hypotheses',
   'research/methods',
@@ -25,8 +26,11 @@ const DIRS = [
   'decisions',
   'data',
   'analysis',
+  'analysis/out',
   'figures',
+  'figures/out',
   'tables',
+  'tables/out',
   'manuscript',
   'manuscript/reports',
   'templates',
@@ -98,7 +102,7 @@ async function copyDirInto(srcDir, destRel, store, created, updated, skipped) {
 //
 // Every skill under srcDir is loaded and validated before anything is copied - a corrupt skill
 // in the source tree must not leave a half-populated `.phdude/skills/`. A skill whose declared
-// network permission the workspace policy has not opened is *withheld* rather than refused:
+// permissions the workspace policy has not opened is *withheld* rather than refused:
 // `init` on a default workspace must still succeed, and simply not install the skill that
 // wanted more than the policy grants. `discoverSkills` is injected (see
 // adapters/skills/loader.js) so this application module never imports an adapter directly.
@@ -113,8 +117,8 @@ export async function copySkills(
   const skills = await discoverSkills([{ dir: srcDir, source: 'core' }]);
   const withheld = [];
   for (const skill of skills) {
-    const reason = skillPolicyViolation(skill, policy);
-    if (reason) withheld.push({ name: skill.name, reason, hint: SKILL_POLICY_HINT });
+    const violation = skillPolicyViolation(skill, policy);
+    if (violation) withheld.push({ name: skill.name, ...violation });
   }
   const withheldNames = new Set(withheld.map((entry) => entry.name));
   const installed = skills

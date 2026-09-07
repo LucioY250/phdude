@@ -9,7 +9,7 @@
 Your AI can write. PhDude helps make the research worth publishing.
 
 [![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.4.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
@@ -37,18 +37,48 @@ It makes no assumptions about your field. A clinical trial, an archival history 
 empirical software-engineering paper get the same treatment; discipline-specific vocabulary
 and review questions arrive as packs.
 
-> **Where things stand.** This is v0.4. The deterministic core is done and tested: workspace,
+> **Where things stand.** This is v0.5. The deterministic core is done and tested: workspace,
 > ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the
 > citation registry, the literature matrix and gap report, workspace migrations, five literature
-> search providers, and the Claude Code and Codex adapters. New in this release, PhDude helps
-> *write*: a manuscript with per-section status, a bounded writing context, six deterministic
-> gates every draft goes through, and a prose report that shows its arithmetic. Analysis
-> execution and document rendering come next; see the [roadmap](#roadmap).
+> search providers, and the Claude Code and Codex adapters. v0.4 taught PhDude to help *write*:
+> a manuscript with per-section status, a bounded writing context, six deterministic gates every
+> draft goes through, and a prose report that shows its arithmetic. New in this release, it runs
+> the *analysis* — datasets, scripts under an execution policy, results with lineage, tables,
+> figures and `phdude repro check`. Document rendering comes next; see the
+> [roadmap](#roadmap).
 
-## What's new in 0.4
+## What's new in 0.5
 
-v0.4 is the Co-Author. PhDude does not write your prose — your agent still does that — but a
-draft now has to get past the workspace before it becomes a section of your manuscript.
+v0.5 is Analysis & Visualization. A number in your thesis now has a chain behind it: the file it
+came from, the script that read it, the run that produced it, and the table and figure drawn from
+it — all recorded, all hashed, and all checkable in one command.
+
+- **Datasets with a profile.** `phdude data add data/survey.csv` hashes a file's bytes, makes
+  that hash its identity, and records rows, per-column inferred types, missing cells and distinct
+  values. Editing the file and adding it again makes a second dataset linked to the first.
+- **Analyses that PhDude runs, not you.** `phdude analyze add` declares a script under
+  `analysis/` and the datasets it reads; `phdude analyze run` executes it with an argument array,
+  no shell, a minimal environment and a timeout, and records the hash of every input and output.
+  It refuses to re-run when nothing has changed, and refuses to run at all unless the execution
+  policy is open.
+- **Results with lineage.** Each entry in the script's `results.json` becomes a `RESULT` you can
+  cite, pointing back at the analysis that produced it. A re-run that states the finding
+  differently supersedes the old result; a re-run that only moves the numbers under the same
+  sentence corrects that record in place.
+- **Tables and figures as objects.** `phdude table build` renders a result or a dataset as
+  Markdown, LaTeX and CSV, deterministically. `phdude figure build` runs a generator through the
+  same execution policy; `phdude:bar-chart` ships with PhDude and draws an accessible SVG.
+  **Alt text is required** — a figure without it never becomes a record at all.
+- **`phdude repro check`.** One line per analysis, table and figure, saying whether what is on
+  disk still follows from what is recorded, and naming the input that moved. It always exits 0.
+  `status`, `next` and `gaps` read the same report.
+- **Execution is closed by default.** `execution.enabled: false` in a fresh workspace, and the
+  core skill forbids your agent from running a script any other way. Migration 0002 brings an
+  older workspace to version 3.
+
+See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
+
+### What 0.4 added: the writing pipeline
 
 - **A manuscript with a status per section.** `phdude manuscript init` plans the six standard
   sections; each one moves `planned → draft → revised → approved` and carries the hash of the
@@ -74,12 +104,13 @@ draft now has to get past the workspace before it becomes a section of your manu
 
 ## Contents
 
-- [What's new in 0.4](#whats-new-in-04)
+- [What's new in 0.5](#whats-new-in-05)
 - [How it works](#how-it-works)
 - [Install](#install)
 - [Set up your agent](#set-up-your-agent) (Claude Code, Codex, anything else)
 - [A first session](#a-first-session)
 - [Finding literature](#finding-literature)
+- [Analysis and figures](#analysis-and-figures)
 - [Writing with PhDude](#writing-with-phdude)
 - [What's in the box](#whats-in-the-box)
 - [Your workspace](#your-workspace)
@@ -134,13 +165,13 @@ command that does it. There is no hidden score.
 
 ## Install
 
-v0.4 is not on npm yet. Install it from the repository:
+v0.5 is not on npm yet. Install it from the repository:
 
 ```
 git clone https://github.com/LucioY250/phdude && cd phdude
 npm ci
 npm link
-phdude --version      # phdude 0.4.0
+phdude --version      # phdude 0.5.0
 ```
 
 Node 22 or newer. `pdftotext` (poppler-utils) is optional: without it PDFs are still
@@ -170,7 +201,7 @@ This writes:
 |---|---|
 | `CLAUDE.md` | Entry point. Imports `AGENTS.md` and adds Claude-specific notes. |
 | `AGENTS.md` | Operating rules, the command reference, and an *index* of skills. Skills are loaded on demand, not up front, to keep your context small. |
-| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-authors`, `/phdude-write`, `/phdude-deslop`, `/phdude-manuscript`, `/phdude-prose`, `/phdude-packs`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
+| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-data`, `/phdude-analyze`, `/phdude-table`, `/phdude-figure`, `/phdude-repro`, `/phdude-authors`, `/phdude-write`, `/phdude-deslop`, `/phdude-manuscript`, `/phdude-prose`, `/phdude-packs`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
 | `.phdude/skills/*/SKILL.md` | The skills themselves, in the open `SKILL.md` convention. |
 
 Open Claude Code in the directory and start with:
@@ -360,6 +391,118 @@ failed call included, because the query left the machine either way:
 Your agent is held to the same rule: the core skill forbids it from fetching a paper, an
 abstract or a DOI on its own, by any means. If the policy is closed, it reports that and asks
 you — it does not pass `--allow-network` on your behalf.
+
+## Analysis and figures
+
+A number in a thesis has to come from somewhere you can point at. PhDude does not do statistics —
+your script does, in whatever language you already use — but it holds on to which file the script
+read, which bytes that file had, what the script reported, and which table and figure were drawn
+from it.
+
+<p align="center"><img src="docs/assets/diagrams/analysis.svg" alt="The analysis chain: a file under data/ becomes a hashed DATASET, a declared ANALYSIS script reads it and writes results.json, each finding becomes a RESULT, and a RESULT becomes a table and a figure; repro check re-hashes the file to see whether any of it still holds" width="900"></p>
+
+Start by registering the data:
+
+```
+phdude data add data/survey.csv
+```
+
+The file's bytes are its identity, so the id is `DATASET-<hash>`: re-adding the same file does
+nothing, and editing it and adding it again makes a second dataset linked to the first. The
+record carries a profile you can read — rows, each column's inferred type, how many cells are
+missing, how many distinct values it holds. Set `"sensitive": true` and the profile keeps the
+counts and drops the values.
+
+Then declare what reads it:
+
+```
+phdude analyze add --json '{"name":"survey descriptives","runtime":"node",
+  "script":"analysis/describe.mjs","inputs":["DATASET-bc43bf3439"]}'
+phdude analyze run ANALYSIS-a5b945f2cd --allow-exec
+```
+
+The script is yours and it stays yours. PhDude runs it with an argument array and no shell, with
+the workspace as the working directory and an environment holding almost nothing —
+`PHDUDE_WORKSPACE`, `PHDUDE_ANALYSIS`, `PATH`, `HOME`, `LANG` — and it does not run at all unless
+`execution.enabled: true` is in your research policy or you pass `--allow-exec`. **A fresh
+workspace has execution closed.** Nothing in PhDude will open it for you, and your agent is
+forbidden from running the script another way.
+
+What the script owes back is one JSON file:
+
+```json
+{ "results": [ { "key": "daily_use_by_channel",
+                 "summary": "Daily use is lowest in the social-media sample.",
+                 "values": { "mailing list": 0.75, "campus social media": 0.5 },
+                 "unit": "proportion" } ] }
+```
+
+Each entry becomes a `RESULT` you can cite like any other knowledge, with `from` pointing back at
+the analysis. Run it again with the same numbers and nothing happens. Run it again and get a
+different *sentence* for a key, and the old result is marked superseded rather than overwritten,
+so the version of the finding your draft quoted is still there. Run it again and get different
+*numbers* under the same sentence, and that record is corrected in place: a result's id comes
+from its summary and its analysis, so it has no second id to supersede itself with. Put the
+number in the summary — `"Mean respondent age is 38.4 years"`, not `"Mean age"` — when you want
+the old one kept. The run itself is recorded with the hash of every input it read and every file
+it wrote.
+
+A result becomes a table, and a table is three files:
+
+```
+phdude table add --json '{"name":"daily-use-by-channel","caption":"Daily use by channel.",
+  "source":{"result":"RESULT-d09b2158fb"},
+  "columns":[{"key":"key","label":"Recruitment channel"},
+             {"key":"value","label":"Daily use","format":"percent:0"}]}'
+phdude table build TABLE-49db8343a8
+```
+
+Markdown, LaTeX (`booktabs`, with a `\label`) and CSV under `tables/out/`, rendered
+deterministically and escaped properly, so the same result gives you the same bytes every time.
+
+A figure is drawn by a generator, and it needs alt text before it exists:
+
+```
+phdude figure add --json '{"name":"respondents-by-channel","caption":"Respondents by channel.",
+  "alt":"Bar chart: the mailing list contributed 8 of the 20 respondents…",
+  "generator":{"runtime":"node","script":"phdude:bar-chart","args":["--input","…","--key","…"]},
+  "inputs":["RESULT-8189aa9910"],
+  "outputs":[{"path":"figures/out/respondents-by-channel.svg","format":"svg"}]}'
+phdude figure build FIG-843c619df9 --allow-exec
+```
+
+`alt` is required and cannot be empty. A figure without a sentence saying what it shows is not a
+figure a thesis can publish, and the moment to write that sentence is while you still remember
+the finding. `phdude:bar-chart` is the one generator that ships with PhDude — plain Node, no
+dependencies, an accessible SVG with a title, a description, real axis labels and one colour that
+survives being printed in grayscale. Point `script` at something under `figures/` and PhDude runs
+yours instead.
+
+Then the question all of this exists to answer:
+
+```
+$ phdude repro check
+ANALYSIS-a5b945f2cd  survey descriptives     up-to-date
+TABLE-49db8343a8     daily-use-by-channel    up-to-date
+FIG-843c619df9       respondents-by-channel  up-to-date
+
+3 item(s): 3 up-to-date
+```
+
+Edit `data/survey.csv` and run it again, and all three say `stale`: the analysis because
+`input DATASET-bc43bf3439 bytes changed on disk`, the table and the figure because the result
+they draw comes from an analysis that is itself stale. Nothing was watching the file; the check
+simply re-hashes it. `phdude repro check` always exits 0. It is a report, not a gate: it tells
+you the numbers in your manuscript no longer follow from the data under them, and what to do
+about that is yours to decide.
+
+Until the file is registered again, `phdude analyze run` refuses it rather than recording a hash
+for bytes it never read. `phdude next` prints the three commands that clear it: register the
+file, re-declare the analysis against the new `DATASET` id, re-run.
+
+`phdude status` counts the same things in its `Analysis:` block, `phdude next` raises a stale
+analysis to high impact once a supported or canonical claim rests on one of its results, and
+`phdude gaps` reports a result nothing has cited yet.
 
 ## Writing with PhDude
 
@@ -552,7 +695,8 @@ phdude/
 │   └── schemas/           the JSON Schema validator
 ├── schemas/               one JSON Schema per research object, plus the skill contract
 ├── migrations/            one module per workspace-version step
-├── skills/                the eight core skills, one SKILL.md directory each
+├── skills/                the twelve core skills, one SKILL.md directory each
+├── generators/            the figure generators PhDude ships (bar-chart.mjs, plain Node)
 ├── commands/              the Claude Code slash-command templates
 ├── packs/                 seven starter packs: fields/ and methods/
 ├── defaults/              the research constitution and policies a new workspace gets
@@ -587,15 +731,23 @@ my-research/
 │   ├── claims/          # CLAIM-*.yaml
 │   ├── evidence/        # EVID-*.yaml
 │   ├── facts/           # FACT-*.yaml  project facts with their origin
-│   ├── results/         # RESULT-*.yaml
+│   ├── results/         # RESULT-*.yaml  findings, from an analysis or recorded by hand
+│   ├── datasets/        # DATASET-*.yaml  a file under data/, hashed and profiled
 │   └── candidates/      # CAND-*.yaml  literature hits awaiting your verdict, not yet sources
 ├── research/            # questions/ RQ-*.yaml · hypotheses/ H-*.yaml · methods/ METH-*.yaml
 │                        # searches/  SEARCH-*.yaml  what was asked, of whom, and when
 ├── decisions/           # DEC-*.yaml
 ├── manuscript/          # manuscript.yaml, one .md per section, reports/ per section
 ├── references.bib       # written by `phdude cite export`; derived, not knowledge
-└── data/ analysis/ figures/ tables/ templates/ outputs/
+├── data/                # your data files; the ones you register become DATASET records
+├── analysis/            # ANALYSIS-*.yaml and your scripts · out/ holds what they write
+├── tables/              # TABLE-*.yaml · out/ holds the rendered md, tex and csv
+├── figures/             # FIG-*.yaml and your generators · out/ holds the drawn files
+└── templates/ outputs/
 ```
+
+Every `out/` directory is gitignored: what is in it is reproducible from the record beside it,
+and the record already carries the hash of what the run wrote.
 
 One object per file, content-derived ids, schema on every file. Plain YAML and Markdown under
 git: you can read, diff, review and merge all of it without PhDude installed, and if you stop
@@ -622,6 +774,11 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude edit <id> --json '<fields>'` | Correct the non-identity fields of a non-canonical object. Identity fields are never editable. |
 | `phdude matrix [--format md\|csv] [--question RQ-n]` | Literature matrix: one row per source, which questions and claims it reaches. |
 | `phdude gaps` | Research gaps: questions, claims, sources, artifacts and conflicts that need attention. |
+| `phdude data add <path>\|list\|show <id>\|profile <id>` | Register a file under `data/` as a dataset: its bytes are its identity, and its profile reports rows, column types, missing cells and distinct values. `sensitive: true` keeps cell values out of the profile. |
+| `phdude analyze add\|list\|show <id>\|run <id>\|runs <id>` | Declare an analysis: a script under `analysis/`, the datasets it reads, and where it writes `results.json`. `run` executes it through the runner, records the run with input and output hashes, and turns every finding into a `RESULT-`. It refuses unless the execution policy allows it. |
+| `phdude table add --json\|list\|show <id>\|build <id>` | Declare a table over a `RESULT` or a `DATASET` and render it as Markdown, LaTeX (`booktabs`) and CSV under `tables/out/`. Each build records the hash of what it read and what it wrote. |
+| `phdude figure add --json\|list\|show <id>\|build <id>\|check` | Declare a figure with required alt text, build it by running its generator under the execution policy, and report which figures are stale, unbuilt, or missing their alt text. |
+| `phdude repro check` | What every analysis, table and figure would need re-run or rebuilt: which input moved since the run that produced it, which declared output is gone, and what has never been produced at all. Always exits 0 - it reports, it does not fix. |
 | `phdude prose <section>\|--file <path> [--lang en\|es]` | Academic Prose Quality report for a manuscript section or a text file: six located sub-scores and the observations behind them. Never an AI-detector score. |
 | `phdude write <section> [--voice <id>] [--budget <chars>]` | Assemble the bounded writing context for a section and print the draft contract. Writes cache, never prose. |
 | `phdude deslop <section> [--file <revised.md>]` | The revision contract for a section, or a revision run through every gate; a revision that loses a claim, a citation, a number or a negation is refused. |
@@ -634,7 +791,7 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude help` | The command list, the global options, and what each exit code means. |
 
 Every command takes `--json`. Exit codes mean something: 0 ok, 1 usage, 2 validation,
-3 policy, 4 external tool missing. Errors come with a suggested action. The full reference is
+3 policy, 4 an external tool missing or a script that failed. Errors come with a suggested action. The full reference is
 in [docs/cli.md](docs/cli.md).
 
 ## Packs
@@ -672,8 +829,8 @@ The reasoning behind the big calls is in [docs/adr/](docs/adr/).
 | v0.1 | MVP | workspace, ingestion, knowledge graph, decisions, conflicts, status, next, packs, Claude Code and Codex adapters |
 | v0.2 | Research Brain | citation registry, literature matrix, research gaps, contradictions, methods, provenance, workspace migrations, skill contracts |
 | v0.3 | Research Engine | fresh literature search, five provider adapters, candidate review, freshness tracking, `phdude edit` |
-| **v0.4** | Co-Author | the manuscript model, the writing context, six writing gates, `deslop`, author voice profiles, the Academic Prose Quality report |
-| v0.5 | Analysis & Visualization | analysis skills, tables, charts, figures, reproducibility lineage |
+| v0.4 | Co-Author | the manuscript model, the writing context, six writing gates, `deslop`, author voice profiles, the Academic Prose Quality report |
+| **v0.5** | Analysis & Visualization | datasets with profiles, declared analyses, results with lineage, tables, figures with alt text, `repro check` |
 | v0.6 | Document Factory | DOCX, PDF, LaTeX, PPTX and XLSX output, venue packs (IEEE, ACM) |
 | v0.7 | Reviewer | citation auditor, methodology reviewer, Reviewer #2, Research Health, submission readiness |
 | v1.0 | Public Release | stable workspace schema, extension API and skill contract, a third agent, cross-field examples, migration docs |

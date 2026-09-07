@@ -548,7 +548,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   // Reads work on a v0.1 workspace and say what is wrong with it.
   const before = await runJson(ws, ['status']);
   assert.equal(before.knowledge.byType.claim.total, 1);
-  assert.ok(before.warnings.includes('workspace needs migration (1 → 2)'));
+  assert.ok(before.warnings.includes('workspace needs migration (1 → 3)'));
 
   // Writes do not, and they name the command that fixes it.
   const refused = await phdude(ws, [
@@ -561,7 +561,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.equal(refused.code, 1);
   const refusal = JSON.parse(refused.stderr).error;
   assert.equal(refusal.code, 'USAGE');
-  assert.equal(refusal.message, 'workspace needs migration (1 → 2)');
+  assert.equal(refusal.message, 'workspace needs migration (1 → 3)');
   assert.equal(refusal.hint, 'run phdude migrate');
 
   const dryRun = await runJson(ws, ['migrate', '--dry-run']);
@@ -570,19 +570,19 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.ok(dryRun.steps[0].changed.includes('phdude.yaml'));
   const stillBehind = await runJson(ws, ['status']);
   assert.ok(
-    stillBehind.warnings.includes('workspace needs migration (1 → 2)'),
+    stillBehind.warnings.includes('workspace needs migration (1 → 3)'),
     'a dry run writes nothing',
   );
 
   const applied = await run(ws, ['migrate']);
-  assert.match(applied.stdout, /Migrated workspace 1 → 2/);
+  assert.match(applied.stdout, /Migrated workspace 1 → 3/);
 
   const after = await runJson(ws, ['status']);
   assert.deepEqual(after.warnings, []);
   assert.ok(after.recentEvents.some((e) => e.op === 'migrate'));
 
   const doctor = await runJson(ws, ['doctor']);
-  assert.equal(doctor.workspaceVersion, 2);
+  assert.equal(doctor.workspaceVersion, 3);
 
   // The write that was refused now goes through.
   await run(ws, [
@@ -593,7 +593,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   ]);
 
   const second = await run(ws, ['migrate']);
-  assert.match(second.stdout, /Workspace is up to date \(2\)/);
+  assert.match(second.stdout, /Workspace is up to date \(3\)/);
 });
 
 test('e2e: add artifact-role reports the update in text mode', async (t) => {
@@ -625,10 +625,10 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   const config = join(ws, 'phdude.yaml');
   await writeFile(
     config,
-    (await readFile(config, 'utf8')).replace('workspace_version: 2', 'workspace_version: 3'),
+    (await readFile(config, 'utf8')).replace('workspace_version: 3', 'workspace_version: 4'),
   );
 
-  const message = 'workspace version 3 is newer than this PhDude (2)';
+  const message = 'workspace version 4 is newer than this PhDude (3)';
 
   // Reads keep working and say what is wrong, the same way an older workspace does.
   const read = await runJson(ws, ['status']);
@@ -648,11 +648,11 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   assert.equal(refusal.hint, 'upgrade phdude');
 
   const report = await runJson(ws, ['doctor']);
-  assert.equal(report.workspaceVersion, 3);
+  assert.equal(report.workspaceVersion, 4);
   assert.ok(report.warnings.includes(message));
 
   const text = await run(ws, ['doctor']);
-  assert.match(text.stdout, /workspace version: 3 \(newer than this phdude\)/);
+  assert.match(text.stdout, /workspace version: 4 \(newer than this phdude\)/);
 });
 
 test('e2e: methods, provenance and the trace line that reports them', async (t) => {
@@ -1286,7 +1286,9 @@ test('e2e: research refuses without network, then searches, records and lists ca
       .replace('enabled: false', 'enabled: true'),
   );
   const reinit = await run(ws, ['init', '--title', 'Research engine', '--no-git']);
-  assert.doesNotMatch(reinit.stdout, /was not installed/);
+  // Only the network skill is at stake here; `analysis` stays withheld until the same file also
+  // sets skills.allow_execution.
+  assert.doesNotMatch(reinit.stdout, /skill research was not installed/);
   assert.equal(await exists(join(ws, '.phdude', 'skills', 'research', 'SKILL.md')), true);
 
   // With the policy open, no flag is needed.
@@ -1919,4 +1921,526 @@ test('e2e: authors add, learn (paths relative to cwd), consensus', async (t) => 
     ...ACTOR,
   ]);
   assert.equal(badId.code, 2);
+});
+
+test('e2e: data add profiles a file under data/, re-adds as a no-op, and versions a change', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-data-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'E2E data', '--no-git']);
+
+  const survey = ['id,age,group,joined', '1,31,a,2026-01-02', '2,44,b,2026-02-03', '3,,a,'].join(
+    '\n',
+  );
+  await writeFile(join(ws, 'data', 'survey.csv'), survey + '\n');
+
+  const added = await runJson(ws, [
+    'data',
+    'add',
+    'data/survey.csv',
+    '--json',
+    '{"description":"Pilot survey","license":"CC-BY-4.0"}',
+  ]);
+  assert.equal(added.created, true);
+  assert.match(added.dataset.id, /^DATASET-[0-9a-f]{10}$/);
+  assert.equal(added.dataset.format, 'csv');
+  assert.equal(added.dataset.profile.rows, 3);
+  assert.deepEqual(
+    added.dataset.profile.columns.map((c) => c.inferred_type),
+    ['number', 'number', 'string', 'date'],
+  );
+  assert.ok(
+    await exists(join(ws, 'knowledge', 'datasets', `${added.dataset.id}.yaml`)),
+    'the record lands in knowledge/datasets/',
+  );
+
+  // Re-adding the same bytes is a no-op the researcher can see.
+  const again = await run(ws, ['data', 'add', 'data/survey.csv']);
+  assert.match(again.stdout, /^Unchanged DATASET-/);
+
+  // A dataset outside data/ is refused before anything is read.
+  await writeFile(join(ws, 'sources', 'stray.csv'), 'a,b\n1,2\n');
+  const outside = await phdude(ws, ['data', 'add', 'sources/stray.csv', ...ACTOR]);
+  assert.equal(outside.code, 2);
+  assert.match(outside.stderr, /outside data\//);
+
+  // Editing the file records a new dataset linked to the first.
+  await writeFile(join(ws, 'data', 'survey.csv'), survey + '\n4,52,b,2026-03-04\n');
+  const changed = await runJson(ws, ['data', 'add', 'data/survey.csv']);
+  assert.equal(changed.created, true);
+  assert.equal(changed.dataset.versions_of, added.dataset.id);
+  assert.deepEqual(changed.replaced, [added.dataset.id]);
+
+  const listed = await runJson(ws, ['data', 'list']);
+  assert.equal(listed.length, 2);
+  const listedText = await run(ws, ['data', 'list']);
+  assert.match(listedText.stdout, /superseded/);
+
+  const profile = await runJson(ws, ['data', 'profile', changed.dataset.id]);
+  assert.equal(profile.rows, 4);
+  assert.deepEqual(
+    profile.columns.map((c) => c.name),
+    ['id', 'age', 'group', 'joined'],
+  );
+  const profileText = await run(ws, ['data', 'profile', changed.dataset.id]);
+  assert.match(profileText.stdout, /Column +Type +Missing +Distinct +Samples/);
+
+  const shown = await runJson(ws, ['data', 'show', changed.dataset.id]);
+  assert.equal(shown.id, changed.dataset.id);
+
+  // A sensitive dataset keeps its cell values out of the committed profile.
+  await writeFile(join(ws, 'data', 'people.csv'), 'name,email\nAda,ada@example.org\n');
+  const sensitive = await runJson(ws, [
+    'data',
+    'add',
+    'data/people.csv',
+    '--json',
+    '{"sensitive":true}',
+  ]);
+  for (const column of sensitive.dataset.profile.columns) {
+    assert.equal(Object.hasOwn(column, 'samples'), false, `${column.name} leaked samples`);
+  }
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'data');
+  assert.equal(events.length, 3, 'one data event per registration, none for the no-op');
+});
+
+test('e2e: declare an analysis, refuse it under the closed policy, run it with --allow-exec', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-analyze-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Analysis thesis', '--agents', 'claude-code', '--no-git']);
+
+  // The analysis skill asks for script execution, which the default policy has not granted.
+  assert.equal(
+    await exists(join(ws, '.phdude', 'skills', 'analysis', 'SKILL.md')),
+    false,
+    'a skill that asks for execution is withheld until skills.allow_execution is set',
+  );
+
+  const doctorText = await run(ws, ['doctor']);
+  assert.match(doctorText.stdout, /execution: +disabled \(runtimes: .*node.*timeout 600s\)/);
+
+  const survey = ['id,age,group', '1,31,a', '2,44,b', '3,,a'].join('\n') + '\n';
+  await writeFile(join(ws, 'data', 'survey.csv'), survey);
+  await cp(
+    join(REPO_ROOT, 'tests', 'fixtures', 'scripts', 'analysis-echo.mjs'),
+    join(ws, 'analysis', 'describe.mjs'),
+  );
+
+  const { dataset } = await runJson(ws, ['data', 'add', 'data/survey.csv']);
+
+  const declaration = {
+    name: 'describe survey',
+    runtime: 'node',
+    script: 'analysis/describe.mjs',
+    args: ['--input', 'data/survey.csv', '--out', 'analysis/out/describe-survey/results.json'],
+    inputs: [dataset.id],
+  };
+  const declared = await runJson(ws, ['analyze', 'add', '--json', JSON.stringify(declaration)]);
+  assert.equal(declared.created, true);
+  assert.match(declared.analysis.id, /^ANALYSIS-[0-9a-f]{10}$/);
+  assert.equal(
+    declared.analysis.outputs.results,
+    'analysis/out/describe-survey/results.json',
+    'the results path defaults from the name',
+  );
+  const id = declared.analysis.id;
+
+  // Nothing runs while the policy is closed, and the refusal names the way out.
+  const refused = await phdude(ws, ['analyze', 'run', id, ...ACTOR]);
+  assert.equal(refused.code, 3);
+  assert.match(refused.stderr, /script execution is disabled/);
+  assert.match(refused.stderr, /--allow-exec/);
+
+  // Pin the runtime to the interpreter running these tests, so the run does not depend on PATH.
+  const policyPath = join(ws, '.phdude', 'research-policy.yaml');
+  const policy = await readFile(policyPath, 'utf8');
+  await writeFile(policyPath, policy.replace('    node: node', `    node: ${process.execPath}`));
+
+  const ran = await runJson(ws, ['analyze', 'run', id, '--allow-exec']);
+  assert.equal(ran.ran, true);
+  assert.equal(ran.created.length, 2);
+  assert.equal(ran.run.exit, 0);
+  assert.deepEqual(ran.run.input_hashes, { [dataset.id]: dataset.hash });
+
+  const mean = ran.created.find((r) => r.ext.analysis.key === 'mean_age');
+  assert.match(mean.summary, /37\.5 years/);
+  assert.equal(mean.from, id);
+  assert.ok(
+    await exists(join(ws, 'knowledge', 'results', `${mean.id}.yaml`)),
+    'a finding lands in knowledge/results/',
+  );
+  assert.ok(await exists(join(ws, 'analysis', 'out', 'describe-survey', 'results.json')));
+
+  // A second run with the same inputs is refused as up to date, and says how to override it.
+  const upToDate = await run(ws, ['analyze', 'run', id, '--allow-exec']);
+  assert.match(upToDate.stdout, /is up to date/);
+  assert.match(upToDate.stdout, /--force/);
+
+  const runsText = await run(ws, ['analyze', 'runs', id]);
+  assert.match(runsText.stdout, /exit 0/);
+  const listText = await run(ws, ['analyze', 'list']);
+  assert.match(listText.stdout, /describe survey/);
+
+  // New data, new findings: the old results are kept and marked superseded.
+  await writeFile(join(ws, 'data', 'survey.csv'), survey.replace('3,,a', '3,50,a'));
+  const { dataset: edited } = await runJson(ws, ['data', 'add', 'data/survey.csv']);
+  await runJson(ws, [
+    'analyze',
+    'add',
+    '--json',
+    JSON.stringify({ ...declaration, inputs: [edited.id] }),
+  ]);
+  const rerun = await runJson(ws, ['analyze', 'run', id, '--allow-exec']);
+  assert.equal(rerun.created.length, 2);
+  assert.equal(rerun.rejected.length, 2);
+  const superseded = await runJson(ws, ['knowledge', 'show', mean.id]);
+  assert.equal(superseded.state, 'rejected');
+
+  // A script that fails records the run and its stderr, and exits 4.
+  await runJson(ws, [
+    'analyze',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'broken',
+      runtime: 'node',
+      script: 'analysis/describe.mjs',
+      args: ['--out', 'analysis/out/broken/results.json', '--fail', '3'],
+      inputs: [edited.id],
+    }),
+  ]);
+  const broken = (await runJson(ws, ['analyze', 'list'])).find((a) => a.name === 'broken');
+  const failed = await phdude(ws, ['analyze', 'run', broken.id, '--allow-exec', ...ACTOR]);
+  assert.equal(failed.code, 4);
+  assert.match(failed.stderr, /exited 3/);
+  const brokenRuns = await runJson(ws, ['analyze', 'runs', broken.id]);
+  assert.equal(brokenRuns.runs[0].exit, 3);
+  assert.match(brokenRuns.runs[0].stderr_tail, /no such column/);
+  assert.deepEqual(
+    await runJson(ws, ['analyze', 'runs', broken.id]).then((r) => r.runs[0].results),
+    [],
+  );
+
+  // `analyze add` without a declaration is a usage error, not an empty analysis.
+  const noPayload = await phdude(ws, ['analyze', 'add', ...ACTOR]);
+  assert.equal(noPayload.code, 1);
+  assert.match(noPayload.stderr, /needs a declaration/);
+
+  const analyzeEvents = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'analyze');
+  assert.equal(
+    analyzeEvents.length,
+    6,
+    'declared, ran, redeclared, ran again, declared broken, failed - and nothing for the no-op run',
+  );
+});
+
+test('e2e: table build and figure build through the CLI, with the execution policy in the way', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-figures-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await run(ws, ['init', '--title', 'Figures e2e', '--no-git']);
+
+  const survey = ['id,age,group', '1,31,a', '2,44,b', '3,52,a'].join('\n') + '\n';
+  await writeFile(join(ws, 'data', 'survey.csv'), survey);
+  const dataset = (await runJson(ws, ['data', 'add', 'data/survey.csv'])).dataset;
+
+  // A table over the dataset renders three files and records what it read.
+  const declared = await runJson(ws, [
+    'table',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'respondents',
+      caption: 'Every respondent, by group.',
+      source: { dataset: dataset.id, columns: ['group', 'age'] },
+      columns: [
+        { key: 'group', label: 'Group' },
+        { key: 'age', label: 'Age', format: 'number:0' },
+      ],
+    }),
+  ]);
+  assert.equal(declared.created, true);
+  assert.match(declared.table.id, /^TABLE-[0-9a-f]{10}$/);
+
+  const built = await runJson(ws, ['table', 'build', declared.table.id]);
+  assert.equal(built.built, true);
+  assert.equal(
+    await readFile(join(ws, 'tables', 'out', 'respondents.md'), 'utf8'),
+    [
+      '| Group | Age |',
+      '| --- | ---: |',
+      '| a | 31 |',
+      '| b | 44 |',
+      '| a | 52 |',
+      '',
+      'Table: Every respondent, by group.',
+      '',
+    ].join('\n'),
+  );
+  assert.match(
+    await readFile(join(ws, 'tables', 'out', 'respondents.tex'), 'utf8'),
+    /\\label\{tab:respondents\}/,
+  );
+
+  const again = await run(ws, ['table', 'build', declared.table.id]);
+  assert.match(again.stdout, /is up to date/);
+
+  // A figure needs alt text before it is a record at all.
+  const noAlt = await phdude(ws, [
+    'figure',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'groups',
+      caption: 'Respondents per group.',
+      alt: '',
+      generator: { runtime: 'node', script: 'phdude:bar-chart', args: [] },
+      inputs: [],
+      outputs: [{ path: 'figures/out/groups.svg', format: 'svg' }],
+    }),
+    ...ACTOR,
+  ]);
+  assert.equal(noAlt.code, 2);
+  assert.match(noAlt.stderr, /a figure needs alt text/);
+
+  const alt = 'Groups a and b hold two and one respondents; group a is the larger.';
+  const figure = await runJson(ws, [
+    'figure',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'groups',
+      caption: 'Respondents per group.',
+      alt,
+      generator: {
+        runtime: 'node',
+        script: 'phdude:bar-chart',
+        args: [
+          '--input',
+          'data/survey.csv',
+          '--key',
+          'group',
+          '--out',
+          'figures/out/groups.svg',
+          '--title',
+          'Respondents per group',
+          '--alt',
+          alt,
+        ],
+      },
+      inputs: [dataset.id],
+      outputs: [{ path: 'figures/out/groups.svg', format: 'svg' }],
+    }),
+  ]);
+  assert.match(figure.figure.id, /^FIG-[0-9a-f]{10}$/);
+
+  // The default policy leaves execution closed.
+  const refused = await phdude(ws, ['figure', 'build', figure.figure.id, ...ACTOR]);
+  assert.equal(refused.code, 3);
+  assert.match(refused.stderr, /script execution is disabled/);
+  assert.match(refused.stderr, /--allow-exec/);
+
+  const check = await runJson(ws, ['figure', 'check']);
+  assert.equal(check.figures[0].status, 'never-run');
+
+  const drawn = await runJson(ws, ['figure', 'build', figure.figure.id, '--allow-exec']);
+  assert.equal(drawn.run.exit, 0);
+  const svg = await readFile(join(ws, 'figures', 'out', 'groups.svg'), 'utf8');
+  assert.match(svg, new RegExp(`<desc id="figure-desc">${alt.replace(/[.]/g, '\\.')}</desc>`));
+  assert.equal(drawn.run.output_hashes['figures/out/groups.svg'].length, 64);
+
+  assert.equal((await runJson(ws, ['figure', 'check'])).figures[0].status, 'up-to-date');
+
+  // Nothing moved, so a second build spawns nothing and records nothing; --force builds anyway.
+  const skipped = await runJson(ws, ['figure', 'build', figure.figure.id, '--allow-exec']);
+  assert.equal(skipped.built, false);
+  assert.equal(skipped.reason, 'up to date');
+  assert.equal(skipped.run, null);
+  const forced = await runJson(ws, [
+    'figure',
+    'build',
+    figure.figure.id,
+    '--allow-exec',
+    '--force',
+  ]);
+  assert.equal(forced.built, true);
+  assert.equal(forced.run.exit, 0);
+
+  // Editing the data under the figure makes it stale, without anything having watched the file -
+  // and `figure check` says exactly what `repro check` says, because it reads the same report.
+  await writeFile(join(ws, 'data', 'survey.csv'), survey + '4,29,c\n');
+  const stale = await run(ws, ['figure', 'check']);
+  assert.match(stale.stdout, /stale/);
+  assert.match(stale.stdout, /bytes changed on disk/);
+  const repro = await run(ws, ['repro', 'check']);
+  // `repro check` pads its columns across three kinds of item, so the block is compared with
+  // runs of spaces collapsed: the status and the reasons have to be the same, not the padding.
+  const figureBlock = (text) => {
+    const lines = text.split('\n').map((line) => line.replace(/ {2,}/g, ' ').trimEnd());
+    const start = lines.findIndex((line) => line.startsWith('FIG-'));
+    const block = [lines[start]];
+    for (const line of lines.slice(start + 1)) {
+      if (!line.startsWith(' -')) break;
+      block.push(line.trim());
+    }
+    return block;
+  };
+  assert.deepEqual(figureBlock(stale.stdout), figureBlock(repro.stdout));
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.filter((e) => e.op === 'table').length, 2, 'one declaration, one build');
+  assert.equal(
+    events.filter((e) => e.op === 'figure').length,
+    3,
+    'one declaration and two builds; the skipped build recorded nothing',
+  );
+});
+
+test('e2e: data, analyze, table, figure and repro check through the binary', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-repro-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Repro e2e', '--agents', 'claude-code', '--no-git']);
+
+  const survey = ['id,channel,daily', '1,list,yes', '2,list,no', '3,social,yes'].join('\n') + '\n';
+  await writeFile(join(ws, 'data', 'survey.csv'), survey);
+  await writeFile(
+    join(ws, 'analysis', 'counts.mjs'),
+    [
+      "import { mkdir, readFile, writeFile } from 'node:fs/promises';",
+      "const rows = (await readFile('data/survey.csv', 'utf8')).trim().split('\\n').slice(1);",
+      "const yes = rows.filter((r) => r.endsWith('yes')).length;",
+      "await mkdir('analysis/out/counts', { recursive: true });",
+      "await writeFile('analysis/out/counts/results.json', JSON.stringify({ results: [",
+      "  { key: 'daily_use', summary: 'Most report daily use.', values: { yes, no: rows.length - yes } },",
+      '] }));',
+      '',
+    ].join('\n'),
+  );
+
+  const dataset = await runJson(ws, ['data', 'add', 'data/survey.csv']);
+  const analysis = await runJson(ws, [
+    'analyze',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'counts',
+      runtime: 'node',
+      script: 'analysis/counts.mjs',
+      inputs: [dataset.dataset.id],
+    }),
+  ]);
+
+  // Declared and never run: repro check says so, and still exits 0.
+  const declared = await run(ws, ['repro', 'check']);
+  assert.match(declared.stdout, /never-run/);
+  assert.match(declared.stdout, /no successful run recorded/);
+
+  const ran = await runJson(ws, ['analyze', 'run', analysis.analysis.id, '--allow-exec']);
+  const result = ran.created[0].id;
+
+  const table = await runJson(ws, [
+    'table',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'daily-use',
+      caption: 'Daily use.',
+      source: { result },
+      formats: ['md'],
+    }),
+  ]);
+  await run(ws, ['table', 'build', table.table.id]);
+
+  const alt = 'Bar chart: two respondents report daily use and one does not.';
+  const figure = await runJson(ws, [
+    'figure',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'daily-use',
+      caption: 'Daily use.',
+      alt,
+      generator: {
+        runtime: 'node',
+        script: 'phdude:bar-chart',
+        args: [
+          '--input',
+          'analysis/out/counts/results.json',
+          '--key',
+          'daily_use',
+          '--out',
+          'figures/out/daily-use.svg',
+          '--title',
+          'Daily use',
+          '--alt',
+          alt,
+        ],
+      },
+      inputs: [result],
+      outputs: [{ path: 'figures/out/daily-use.svg', format: 'svg' }],
+    }),
+  ]);
+  await run(ws, ['figure', 'build', figure.figure.id, '--allow-exec']);
+
+  const fresh = await runJson(ws, ['repro', 'check']);
+  assert.equal(fresh.attention, 0);
+  assert.equal(fresh.counts['up-to-date'], 3);
+
+  const status = await runJson(ws, ['status']);
+  assert.deepEqual(status.analysis, {
+    datasets: 1,
+    analyses: 1,
+    results: 1,
+    tables: 1,
+    figures: 1,
+    reproducible: 3,
+    stale: 0,
+  });
+
+  // Editing the file under the analysis: the report says the bytes are not the registered ones,
+  // the table and the figure drawn from its result move with it, and the whole thing still
+  // exits 0.
+  await writeFile(join(ws, 'data', 'survey.csv'), survey + '4,social,no\n');
+  const drifted = await run(ws, ['repro', 'check']);
+  assert.equal(drifted.code, 0);
+  assert.match(drifted.stdout, /bytes changed on disk/);
+  assert.match(drifted.stdout, /3 stale/);
+  assert.match(drifted.stdout, /which is stale/);
+
+  // The run is refused rather than recording a hash for bytes it did not read.
+  const refusedRun = await phdude(ws, [
+    'analyze',
+    'run',
+    analysis.analysis.id,
+    '--allow-exec',
+    ...ACTOR,
+  ]);
+  assert.equal(refusedRun.code, 2);
+  assert.match(refusedRun.stderr, /changed on disk since it was registered/);
+
+  const next = await runJson(ws, ['next']);
+  const stale = next.actions.find((a) => a.rule === 'analysis-stale');
+  assert.ok(stale, 'next never recommended re-running the stale analysis');
+  const steps = stale.command.split(', then ');
+  assert.match(steps[0], /^set execution\.enabled: true/, 'the run at the end needs the policy');
+  assert.equal(steps[1], 'phdude data add data/survey.csv');
+  assert.match(steps[2], /^phdude analyze add --json /);
+  assert.equal(steps[3], `phdude analyze run ${analysis.analysis.id}`);
+
+  const unknown = await phdude(ws, ['repro', 'rebuild', ...ACTOR]);
+  assert.equal(unknown.code, 1);
+  assert.match(unknown.stderr, /unknown repro subcommand/);
 });

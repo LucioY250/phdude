@@ -14,6 +14,10 @@ const ENTITY_DIRS = {
   fact: join('knowledge', 'facts'),
   result: join('knowledge', 'results'),
   candidate: join('knowledge', 'candidates'),
+  dataset: join('knowledge', 'datasets'),
+  analysis: 'analysis',
+  table: 'tables',
+  figure: 'figures',
   question: join('research', 'questions'),
   hypothesis: join('research', 'hypotheses'),
   method: join('research', 'methods'),
@@ -87,6 +91,17 @@ export class FsStore {
 
   async writeTextAtomic(relPath, text) {
     await writeFileAtomic(join(this.root, relPath), text);
+  }
+
+  // The bytes, not the text: a dataset's identity is its file's bytes, and an xlsx decoded as
+  // utf8 would hash to something the workspace never recorded.
+  async readBytes(relPath) {
+    try {
+      return await readFile(join(this.root, relPath));
+    } catch (err) {
+      if (err.code === 'ENOENT') return null;
+      throw err;
+    }
   }
 
   async readProject() {

@@ -21,6 +21,7 @@ import { walk, read, realpath } from '../../src/adapters/store/fs-walk.js';
 import { detectKind, parserFor } from '../../src/adapters/documents/index.js';
 import { ingest } from '../../src/application/ingest.js';
 import { PhdudeError } from '../../src/domain/errors.js';
+import { CURRENT_WORKSPACE_VERSION } from '../../src/domain/versioning.js';
 
 const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'fixtures', 'docs');
 
@@ -264,7 +265,7 @@ test('ingest: the workspace root walks sources/ only, never the recorded knowled
     [
       'schema: phdude.project',
       'version: 1',
-      'workspace_version: 2',
+      `workspace_version: ${CURRENT_WORKSPACE_VERSION}`,
       'title: Scoped',
       'fields: []',
       'methods: []',
@@ -297,7 +298,7 @@ test('ingest: an explicit path into the recorded workspace is refused', async ()
     [
       'schema: phdude.project',
       'version: 1',
-      'workspace_version: 2',
+      `workspace_version: ${CURRENT_WORKSPACE_VERSION}`,
       'title: Scoped',
       'fields: []',
       'methods: []',

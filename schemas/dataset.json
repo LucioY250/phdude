@@ -1,0 +1,50 @@
+{
+  "$id": "phdude://dataset",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.dataset" },
+        "path": { "type": "string" },
+        "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "bytes": { "type": "integer", "minimum": 0 },
+        "format": { "enum": ["csv", "tsv", "json", "xlsx", "other"] },
+        "profile": {
+          "type": "object",
+          "properties": {
+            "rows": { "type": "integer", "minimum": 0 },
+            "columns": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "inferred_type": {
+                    "enum": ["number", "string", "boolean", "date", "empty"]
+                  },
+                  "missing": { "type": "integer", "minimum": 0 },
+                  "distinct": { "type": "integer", "minimum": 0, "maximum": 50 },
+                  "distinct_truncated": { "type": "boolean" },
+                  "samples": { "type": "array", "items": { "type": "string" }, "maxItems": 5 }
+                },
+                "required": ["name", "inferred_type", "missing", "distinct", "distinct_truncated"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["rows", "columns"],
+          "additionalProperties": false
+        },
+        "description": { "type": "string" },
+        "license": { "type": "string" },
+        "sensitive": { "type": "boolean" },
+        "versions_of": { "$ref": "phdude://common#/$defs/id" },
+        "latest": { "type": "boolean" },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": ["path", "hash", "bytes", "format", "profile", "sensitive", "state"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

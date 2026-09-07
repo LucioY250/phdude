@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" width="720" height="420" role="img" aria-labelledby="figure-title figure-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title id="figure-title">Mean weight by group</title>
+<desc id="figure-desc">Bar chart: group b averages 75.5 kg, group a 71.4 kg and group c 68.2 kg.</desc>
+<rect width="720" height="420" fill="#ffffff"/>
+<text x="360" y="30" text-anchor="middle" font-size="18" font-weight="600" fill="#1a1a1a">Mean weight by group</text>
+<line x1="72" y1="332" x2="696" y2="332" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="332" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">0</text>
+<line x1="72" y1="263" x2="696" y2="263" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="263" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">20</text>
+<line x1="72" y1="194" x2="696" y2="194" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="194" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">40</text>
+<line x1="72" y1="125" x2="696" y2="125" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="125" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">60</text>
+<line x1="72" y1="56" x2="696" y2="56" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="56" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">80</text>
+<line x1="72" y1="332" x2="696" y2="332" stroke="#767676" stroke-width="1.5"/>
+<line x1="72" y1="56" x2="72" y2="332" stroke="#767676" stroke-width="1.5"/>
+<rect x="113.6" y="85.67" width="124.8" height="246.33" fill="#0072b2"/>
+<text x="176" y="78.67" text-anchor="middle" font-size="12" fill="#1a1a1a">71.4</text>
+<text x="176" y="348" text-anchor="end" font-size="12" fill="#1a1a1a" transform="rotate(-30 176 348)">a</text>
+<rect x="321.6" y="71.53" width="124.8" height="260.48" fill="#0072b2"/>
+<text x="384" y="64.53" text-anchor="middle" font-size="12" fill="#1a1a1a">75.5</text>
+<text x="384" y="348" text-anchor="end" font-size="12" fill="#1a1a1a" transform="rotate(-30 384 348)">b</text>
+<rect x="529.6" y="96.71" width="124.8" height="235.29" fill="#0072b2"/>
+<text x="592" y="89.71" text-anchor="middle" font-size="12" fill="#1a1a1a">68.2</text>
+<text x="592" y="348" text-anchor="end" font-size="12" fill="#1a1a1a" transform="rotate(-30 592 348)">c</text>
+<text x="20" y="194" text-anchor="middle" font-size="13" fill="#1a1a1a" transform="rotate(-90 20 194)">mean_weight_by_group (kg)</text>
+</svg>

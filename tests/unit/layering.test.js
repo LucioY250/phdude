@@ -3,13 +3,15 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
+// `(\.\.\/)+` rather than one `../`, so a module nested a directory deeper - `src/domain/gates/x.js`
+// reaching for `../../application` - is caught by the same rule.
 const FORBIDDEN = {
   'src/domain': [
-    /from '\.\.\/(application|ports|adapters)/,
+    /from '(?:\.\.\/)+(application|ports|adapters)/,
     /from 'node:(fs|child_process|os)/,
     /from '(yaml|ajv|fflate)'/,
   ],
-  'src/application': [/from '\.\.\/adapters/],
+  'src/application': [/from '(?:\.\.\/)+adapters/],
 };
 function walk(dir) {
   return readdirSync(dir).flatMap((f) => {

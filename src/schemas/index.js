@@ -26,6 +26,10 @@ export const SCHEMA_TYPES = [
   'method',
   'result',
   'candidate',
+  'dataset',
+  'analysis',
+  'table',
+  'figure',
   'search',
   'decision',
   'manuscript',
@@ -58,4 +62,19 @@ export function assertValid(type, obj) {
       'fix the listed fields',
       r.errors,
     );
+}
+
+// `results.json` is a file a researcher's script writes, not an entity PhDude stores, so it has
+// a schema but no place in SCHEMA_TYPES. The shape is the published contract (docs/extending.md);
+// what it cannot express - a summary that is blank once trimmed, a repeated key - is checked in
+// domain/analysis.js, which reports each entry rather than failing the whole file.
+let resultsJsonValidator;
+export function validateResultsJson(json) {
+  resultsJsonValidator ??= ajv.getSchema('phdude://results-json');
+  return resultsJsonValidator(json)
+    ? { ok: true }
+    : {
+        ok: false,
+        errors: resultsJsonValidator.errors.map((e) => `${e.instancePath || '/'} ${e.message}`),
+      };
 }

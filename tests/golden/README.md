@@ -10,8 +10,21 @@ The example is generated to reach every `gaps` kind, so `gaps.txt` doubles as th
 of each one; `gaps.test.js` asserts the full set, and adding a kind without giving the example
 something that triggers it fails there.
 
+`table.test.js` and `bar-chart.test.js` are the exceptions: the table renderers and the shipped
+figure generator are pure functions of their input, so they run on fixtures rather than on the
+example, and pin the exact bytes of a Markdown, a LaTeX and a CSV table and of the generated SVG.
+They take `UPDATE_GOLDEN=1` the same way.
+
 `examples/generic-thesis` is itself generated (not hand-authored) by `scripts/make-example.mjs`;
 see that file and `tests/integration/make-example.test.js` for how it stays reproducible.
+
+The example's `analysis/out/`, `tables/out/` and `figures/out/` files are **committed**, even
+though a real workspace's `.gitignore` excludes them. They were added with `git add -f` on
+purpose: the example is a finished workspace a reader clones and looks at, `repro.test.js` asserts
+that nothing in it is stale, and `make-example.test.js` compares the whole generated tree against
+the committed one. A run whose output was not committed would show up in both as missing. Nothing
+special is needed to keep them current — once tracked, git follows them — but a new output path
+added to the example has to be `git add -f`ed the first time.
 
 ## Regenerating the goldens
 

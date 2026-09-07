@@ -1,7 +1,9 @@
 import { identityKey } from './candidates.js';
-import { makeId, makeSeqId } from './ids.js';
+import { makeHashId, makeId, makeSeqId } from './ids.js';
 import { normalizeKey, stableStringify } from './normalize.js';
 import { PhdudeError } from './errors.js';
+import { validateFigure } from './figures.js';
+import { tableFormats, tableName, tableOutputs } from './tables.js';
 
 function requireText(label, value) {
   const text = String(value ?? '').trim();
@@ -274,10 +276,15 @@ export function newSource({
  */
 export function newResult({ summary, from, values = {}, tags = [], actor, created }) {
   const text = requireText('summary', summary);
+  // Two analyses can reach the same finding and each owns its own record, so the analysis is
+  // part of the identity. Only an analysis is: v0.4 let `from` be any prose ("logistic
+  // regression on survey sample"), and those results keep the id v0.4 gave them, so re-adding
+  // one after a migration finds the record it already has instead of minting a second.
+  const material = /^ANALYSIS-/.test(String(from ?? '')) ? `${text}|${from}` : text;
   return {
     schema: 'phdude.result',
     version: 1,
-    id: makeId('result', text),
+    id: makeId('result', material),
     created,
     actor,
     tags,
@@ -565,5 +572,168 @@ export function newSearch({
     filters,
     runs,
     last_run,
+  };
+}
+
+/**
+ * A file under `data/` registered as a research object. Its identity is the bytes: the same
+ * file re-added lands on the same record, and an edited one is a different dataset that
+ * `versions_of` links back to the first (see domain/datasets.js `linkDatasetVersions`).
+ * @param {object} p
+ * @param {string} p.path - workspace-relative, under `data/`
+ * @param {string} p.hash - sha256 of the file bytes
+ * @param {number} p.bytes
+ * @param {string} p.format - csv|tsv|json|xlsx|other
+ * @param {{rows: number, columns: object[]}} p.profile
+ * @param {string} [p.description]
+ * @param {string} [p.license]
+ * @param {boolean} [p.sensitive]
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.dataset`
+ */
+export function newDataset({
+  path,
+  hash,
+  bytes,
+  format,
+  profile,
+  description,
+  license,
+  sensitive = false,
+  actor,
+  created,
+}) {
+  const rel = requireText('path', path);
+  const dataset = {
+    schema: 'phdude.dataset',
+    version: 1,
+    id: makeHashId('dataset', hash),
+    created,
+    actor,
+    tags: [],
+    path: rel,
+    hash,
+    bytes,
+    format,
+    profile,
+    sensitive,
+    state: 'candidate',
+  };
+  if (description !== undefined) dataset.description = description;
+  if (license !== undefined) dataset.license = license;
+  return dataset;
+}
+
+/**
+ * A script the researcher declared as an analysis: what to run, on which datasets, and where it
+ * leaves its results. The name alone is the identity - a study has one "describe survey", and
+ * pointing it at a different script later corrects that record rather than minting a second one.
+ * Runs accumulate on the record; nothing here runs anything.
+ * @param {object} p
+ * @param {string} p.name
+ * @param {string} p.runtime - node|python3|Rscript|other
+ * @param {string} p.script - workspace-relative, under `analysis/`
+ * @param {string[]} [p.args]
+ * @param {string[]} [p.inputs] - DATASET ids
+ * @param {{results: string, files: string[]}} p.outputs
+ * @param {object} [p.params]
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.analysis`
+ */
+export function newAnalysis({
+  name,
+  runtime,
+  script,
+  args = [],
+  inputs = [],
+  outputs,
+  params = {},
+  actor,
+  created,
+}) {
+  const text = requireText('name', name);
+  return {
+    schema: 'phdude.analysis',
+    version: 1,
+    id: makeId('analysis', text),
+    created,
+    actor,
+    tags: [],
+    name: text,
+    runtime,
+    script,
+    args,
+    inputs,
+    outputs,
+    params,
+    runs: [],
+    state: 'candidate',
+  };
+}
+
+/**
+ * A rendered table. Its name is its identity — a study has one "mean weight by group" table,
+ * and changing its caption or its columns must correct that record rather than mint a second
+ * one whose file would sit next to the first under `tables/out/`.
+ * @param {object} p
+ * @param {string} p.name - lowercase words joined by "-"
+ * @param {string} p.caption
+ * @param {{result?: string, dataset?: string, columns?: string[], limit?: number}} p.source
+ * @param {{key: string, label: string, format?: string}[]} [p.columns]
+ * @param {string[]} [p.formats] - md|latex|csv; all three when omitted
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.table`
+ */
+export function newTable({ name, caption, source, columns = [], formats, actor, created }) {
+  const slug = tableName(name);
+  const wanted = tableFormats(formats);
+  return {
+    schema: 'phdude.table',
+    version: 1,
+    id: makeId('table', slug),
+    created,
+    actor,
+    tags: [],
+    name: slug,
+    caption: requireText('caption', caption),
+    source,
+    columns,
+    formats: wanted,
+    outputs: tableOutputs(slug, wanted),
+    runs: [],
+    state: 'candidate',
+  };
+}
+
+/**
+ * A generated figure. Like a table, its name is its identity. `alt` is required and non-empty
+ * before the record exists at all (PRD §100): the sentence a reader who cannot see the figure
+ * needs is written while the finding is fresh, not at submission.
+ * @param {object} p
+ * @param {string} p.name
+ * @param {string} p.caption
+ * @param {string} p.alt
+ * @param {{runtime: string, script: string, args?: string[]}} p.generator
+ * @param {string[]} [p.inputs] - RESULT or DATASET ids
+ * @param {{path: string, format: string}[]} p.outputs
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.figure`
+ */
+export function newFigure({ name, caption, alt, generator, inputs, outputs, actor, created }) {
+  const fields = validateFigure({ name, caption, alt, generator, inputs, outputs });
+  return {
+    schema: 'phdude.figure',
+    version: 1,
+    id: makeId('figure', fields.name),
+    created,
+    actor,
+    tags: [],
+    ...fields,
+    runs: [],
+    state: 'candidate',
   };
 }

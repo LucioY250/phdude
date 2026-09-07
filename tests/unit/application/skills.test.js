@@ -40,6 +40,49 @@ test('assertSkillPolicyOk allows a networked skill once the workspace policy opt
   );
 });
 
+test('assertSkillPolicyOk rejects an executing skill when the policy is absent or disallows it', () => {
+  for (const policy of [null, undefined, {}, { skills: { allow_execution: false } }]) {
+    assert.throws(
+      () =>
+        assertSkillPolicyOk(
+          {
+            name: 'analysis',
+            contract: { permissions: { network: 'none', execution: 'allowed' } },
+          },
+          policy,
+        ),
+      (err) => {
+        assert.ok(err instanceof PhdudeError);
+        assert.equal(err.code, 'POLICY');
+        assert.equal(err.message, 'skill analysis requests script execution');
+        assert.equal(err.hint, 'set skills.allow_execution: true in .phdude/research-policy.yaml');
+        return true;
+      },
+    );
+  }
+});
+
+test('assertSkillPolicyOk allows an executing skill once the workspace policy opts in', () => {
+  assertSkillPolicyOk(
+    { name: 'analysis', contract: { permissions: { network: 'none', execution: 'allowed' } } },
+    { skills: { allow_execution: true } },
+  );
+});
+
+test('allowing network access does not allow script execution', () => {
+  const skill = {
+    name: 'both',
+    contract: { permissions: { network: 'allowed', execution: 'allowed' } },
+  };
+  assert.throws(() => assertSkillPolicyOk(skill, { skills: { allow_network: true } }), {
+    message: 'skill both requests script execution',
+  });
+  assert.throws(() => assertSkillPolicyOk(skill, { skills: { allow_execution: true } }), {
+    message: 'skill both requests network access',
+  });
+  assertSkillPolicyOk(skill, { skills: { allow_network: true, allow_execution: true } });
+});
+
 const emptyStore = { root: '/nonexistent-phdude-workspace', readYaml: async () => null };
 
 test('listSkills reports the shipped core skills with source "core" and their declared permissions', async () => {
@@ -49,9 +92,12 @@ test('listSkills reports the shipped core skills with source "core" and their de
     discoverSkills,
     skillsDir: DEFAULT_SKILLS_DIR,
   });
-  // `research` is the one shipped skill that declares network access, so a workspace with no
-  // policy (the default, closed) reports it - and still lists every skill.
+  // `research` declares network access; `analysis` and `figures` declare script execution,
+  // because both drive a command that spawns one. A workspace with no policy (the default,
+  // closed) reports all three - and still lists every skill.
   assert.deepEqual(warnings, [
+    'skill analysis requests script execution; set skills.allow_execution: true in .phdude/research-policy.yaml',
+    'skill figures requests script execution; set skills.allow_execution: true in .phdude/research-policy.yaml',
     'skill research requests network access; set skills.allow_network: true in .phdude/research-policy.yaml',
   ]);
   const bootstrap = skills.find((s) => s.name === 'bootstrap');
@@ -97,7 +143,7 @@ async function workspaceWith(t, files) {
   };
 }
 
-const skillMd = (name, { network = 'none' } = {}) =>
+const skillMd = (name, { network = 'none', execution = 'none' } = {}) =>
   [
     '---',
     `name: ${name}`,
@@ -108,6 +154,7 @@ const skillMd = (name, { network = 'none' } = {}) =>
     '  writes: []',
     '  permissions:',
     `    network: ${network}`,
+    `    execution: ${execution}`,
     '    workspace: [read]',
     '---',
     '',
@@ -183,7 +230,47 @@ test('listSkills warns, and does not throw, on a skill the network policy has no
 test('listSkills stays quiet once the workspace policy allows network access', async (t) => {
   const store = await workspaceWith(t, {
     '.phdude/skills/searcher/SKILL.md': skillMd('searcher', { network: 'allowed' }),
-    '.phdude/research-policy.yaml': 'skills:\n  allow_network: true\n',
+    // Both settings, because the shipped `analysis` skill is discovered here too.
+    '.phdude/research-policy.yaml': 'skills:\n  allow_network: true\n  allow_execution: true\n',
+  });
+
+  const { warnings } = await listSkills({
+    store,
+    loadPacks: async () => [],
+    discoverSkills,
+    skillsDir: DEFAULT_SKILLS_DIR,
+  });
+
+  assert.deepEqual(warnings, []);
+});
+
+test('listSkills warns, and does not throw, on a skill the execution policy has not allowed', async (t) => {
+  const store = await workspaceWith(t, {
+    '.phdude/skills/analyst/SKILL.md': skillMd('analyst', { execution: 'allowed' }),
+  });
+
+  const { skills, warnings } = await listSkills({
+    store,
+    loadPacks: async () => [],
+    discoverSkills,
+    skillsDir: DEFAULT_SKILLS_DIR,
+  });
+
+  assert.ok(
+    skills.some((s) => s.name === 'analyst'),
+    'the skill is still listed',
+  );
+  assert.ok(
+    warnings.includes(
+      'skill analyst requests script execution; set skills.allow_execution: true in .phdude/research-policy.yaml',
+    ),
+  );
+});
+
+test('listSkills stays quiet once the workspace policy allows script execution', async (t) => {
+  const store = await workspaceWith(t, {
+    '.phdude/skills/analyst/SKILL.md': skillMd('analyst', { execution: 'allowed' }),
+    '.phdude/research-policy.yaml': 'skills:\n  allow_network: true\n  allow_execution: true\n',
   });
 
   const { warnings } = await listSkills({

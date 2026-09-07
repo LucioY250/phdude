@@ -39,3 +39,12 @@
 {"ts":"2026-09-01T00:01:11.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-2567086fc6"],"summary":"decision proposed"}
 {"ts":"2026-09-01T00:01:13.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-2567086fc6"],"summary":"decision approved by example"}
 {"ts":"2026-09-01T00:01:14.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":["DEC-2567086fc6"],"summary":"approved introduction (DEC-2567086fc6)"}
+{"ts":"2026-09-01T00:01:16.000Z","op":"data","actor":{"researcher":"example","agent":"script"},"ids":["DATASET-bc43bf3439"],"summary":"dataset added: data/survey.csv"}
+{"ts":"2026-09-01T00:01:18.000Z","op":"analyze","actor":{"researcher":"example","agent":"script"},"ids":["ANALYSIS-a5b945f2cd"],"summary":"analysis declared: survey descriptives"}
+{"ts":"2026-09-01T00:01:20.000Z","op":"analyze","actor":{"researcher":"example","agent":"script"},"ids":["ANALYSIS-a5b945f2cd","RESULT-d09b2158fb","RESULT-8189aa9910"],"summary":"analysis run: survey descriptives → 2 new, 0 unchanged, 0 superseded"}
+{"ts":"2026-09-01T00:01:22.000Z","op":"table","actor":{"researcher":"example","agent":"script"},"ids":["TABLE-49db8343a8"],"summary":"table declared: daily-use-by-channel"}
+{"ts":"2026-09-01T00:01:23.000Z","op":"table","actor":{"researcher":"example","agent":"script"},"ids":["TABLE-49db8343a8"],"summary":"table built: daily-use-by-channel (md, latex, csv)"}
+{"ts":"2026-09-01T00:01:25.000Z","op":"figure","actor":{"researcher":"example","agent":"script"},"ids":["FIG-843c619df9"],"summary":"figure declared: respondents-by-channel"}
+{"ts":"2026-09-01T00:01:26.000Z","op":"figure","actor":{"researcher":"example","agent":"script"},"ids":["FIG-843c619df9"],"summary":"figure built: respondents-by-channel (figures/out/respondents-by-channel.svg)"}
+{"ts":"2026-09-01T00:01:28.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-7b4227f9fe"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:01:29.000Z","op":"link","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-8ad284d305","EVID-7b4227f9fe"],"summary":"CLAIM-8ad284d305 linked to 1 object(s)"}

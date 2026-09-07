@@ -143,6 +143,32 @@ export const COMMAND_ROWS = [
     'Research gaps: questions, claims, sources, artifacts, and conflicts needing attention.',
   ],
   [
+    'data add|list|show|profile',
+    'Register a file under data/ as a dataset: its bytes are its identity, and its profile ' +
+      'reports rows, column types, missing cells and distinct values.',
+  ],
+  [
+    'analyze add|list|show|run|runs',
+    'Declare an analysis - a script under analysis/, the datasets it reads, where it writes ' +
+      'results.json - run it under the execution policy, and record every finding as a RESULT. ' +
+      'Never run a script yourself.',
+  ],
+  [
+    'table add|list|show|build',
+    'Render a RESULT or a DATASET as a Markdown, LaTeX and CSV table under tables/out/; each ' +
+      'build records the hash of what it read and what it wrote.',
+  ],
+  [
+    'figure add|list|show|build|check',
+    'Declare a figure with required alt text, build it by running its generator through the ' +
+      'execution policy, and report which figures are stale, unbuilt or missing alt text.',
+  ],
+  [
+    'repro check',
+    'What every analysis, table and figure would need re-run or rebuilt: which input moved, ' +
+      'which output is gone, and what has never been produced at all. It reports; it never fixes.',
+  ],
+  [
     'prose <section> | --file <path>',
     'Academic Prose Quality report over a manuscript section or a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
   ],

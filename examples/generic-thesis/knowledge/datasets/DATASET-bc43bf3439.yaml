@@ -1,0 +1,54 @@
+schema: phdude.dataset
+version: 1
+id: DATASET-bc43bf3439
+created: 2026-09-01T00:01:15.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+path: data/survey.csv
+hash: bc43bf3439d8876d62f4534e56b2a3763a131256af3523411f2460b219cd22af
+bytes: 663
+format: csv
+profile:
+  rows: 20
+  columns:
+    - name: respondent_id
+      inferred_type: string
+      missing: 0
+      distinct: 20
+      distinct_truncated: false
+      samples:
+        - R01
+        - R02
+        - R03
+        - R04
+        - R05
+    - name: campus
+      inferred_type: string
+      missing: 0
+      distinct: 3
+      distinct_truncated: false
+      samples:
+        - North
+        - South
+        - East
+    - name: recruitment_channel
+      inferred_type: string
+      missing: 0
+      distinct: 3
+      distinct_truncated: false
+      samples:
+        - mailing list
+        - campus social media
+        - stratified campuses
+    - name: daily_use
+      inferred_type: boolean
+      missing: 0
+      distinct: 2
+      distinct_truncated: false
+      samples:
+        - yes
+        - no
+sensitive: false
+state: candidate

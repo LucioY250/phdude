@@ -13,12 +13,20 @@ Inventory:
 Knowledge:
   source: total=5 (candidate=5)
   claim: total=7 (candidate=4, disputed=2, supported=1)
-  evidence: total=5 (candidate=5)
+  evidence: total=6 (candidate=6)
   fact: total=4 (candidate=4)
-  result: total=0 ((none))
+  result: total=2 (candidate=2)
   question: total=3 (candidate=3)
   hypothesis: total=1 (candidate=1)
   method: total=1 (candidate=1)
+
+Analysis:
+  Datasets: 1
+  Analyses: 1
+  Results (from analyses): 2
+  Tables: 1
+  Figures: 1
+  Stale or unbuilt: 0 of 3
 
 Literature:
   Candidates: total=2 (accepted=1, candidate=1)
@@ -35,8 +43,8 @@ Pending decisions (1):
   - DEC-7aa12a7b78: Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta
 
 Recent events:
-  manuscript: submitted introduction (draft)
-  manuscript: submitted introduction (revised)
-  decide: decision proposed
-  decide: decision approved by example
-  manuscript: approved introduction (DEC-2567086fc6)
+  table: table built: daily-use-by-channel (md, latex, csv)
+  figure: figure declared: respondents-by-channel
+  figure: figure built: respondents-by-channel (figures/out/respondents-by-channel.svg)
+  add: evidence added
+  link: CLAIM-8ad284d305 linked to 1 object(s)

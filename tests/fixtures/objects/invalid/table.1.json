@@ -1,0 +1,16 @@
+{
+  "schema": "phdude.table",
+  "version": 1,
+  "id": "TABLE-0123456789",
+  "created": "2026-09-07T00:00:00Z",
+  "actor": { "researcher": "ada", "agent": "cli" },
+  "tags": [],
+  "name": "mean-weight",
+  "caption": "Mean weight by group.",
+  "source": { "result": "RESULT-0123456789", "dataset": "DATASET-0123456789" },
+  "columns": [],
+  "formats": ["md"],
+  "outputs": { "md": "tables/out/mean-weight.md" },
+  "runs": [],
+  "state": "candidate"
+}

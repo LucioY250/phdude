@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "key": "daily_use_by_channel",
+      "summary": "Reported daily note-taking app use is lowest in the sample recruited through the campus social media group.",
+      "values": {
+        "mailing list": 0.75,
+        "campus social media": 0.5,
+        "stratified campuses": 0.833
+      },
+      "unit": "proportion"
+    },
+    {
+      "key": "respondents_by_channel",
+      "summary": "The three recruitment channels contributed unequal numbers of respondents.",
+      "values": {
+        "mailing list": 8,
+        "campus social media": 6,
+        "stratified campuses": 6
+      },
+      "unit": "participants"
+    }
+  ]
+}

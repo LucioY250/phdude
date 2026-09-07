@@ -3,7 +3,11 @@ import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { doctor } from '../../../src/application/doctor.js';
 import { renderSectionFile, sectionHash } from '../../../src/domain/manuscript.js';
-import { DEFAULT_PROVIDERS } from '../../../src/domain/policy.js';
+import {
+  DEFAULT_EXECUTION_TIMEOUT_SECONDS,
+  DEFAULT_PROVIDERS,
+  DEFAULT_RUNTIMES,
+} from '../../../src/domain/policy.js';
 
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
 
@@ -43,6 +47,25 @@ test('doctor: reports the policy network setting and provider list', async () =>
   assert.deepEqual(report.providers, ['openalex', 'crossref']);
 });
 
+test('doctor: reports the execution policy next to the network policy', async () => {
+  const closed = await doctor(depsWith(null));
+  assert.deepEqual(closed.execution, {
+    enabled: false,
+    runtimes: Object.keys(DEFAULT_RUNTIMES).sort((a, b) => a.localeCompare(b)),
+    timeoutSeconds: DEFAULT_EXECUTION_TIMEOUT_SECONDS,
+  });
+
+  const open = await doctor(
+    depsWith({
+      execution: { enabled: true, runtimes: { julia: 'julia' }, timeout_seconds: 30 },
+    }),
+  );
+  assert.equal(open.execution.enabled, true);
+  assert.ok(open.execution.runtimes.includes('julia'));
+  assert.ok(open.execution.runtimes.includes('node'), 'the built-in runtimes are still there');
+  assert.equal(open.execution.timeoutSeconds, 30);
+});
+
 test('doctor: an unreadable policy is reported as unreadable, never as the defaults', async () => {
   const report = await doctor(
     depsWith(null, {
@@ -57,6 +80,7 @@ test('doctor: an unreadable policy is reported as unreadable, never as the defau
   assert.equal(report.policyError, 'malformed YAML: .phdude/research-policy.yaml');
   assert.equal(report.network, null);
   assert.deepEqual(report.providers, []);
+  assert.equal(report.execution, null);
   assert.ok(
     report.warnings.some((w) =>
       w.includes('research-policy.yaml could not be read: malformed YAML'),

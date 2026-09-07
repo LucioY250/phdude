@@ -4,8 +4,10 @@ import { join, resolve } from 'node:path';
 import { PhdudeError, exitCodeFor } from '../../domain/errors.js';
 import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
-import { detectKind, parserFor, PARSERS } from '../documents/index.js';
+import { detectKind, parseTable, parserFor, PARSERS } from '../documents/index.js';
 import { DEFAULT_PACKS_DIR, discoverPacks, loadProfile } from '../packs/loader.js';
+import { localRunner } from '../execution/local.js';
+import { DEFAULT_GENERATORS_DIR } from '../execution/generators.js';
 import { buildProviders } from '../search/index.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
@@ -16,13 +18,16 @@ import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
 import { printJson } from './output.js';
 import add from './commands/add.js';
+import analyze from './commands/analyze.js';
 import authors from './commands/authors.js';
 import bootstrap from './commands/bootstrap.js';
 import cite from './commands/cite.js';
+import data from './commands/data.js';
 import decide from './commands/decide.js';
 import deslop from './commands/deslop.js';
 import doctor from './commands/doctor.js';
 import edit from './commands/edit.js';
+import figure from './commands/figure.js';
 import freshness from './commands/freshness.js';
 import gaps from './commands/gaps.js';
 import help, { usage } from './commands/help.js';
@@ -38,22 +43,27 @@ import next from './commands/next.js';
 import packs from './commands/packs.js';
 import promote from './commands/promote.js';
 import prose from './commands/prose.js';
+import repro from './commands/repro.js';
 import research from './commands/research.js';
 import researchFresh from './commands/research-fresh.js';
 import status from './commands/status.js';
+import table from './commands/table.js';
 import write from './commands/write.js';
 
 const { version } = createRequire(import.meta.url)('../../../package.json');
 
 const COMMANDS = {
   add,
+  analyze,
   authors,
   bootstrap,
   cite,
+  data,
   decide,
   deslop,
   doctor,
   edit,
+  figure,
   freshness,
   gaps,
   ingest,
@@ -68,9 +78,11 @@ const COMMANDS = {
   packs,
   promote,
   prose,
+  repro,
   research,
   'research-fresh': researchFresh,
   status,
+  table,
   write,
 };
 
@@ -126,6 +138,10 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     fs: { walk, read, realpath },
     parsers: { detectKind, parserFor },
     parserAdapters: PARSERS,
+    readBytes: (rel) => read(join(workspace, rel)),
+    parseTable,
+    runner: localRunner,
+    generatorsDir: DEFAULT_GENERATORS_DIR,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     loadProfile: (name) =>
       loadProfile(name, [DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),

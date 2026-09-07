@@ -32,28 +32,41 @@ my-research/
 │   ├── evidence/   EVID-*.yaml
 │   ├── facts/      FACT-*.yaml
 │   ├── results/    RESULT-*.yaml
-│   └── candidates/ CAND-*.yaml   # literature hits awaiting review, not yet sources
+│   ├── candidates/ CAND-*.yaml   # literature hits awaiting review, not yet sources
+│   └── datasets/   DATASET-*.yaml # files under data/, hashed and profiled
 ├── research/
 │   ├── questions/  RQ-*.yaml
 │   ├── hypotheses/ H-*.yaml
 │   ├── methods/    METH-*.yaml
 │   └── searches/   SEARCH-*.yaml # what was asked, of whom, and when
 ├── decisions/      DEC-*.yaml
+├── tables/         TABLE-*.yaml  # table declarations
+│   └── out/                      # the rendered .md/.tex/.csv, generated
+├── figures/        FIG-*.yaml    # figure declarations, alt text included
+│   └── out/                      # what the generators wrote, generated
 ├── manuscript/
 │   ├── manuscript.yaml           # schema phdude.manuscript v1: the plan and every section
 │   ├── <section>.md              # the prose, front matter + Markdown body
 │   └── reports/<section>.yaml    # schema phdude.section-report v1: the last gate run
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
-├── data/ analysis/ figures/ tables/ templates/ outputs/
+├── analysis/       ANALYSIS-*.yaml # declared analysis scripts and their runs
+│   └── out/                      # where a run's results.json and files land
+├── data/                         # your data files; registered ones become DATASET records
+├── templates/ outputs/
 └── .gitignore
 ```
+
+`analysis/out/`, `tables/out/` and `figures/out/` are gitignored, and so is `.phdude/cache/`.
+What lands in them is reproducible from the record next to it — the run already carries the hash
+of every file it wrote — so committing them would be committing the same thing twice. Everything
+else in the tree is meant to be read in a diff.
 
 ## `phdude.yaml`
 
 ```yaml
 schema: phdude.project
 version: 1
-workspace_version: 2
+workspace_version: 3
 title: Adaptive scheduling in edge clusters
 language: en
 fields: [computer-science]
@@ -71,11 +84,11 @@ suggested; it is a recommendation until you run `phdude packs apply`.
 
 `version: 1` is the schema of this file. `workspace_version` is the shape of the whole
 directory, and it is what `phdude migrate` moves forward. A workspace without the field is
-version 1 (everything v0.1 wrote); the current version is 2. Versioning the workspace rather
+version 1 (everything v0.1 wrote); the current version is 3. Versioning the workspace rather
 than each object keeps an additive field — `provenance`, `contradicts` — from turning into a
 breaking change for every reader; see [ADR 6](adr/0006-workspace-versioning-and-migrations.md).
 
-Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 2)`.
+Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 3)`.
 Writes stop until you run `phdude migrate`, which is deliberately a command you run rather than
 something that happens to your files while you were asking for something else.
 
@@ -105,7 +118,11 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]`, `provenance` |
 | Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength`, `provenance` |
 | Fact | `FACT-<hash10>` | `key`, `value`, `unit`, `from {artifact, locator}` |
-| Result | `RESULT-<hash10>` | `summary`, `from`, `values{}` |
+| Result | `RESULT-<hash10>` | `summary`, `from`, `values{}`, `ext.analysis?{key,run_at,unit}`, `superseded_by?` |
+| Analysis | `ANALYSIS-<hash10>` | `name`, `runtime`, `script`, `args[]`, `inputs[]`, `outputs{results,files[]}`, `params`, `runs[]` |
+| Dataset | `DATASET-<hash10>` | `path`, `hash`, `bytes`, `format`, `profile{rows,columns[]}`, `description?`, `license?`, `sensitive`, `versions_of?`, `latest` |
+| Table | `TABLE-<hash10>` | `name`, `caption`, `source{result}\|{dataset,columns?,limit?}`, `columns[]`, `formats[]`, `outputs{md,latex,csv}`, `runs[]` |
+| Figure | `FIG-<hash10>` | `name`, `caption`, `alt`, `generator{runtime,script,args[]}`, `inputs[]`, `outputs[{path,format}]`, `runs[]` |
 | ResearchQuestion | `RQ-<n>` | `text`, `objectives[]` |
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
 | Method | `METH-<hash10>` | `name`, `design`, `paradigm`, `sampling`, `instruments[]`, `analysis[]`, `limitations[]`, `questions[]` |
