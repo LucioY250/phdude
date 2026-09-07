@@ -1,0 +1,4 @@
+.phdude/cache/
+.env
+.env.*
+outputs/

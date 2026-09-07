@@ -51,6 +51,15 @@ export class FsStore {
     await writeFileAtomic(join(this.root, relPath), stringify(obj, { lineWidth: 0 }));
   }
 
+  async readText(relPath) {
+    try {
+      return await readFile(join(this.root, relPath), 'utf8');
+    } catch (err) {
+      if (err.code === 'ENOENT') return null;
+      throw err;
+    }
+  }
+
   async writeTextAtomic(relPath, text) {
     await writeFileAtomic(join(this.root, relPath), text);
   }

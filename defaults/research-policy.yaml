@@ -1,0 +1,27 @@
+schema: phdude.research-policy
+version: 1
+
+research:
+  year_range:
+    from: 2021
+
+  peer_reviewed: preferred
+
+  quartiles:
+    allowed:
+      - Q1
+      - Q2
+
+  languages:
+    - en
+    - es
+
+  regions:
+    priority:
+      - Latin America
+
+  freshness:
+    always_check_recent: true
+
+  preprints:
+    require_approval: true

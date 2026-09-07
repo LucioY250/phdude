@@ -1,0 +1,4 @@
+schema: phdude.publication-policy
+version: 1
+target_venues: []
+default_profile: generic-thesis
