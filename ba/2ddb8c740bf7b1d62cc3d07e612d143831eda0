@@ -1,0 +1,37 @@
+tests/unit/domain/lineage.test.js
+  s_946fc7502759d8::t_3ccd4e30641acc 21-28,87-92
+  s_946fc7502759d8::t_e5569da044bce0 1-20,29-86,93-128
+tests/integration/add-knowledge.test.js
+  s_946fc7502759d8::t_821d3504905c97 1-62,71-180
+  s_946fc7502759d8::t_3ccd4e30641acc 63-70
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_39b559e71c52a6 1-106,111-137
+  s_946fc7502759d8::t_3ccd4e30641acc 107-110
+src/domain/entities.js
+  s_946fc7502759d8::t_8055a15e6fc4a9 65-299
+  s_946fc7502759d8::t_f95ebd36fa3c0d 1-10
+src/application/snapshot.js
+  s_946fc7502759d8::t_337f4b597ec8b2 1-52
+src/application/add.js
+  s_946fc7502759d8::t_ef39dd018ede88 1-123
+src/application/knowledge.js
+  s_946fc7502759d8::t_99810c48ecb81c 1-73
+src/domain/lineage.js
+  s_946fc7502759d8::t_ccabac7e478698 1-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ba2ddb8c740bf7b1d62cc3d07e612d143831eda0",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
