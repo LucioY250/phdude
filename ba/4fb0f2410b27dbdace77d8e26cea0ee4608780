@@ -1,0 +1,59 @@
+src/application/manuscript.js
+  s_946fc7502759d8::t_d37567ab36d426 12,134-141,250-251,257,260-261
+src/adapters/cli/commands/manuscript.js
+  s_946fc7502759d8::t_dbe9d432e98e42 5,58
+tests/unit/application/doctor.test.js
+  s_946fc7502759d8::t_64d5e2ddc2edce 5,17-19,73-128
+tests/integration/write.test.js
+  s_946fc7502759d8::t_05a8bce18dfc90 424,465
+  s_946fc7502759d8::t_837a4f692f45ba 15,419-423,425-464,466-491
+  s_946fc7502759d8::t_205918f1f3e5b8 492
+tests/golden/prose.test.js
+  s_946fc7502759d8::t_eb71774e2fe1b9 13,23-26,40,44-47,49-53,66
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_95702c5c394763 39-41
+examples/generic-thesis/manuscript/reports/introduction.yaml
+  s_946fc7502759d8::t_95702c5c394763 5
+docs/cli.md
+  s_946fc7502759d8::t_c8627c088800c7 678-687,813-817,974-978
+  s_946fc7502759d8::t_34dc0fa8ab24b6 979
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_f23983f6d26c02 51-64
+src/application/prose.js
+  s_946fc7502759d8::t_d37567ab36d426 2,4,6,55-62,64-65,67,90,98,101,103,108-112,114,116-122
+  s_946fc7502759d8::t_bc5839672785c5 123
+src/adapters/cli/commands/prose.js
+  s_946fc7502759d8::t_dbe9d432e98e42 4,26-27,29
+src/application/doctor.js
+  s_946fc7502759d8::t_f23983f6d26c02 2,23,88-96,123,127-146
+  s_946fc7502759d8::t_974a6e49c42b40 147-148
+README.md
+  s_946fc7502759d8::t_c6c2da687c0296 476-480,633
+docs/workspace.md
+  s_946fc7502759d8::t_c8627c088800c7 330-332,336-338
+examples/generic-thesis/decisions/DEC-2567086fc6.yaml
+  s_946fc7502759d8::t_95702c5c394763 4,20
+tests/unit/domain/manuscript.test.js
+  s_946fc7502759d8::t_7d01236954a18a 11-12,61-79
+  s_946fc7502759d8::t_54174decb35a38 80
+src/domain/manuscript.js
+  s_946fc7502759d8::t_96a8d89f19d563 123-145
+CHANGELOG.md
+  s_946fc7502759d8::t_c18dd67c16c0ed 26-32,62-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ba4fb0f2410b27dbdace77d8e26cea0ee4608780",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
