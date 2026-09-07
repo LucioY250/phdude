@@ -1,0 +1,121 @@
+tests/fixtures/workspaces/v0.1-minimal/research/questions/RQ-1.yaml
+  s_946fc7502759d8::t_a88cbdb8386585 1-12
+src/adapters/git.js
+  s_946fc7502759d8::t_7fcafd77430736 50
+  s_946fc7502759d8::t_2ccb352038c107 30-40
+tests/fixtures/workspaces/v0.1-minimal/.gitignore
+  s_946fc7502759d8::t_a88cbdb8386585 1-5
+tests/fixtures/workspaces/v0.1-minimal/sources/lab-notebooks.md
+  s_946fc7502759d8::t_a88cbdb8386585 1-9
+tests/unit/domain/versioning.test.js
+  s_946fc7502759d8::t_ce5a666a78692b 1-72
+tests/fixtures/workspaces/v0.1-minimal/.phdude/events.jsonl
+  s_946fc7502759d8::t_a88cbdb8386585 1
+src/application/init.js
+  s_946fc7502759d8::t_cdcfb96d8bacc2 4,142
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_6b72ea60a4cbd3 16-19,22,28
+  s_946fc7502759d8::t_9239f7e39865b0 23-27,29-35
+  s_0690fd0bbb54b8::t_2876eee5f13044 36
+README.md
+  s_946fc7502759d8::t_9018e0c8c5ac63 307
+schemas/common.json
+  s_946fc7502759d8::t_271442c815c5a2 19-27
+migrations/0001-workspace-v2.mjs
+  s_946fc7502759d8::t_d27af707f50b61 4-5
+  s_946fc7502759d8::t_6887b8ca0d104e 12
+  s_946fc7502759d8::t_e374c9944b6b69 1-3,6,8-11,13-64
+  s_946fc7502759d8::t_c19ff849ad0b18 7
+tests/fixtures/workspaces/v0.1-minimal/knowledge/sources/SRC-76111f48a9.yaml
+  s_946fc7502759d8::t_a88cbdb8386585 1-16
+src/application/doctor.js
+  s_946fc7502759d8::t_c0c42085ff4f54 1-3,13-14,23-36,63-64
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_ee179865ae1d37 12,481-500,505-535
+  s_946fc7502759d8::t_130871809c97f3 501-504
+  s_946fc7502759d8::t_4ad97426c11a4e 536
+docs/cli.md
+  s_946fc7502759d8::t_9018e0c8c5ac63 233-248,252-254
+src/application/packs.js
+  s_946fc7502759d8::t_3864db9dfbfb64 3,44,78
+schemas/claim.json
+  s_946fc7502759d8::t_271442c815c5a2 14-16
+package.json
+  s_946fc7502759d8::t_9018e0c8c5ac63 25
+src/application/link.js
+  s_946fc7502759d8::t_3864db9dfbfb64 3,26-27
+tests/fixtures/workspaces/v0.1-minimal/knowledge/claims/CLAIM-bb244df965.yaml
+  s_946fc7502759d8::t_a88cbdb8386585 1-17
+tests/fixtures/workspaces/v0.1-minimal/knowledge/evidence/EVID-02756876a5.yaml
+  s_946fc7502759d8::t_a88cbdb8386585 1-13
+docs/adr/0006-workspace-versioning-and-migrations.md
+  s_946fc7502759d8::t_4fa5d80203623d 1-48
+tests/fixtures/workspaces/v0.1-minimal/phdude.yaml
+  s_946fc7502759d8::t_a88cbdb8386585 1-10
+src/adapters/cli/commands/migrate.js
+  s_946fc7502759d8::t_42232c44bbd4c0 1-26
+src/adapters/agents/claude-code.js
+  s_946fc7502759d8::t_006a2aa5946103 21-22
+  s_946fc7502759d8::t_9018e0c8c5ac63 20
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_81ec107c8a1bd1 21
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_cdcfb96d8bacc2 24,164
+tests/integration/migrate.test.js
+  s_946fc7502759d8::t_006a2aa5946103 109-112,179-183
+  s_946fc7502759d8::t_bcacd4ed68b4dd 1-108,113-178,184-201
+src/application/migrate.js
+  s_946fc7502759d8::t_0d999039dae8e9 1-92
+src/application/ingest.js
+  s_946fc7502759d8::t_dda8729a878b6b 7,210-211
+src/application/add.js
+  s_946fc7502759d8::t_3864db9dfbfb64 12,110-111
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_cdcfb96d8bacc2 22,40
+src/application/mode.js
+  s_946fc7502759d8::t_3864db9dfbfb64 2,26
+src/application/snapshot.js
+  s_946fc7502759d8::t_7fcafd77430736 2,25-26
+commands/migrate.md
+  s_946fc7502759d8::t_8d3ddc2b2360d0 1-24
+schemas/project.json
+  s_946fc7502759d8::t_271442c815c5a2 8
+schemas/evidence.json
+  s_946fc7502759d8::t_271442c815c5a2 13-14
+tests/fixtures/workspaces/v0.1-minimal/knowledge/facts/FACT-d483312346.yaml
+  s_946fc7502759d8::t_a88cbdb8386585 1-15
+src/application/guard.js
+  s_946fc7502759d8::t_70eb9bd04689d1 1-26
+src/application/decide.js
+  s_946fc7502759d8::t_dda8729a878b6b 4,51-52,85-86,128-129,166-167,199-200
+src/domain/versioning.js
+  s_946fc7502759d8::t_6b9ba32e6dc465 1-63
+examples/generic-thesis/phdude.yaml
+  s_946fc7502759d8::t_ebd918a169e62c 3
+tests/fixtures/workspaces/v0.1-minimal/knowledge/artifacts/ART-3cd69e1207.yaml
+  s_946fc7502759d8::t_a88cbdb8386585 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "0ce4bb1de5897d48e50bb7622367985f98f84fbd",
+  "prompts": {},
+  "sessions": {
+    "s_0690fd0bbb54b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06d6a-70d5-7793-9200-19966b38bc18",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    },
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
