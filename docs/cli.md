@@ -750,7 +750,7 @@ every run already on it. A re-declaration that changes nothing writes nothing.
 A script gets `PHDUDE_WORKSPACE` and `PHDUDE_ANALYSIS` in its environment, `PATH`, `HOME` and
 `LANG` from the parent, and nothing else: an API key in your shell is not one `os.environ` away
 from a script the workspace declared. It runs with the workspace root as its working directory,
-through `execFile` with an argument array, never a shell.
+through `spawn` with an argument array, never a shell.
 
 It reads its inputs from `data/` and writes:
 
@@ -875,7 +875,7 @@ and the files it writes.
 script the workspace holds under `figures/`, whose real path must stay inside the workspace or
 `build` exits 1. Nothing else runs. `runtime` is resolved through
 `execution.runtimes` in `.phdude/research-policy.yaml`; a runtime the workspace never named exits
-2. The generator is run with `execFile` and an argument array, never a shell, with the workspace
+2. The generator is run with `spawn` and an argument array, never a shell, with the workspace
 as its working directory and an environment holding `PATH`, `HOME`, `LANG`, `PHDUDE_WORKSPACE`
 and `PHDUDE_FIGURE` — nothing else of yours reaches it.
 
