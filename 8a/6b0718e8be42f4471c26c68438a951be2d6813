@@ -1,0 +1,51 @@
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_195c19a54430b6 549-569,1049-1063
+examples/generic-thesis/.phdude/skills/literature/SKILL.md
+  s_946fc7502759d8::t_0aca5db984bc1a 96
+src/application/add.js
+  s_946fc7502759d8::t_aa13ef55da25d5 141-142,152,159-160
+tests/golden/matrix.test.js
+  s_946fc7502759d8::t_cd7f2d0a96e564 34-42
+skills/literature/SKILL.md
+  s_946fc7502759d8::t_0aca5db984bc1a 96
+src/application/knowledge.js
+  s_946fc7502759d8::t_aa13ef55da25d5 3,41-55
+src/adapters/cli/commands/add.js
+  s_946fc7502759d8::t_aa13ef55da25d5 38,44-49
+src/domain/gaps.js
+  s_946fc7502759d8::t_aa13ef55da25d5 127
+tests/golden/expected/gaps.txt
+  s_946fc7502759d8::t_aa13ef55da25d5 36
+tests/integration/add-knowledge.test.js
+  s_946fc7502759d8::t_cd7f2d0a96e564 421-439
+  s_946fc7502759d8::t_e25d3902548975 151,156,164-167
+docs/cli.md
+  s_946fc7502759d8::t_0aca5db984bc1a 410
+  s_946fc7502759d8::t_c8d5aafb76876a 151-153,195-197,387-389
+src/application/matrix.js
+  s_946fc7502759d8::t_aa13ef55da25d5 23-32
+tests/golden/gaps.test.js
+  s_946fc7502759d8::t_aa13ef55da25d5 44
+tests/unit/domain/gaps.test.js
+  s_946fc7502759d8::t_aa13ef55da25d5 261,264,270,274
+CHANGELOG.md
+  s_946fc7502759d8::t_0aca5db984bc1a 25-26
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_aa13ef55da25d5 314,367
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "8a6b0718e8be42f4471c26c68438a951be2d6813",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
