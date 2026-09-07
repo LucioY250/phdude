@@ -1,0 +1,37 @@
+commands/help.md
+  s_946fc7502759d8::t_803108f3ff43c5 1-17
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_7b37a5acc99c90 49-51
+  s_946fc7502759d8::t_23b240471d54f7 1-48,52-103
+commands/decide.md
+  s_946fc7502759d8::t_1351f1b6a94d4b 2
+src/adapters/agents/claude-code.js
+  s_946fc7502759d8::t_e1bf328d04db35 11-39,52-57,83-84,87,89
+  s_946fc7502759d8::t_280e5a9135e647 40-45
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_3b735fff1d4701 90-94,97-100,102,107-114,116,119,121,124,129
+  s_946fc7502759d8::t_7b37a5acc99c90 117-118,120,122-123,127-128
+  s_946fc7502759d8::t_e0576b93db951a 139
+commands/init.md
+  s_946fc7502759d8::t_803108f3ff43c5 1-20
+commands/promote.md
+  s_946fc7502759d8::t_803108f3ff43c5 1-20
+README.md
+  s_946fc7502759d8::t_144b42b334aca7 140,311-312
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "efd402c23224f409d40cc8a8c552730477601cee",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
