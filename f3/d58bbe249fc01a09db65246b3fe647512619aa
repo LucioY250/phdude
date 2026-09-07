@@ -1,0 +1,38 @@
+src/adapters/cli/commands/analyze.js
+  s_946fc7502759d8::t_e66453807ea825 113,140
+docs/cli.md
+  s_946fc7502759d8::t_b46a3a8188ac80 736,739-740,872,875
+  s_946fc7502759d8::t_3765a3d19fab7b 876
+src/application/paths.js
+  s_946fc7502759d8::t_9dec81b18feba7 1,36-48
+  s_946fc7502759d8::t_fdfeee84605e51 49
+src/application/figure.js
+  s_946fc7502759d8::t_1866966c11d635 10,16-25,77-78,83,86-93,153-154,161,170-175,222-224
+  s_946fc7502759d8::t_fc22ca41e3f4d3 225
+src/adapters/cli/commands/figure.js
+  s_946fc7502759d8::t_1866966c11d635 73,110
+src/application/analyze.js
+  s_946fc7502759d8::t_615a4fffa8b014 19,36-45,123-124,129,157-163,313-314,320,346-352,421-423
+  s_946fc7502759d8::t_1f44657e25a933 424
+tests/integration/figure.test.js
+  s_946fc7502759d8::t_c66f330e28af2b 3,601-705
+tests/integration/analyze.test.js
+  s_946fc7502759d8::t_f5ecaff3b74333 808-812
+  s_946fc7502759d8::t_19b384f15a1a33 3,713-807,813-884
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f3d58bbe249fc01a09db65246b3fe647512619aa",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
