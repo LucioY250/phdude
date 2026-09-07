@@ -1,0 +1,119 @@
+examples/generic-thesis/knowledge/facts/FACT-16634b5368.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-14
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_cdd4c66d294655 1-33
+examples/generic-thesis/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-27
+examples/generic-thesis/.phdude/author-profile.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-6
+tests/golden/next.test.js
+  s_946fc7502759d8::t_0fed2b34e98730 1-38
+examples/generic-thesis/phdude.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-10
+examples/generic-thesis/.phdude/skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_781c622c402df0 1-89
+examples/generic-thesis/.phdude/writing-policy.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-15
+examples/generic-thesis/knowledge/sources/SRC-c2221faf93.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-18
+examples/generic-thesis/.phdude/skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_781c622c402df0 1-58
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_7b738c5982a14a 1-120
+examples/generic-thesis/knowledge/sources/SRC-04b75ed54a.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-16
+examples/generic-thesis/knowledge/evidence/EVID-94123dad16.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-13
+scripts/make-example.mjs
+  s_946fc7502759d8::t_1a13c0b11b02a0 144-145
+  s_946fc7502759d8::t_03f57a144c4ebe 1-114,116-143,146-161,168-183,189-191,193,197-208
+  s_946fc7502759d8::t_2128a9def4c1db 162-167,184-188,192,194-196
+  s_946fc7502759d8::t_e7aa378e628197 115
+tests/golden/status.test.js
+  s_946fc7502759d8::t_f531ebd68af880 1-26
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_21046abf9e269b 153
+  s_946fc7502759d8::t_1a13c0b11b02a0 46-56,117-121,133-136
+  s_946fc7502759d8::t_893c49832ccee2 1-45,57-116,122-132,137-152,154-209
+examples/generic-thesis/.phdude/constitution.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-26
+examples/generic-thesis/.phdude/methodology-policy.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-4
+examples/generic-thesis/knowledge/facts/FACT-3130238a7e.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-15
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_781c622c402df0 1-82
+examples/generic-thesis/knowledge/artifacts/ART-35146e2f6d.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-23
+examples/generic-thesis/.phdude/skills/review-modes/SKILL.md
+  s_946fc7502759d8::t_781c622c402df0 1-46
+examples/generic-thesis/knowledge/artifacts/ART-f7ced78004.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-23
+examples/generic-thesis/knowledge/claims/CLAIM-3d035aa05b.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-14
+examples/generic-thesis/knowledge/artifacts/ART-655edfb882.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-23
+tests/golden/README.md
+  s_946fc7502759d8::t_5852f7215dce11 1-20
+examples/generic-thesis/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_781c622c402df0 1-56
+tests/integration/make-example.test.js
+  s_946fc7502759d8::t_e1c681b735cdf1 1-68
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_781c622c402df0 1-15
+examples/generic-thesis/knowledge/claims/CLAIM-8ad284d305.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-14
+src/application/next.js
+  s_946fc7502759d8::t_40ceaf3fe51601 1-14
+examples/generic-thesis/decisions/DEC-ad26c150fb.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-19
+examples/generic-thesis/knowledge/facts/FACT-11330aa999.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-15
+tests/golden/expected/next.txt
+  s_946fc7502759d8::t_cdd4c66d294655 1-17
+examples/generic-thesis/knowledge/facts/FACT-bdf6f42550.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-14
+examples/generic-thesis/research/questions/RQ-1.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-12
+examples/generic-thesis/.phdude/publication-policy.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-4
+examples/generic-thesis/knowledge/artifacts/ART-0772a215de.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-23
+src/application/status.js
+  s_946fc7502759d8::t_66662750917483 1-60
+examples/generic-thesis/.phdude/skills/decisions/SKILL.md
+  s_946fc7502759d8::t_781c622c402df0 1-53
+examples/generic-thesis/knowledge/claims/CLAIM-ab73621987.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-17
+src/domain/next.js
+  s_946fc7502759d8::t_3c9cc6e11eeeb8 1-123,127-169,173-247
+  s_946fc7502759d8::t_1a13c0b11b02a0 124-126,170-172
+examples/generic-thesis/.phdude/citation-policy.yaml
+  s_946fc7502759d8::t_781c622c402df0 1-6
+examples/generic-thesis/.gitignore
+  s_946fc7502759d8::t_781c622c402df0 1-4
+examples/generic-thesis/sources/participants.csv
+  s_946fc7502759d8::t_2f37e2dceceda0 1-2
+examples/generic-thesis/sources/survey-alpha.md
+  s_946fc7502759d8::t_c43e0c10993d21 1-10
+examples/generic-thesis/sources/survey-beta.md
+  s_946fc7502759d8::t_e7d710d2523092 1-10
+examples/generic-thesis/sources/survey-gamma.md
+  s_946fc7502759d8::t_ef1ce26806bbbb 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "9ac96bbfd387713dc359ab77af26dc8e03eec8e5",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
