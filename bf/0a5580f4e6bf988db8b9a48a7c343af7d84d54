@@ -1,0 +1,77 @@
+docs/workspace.md
+  s_946fc7502759d8::t_30461bc1bc1d06 23-26,176-200
+  s_946fc7502759d8::t_2415832c1390c7 201
+scripts/make-example.mjs
+  s_946fc7502759d8::t_30461bc1bc1d06 6,17,93-128,265-280,507
+  s_946fc7502759d8::t_aba0aabf981db2 508
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_12e7e5801a8e87 1843
+  s_946fc7502759d8::t_30461bc1bc1d06 1844-1921
+  s_946fc7502759d8::t_106cda36521a5c 1922
+docs/cli.md
+  s_946fc7502759d8::t_30461bc1bc1d06 854-894
+tests/fixtures/objects/invalid/author-profile.1.json
+  s_946fc7502759d8::t_30461bc1bc1d06 1-25
+tests/fixtures/objects/valid/author-profile.1.json
+  s_946fc7502759d8::t_30461bc1bc1d06 1-38
+schemas/author-profile.json
+  s_946fc7502759d8::t_30461bc1bc1d06 1-103
+src/adapters/cli/commands/authors.js
+  s_946fc7502759d8::t_30461bc1bc1d06 1-114
+examples/generic-thesis/authors/samples/researcher-a/intro-approved.md
+  s_946fc7502759d8::t_30461bc1bc1d06 1-5
+src/schemas/index.js
+  s_946fc7502759d8::t_30461bc1bc1d06 33
+tests/integration/authors.test.js
+  s_946fc7502759d8::t_30461bc1bc1d06 1-235
+examples/generic-thesis/manuscript/introduction.md
+  s_946fc7502759d8::t_2131eec1dfc2d6 5
+src/application/authors.js
+  s_946fc7502759d8::t_30461bc1bc1d06 1-295
+src/domain/voice.js
+  s_946fc7502759d8::t_30461bc1bc1d06 1-420
+examples/generic-thesis/authors/researcher-a.yaml
+  s_946fc7502759d8::t_30461bc1bc1d06 1-52
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_30461bc1bc1d06 38-39
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_30461bc1bc1d06 93-96,155-158,162,179-184,195-196,202,266-273,284-287,310-311,355-358,362-367
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_2131eec1dfc2d6 36-37
+  s_946fc7502759d8::t_30461bc1bc1d06 33-35
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_30461bc1bc1d06 161-165
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_30461bc1bc1d06 19,50
+tests/unit/domain/voice.test.js
+  s_946fc7502759d8::t_30461bc1bc1d06 1-291
+examples/generic-thesis/decisions/DEC-7aa12a7b78.yaml
+  s_946fc7502759d8::t_30461bc1bc1d06 4
+commands/authors.md
+  s_946fc7502759d8::t_30461bc1bc1d06 1-26
+examples/generic-thesis/manuscript/reports/introduction.yaml
+  s_946fc7502759d8::t_2131eec1dfc2d6 5
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_30461bc1bc1d06 44-45
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_30461bc1bc1d06 192-217
+README.md
+  s_946fc7502759d8::t_30461bc1bc1d06 451
+  s_946fc7502759d8::t_12e7e5801a8e87 174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "bf0a5580f4e6bf988db8b9a48a7c343af7d84d54",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
