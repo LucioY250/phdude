@@ -1,0 +1,50 @@
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_d150d7f049ca97 55-58
+src/application/init.js
+  s_946fc7502759d8::t_3fdd9bd65c0e19 188-202
+  s_946fc7502759d8::t_dcca48b3b4794d 42-53,55,57,59-60
+tests/unit/adapters/agents-shared.test.js
+  s_946fc7502759d8::t_220ad77aaf7c4e 6,8,11-12,17-18,22-29,35-40
+skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_ea0673a37b640a 47-48
+  s_946fc7502759d8::t_a0196b3a156b26 56
+tests/contracts/agent-host.test.js
+  s_946fc7502759d8::t_3231f56f37abe1 44-86
+src/adapters/agents/codex.js
+  s_946fc7502759d8::t_e695e73496b6f8 1-9,11-14,18-22
+skills/decisions/SKILL.md
+  s_946fc7502759d8::t_b7d87006c8ae94 22
+  s_946fc7502759d8::t_a8be3ad1c6c03f 33
+  s_946fc7502759d8::t_3d3b127e209a4e 49
+src/adapters/agents/claude-code.js
+  s_946fc7502759d8::t_eb4e210d29ca44 47
+  s_946fc7502759d8::t_53dd2ad2abe0a2 22-23
+commands/add.md
+  s_946fc7502759d8::t_c95e70b6906804 16-19
+skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_73a83da10aa055 31,35,41,47,54,57-58,61-71
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_36c40635984ec1 115-124,126-128,133,140,147-158
+  s_946fc7502759d8::t_96bb56d2abcd4b 85,87
+  s_946fc7502759d8::t_a9fde14c38df25 12,17-19,23-27,32
+  s_946fc7502759d8::t_e2aa4ecb6911e9 45,59
+tests/integration/init.test.js
+  s_946fc7502759d8::t_caedda6ad22af9 91-109
+  s_946fc7502759d8::t_0dc070b5ae9f76 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "afa78892d02eff9b4e9752b4e0111df62d908abf",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
