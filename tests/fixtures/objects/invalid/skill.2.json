@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "reads": ["analysis/**"],
+  "writes": [],
+  "permissions": {
+    "network": "none",
+    "execution": "sometimes",
+    "workspace": ["read"]
+  }
+}

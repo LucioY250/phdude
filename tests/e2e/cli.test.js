@@ -548,7 +548,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   // Reads work on a v0.1 workspace and say what is wrong with it.
   const before = await runJson(ws, ['status']);
   assert.equal(before.knowledge.byType.claim.total, 1);
-  assert.ok(before.warnings.includes('workspace needs migration (1 → 2)'));
+  assert.ok(before.warnings.includes('workspace needs migration (1 → 3)'));
 
   // Writes do not, and they name the command that fixes it.
   const refused = await phdude(ws, [
@@ -561,7 +561,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.equal(refused.code, 1);
   const refusal = JSON.parse(refused.stderr).error;
   assert.equal(refusal.code, 'USAGE');
-  assert.equal(refusal.message, 'workspace needs migration (1 → 2)');
+  assert.equal(refusal.message, 'workspace needs migration (1 → 3)');
   assert.equal(refusal.hint, 'run phdude migrate');
 
   const dryRun = await runJson(ws, ['migrate', '--dry-run']);
@@ -570,19 +570,19 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.ok(dryRun.steps[0].changed.includes('phdude.yaml'));
   const stillBehind = await runJson(ws, ['status']);
   assert.ok(
-    stillBehind.warnings.includes('workspace needs migration (1 → 2)'),
+    stillBehind.warnings.includes('workspace needs migration (1 → 3)'),
     'a dry run writes nothing',
   );
 
   const applied = await run(ws, ['migrate']);
-  assert.match(applied.stdout, /Migrated workspace 1 → 2/);
+  assert.match(applied.stdout, /Migrated workspace 1 → 3/);
 
   const after = await runJson(ws, ['status']);
   assert.deepEqual(after.warnings, []);
   assert.ok(after.recentEvents.some((e) => e.op === 'migrate'));
 
   const doctor = await runJson(ws, ['doctor']);
-  assert.equal(doctor.workspaceVersion, 2);
+  assert.equal(doctor.workspaceVersion, 3);
 
   // The write that was refused now goes through.
   await run(ws, [
@@ -593,7 +593,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   ]);
 
   const second = await run(ws, ['migrate']);
-  assert.match(second.stdout, /Workspace is up to date \(2\)/);
+  assert.match(second.stdout, /Workspace is up to date \(3\)/);
 });
 
 test('e2e: add artifact-role reports the update in text mode', async (t) => {
@@ -625,10 +625,10 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   const config = join(ws, 'phdude.yaml');
   await writeFile(
     config,
-    (await readFile(config, 'utf8')).replace('workspace_version: 2', 'workspace_version: 3'),
+    (await readFile(config, 'utf8')).replace('workspace_version: 3', 'workspace_version: 4'),
   );
 
-  const message = 'workspace version 3 is newer than this PhDude (2)';
+  const message = 'workspace version 4 is newer than this PhDude (3)';
 
   // Reads keep working and say what is wrong, the same way an older workspace does.
   const read = await runJson(ws, ['status']);
@@ -648,11 +648,11 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   assert.equal(refusal.hint, 'upgrade phdude');
 
   const report = await runJson(ws, ['doctor']);
-  assert.equal(report.workspaceVersion, 3);
+  assert.equal(report.workspaceVersion, 4);
   assert.ok(report.warnings.includes(message));
 
   const text = await run(ws, ['doctor']);
-  assert.match(text.stdout, /workspace version: 3 \(newer than this phdude\)/);
+  assert.match(text.stdout, /workspace version: 4 \(newer than this phdude\)/);
 });
 
 test('e2e: methods, provenance and the trace line that reports them', async (t) => {

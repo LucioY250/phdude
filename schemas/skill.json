@@ -16,6 +16,7 @@
       "type": "object",
       "properties": {
         "network": { "enum": ["none", "allowed"] },
+        "execution": { "enum": ["none", "allowed"] },
         "workspace": {
           "type": "array",
           "items": { "enum": ["read", "write:manuscript", "write:knowledge", "write:sources"] },

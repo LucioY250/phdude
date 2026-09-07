@@ -1,0 +1,15 @@
+schema: phdude.research-policy
+version: 1
+
+network:
+  enabled: false
+
+providers:
+  - openalex
+
+research:
+  peer_reviewed: preferred
+  limit: 20
+
+skills:
+  allow_network: false

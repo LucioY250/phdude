@@ -3,31 +3,55 @@ import { PhdudeError } from '../domain/errors.js';
 
 export const SKILL_POLICY_HINT = 'set skills.allow_network: true in .phdude/research-policy.yaml';
 
+export const SKILL_EXECUTION_POLICY_HINT =
+  'set skills.allow_execution: true in .phdude/research-policy.yaml';
+
+// The two permissions a skill can ask for that the workspace holds shut by default, each with
+// the setting that opens it. Checked in order, so a skill that wants both is reported against
+// the first one the policy has not granted.
+const PERMISSION_RULES = [
+  {
+    permission: 'network',
+    setting: 'allow_network',
+    asks: 'network access',
+    hint: SKILL_POLICY_HINT,
+  },
+  {
+    permission: 'execution',
+    setting: 'allow_execution',
+    asks: 'script execution',
+    hint: SKILL_EXECUTION_POLICY_HINT,
+  },
+];
+
 /**
- * Whether a skill's declared network permission is at odds with the workspace policy. A skill
- * without that permission, or a missing/absent policy that defaults closed, is never a
- * violation. `packs apply` turns this into a refusal; `init` withholds the skill and `doctor`
- * only reports it.
+ * Whether a skill's declared permissions are at odds with the workspace policy. A skill that
+ * asks for neither, or a missing/absent policy that defaults closed, is never a violation.
+ * `packs apply` turns this into a refusal; `init` withholds the skill and `doctor` only
+ * reports it.
  * @param {{name: string, contract: object}} skill
  * @param {object|null} policy - the parsed `.phdude/research-policy.yaml`
- * @returns {string|null} the message, or null when there is nothing to report
+ * @returns {{reason: string, hint: string}|null} null when there is nothing to report
  */
 export function skillPolicyViolation(skill, policy) {
-  if (skill.contract.permissions.network !== 'allowed') return null;
-  if (policy?.skills?.allow_network === true) return null;
-  return `skill ${skill.name} requests network access`;
+  for (const rule of PERMISSION_RULES) {
+    if (skill.contract.permissions[rule.permission] !== 'allowed') continue;
+    if (policy?.skills?.[rule.setting] === true) continue;
+    return { reason: `skill ${skill.name} requests ${rule.asks}`, hint: rule.hint };
+  }
+  return null;
 }
 
 /**
- * Refuses a skill that declares `permissions.network: allowed` unless the workspace policy
- * opts in. A skill without that permission, or a missing/absent policy that defaults closed,
- * always passes.
+ * Refuses a skill that declares `permissions.network: allowed` or `permissions.execution:
+ * allowed` unless the workspace policy opts in. A skill without those permissions, or a
+ * missing/absent policy that defaults closed, always passes.
  * @param {{name: string, contract: object}} skill
  * @param {object|null} policy - the parsed `.phdude/research-policy.yaml`
  */
 export function assertSkillPolicyOk(skill, policy) {
-  const message = skillPolicyViolation(skill, policy);
-  if (message) throw new PhdudeError('POLICY', message, SKILL_POLICY_HINT);
+  const violation = skillPolicyViolation(skill, policy);
+  if (violation) throw new PhdudeError('POLICY', violation.reason, violation.hint);
 }
 
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
@@ -82,7 +106,7 @@ export async function listSkills({ store, loadPacks, discoverSkills, skillsDir }
   return {
     skills: skills.map((skill) => {
       const violation = skillPolicyViolation(skill, policy);
-      if (violation) warnings.push(`${violation}; ${SKILL_POLICY_HINT}`);
+      if (violation) warnings.push(`${violation.reason}; ${violation.hint}`);
       return {
         name: skill.name,
         // `init` copies the shipped skills into `.phdude/skills/`, so discovery finds every core
