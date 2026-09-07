@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readdir, readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
@@ -61,4 +61,39 @@ test('writeYamlAtomic leaves no tmp file behind after success', async () => {
   await store.writeYamlAtomic('knowledge/claims/CLAIM-0123456789.yaml', claim);
   const files = await readdir(join(root, 'knowledge', 'claims'));
   assert.deepEqual(files, ['CLAIM-0123456789.yaml']);
+});
+
+test('listEntities and readEntity reject a malformed entity file with a typed error', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  await store.writeEntity(claim);
+  await writeFile(join(root, 'knowledge', 'claims', 'CLAIM-9999999999.yaml'), '');
+
+  const expected = (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'VALIDATION');
+    assert.equal(err.message, 'malformed entity file: knowledge/claims/CLAIM-9999999999.yaml');
+    assert.equal(err.hint, 'fix or delete the file');
+    return true;
+  };
+
+  await assert.rejects(store.listEntities('claim'), expected);
+  await assert.rejects(store.readEntity('CLAIM-9999999999'), expected);
+});
+
+test('readEntity rejects a file that parses to a non-object or lacks an id', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  await mkdir(join(root, 'knowledge', 'claims'), { recursive: true });
+  await writeFile(join(root, 'knowledge', 'claims', 'CLAIM-8888888888.yaml'), 'just a string\n');
+  await writeFile(join(root, 'knowledge', 'claims', 'CLAIM-7777777777.yaml'), 'statement: x\n');
+
+  await assert.rejects(store.readEntity('CLAIM-8888888888'), /malformed entity file/);
+  await assert.rejects(store.readEntity('CLAIM-7777777777'), /malformed entity file/);
+});
+
+test('readEntity still returns null for a file that is simply absent', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  assert.equal(await store.readEntity('CLAIM-0123456789'), null);
 });

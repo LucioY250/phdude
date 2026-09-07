@@ -194,3 +194,23 @@ test('list reports applied: true once a pack has been applied', async () => {
   const qualitative = summary.find((p) => p.name === 'qualitative');
   assert.equal(qualitative.applied, false);
 });
+
+test('packs list, detect and apply outside a workspace point at init', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-packs-nows-'));
+  const deps = {
+    ...makeDeps(root),
+    loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR]),
+  };
+
+  const expected = (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'USAGE');
+    assert.equal(err.message, 'not a PhDude workspace');
+    assert.equal(err.hint, 'run phdude init');
+    return true;
+  };
+
+  await assert.rejects(list(deps), expected);
+  await assert.rejects(detect(deps), expected);
+  await assert.rejects(apply(deps, 'quantitative'), expected);
+});

@@ -1,5 +1,5 @@
 import { readFile, appendFile, mkdir, readdir, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, sep } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { parseId } from '../../domain/ids.js';
 import { PhdudeError } from '../../domain/errors.js';
@@ -80,10 +80,32 @@ export class FsStore {
     await this.writeYamlAtomic('phdude.yaml', cfg);
   }
 
+  // An entity file that parses to null, to a non-object, or without an id is a merge conflict
+  // or an interrupted write, not an entity. Naming the file beats a bare TypeError from a
+  // downstream sort (spec §13).
+  async readEntityYaml(relPath) {
+    let text;
+    try {
+      text = await readFile(join(this.root, relPath), 'utf8');
+    } catch (err) {
+      if (err.code === 'ENOENT') return null;
+      throw err;
+    }
+    const obj = parse(text);
+    if (obj === null || typeof obj !== 'object' || Array.isArray(obj) || obj.id === undefined) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `malformed entity file: ${relPath.split(sep).join('/')}`,
+        'fix or delete the file',
+      );
+    }
+    return obj;
+  }
+
   async readEntity(id) {
     const parsed = parseId(id);
     if (!parsed) return null;
-    return this.readYaml(join(this.entityDir(parsed.type), `${id}.yaml`));
+    return this.readEntityYaml(join(this.entityDir(parsed.type), `${id}.yaml`));
   }
 
   async writeEntity(obj) {
@@ -111,7 +133,7 @@ export class FsStore {
       throw err;
     }
     const objs = await Promise.all(
-      files.filter((f) => f.endsWith('.yaml')).map((f) => this.readYaml(join(dir, f))),
+      files.filter((f) => f.endsWith('.yaml')).map((f) => this.readEntityYaml(join(dir, f))),
     );
     return objs.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   }

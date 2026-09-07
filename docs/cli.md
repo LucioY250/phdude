@@ -69,6 +69,10 @@ Files that share a hash under different paths collapse into one artifact with se
 `paths[]`. Extraction is best effort: a PDF with no `pdftotext` on the machine is still
 inventoried and hashed, with `extracted.status` reporting why the text is missing.
 
+Every requested path must resolve inside the workspace. `phdude ingest ../elsewhere` exits 1
+rather than recording an external path in a tracked artifact and copying the file's text into
+the cache; copy the material into `sources/` first.
+
 The result carries four keys:
 
 | Key | Contents |
@@ -143,7 +147,10 @@ Because `--json` doubles as the payload flag, `phdude add claim --json '{…}'` 
 JSON. Use `--file` if you want the short text confirmation instead.
 
 References are checked before writing: a claim citing an evidence id that does not exist is
-a validation error, not a dangling edge.
+a validation error, not a dangling edge. So is an unrecognised top-level key:
+`{"question":["RQ-1"]}` on a claim exits 2 and names the field, because the field is
+`questions`. Nothing is silently dropped, which matters because a content-derived id cannot
+be corrected afterwards.
 
 ### `phdude link <id> --to <id> [<id>…]`
 
@@ -201,7 +208,8 @@ exits 3. This is where human authority over canonical knowledge is enforced.
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's
 keywords against the cached text and records the recommendation in `phdude.yaml` without
-applying anything. `apply` adds the pack to `fields` or `methods` and writes an event.
+applying anything. `apply` adds the pack to `fields` or `methods` and writes an event. All
+three need a workspace: outside one they exit 1 and point at `phdude init`.
 
 ### `phdude mode lite|full|ruthless|off`
 

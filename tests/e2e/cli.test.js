@@ -348,6 +348,71 @@ test('e2e: bootstrap ingests, detects packs and prints the agent handoff', async
   assert.match(stdout, /Highest-impact next action/);
 });
 
+test('e2e: a malformed entity file makes status exit 2 and names the file', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-malformed-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Malformed thesis', '--no-git']);
+  await writeFile(join(ws, 'knowledge', 'facts', 'FACT-0123456789.yaml'), '');
+
+  const result = await phdude(ws, ['status', ...ACTOR]);
+  assert.equal(result.code, 2);
+  assert.match(result.stderr, /malformed entity file: knowledge\/facts\/FACT-0123456789\.yaml/);
+  assert.match(result.stderr, /Suggested action: fix or delete the file/);
+});
+
+test('e2e: packs outside a workspace point at init instead of crashing', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-nopacks-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  for (const args of [
+    ['packs', 'list'],
+    ['packs', 'detect'],
+    ['packs', 'apply', 'quantitative'],
+  ]) {
+    const result = await phdude(ws, [...args, ...ACTOR]);
+    assert.equal(result.code, 1, `${args.join(' ')} should be a usage error`);
+    assert.match(result.stderr, /not a PhDude workspace/);
+    assert.match(result.stderr, /Suggested action: run phdude init/);
+  }
+});
+
+test('e2e: ingest refuses a path outside the workspace', async (t) => {
+  const outside = await mkdtemp(join(tmpdir(), 'phdude-e2e-outside-'));
+  t.after(() => rm(outside, { recursive: true, force: true }));
+  await writeFile(join(outside, 'secret.txt'), 'SECRET_TOKEN=abc123\n');
+
+  const ws = join(outside, 'ws');
+  await run(outside, ['init', 'ws', '--title', 'Contained thesis', '--no-git']);
+
+  const result = await phdude(ws, ['ingest', '../secret.txt', ...ACTOR]);
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /path is outside the workspace: \.\.\/secret\.txt/);
+  assert.match(result.stderr, /Suggested action: copy the files into sources\/ first/);
+
+  const listed = await runJson(ws, ['knowledge', 'list', '--type', 'artifact']);
+  assert.equal(listed.length, 0, 'nothing outside the workspace was recorded');
+});
+
+test('e2e: an unknown field on add is a validation error, not a silent drop', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-field-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Field thesis', '--no-git']);
+  const result = await phdude(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'A typo-linked claim.', question: ['RQ-1'] }),
+    ...ACTOR,
+  ]);
+  assert.equal(result.code, 2);
+  const payload = JSON.parse(result.stderr).error;
+  assert.equal(payload.code, 'VALIDATION');
+  assert.equal(payload.message, 'unknown field(s) for claim: question');
+  assert.match(payload.hint, /questions/);
+});
+
 test('e2e: --help and --version exit 0, a bare invocation is a usage error', async (t) => {
   const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-help-'));
   t.after(() => rm(ws, { recursive: true, force: true }));

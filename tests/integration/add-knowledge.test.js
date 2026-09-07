@@ -190,6 +190,50 @@ test('artifact-role rejects an unknown artifact id', async () => {
   );
 });
 
+test('addEntity: an unknown top-level key is a validation error naming the field', async () => {
+  const deps = makeDeps(await newRoot());
+  await assert.rejects(
+    addEntity(deps, 'claim', { statement: 'A typo-linked claim.', question: ['RQ-1'] }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'VALIDATION');
+      assert.equal(err.message, 'unknown field(s) for claim: question');
+      assert.match(err.hint, /questions/);
+      return true;
+    },
+  );
+  assert.equal((await deps.store.listEntities('claim')).length, 0, 'nothing was written');
+});
+
+test('addEntity: several unknown keys are reported sorted, in one error', async () => {
+  const deps = makeDeps(await newRoot());
+  await assert.rejects(
+    addEntity(deps, 'fact', {
+      key: 'sample_size',
+      value: 1,
+      from: { artifact: 'ART-0000000000' },
+      zeta: 1,
+      alpha: 2,
+    }),
+    (err) => {
+      assert.equal(err.message, 'unknown field(s) for fact: alpha, zeta');
+      return true;
+    },
+  );
+});
+
+test('addEntity: artifact-role rejects unknown keys too', async () => {
+  const deps = makeDeps(await newRoot());
+  await assert.rejects(
+    addEntity(deps, 'artifact-role', { id: 'ART-0000000000', roles: 'paper' }),
+    (err) => {
+      assert.equal(err.code, 'VALIDATION');
+      assert.match(err.message, /unknown field\(s\) for artifact-role: roles/);
+      return true;
+    },
+  );
+});
+
 test('addEntity: unknown type is rejected with USAGE', async () => {
   const deps = makeDeps(await newRoot());
   await assert.rejects(addEntity(deps, 'bogus', {}), (err) => {

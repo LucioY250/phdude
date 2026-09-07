@@ -1,4 +1,4 @@
-import { join, relative, sep } from 'node:path';
+import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { sha256 } from '../domain/hash.js';
 import { makeId } from '../domain/ids.js';
 import { newArtifact, mimeFor } from '../domain/entities.js';
@@ -70,8 +70,24 @@ async function writeCache(store, id, hash, kind, parsed) {
   }
 }
 
+// The slash commands hand the agent `Bash(phdude:*)` as a narrow capability, so ingest must
+// not become an arbitrary file read plus copy-into-repo: contain every requested path under
+// the workspace the way the pack loader contains skill paths.
+function resolveInsideRoot(store, requestedPath) {
+  const absPath = resolve(store.root, requestedPath);
+  const back = relative(store.root, absPath);
+  if (back.startsWith('..') || isAbsolute(back)) {
+    throw new PhdudeError(
+      'USAGE',
+      `path is outside the workspace: ${requestedPath}`,
+      'copy the files into sources/ first',
+    );
+  }
+  return absPath;
+}
+
 async function collectFiles(fs, store, requestedPath) {
-  const absPath = join(store.root, requestedPath);
+  const absPath = resolveInsideRoot(store, requestedPath);
   const files = [];
   try {
     for await (const entry of fs.walk(absPath)) {

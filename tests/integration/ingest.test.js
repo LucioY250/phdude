@@ -233,3 +233,30 @@ test('ingest: a path may point at a single file', async () => {
   assert.equal(r.artifacts.length, 1);
   assert.equal(r.artifacts[0].paths[0], 'sources/sample.txt');
 });
+
+test('ingest: a path outside the workspace is refused', async () => {
+  const outside = await mkdtemp(join(tmpdir(), 'phdude-outside-'));
+  await writeFile(join(outside, 'secret.txt'), 'SECRET_TOKEN=abc123\n');
+  const root = await mkdtemp(join(outside, 'ws-'));
+  await setupSources(root);
+  const deps = makeDeps(root);
+
+  await assert.rejects(ingest(deps, { paths: ['../secret.txt'] }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'USAGE');
+    assert.equal(err.message, 'path is outside the workspace: ../secret.txt');
+    assert.equal(err.hint, 'copy the files into sources/ first');
+    return true;
+  });
+
+  await assert.rejects(ingest(deps, { paths: [outside] }), /outside the workspace/);
+  assert.equal((await deps.store.listEntities('artifact')).length, 0, 'nothing was recorded');
+});
+
+test('ingest: the workspace root itself is still an acceptable path', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-root-'));
+  await setupSources(root);
+  const deps = makeDeps(root);
+  const result = await ingest(deps, { paths: ['.'] });
+  assert.ok(result.artifacts.length > 0);
+});

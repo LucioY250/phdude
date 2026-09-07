@@ -23,6 +23,34 @@ const SEQ_FACTORIES = {
   hypothesis: newHypothesis,
 };
 
+// The factories destructure known fields only, so without this a typo ("question" for
+// "questions") passes validation, is silently dropped, and cannot be corrected afterwards
+// because the id is already derived from the rest of the content.
+export const ALLOWED_FIELDS = {
+  claim: ['statement', 'kind', 'supported_by', 'questions', 'sections', 'tags'],
+  evidence: ['source', 'locator', 'excerpt', 'strength', 'tags'],
+  fact: ['key', 'value', 'unit', 'from', 'tags'],
+  source: ['title', 'authors', 'year', 'venue', 'doi', 'url', 'type', 'artifacts', 'tags'],
+  result: ['summary', 'from', 'values', 'tags'],
+  question: ['text', 'objectives', 'tags'],
+  hypothesis: ['text', 'questions', 'tags'],
+  'artifact-role': ['id', 'role'],
+};
+
+function assertKnownFields(type, input) {
+  const allowed = ALLOWED_FIELDS[type];
+  const unknown = Object.keys(input ?? {})
+    .filter((key) => !allowed.includes(key))
+    .sort();
+  if (unknown.length > 0) {
+    throw new PhdudeError(
+      'VALIDATION',
+      `unknown field(s) for ${type}: ${unknown.join(', ')}`,
+      `allowed: ${allowed.join(', ')}`,
+    );
+  }
+}
+
 async function assertReferenceExists(store, id) {
   const obj = await store.readEntity(id);
   if (!obj) {
@@ -86,19 +114,20 @@ export async function addEntity({ store, clock, actor }, type, input) {
     );
   }
 
-  if (type === 'artifact-role') {
-    return addArtifactRole({ store, clock, actor }, input);
-  }
-
-  const factory = FACTORIES[type] ?? SEQ_FACTORIES[type];
-  if (!factory) {
+  if (!ALLOWED_FIELDS[type]) {
     throw new PhdudeError(
       'USAGE',
       `unknown entity type: ${type}`,
       'valid types: claim, evidence, fact, source, result, question, hypothesis, artifact-role',
     );
   }
+  assertKnownFields(type, input);
 
+  if (type === 'artifact-role') {
+    return addArtifactRole({ store, clock, actor }, input);
+  }
+
+  const factory = FACTORIES[type] ?? SEQ_FACTORIES[type];
   await validateReferences(store, type, input);
 
   if (SEQ_FACTORIES[type]) {

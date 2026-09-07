@@ -3,6 +3,14 @@ import { scorePackDetection, recommendPacks } from '../domain/packs.js';
 
 const FIELD_BY_KIND = { field: 'fields', method: 'methods' };
 
+async function requireProject(store) {
+  const project = await store.readProject();
+  if (project === null) {
+    throw new PhdudeError('USAGE', 'not a PhDude workspace', 'run phdude init');
+  }
+  return project;
+}
+
 function isApplied(project, pack) {
   const field = FIELD_BY_KIND[pack.kind];
   return field ? project[field].includes(pack.name) : false;
@@ -17,7 +25,7 @@ function sameNames(a, b) {
  * @returns {Promise<{name: string, kind: string, description: string, applied: boolean}[]>}
  */
 export async function list({ store, loadPacks }) {
-  const [packs, project] = await Promise.all([loadPacks(), store.readProject()]);
+  const [packs, project] = await Promise.all([loadPacks(), requireProject(store)]);
   return packs.map((p) => ({
     name: p.name,
     kind: p.kind,
@@ -31,6 +39,7 @@ export async function list({ store, loadPacks }) {
  * @returns {Promise<{scores: object[], recommended: string[]}>}
  */
 export async function detect({ store, loadPacks, clock, actor }) {
+  const project = await requireProject(store);
   const packs = await loadPacks();
   const artifacts = await store.listEntities('artifact');
   const texts = [];
@@ -42,7 +51,6 @@ export async function detect({ store, loadPacks, clock, actor }) {
   const scores = scorePackDetection(packs, texts);
   const recommended = recommendPacks(scores);
 
-  const project = await store.readProject();
   const current = project.packs_recommended ?? [];
   if (!sameNames(current, recommended)) {
     await store.writeProject({ ...project, packs_recommended: recommended });
@@ -64,6 +72,7 @@ export async function detect({ store, loadPacks, clock, actor }) {
  * @returns {Promise<{applied: boolean, project?: object}>}
  */
 export async function apply({ store, loadPacks, clock, actor }, name) {
+  const project = await requireProject(store);
   const packs = await loadPacks();
   const pack = packs.find((p) => p.name === name);
   if (!pack) throw new PhdudeError('USAGE', `unknown pack ${name}`, 'phdude packs list');
@@ -71,7 +80,6 @@ export async function apply({ store, loadPacks, clock, actor }, name) {
     throw new PhdudeError('USAGE', 'venue packs are not supported in v0.1');
   }
 
-  const project = await store.readProject();
   const field = FIELD_BY_KIND[pack.kind];
   const otherField = field === 'fields' ? 'methods' : 'fields';
   if (project[otherField].includes(name)) {
