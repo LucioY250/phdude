@@ -1,0 +1,115 @@
+src/adapters/cli/commands/status.js
+  s_946fc7502759d8::t_1f3f8328b5e109 1-7
+src/adapters/cli/commands/bootstrap.js
+  s_946fc7502759d8::t_1228077dee71d4 1-42
+docs/extending.md
+  s_946fc7502759d8::t_1897e7470d601b 1-178
+docs/adr/0001-node-esm-harness.md
+  s_946fc7502759d8::t_c1f5f48a276a8d 31
+  s_946fc7502759d8::t_2da36d52b9bb29 1-30,32-40
+src/adapters/cli/commands/next.js
+  s_946fc7502759d8::t_63cc97eaa0636c 1-7
+src/adapters/cli/commands/knowledge.js
+  s_946fc7502759d8::t_c3c06106fcbfa8 1-43,45-46,48-56,60-67,69-77
+  s_946fc7502759d8::t_0f76d20bb7b80e 57-58
+  s_946fc7502759d8::t_2999550500efa8 44,47,59,68
+src/adapters/cli/commands/ingest.js
+  s_946fc7502759d8::t_521b7c2053b9ab 1-3,7-41
+  s_946fc7502759d8::t_0f76d20bb7b80e 4-6
+src/adapters/cli/commands/add.js
+  s_946fc7502759d8::t_286866d6afb2f7 1-47
+package.json
+  s_946fc7502759d8::t_9c93674e50ec6e 29-31
+docs/workspace.md
+  s_946fc7502759d8::t_14162af9f08c76 1-116
+docs/adr/0003-content-derived-ids.md
+  s_946fc7502759d8::t_0b05918e41bd3e 14,17-18,31-32,36
+  s_946fc7502759d8::t_c29de226a9a868 16,37-40
+  s_946fc7502759d8::t_8d8664403f58da 15,20-21,25
+  s_946fc7502759d8::t_0662a03eb1994d 9
+  s_946fc7502759d8::t_ccb1b16c8141f3 1-6,10-13,19,24,26-28,33-35
+  s_946fc7502759d8::t_e50223d90d98ec 7-8,22-23,29-30
+bin/phdude.js
+  s_946fc7502759d8::t_3004a00282aafe 2-9
+src/adapters/cli/commands/promote.js
+  s_946fc7502759d8::t_d8e10179f15445 1-20
+src/adapters/packs/loader.js
+  s_946fc7502759d8::t_477049647958f3 1
+  s_946fc7502759d8::t_f59e5bca9d0599 23-26
+  s_946fc7502759d8::t_706eeebc330216 37,39-45,47,56-62
+docs/adr/0005-packs-as-composable-extensions.md
+  s_946fc7502759d8::t_abb2b2f3d9b5f3 14,29-30
+  s_946fc7502759d8::t_dc33e9ddf58bca 10
+  s_946fc7502759d8::t_b1aa61283be05b 17,19,39-40
+  s_946fc7502759d8::t_bad0761d410567 1-8,11-13,15-16,18,21,26-28,34-36,38
+  s_946fc7502759d8::t_2e9f9fe0dd3997 9,23-25,31-33,37
+  s_946fc7502759d8::t_fdcbe9f9d9ddbe 20,22
+src/adapters/cli/commands/packs.js
+  s_946fc7502759d8::t_5b04aea6d27379 1-7,12-78
+  s_946fc7502759d8::t_0f76d20bb7b80e 8-11
+src/application/doctor.js
+  s_946fc7502759d8::t_c02b0444e227f9 1-51
+docs/cli.md
+  s_946fc7502759d8::t_019208b8db6098 1-31,33,38-152
+  s_946fc7502759d8::t_4f461e9faab5e4 32,34-37
+docs/adr/0002-git-workspace-entity-per-file.md
+  s_946fc7502759d8::t_ade695e536b455 20,23,36-39
+  s_946fc7502759d8::t_056171ac9a69b0 10
+  s_946fc7502759d8::t_eb46dafbd243db 1-6,11-19,21-22,24-28,31-35
+  s_946fc7502759d8::t_ca75a92340d0f7 7-9,29-30
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_977b6be5e49ebb 98-102
+  s_946fc7502759d8::t_53f0b00b1a8112 1-97,103-151
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_00d3d75c9be2ae 1-91,114-165
+  s_946fc7502759d8::t_5be64dd6a1f8e9 92-113
+src/adapters/cli/commands/mode.js
+  s_946fc7502759d8::t_b1c9d2e5392117 1-6,8-9,11-13
+  s_946fc7502759d8::t_0f76d20bb7b80e 7,10
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_fd42f6ddb765d4 139-152
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_538dc71a08a32b 1-43
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_a5e1a43063cbbd 1-44
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_a8f596fa7549cc 1-179,184-228,235-242,244-246,248-277
+  s_946fc7502759d8::t_413cf74c0ee285 243,247
+  s_946fc7502759d8::t_0f76d20bb7b80e 180-183
+  s_946fc7502759d8::t_0297508e660333 229-234
+src/adapters/cli/commands/init.js
+  s_946fc7502759d8::t_83950ab5479249 1-56
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_9c4fbe01fefdd1 157-160
+  s_946fc7502759d8::t_2caf9a902353f6 1-156,161
+tests/unit/adapters/packs-loader.test.js
+  s_946fc7502759d8::t_b2014a7740cca2 3,100-180
+docs/adr/0004-agent-writes-through-cli.md
+  s_946fc7502759d8::t_416b7b1e55f426 1-40
+src/adapters/cli/commands/decide.js
+  s_946fc7502759d8::t_0f76d20bb7b80e 26-30,33-37
+  s_946fc7502759d8::t_33380959c929e3 1-25,31-32,38-82
+src/application/mode.js
+  s_946fc7502759d8::t_899ed733f8163c 1-36
+README.md
+  s_946fc7502759d8::t_bb8e087cf658e3 3,5,7-173,175-190
+  s_946fc7502759d8::t_67efeadb5fd19d 174
+src/ports/store.js
+  s_946fc7502759d8::t_73cb5abfd98737 14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "85850fafc13f5add12f7e3af49c9e7cd038da71b",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
