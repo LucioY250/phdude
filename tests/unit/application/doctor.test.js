@@ -25,6 +25,7 @@ function depsWith(policy, { readYaml } = {}) {
     },
     git: { isAvailable: async () => true },
     parsers: [],
+    renderers: [],
     loadPacks: async () => [],
     schemaTypes: [],
     node: 'v22.0.0',
@@ -148,5 +149,76 @@ test('doctor: a manuscript it cannot read is a warning, never the end of the rep
   assert.ok(
     report.warnings.some((w) => w.includes('the manuscript could not be read: malformed YAML')),
   );
+  assert.equal(report.node, 'v22.0.0');
+});
+
+function renderer(name, formats, availability) {
+  return {
+    name,
+    formats,
+    available: async () => {
+      if (availability instanceof Error) throw availability;
+      return availability;
+    },
+  };
+}
+
+test('doctor: reports each renderer with its formats and the version behind it', async () => {
+  const deps = depsWith(null);
+  deps.renderers = [
+    renderer('markdown', ['md'], { ok: true, version: 'phdude 0.6.0' }),
+    renderer('pandoc', ['docx', 'html'], {
+      ok: false,
+      hint: 'install pandoc (apt install pandoc)',
+    }),
+  ];
+
+  const report = await doctor(deps);
+  assert.deepEqual(report.renderers, [
+    { name: 'markdown', formats: ['md'], available: true, version: 'phdude 0.6.0', hint: null },
+    {
+      name: 'pandoc',
+      formats: ['docx', 'html'],
+      available: false,
+      version: null,
+      hint: 'install pandoc (apt install pandoc)',
+    },
+  ]);
+});
+
+test('doctor: an unavailable renderer is a warning naming the formats it would unlock', async () => {
+  const deps = depsWith(null);
+  deps.renderers = [
+    renderer('markdown', ['md'], { ok: true, version: 'phdude 0.6.0' }),
+    renderer('latex', ['pdf'], { ok: false, hint: 'install a TeX distribution' }),
+  ];
+
+  const report = await doctor(deps);
+  assert.ok(
+    report.warnings.includes(
+      'latex is not available: pdf cannot be built (install a TeX distribution)',
+    ),
+    report.warnings.join(' | '),
+  );
+  assert.ok(!report.warnings.some((w) => w.startsWith('markdown is not available')));
+});
+
+test('doctor: a renderer whose probe throws costs one warning, not the report', async () => {
+  const deps = depsWith(null);
+  deps.renderers = [
+    renderer('pandoc', ['docx'], new Error('spawn EPERM')),
+    renderer('markdown', ['md'], { ok: true, version: 'phdude 0.6.0' }),
+  ];
+
+  const report = await doctor(deps);
+  assert.deepEqual(report.renderers[0], {
+    name: 'pandoc',
+    formats: ['docx'],
+    available: false,
+    version: null,
+    hint: null,
+  });
+  assert.equal(report.renderers[1].available, true);
+  assert.ok(report.warnings.some((w) => w.includes('pandoc could not be probed: spawn EPERM')));
   assert.equal(report.node, 'v22.0.0');
 });

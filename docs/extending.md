@@ -489,6 +489,75 @@ holds the shipped generator to that byte for byte.
 To ship another one, add it to `generators/`, register it in `SHIPPED_GENERATORS` in
 `src/domain/figures.js`, and add it to `files` in `package.json` if it needs a new directory.
 
+### DocumentRenderer
+
+```js
+{
+  name: 'pandoc',
+  formats: ['docx', 'html', 'latex', 'md', 'pptx'],
+  available: async () => ({ ok, version, hint }),
+  render: async ({ input, output, cwd }) => ({ path, warnings }),
+}
+```
+
+`input` is `{ markdownPath, bibPath?, cslPath?, referenceDoc?, template?, metadata? }`, `output`
+is `{ path, format }`, and `metadata` is a flat map of scalars and arrays of scalars (`title`,
+`author`, `date`, `abstract`). A fixed `date` is what makes two builds of the same manuscript
+produce the same bytes, so the build passes one rather than letting the tool reach for the clock.
+
+Four rules, in this order, and the order is the interesting part:
+
+| Situation | Answer |
+| --- | --- |
+| A format the renderer does not declare, or an input file nobody wrote | `VALIDATION`, whether or not the tool is installed |
+| The tool is not installed | `TOOL_MISSING` carrying the install hint |
+| Anything else | Create the output's parent directory, render, return the absolute path |
+| An input this renderer cannot honour (a CSL style, a `--reference-doc`) | A **warning naming the file**, never a silent drop |
+
+A malformed request stays malformed on a machine that has every tool, which is why validation
+comes first: answering `TOOL_MISSING` over a typo would send a researcher off to install Pandoc.
+And the *artifact* decides whether a render succeeded, never the exit code — a tool that exits 0
+and writes nothing is an `EXECUTION` failure, because hashing whatever happens to be at that path
+would record a render that did not happen.
+
+```js
+import { documentRendererContract } from '../../src/ports/document-renderer.js';
+documentRendererContract(test, assert, myRenderer, { fixturesDir: FIXTURES });
+```
+
+The suite checks the shape, that `available()` reports honestly and stably, both `VALIDATION`
+paths, and then — for every format the renderer declares — either a rendered file (non-empty,
+with the fixture's text in it, or the right magic bytes for a binary format) or a `TOOL_MISSING`
+refusal, whichever the machine warrants. For `md`, `latex` and `html` it also renders twice and
+compares bytes: identical inputs and an identical renderer version must produce identical files,
+which is what lets the build cache treat "the inputs did not change" as "the output would not
+change". DOCX, PPTX and PDF are best-effort and not held to that (see
+[ADR 10](adr/0010-renderer-adapters-and-reproducible-builds.md)).
+
+**Precedence.** `buildRenderers({ execFile, env, version, paths })` returns
+`[markdown, pandoc, latex]` and `rendererFor(renderers, format)` takes the first renderer that
+declares the format:
+
+| Format | Renderer | Needs |
+| --- | --- | --- |
+| `md` | `markdown` (built in) | nothing |
+| `docx`, `pptx`, `html`, `latex` | `pandoc` | pandoc |
+| `pdf` | `latex` | pandoc **and** `latexmk` or `pdflatex` |
+
+`md` goes to the built-in renderer *even where Pandoc is installed*: the one format that must
+never depend on a tool must not quietly start depending on one. The built-in renderer resolves
+`[@key]`, `[@a; @b]`, `[-@key]` and `[@key, p. 3]` into plain `(Surname, Year)` forms and appends
+a `## References` list holding the entries actually cited, in author-year order, read out of
+`references.bib` by `parseBibtex`. It is one fixed style and says so: a venue's style is what
+`--csl` and Pandoc are for, and a CSL file handed to it comes back as a warning.
+
+`PHDUDE_PANDOC`, `PHDUDE_LATEXMK`, `PHDUDE_PDFLATEX` and `PHDUDE_BIBTEX` point an adapter at a
+user-local install; `paths` does the same from code. Every tool is called with `execFile` and an
+argument array, never a shell.
+
+Then wire the renderers into `deps.renderers` in `src/adapters/cli/run.js`; `phdude doctor` picks
+them up from there and prints one line each.
+
 ### Store
 
 `src/ports/store.js` documents the storage interface used by every use case. `FsStore` is the

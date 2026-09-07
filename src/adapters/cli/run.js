@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
@@ -8,6 +9,7 @@ import { detectKind, parseTable, parserFor, PARSERS } from '../documents/index.j
 import { DEFAULT_PACKS_DIR, discoverPacks, loadProfile } from '../packs/loader.js';
 import { localRunner } from '../execution/local.js';
 import { DEFAULT_GENERATORS_DIR } from '../execution/generators.js';
+import { buildRenderers } from '../render/index.js';
 import { buildProviders } from '../search/index.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
@@ -141,6 +143,7 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     readBytes: (rel) => read(join(workspace, rel)),
     parseTable,
     runner: localRunner,
+    renderers: buildRenderers({ execFile, env, version }),
     generatorsDir: DEFAULT_GENERATORS_DIR,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     loadProfile: (name) =>

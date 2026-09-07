@@ -19,19 +19,20 @@ const SCHEMA_VERSION = 1;
 
 /**
  * Reports what the runtime can and cannot do here. Diagnostic only: never writes.
- * @param {{store: object, git: object, parsers: object[], loadPacks: () => Promise<object[]>,
- *   schemaTypes: string[], node: string, discoverSkills: (roots: object[]) => Promise<object[]>,
- *   skillsDir: string}} deps
+ * @param {{store: object, git: object, parsers: object[], renderers?: object[],
+ *   loadPacks: () => Promise<object[]>, schemaTypes: string[], node: string,
+ *   discoverSkills: (roots: object[]) => Promise<object[]>, skillsDir: string}} deps
  * @returns {Promise<{node: string, pdftotext: boolean, git: boolean, workspace: boolean,
  *   workspaceVersion: number|null, workspaceVersionCurrent: number, parsers: object,
- *   policyError: string|null, network: boolean|null, providers: string[], execution: object|null,
- *   schemaVersions: object, cacheEntries: number, packsAvailable: string[],
+ *   renderers: object[], policyError: string|null, network: boolean|null, providers: string[],
+ *   execution: object|null, schemaVersions: object, cacheEntries: number, packsAvailable: string[],
  *   skills: object[], manuscript: object|null, warnings: string[]}>}
  */
 export async function doctor({
   store,
   git,
   parsers,
+  renderers = [],
   loadPacks,
   schemaTypes,
   node,
@@ -69,6 +70,36 @@ export async function doctor({
   const pdftotext = parserAvailability.pdf === true;
   if (!pdftotext) {
     warnings.push('pdftotext is not installed; PDF text extraction is unavailable');
+  }
+
+  // Which deliverables this machine can actually produce. The built-in Markdown renderer is
+  // always one of them; the rest name the tool that is missing rather than failing a build later.
+  const rendererAvailability = [];
+  for (const renderer of renderers) {
+    try {
+      const availability = await renderer.available();
+      rendererAvailability.push({
+        name: renderer.name,
+        formats: renderer.formats,
+        available: availability.ok === true,
+        version: availability.version ?? null,
+        hint: availability.hint ?? null,
+      });
+      if (!availability.ok) {
+        warnings.push(
+          `${renderer.name} is not available: ${renderer.formats.join(', ')} cannot be built (${availability.hint})`,
+        );
+      }
+    } catch (err) {
+      rendererAvailability.push({
+        name: renderer.name,
+        formats: renderer.formats,
+        available: false,
+        version: null,
+        hint: null,
+      });
+      warnings.push(`${renderer.name} could not be probed: ${err.message}`);
+    }
   }
 
   // Reported, never exercised: doctor says what the network policy allows without making a
@@ -119,6 +150,7 @@ export async function doctor({
     workspaceVersion,
     workspaceVersionCurrent: CURRENT_WORKSPACE_VERSION,
     parsers: parserAvailability,
+    renderers: rendererAvailability,
     policyError,
     network: policyError === null ? networkAllowed(policy, {}) : null,
     providers: policyError === null ? providerNames(policy) : [],

@@ -1338,7 +1338,7 @@ Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
 that version is `(current)`, `(needs migration → 3)` or `(newer than this phdude)`, whether
 network access is enabled and the configured search providers, whether script execution is
-enabled and under what limits, the cache
+enabled and under what limits, which document formats this machine can render, the cache
 entry count, the discoverable packs and the schema
 versions, plus warnings for anything missing. It is diagnostic only and never writes.
 
@@ -1368,6 +1368,23 @@ sections that have a report in `manuscript/reports/`, and the sections whose fil
 edited outside PhDude since its last submit (`drift: none` when none has). Each drifted section
 is a warning too. `--json` carries the same as `manuscript: { counts, reports[], drifted[] }`,
 and `null` for a workspace with no manuscript.
+
+A `Renderers:` block says which deliverables this machine can actually produce — one line per
+renderer with the formats it covers and either the version behind the bytes or the command that
+would install it:
+
+```
+Renderers:
+  markdown (md) available: phdude 0.6.0
+  pandoc (docx, html, latex, md, pptx) available: 3.6.4
+  latex (pdf) unavailable: install a TeX distribution (apt install texlive-latex-base latexmk, or MacTeX on macOS) to build PDF
+```
+
+The built-in Markdown renderer is always available, which is what makes a Markdown build a
+promise rather than a hope; every other format degrades to that hint and to one warning per
+unavailable renderer, rather than to a build that fails halfway. `--json` carries the same as a
+`renderers` array of `{ name, formats, available, version, hint }`. See
+[DocumentRenderer](extending.md#documentrenderer).
 
 It also lists every discoverable skill (core, applied packs, and the workspace's own
 `.phdude/skills/`) with its source, declared network and workspace permissions, and any loader
