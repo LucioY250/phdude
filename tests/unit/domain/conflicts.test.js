@@ -91,7 +91,12 @@ test('detectFactConflicts: approved decision resolves conflict', () => {
     fact('FACT-0000000001', 'sample_size', 312, 'ART-a'),
     fact('FACT-0000000002', 'sample_size', 300, 'ART-b'),
   ];
-  const decisions = [decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312)];
+  const decisions = [
+    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312, [
+      'FACT-0000000001',
+      'FACT-0000000002',
+    ]),
+  ];
   const conflicts = detectFactConflicts(facts, decisions);
   assert.equal(conflicts.length, 1);
   assert.ok(conflicts[0].resolved, 'conflict should be resolved');
@@ -196,9 +201,10 @@ test('detectFactConflicts: first approved decision by id resolves conflict', () 
     fact('FACT-0000000001', 'sample_size', 312, 'ART-a'),
     fact('FACT-0000000002', 'sample_size', 300, 'ART-b'),
   ];
+  const affects = ['FACT-0000000001', 'FACT-0000000002'];
   const decisions = [
-    decision('DEC-zzzzzzzzzz', 'approved', 'sample_size', 300),
-    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312),
+    decision('DEC-zzzzzzzzzz', 'approved', 'sample_size', 300, affects),
+    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312, affects),
   ];
   const conflicts = detectFactConflicts(facts, decisions);
   assert.equal(conflicts[0].resolved.decision, 'DEC-aaaaaaaaaa', 'should pick first by id');
@@ -211,7 +217,12 @@ test('openConflicts: filters to unresolved only', () => {
     fact('FACT-0000000003', 'weight', 10, 'ART-c'),
     fact('FACT-0000000004', 'weight', 20, 'ART-d'),
   ];
-  const decisions = [decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312)];
+  const decisions = [
+    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312, [
+      'FACT-0000000001',
+      'FACT-0000000002',
+    ]),
+  ];
   const conflicts = detectFactConflicts(facts, decisions);
   const open = openConflicts(conflicts);
   assert.equal(open.length, 1);
@@ -223,7 +234,12 @@ test('openConflicts: returns empty when all resolved', () => {
     fact('FACT-0000000001', 'sample_size', 312, 'ART-a'),
     fact('FACT-0000000002', 'sample_size', 300, 'ART-b'),
   ];
-  const decisions = [decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312)];
+  const decisions = [
+    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312, [
+      'FACT-0000000001',
+      'FACT-0000000002',
+    ]),
+  ];
   const conflicts = detectFactConflicts(facts, decisions);
   const open = openConflicts(conflicts);
   assert.equal(open.length, 0);
@@ -234,7 +250,12 @@ test('detectFactConflicts: canonical_value null when not provided', () => {
     fact('FACT-0000000001', 'sample_size', 312, 'ART-a'),
     fact('FACT-0000000002', 'sample_size', 300, 'ART-b'),
   ];
-  const decisions = [decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', undefined)];
+  const decisions = [
+    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', undefined, [
+      'FACT-0000000001',
+      'FACT-0000000002',
+    ]),
+  ];
   decisions[0].change.canonical_value = undefined;
   const conflicts = detectFactConflicts(facts, decisions);
   assert.equal(conflicts[0].resolved.canonical_value, null);
@@ -260,4 +281,59 @@ test('detectFactConflicts: boolean values work correctly', () => {
     new Set(conflicts[0].values.map((v) => String(v.value))),
     new Set(['true', 'false']),
   );
+});
+
+test('detectFactConflicts: a fact added after the decision reopens the conflict', () => {
+  const facts = [
+    fact('FACT-0000000001', 'sample_size', 312, 'ART-a'),
+    fact('FACT-0000000002', 'sample_size', 300, 'ART-b'),
+  ];
+  const decisions = [
+    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312, [
+      'FACT-0000000001',
+      'FACT-0000000002',
+    ]),
+  ];
+  assert.ok(detectFactConflicts(facts, decisions)[0].resolved, 'resolved before the new fact');
+
+  const withNewFact = [...facts, fact('FACT-0000000004', 'sample_size', 999, 'ART-d')];
+  const conflicts = detectFactConflicts(withNewFact, decisions);
+  assert.equal(conflicts.length, 1);
+  assert.equal(
+    conflicts[0].resolved,
+    null,
+    'a fact the decision never saw must reopen the conflict',
+  );
+  assert.equal(openConflicts(conflicts).length, 1);
+});
+
+test('detectFactConflicts: a decision covering only some facts does not resolve', () => {
+  const facts = [
+    fact('FACT-0000000001', 'sample_size', 312, 'ART-a'),
+    fact('FACT-0000000002', 'sample_size', 300, 'ART-b'),
+    fact('FACT-0000000003', 'sample_size', 288, 'ART-c'),
+  ];
+  const decisions = [
+    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312, [
+      'FACT-0000000001',
+      'FACT-0000000002',
+    ]),
+  ];
+  const conflicts = detectFactConflicts(facts, decisions);
+  assert.equal(conflicts[0].resolved, null, 'partial affects coverage must not resolve');
+});
+
+test('detectFactConflicts: a rejected fact need not appear in affects', () => {
+  const facts = [
+    fact('FACT-0000000001', 'sample_size', 312, 'ART-a'),
+    fact('FACT-0000000002', 'sample_size', 300, 'ART-b'),
+    fact('FACT-0000000003', 'sample_size', 288, 'ART-c', undefined, undefined, 'rejected'),
+  ];
+  const decisions = [
+    decision('DEC-aaaaaaaaaa', 'approved', 'sample_size', 312, [
+      'FACT-0000000001',
+      'FACT-0000000002',
+    ]),
+  ];
+  assert.ok(detectFactConflicts(facts, decisions)[0].resolved);
 });

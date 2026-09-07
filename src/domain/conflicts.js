@@ -36,8 +36,16 @@ export function detectFactConflicts(facts, decisions) {
       .sort((a, b) => a.factId.localeCompare(b.factId));
 
     let resolved = null;
+    // A decision only resolves the conflict it was actually shown: every fact currently in the
+    // group must be listed in `affects`. A later contradictory fact therefore reopens it
+    // instead of inheriting an authorisation nobody gave (PRD §111).
     const approvedDecisions = decisions
-      .filter((d) => d.status === 'approved' && d.change.fact_key === key)
+      .filter(
+        (d) =>
+          d.status === 'approved' &&
+          d.change.fact_key === key &&
+          values.every((v) => d.affects.includes(v.factId)),
+      )
       .sort((a, b) => a.id.localeCompare(b.id));
 
     if (approvedDecisions.length > 0) {

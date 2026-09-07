@@ -37,7 +37,9 @@ export const pdfParser = {
       dir = await mkdtemp(join(tmpdir(), 'phdude-pdf-'));
       const tmpFile = join(dir, 'input.pdf');
       await writeFile(tmpFile, buffer);
-      const { stdout } = await execFileAsync('pdftotext', ['-layout', tmpFile, '-']);
+      const { stdout } = await execFileAsync('pdftotext', ['-layout', tmpFile, '-'], {
+        maxBuffer: 64 * 1024 * 1024,
+      });
       const pages = stdout.split('\f');
       if (pages.length > 1 && pages[pages.length - 1] === '') pages.pop();
       const sections = pages.map((p, i) => ({ title: `Page ${i + 1}`, text: p.trim() }));

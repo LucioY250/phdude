@@ -88,6 +88,18 @@ Ids are derived from content, so the same claim added twice is one file. See
 The state is not decoration. It tells the agent how strongly it is allowed to write about
 the object (PRD §3.13).
 
+## Fact conflicts
+
+Two Facts sharing a `key` but reporting different values from different artifacts are a
+conflict, computed on read by `status` and `next`. Rejected Facts are ignored.
+
+A conflict counts as resolved only when an approved Decision names that `key` in
+`change.fact_key` **and** lists every non-rejected Fact of that key in `affects`. Adding a
+Fact the Decision never saw therefore reopens the conflict rather than inheriting the old
+resolution, so a later revision of a source can never be silently absorbed into a decision
+nobody made about it. `phdude next` suggests a `decide propose` command whose `--affects`
+already lists every Fact in the group.
+
 ## Provenance and the audit trail
 
 `.phdude/events.jsonl` gets exactly one line per mutating command:
