@@ -23,6 +23,7 @@ export const SCHEMA_TYPES = [
   'fact',
   'question',
   'hypothesis',
+  'method',
   'result',
   'decision',
   'pack',

@@ -23,8 +23,8 @@ phdude knowledge list --query "sample size" --json
 ```
 
 `--type` filters by object type (`claim | evidence | fact | source | question | hypothesis |
-result`). `--state` filters by knowledge state. `--query` is a case-insensitive substring match
-over the object's primary text. Use filters before reading — never dump the whole knowledge
+method | result`). `--state` filters by knowledge state. `--query` is a case-insensitive
+substring match over the object's primary text. Use filters before reading — never dump the whole knowledge
 base into context.
 
 ## Showing one object
@@ -41,11 +41,24 @@ Returns the full object. Report its `state` alongside its content, not just the 
 phdude knowledge trace <id> --json
 ```
 
-Returns `{ id, up, down }`:
+Returns `{ id, obj, up, down }`:
 
+- `obj` — the object itself, so its `state` and `provenance` are in the same answer.
 - `up` — what this object depends on (e.g. a claim's evidence, and that evidence's source).
 - `down` — what depends on this object (e.g. a source's evidence items, an evidence item's
   claims, or a Decision that lists it in `affects`).
+
+For a claim or an evidence item the text output adds a provenance line:
+
+```
+CLAIM-3d035aa05b
+  provenance: agent-extraction ← ART-35146e2f6d
+```
+
+`manual` means a researcher recorded it, `agent-extraction` that an agent did, `imported` that
+it predates the field. Report that distinction when it matters — an agent-extracted claim is
+not a researcher's own words — and name the artifacts it was derived from rather than saying
+"the sources".
 
 Use `trace` to answer "where did this come from?" or "what breaks if this changes?". When a
 researcher asks why a sentence is hedged a certain way, trace the claim to its evidence and read

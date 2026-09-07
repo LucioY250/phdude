@@ -126,3 +126,31 @@ test('trace: unknown id returns empty up/down', () => {
   const graph = chainGraph();
   assert.deepEqual(trace(graph, 'CLAIM-0000000000'), { up: [], down: [] });
 });
+
+const method = {
+  schema: 'phdude.method',
+  version: 1,
+  id: 'METH-5555555555',
+  created,
+  actor,
+  name: 'Cross-sectional survey',
+  design: 'One wave, three campuses.',
+  paradigm: 'quantitative',
+  instruments: [],
+  analysis: [],
+  limitations: [],
+  questions: ['RQ-1'],
+  state: 'candidate',
+};
+
+test('buildGraph: a method addresses the questions it lists', () => {
+  const graph = buildGraph([method, rq]);
+  assert.deepEqual(graph.edges, [{ from: 'METH-5555555555', to: 'RQ-1', rel: 'addresses' }]);
+  assert.equal(graph.dangling.length, 0);
+});
+
+test('trace: a research question traces down to the method that addresses it', () => {
+  const graph = buildGraph([art, src, evid, claim, rq, method]);
+  assert.ok(trace(graph, 'RQ-1').down.includes('METH-5555555555'));
+  assert.deepEqual(trace(graph, 'METH-5555555555').up, ['RQ-1']);
+});

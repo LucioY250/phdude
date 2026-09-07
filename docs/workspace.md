@@ -31,7 +31,8 @@ my-research/
 │   └── results/    RESULT-*.yaml
 ├── research/
 │   ├── questions/  RQ-*.yaml
-│   └── hypotheses/ H-*.yaml
+│   ├── hypotheses/ H-*.yaml
+│   └── methods/    METH-*.yaml
 ├── decisions/      DEC-*.yaml
 ├── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
 └── .gitignore
@@ -78,12 +79,13 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 |---|---|---|
 | Artifact | `ART-<hash10>` | `path`, `paths[]`, `hash`, `bytes`, `mime`, `kind`, `extracted`, `role` |
 | Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]` |
-| Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]` |
-| Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength` |
+| Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]`, `provenance` |
+| Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength`, `provenance` |
 | Fact | `FACT-<hash10>` | `key`, `value`, `unit`, `from {artifact, locator}` |
 | Result | `RESULT-<hash10>` | `summary`, `from`, `values{}` |
 | ResearchQuestion | `RQ-<n>` | `text`, `objectives[]` |
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
+| Method | `METH-<hash10>` | `name`, `design`, `paradigm`, `sampling`, `instruments[]`, `analysis[]`, `limitations[]`, `questions[]` |
 | Decision | `DEC-<hash10>` | `title`, `rationale`, `proposed_by`, `approved_by[]`, `status`, `change`, `affects[]` |
 
 Ids are derived from content, so the same claim added twice is one file. See
@@ -116,6 +118,22 @@ nobody made about it. `phdude next` suggests a `decide propose` command whose `-
 already lists every Fact in the group.
 
 ## Provenance and the audit trail
+
+Claims and evidence carry a `provenance` block saying how the record came to exist:
+
+```yaml
+provenance:
+  method: agent-extraction # or manual, or imported
+  derived_from:
+    - ART-35146e2f6d
+```
+
+`method` is `manual` when a human typed the object at the CLI, `agent-extraction` when an
+agent host recorded it, and `imported` for objects that predate the field (`phdude migrate`
+fills those in). `derived_from` lists the artifacts behind it: for evidence, the artifact it
+cites or the artifacts of its source; for a claim, the union of its evidence's. `phdude
+knowledge trace` prints it, which is how "who says so, and from what?" gets answered without
+opening a file.
 
 `.phdude/events.jsonl` gets exactly one line per mutating command:
 

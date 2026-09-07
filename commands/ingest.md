@@ -12,6 +12,8 @@ Run:
 phdude ingest $ARGUMENTS --json
 ```
 
-This only inventories and caches artifacts; it does not classify or extract knowledge. Report
+This reads source material only: with no arguments (or `.`) it walks `sources/`, and a path
+into the recorded workspace (`knowledge/`, `research/`, `decisions/`, …) is refused. It only
+inventories and caches artifacts; it does not classify or extract knowledge. Report
 the artifacts found and their `extracted.status`. If any artifact now has `role: unknown`,
 continue with `.phdude/skills/bootstrap/SKILL.md` to classify and extract from it.

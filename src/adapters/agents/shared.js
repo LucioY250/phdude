@@ -96,7 +96,7 @@ const COMMAND_ROWS = [
   ['knowledge list|show|trace', 'Query and trace the knowledge graph.'],
   [
     'add <type>',
-    'Add a candidate claim, evidence, fact, source, question, hypothesis, result, or artifact-role.',
+    'Add a candidate claim, evidence, fact, source, question, hypothesis, method, result, or artifact-role.',
   ],
   ['decide propose|approve|reject', 'Propose a Decision; the researcher approves or rejects it.'],
   ['promote', 'Promote an object to canonical; requires an approved Decision.'],

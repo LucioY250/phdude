@@ -178,3 +178,34 @@ test('link: no targets is a usage error', async () => {
     return true;
   });
 });
+
+test('link: method to a question appends to questions', async () => {
+  const { deps, question } = await fixture();
+  const { obj: method } = await addEntity(deps, 'method', {
+    name: 'Cross-sectional survey',
+    paradigm: 'quantitative',
+  });
+
+  const result = await link(deps, method.id, { to: [question.id] });
+  assert.deepEqual(result.added, [question.id]);
+  assert.deepEqual(result.obj.questions, [question.id]);
+  assert.deepEqual((await deps.store.readEntity(method.id)).questions, [question.id]);
+
+  const events = await deps.store.readEvents();
+  assert.equal(events.at(-1).op, 'link');
+  assert.deepEqual(events.at(-1).ids, [method.id, question.id]);
+});
+
+test('link: a method cannot be linked to evidence', async () => {
+  const { deps, evidence } = await fixture();
+  const { obj: method } = await addEntity(deps, 'method', {
+    name: 'Cross-sectional survey',
+    paradigm: 'quantitative',
+  });
+
+  await assert.rejects(link(deps, method.id, { to: [evidence.id] }), (err) => {
+    assert.equal(err.code, 'VALIDATION');
+    assert.match(err.hint, /method → question/);
+    return true;
+  });
+});

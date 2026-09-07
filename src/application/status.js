@@ -9,6 +9,7 @@ const KNOWLEDGE_TYPES = [
   ['result', 'results'],
   ['question', 'questions'],
   ['hypothesis', 'hypotheses'],
+  ['method', 'methods'],
 ];
 
 function countBy(objs, keyFn) {

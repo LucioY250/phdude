@@ -7,6 +7,7 @@ const RELATIONS = {
   'phdude.fact': [{ field: 'from.artifact', rel: 'from', multi: false }],
   'phdude.source': [{ field: 'artifacts', rel: 'has_artifact', multi: true }],
   'phdude.hypothesis': [{ field: 'questions', rel: 'addresses', multi: true }],
+  'phdude.method': [{ field: 'questions', rel: 'addresses', multi: true }],
   'phdude.decision': [{ field: 'affects', rel: 'affects', multi: true }],
   'phdude.artifact': [{ field: 'versions_of', rel: 'version_of', multi: false }],
 };

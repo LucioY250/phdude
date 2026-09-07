@@ -251,3 +251,165 @@ test('show: unknown id rejects with USAGE', async () => {
     return true;
   });
 });
+
+test('add method: schema-valid, stored under research/methods, counted as a method', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: question } = await addEntity(deps, 'question', { text: 'Does adoption vary?' });
+
+  const { obj: method, created } = await addEntity(deps, 'method', {
+    name: 'Cross-sectional survey',
+    design: 'One wave across three campuses.',
+    paradigm: 'quantitative',
+    sampling: 'stratified random sample',
+    instruments: ['adoption questionnaire v2'],
+    analysis: ['descriptive statistics'],
+    limitations: ['single country'],
+    questions: [question.id],
+  });
+
+  assert.equal(created, true);
+  assert.match(method.id, /^METH-[0-9a-f]{10}$/);
+  assert.equal(method.state, 'candidate');
+  assert.deepEqual(method.questions, [question.id]);
+  assert.equal(deps.store.entityDir('method'), join('research', 'methods'));
+  assert.deepEqual(await deps.store.readEntity(method.id), method);
+
+  const methods = await list(deps, { type: 'method' });
+  assert.deepEqual(
+    methods.map((m) => m.id),
+    [method.id],
+  );
+
+  const again = await addEntity(deps, 'method', {
+    name: 'cross-sectional   survey',
+    paradigm: 'quantitative',
+  });
+  assert.equal(again.created, false, 'the same name is the same method');
+  assert.equal(again.obj.id, method.id);
+});
+
+test('add method: an unknown research question is a validation error', async () => {
+  const deps = makeDeps(await newRoot());
+  await assert.rejects(
+    addEntity(deps, 'method', { name: 'Field experiment', questions: ['RQ-9'] }),
+    (err) => {
+      assert.equal(err.code, 'VALIDATION');
+      assert.match(err.message, /unknown reference RQ-9/);
+      return true;
+    },
+  );
+});
+
+test('add method: an unknown field is named, like every other type', async () => {
+  const deps = makeDeps(await newRoot());
+  await assert.rejects(
+    addEntity(deps, 'method', { name: 'Field experiment', question: ['RQ-1'] }),
+    (err) => {
+      assert.equal(err.code, 'VALIDATION');
+      assert.match(err.message, /unknown field\(s\) for method: question/);
+      assert.match(err.hint, /questions/);
+      return true;
+    },
+  );
+});
+
+test('provenance: evidence derives from the artifacts of its source, a claim from its evidence', async () => {
+  const deps = makeDeps(await newRoot());
+  const artifact = newArtifact({
+    id: 'ART-abc1234567',
+    path: 'sources/x.md',
+    hash: 'a'.repeat(64),
+    bytes: 10,
+    kind: 'md',
+    mtime: '2026-01-01T00:00:00.000Z',
+    actor,
+    created: '2026-01-01T00:00:00.000Z',
+  });
+  await deps.store.writeEntity(artifact);
+
+  const { obj: source } = await addEntity(deps, 'source', {
+    title: 'A study of things',
+    artifacts: [artifact.id],
+  });
+  const { obj: evidence } = await addEntity(deps, 'evidence', {
+    source: source.id,
+    excerpt: 'The intervention increased throughput.',
+  });
+  assert.deepEqual(evidence.provenance, {
+    method: 'agent-extraction',
+    derived_from: [artifact.id],
+  });
+
+  const { obj: claim } = await addEntity(deps, 'claim', {
+    statement: 'The intervention increases throughput.',
+    supported_by: [evidence.id],
+  });
+  assert.deepEqual(claim.provenance, { method: 'agent-extraction', derived_from: [artifact.id] });
+
+  const { obj: unsupported } = await addEntity(deps, 'claim', {
+    statement: 'A claim with no evidence yet.',
+  });
+  assert.deepEqual(unsupported.provenance, { method: 'agent-extraction', derived_from: [] });
+});
+
+test('provenance: evidence attributed straight to an artifact derives from it', async () => {
+  const deps = makeDeps(await newRoot());
+  const artifact = newArtifact({
+    id: 'ART-abc1234567',
+    path: 'sources/x.md',
+    hash: 'a'.repeat(64),
+    bytes: 10,
+    kind: 'md',
+    mtime: '2026-01-01T00:00:00.000Z',
+    actor,
+    created: '2026-01-01T00:00:00.000Z',
+  });
+  await deps.store.writeEntity(artifact);
+
+  const { obj: evidence } = await addEntity(deps, 'evidence', {
+    source: artifact.id,
+    excerpt: 'A quote read straight out of the cached text.',
+  });
+  assert.deepEqual(evidence.provenance.derived_from, [artifact.id]);
+});
+
+test('provenance: the CLI actor records manual, and an explicit provenance is honoured', async () => {
+  const deps = { ...makeDeps(await newRoot()), actor: { researcher: 'ada', agent: 'cli' } };
+
+  const { obj: claim } = await addEntity(deps, 'claim', { statement: 'A claim typed by hand.' });
+  assert.deepEqual(claim.provenance, { method: 'manual', derived_from: [] });
+
+  const { obj: imported } = await addEntity(deps, 'claim', {
+    statement: 'A claim imported from an older workspace.',
+    provenance: { method: 'imported', derived_from: [] },
+  });
+  assert.equal(imported.provenance.method, 'imported');
+});
+
+test('provenance: an invalid explicit provenance fails validation', async () => {
+  const deps = makeDeps(await newRoot());
+  await assert.rejects(
+    addEntity(deps, 'claim', {
+      statement: 'A claim with a bogus provenance.',
+      provenance: { method: 'telepathy', derived_from: [] },
+    }),
+    (err) => {
+      assert.equal(err.code, 'VALIDATION');
+      return true;
+    },
+  );
+});
+
+test('trace: the traced object comes back with it, so provenance can be reported', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: source } = await addEntity(deps, 'source', { title: 'A traceable study' });
+  const { obj: evidence } = await addEntity(deps, 'evidence', {
+    source: source.id,
+    excerpt: 'a traceable excerpt',
+  });
+
+  const traced = await trace(deps, evidence.id);
+  assert.equal(traced.obj.id, evidence.id);
+  assert.equal(traced.obj.provenance.method, 'agent-extraction');
+  assert.equal((await trace(deps, 'CLAIM-0000000000')).obj, null);
+});

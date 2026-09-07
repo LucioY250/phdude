@@ -539,3 +539,186 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   const second = await run(ws, ['migrate']);
   assert.match(second.stdout, /Workspace is up to date \(2\)/);
 });
+
+test('e2e: methods, provenance and the trace line that reports them', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-method-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Method thesis', '--no-git']);
+  assert.ok(await exists(join(ws, 'research', 'methods')), 'init creates research/methods');
+
+  await cp(FIXTURES_DIR, join(ws, 'sources'), { recursive: true });
+  const ingested = await runJson(ws, ['ingest']);
+  const artifact = ingested.artifacts.find((a) => a.kind === 'md');
+
+  const question = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'Does adoption differ across campuses?' }),
+  ]);
+
+  const method = await runJson(ws, [
+    'add',
+    'method',
+    '--json',
+    JSON.stringify({
+      name: 'Cross-sectional survey',
+      design: 'One wave across three campuses.',
+      paradigm: 'quantitative',
+      sampling: 'stratified random sample',
+      instruments: ['adoption questionnaire v2'],
+      analysis: ['descriptive statistics'],
+      limitations: ['single country'],
+    }),
+  ]);
+  assert.match(method.id, /^METH-[0-9a-f]{10}$/);
+  assert.equal(method.state, 'candidate');
+  assert.ok(await exists(join(ws, 'research', 'methods', `${method.id}.yaml`)));
+
+  const linked = await runJson(ws, ['link', method.id, '--to', question.id]);
+  assert.deepEqual(linked.questions, [question.id]);
+
+  const methods = await runJson(ws, ['knowledge', 'list', '--type', 'method']);
+  assert.deepEqual(
+    methods.map((m) => m.id),
+    [method.id],
+  );
+
+  const status = await runJson(ws, ['status']);
+  assert.equal(status.knowledge.byType.method.total, 1);
+  const statusText = await run(ws, ['status']);
+  assert.match(statusText.stdout, /method: total=1 \(candidate=1\)/);
+
+  // Provenance: an agent-run add records agent-extraction and the artifacts behind it.
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({ title: 'A study of adoption', artifacts: [artifact.id] }),
+  ]);
+  const evidence = await runJson(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({ source: source.id, locator: 'p. 2', excerpt: 'Adoption rose by 14%.' }),
+  ]);
+  assert.deepEqual(evidence.provenance, {
+    method: 'agent-extraction',
+    derived_from: [artifact.id],
+  });
+
+  const claim = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({
+      statement: 'Adoption rose after the intervention.',
+      supported_by: [evidence.id],
+    }),
+  ]);
+  assert.deepEqual(claim.provenance, { method: 'agent-extraction', derived_from: [artifact.id] });
+
+  const traced = await run(ws, ['knowledge', 'trace', claim.id]);
+  assert.match(traced.stdout, new RegExp(`provenance: agent-extraction ← ${artifact.id}`));
+
+  // A researcher typing at the CLI records manual provenance instead.
+  const typed = await phdude(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'A claim the researcher typed.' }),
+    '--actor',
+    'researcher=tester,agent=cli',
+  ]);
+  assert.equal(typed.code, 0);
+  assert.equal(JSON.parse(typed.stdout).provenance.method, 'manual');
+});
+
+test('e2e: an unknown flag exits 1 and lists the flags the command accepts', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-strict-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Strict thesis', '--no-git']);
+
+  const typo = await phdude(ws, ['knowledge', 'list', '--typo', 'x', ...ACTOR]);
+  assert.equal(typo.code, 1);
+  assert.match(typo.stderr, /unknown option --typo for knowledge/);
+  assert.match(typo.stderr, /Suggested action: allowed: .*--query/);
+
+  const wrongCommand = await phdude(ws, ['status', '--rationale', 'x', '--json', ...ACTOR]);
+  assert.equal(wrongCommand.code, 1);
+  const payload = JSON.parse(wrongCommand.stderr).error;
+  assert.equal(payload.code, 'USAGE');
+  assert.equal(payload.message, 'unknown option --rationale for status');
+
+  // The flags each command does document keep working.
+  await run(ws, ['knowledge', 'list', '--type', 'claim', '--state', 'candidate', '--query', 'x']);
+});
+
+test('e2e: supersede names the researcher and the superseding decision', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-supersede-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Supersede thesis', '--no-git']);
+
+  const original = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Adopt 312 as the canonical sample size',
+    '--rationale',
+    'Two surveys agree.',
+  ]);
+  const replacement = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Adopt 300 as the canonical sample size',
+    '--rationale',
+    'The third survey corrects the count.',
+  ]);
+
+  const oldForm = await phdude(ws, [
+    'decide',
+    'supersede',
+    original.id,
+    '--by',
+    replacement.id,
+    ...ACTOR,
+  ]);
+  assert.equal(oldForm.code, 1);
+  assert.match(oldForm.stderr, /--by is the researcher; pass the superseding decision with --with/);
+
+  const superseded = await runJson(ws, [
+    'decide',
+    'supersede',
+    original.id,
+    '--by',
+    'Ada Lovelace',
+    '--with',
+    replacement.id,
+  ]);
+  assert.equal(superseded.status, 'superseded');
+  assert.equal(superseded.change.superseded_by, replacement.id);
+});
+
+test('e2e: ingest . walks sources/ only and refuses a path into the knowledge base', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-scope-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Scoped thesis', '--no-git']);
+  await cp(FIXTURES_DIR, join(ws, 'sources'), { recursive: true });
+  await writeFile(join(ws, 'manuscript', 'chapter-1.md'), '# Chapter 1\n\nDraft prose.\n');
+
+  const ingested = await runJson(ws, ['ingest', '.']);
+  assert.ok(ingested.artifacts.length > 0);
+  for (const a of ingested.inventory) {
+    assert.ok(a.path.startsWith('sources/'), `${a.path} is not under sources/`);
+  }
+
+  const refused = await phdude(ws, ['ingest', 'knowledge', ...ACTOR]);
+  assert.equal(refused.code, 1);
+  assert.match(refused.stderr, /not a source path: knowledge/);
+  assert.match(refused.stderr, /Suggested action: put research materials under sources\//);
+});

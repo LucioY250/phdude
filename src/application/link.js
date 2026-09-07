@@ -7,11 +7,13 @@ import { assertUpToDate } from './guard.js';
 const LINKABLE = {
   'phdude.claim': { evidence: 'supported_by', question: 'questions' },
   'phdude.hypothesis': { question: 'questions' },
+  'phdude.method': { question: 'questions' },
   'phdude.source': { artifact: 'artifacts' },
 };
 
 const RELATION_HINT =
-  'linkable relations: claim → evidence, claim → question, hypothesis → question, source → artifact';
+  'linkable relations: claim → evidence, claim → question, hypothesis → question, ' +
+  'method → question, source → artifact';
 
 /**
  * Attaches existing objects to an existing object, the one edit `phdude add` cannot make

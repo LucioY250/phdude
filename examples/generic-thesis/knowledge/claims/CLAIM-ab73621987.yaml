@@ -1,7 +1,7 @@
 schema: phdude.claim
 version: 1
 id: CLAIM-ab73621987
-created: 2026-09-01T00:00:14.000Z
+created: 2026-09-01T00:00:16.000Z
 actor:
   researcher: example
   agent: script
@@ -15,3 +15,7 @@ questions:
   - RQ-1
 sections:
   - Results
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-35146e2f6d

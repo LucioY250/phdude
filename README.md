@@ -279,7 +279,7 @@ my-research/
 │   ├── evidence/        # EVID-*.yaml
 │   ├── facts/           # FACT-*.yaml  project facts with their origin
 │   └── results/         # RESULT-*.yaml
-├── research/            # questions/ RQ-*.yaml · hypotheses/ H-*.yaml
+├── research/            # questions/ RQ-*.yaml · hypotheses/ H-*.yaml · methods/ METH-*.yaml
 ├── decisions/           # DEC-*.yaml
 └── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
 ```
@@ -298,8 +298,8 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude status` | Project, inventory, knowledge counts, conflicts, pending decisions. |
 | `phdude next` | The highest-impact next action, with reasons and the exact command. |
 | `phdude knowledge list\|show\|trace` | Query the knowledge graph and follow its lineage. |
-| `phdude add <type>` | Add a claim, evidence, fact, source, question, hypothesis or result; set an artifact's role with `add artifact-role`. |
-| `phdude link <id> --to <ids…>` | Attach evidence to a claim, a claim to a question, an artifact to a source. |
+| `phdude add <type>` | Add a claim, evidence, fact, source, question, hypothesis, method or result; set an artifact's role with `add artifact-role`. |
+| `phdude link <id> --to <ids…>` | Attach evidence to a claim, a claim or method to a question, an artifact to a source. |
 | `phdude decide propose\|approve\|reject\|supersede` | Research decisions. The agent proposes; the researcher decides. |
 | `phdude promote <id> --decision <DEC-id>` | Make an object canonical, with an approved decision behind it. |
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |

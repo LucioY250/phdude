@@ -19,6 +19,7 @@ const DIRS = [
   'knowledge/results',
   'research/questions',
   'research/hypotheses',
+  'research/methods',
   'decisions',
   'data',
   'analysis',

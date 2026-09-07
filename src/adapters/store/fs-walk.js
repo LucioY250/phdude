@@ -1,4 +1,4 @@
-import { readFile, readdir, lstat, stat } from 'node:fs/promises';
+import { readFile, readdir, lstat, realpath as fsRealpath, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 const SKIP_NAMES = new Set(['.git', 'node_modules', '.phdude']);
@@ -45,4 +45,12 @@ export async function* walk(entryPath) {
 
 export async function read(path) {
   return readFile(path);
+}
+
+/**
+ * The fully resolved path, symlinks followed. `application/ingest.js` compares it against the
+ * resolved workspace root, because lexical containment alone cannot see through a link.
+ */
+export async function realpath(path) {
+  return fsRealpath(path);
 }

@@ -41,6 +41,17 @@ approving it, leave it `proposed` and say so.
 A decision may also be rejected (`phdude decide reject DEC-x --by <name>`) — treat a rejection
 the same way: only on the researcher's explicit word.
 
+## Supersede
+
+An approved decision is never rejected; it is replaced. Propose the replacement first, then:
+
+```
+phdude decide supersede DEC-old --by <researcher name> --with DEC-new
+```
+
+`--by` is the researcher, exactly as on `approve` and `reject`; `--with` is the decision that
+replaces the old one. Passing the new decision's id to `--by` is the v0.1 form and exits 1.
+
 ## Promote
 
 Once a Decision is `approved`, promote the object it affects:

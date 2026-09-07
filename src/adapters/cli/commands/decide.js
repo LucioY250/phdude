@@ -2,13 +2,16 @@ import * as decide from '../../../application/decide.js';
 import { PhdudeError } from '../../../domain/errors.js';
 import { parseJsonArg } from '../args.js';
 
+// `supersede` needs the replacing decision as well as the researcher who decided.
+const EXTRA_HINT = { supersede: ' --with <DEC-id>' };
+
 function requireId(positionals, sub) {
   const id = positionals[2];
   if (!id) {
     throw new PhdudeError(
       'USAGE',
       `decide ${sub} needs a decision id`,
-      `phdude decide ${sub} <DEC-id> --by <name>`,
+      `phdude decide ${sub} <DEC-id> --by <name>${EXTRA_HINT[sub] ?? ''}`,
     );
   }
   return id;
@@ -60,7 +63,7 @@ async function reject({ positionals, flags, deps }) {
 
 async function supersede({ positionals, flags, deps }) {
   const id = requireId(positionals, 'supersede');
-  const obj = await decide.supersede(deps, id, { by: flags.by });
+  const obj = await decide.supersede(deps, id, { by: flags.by, with: flags.with });
   return { text: renderDecision('Superseded', obj), json: obj };
 }
 

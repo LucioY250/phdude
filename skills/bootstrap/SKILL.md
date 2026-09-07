@@ -64,6 +64,20 @@ phdude add question --json '{"text":"...","objectives":["..."]}'
 
 This returns an id such as `RQ-1`; only use ids `add question` actually returned, never a guess.
 
+**Methods** — how the study was done. Read the methodology section of each artifact with role
+`paper`, `thesis-draft` or `report`, propose what you find to the researcher, and record each
+confirmed method once they agree:
+
+```
+phdude add method --json '{"name":"Cross-sectional survey","design":"...","paradigm":"quantitative","sampling":"...","instruments":["..."],"analysis":["..."],"limitations":["..."],"questions":["RQ-1"]}'
+```
+
+`paradigm` is one of `quantitative | qualitative | mixed | computational | theoretical |
+archival | other`; only `name` is required, and the name alone is the id, so re-adding a method
+under the same name is a no-op. Link a method to a question it addresses with
+`phdude link METH-0123456789 --to RQ-1`. Never infer a method the artifacts do not describe:
+ask instead.
+
 **Evidence, then claims that cite it** — never add a claim without evidence. `questions` is
 optional on a claim: omit it, or reference the ids `add question` returned above.
 
@@ -73,12 +87,15 @@ phdude add claim --json '{"statement":"...","kind":"empirical","supported_by":["
 ```
 
 `kind` is one of `literature | empirical | theoretical | methodological`. Re-adding the same
-statement is a safe no-op (content-derived ids).
+statement is a safe no-op (content-derived ids). The CLI records provenance for you: what you
+add through an agent host is `agent-extraction`, derived from the artifacts behind the source
+you cited. State your `derived_from` explicitly when you know it and the default would miss it
+(see `[[phdude-core]]`).
 
 **Attaching evidence to a claim that already exists** — because ids are content-derived,
 re-adding the claim with a longer `supported_by` returns the original record unchanged. Use
-`link` instead, which also attaches a research question to a claim or hypothesis, and an
-artifact to a source:
+`link` instead, which also attaches a research question to a claim, hypothesis or method, and
+an artifact to a source:
 
 ```
 phdude link CLAIM-0123456789 --to EVID-0123456789 RQ-1

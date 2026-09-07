@@ -21,6 +21,13 @@ phdude <command> [sub-command] [arguments] [options]
 `PHDUDE_DEBUG=1` prints a stack trace for unexpected internal errors; without it, users see
 the message only.
 
+## Unknown options
+
+Each command declares the options it takes, and anything else exits 1 naming the flag and
+listing what that command accepts. A mistyped filter is otherwise indistinguishable from no
+filter at all: `knowledge list --stat candidate` would return every object and read as an
+answer. The global options above are accepted everywhere.
+
 ## Exit codes
 
 | Code | Meaning | Example |
@@ -83,9 +90,16 @@ inventoried and hashed, with `extracted.status` reporting why the text is missin
 
 Every requested path must resolve inside the workspace. `phdude ingest ../elsewhere` exits 1
 rather than recording an external path in a tracked artifact and copying the file's text into
-the cache; copy the material into `sources/` first. Symlinks are never followed, for the same
-reason; each one is reported as `skipped symlink: <path>` among the warnings rather than
-ignored in silence.
+the cache; copy the material into `sources/` first. The check runs twice, lexically and again
+on the resolved real path, so a symlink under `sources/` cannot smuggle a directory in from
+outside. Symlinks are never followed, for the same reason; each one is reported as
+`skipped symlink: <path>` among the warnings rather than ignored in silence.
+
+Ingest reads source material only. `phdude ingest .` walks `sources/`, not the whole
+workspace; an explicit path into `knowledge/`, `research/`, `decisions/`, `.phdude/`,
+`.claude/`, `authors/`, `manuscript/`, `outputs/`, or at `phdude.yaml`, `AGENTS.md`,
+`CLAUDE.md` or `.gitignore` exits 1 with `not a source path: <path>`. Re-importing the
+knowledge base as evidence for itself is not a thing anyone wants.
 
 The result carries four keys:
 
@@ -120,9 +134,19 @@ phdude knowledge trace <id>
 ```
 
 `list` filters by type (`artifact`, `source`, `claim`, `evidence`, `fact`, `result`,
-`question`, `hypothesis`, `decision`), by state, and by a case-insensitive substring of the
-object's primary text. `trace` walks the lineage graph in both directions: `up` is what the
-object rests on, `down` is what rests on it.
+`question`, `hypothesis`, `method`, `decision`), by state, and by a case-insensitive substring
+of the object's primary text. `trace` walks the lineage graph in both directions: `up` is what
+the object rests on, `down` is what rests on it.
+
+`trace` prints a `provenance:` line for an object that carries one (claims and evidence):
+
+```
+CLAIM-3d035aa05b
+  provenance: agent-extraction ← ART-35146e2f6d
+```
+
+It reads "extracted by an agent from artifact ART-35146e2f6d". `manual` means a human typed it
+at the CLI, `imported` that it predates the field and was filled in by `phdude migrate`.
 
 ### `phdude add <type>`
 
@@ -131,9 +155,9 @@ phdude add claim --json '{"statement":"…","kind":"empirical","supported_by":["
 phdude add fact --file fact.json
 ```
 
-Types: `claim`, `evidence`, `fact`, `source`, `question`, `hypothesis`, `result`, and
-`artifact-role`. The object comes from `--json '<obj>'` or `--file <path>.json`. Objects are
-created in state `candidate`.
+Types: `claim`, `evidence`, `fact`, `source`, `question`, `hypothesis`, `method`, `result`,
+and `artifact-role`. The object comes from `--json '<obj>'` or `--file <path>.json`. Objects
+are created in state `candidate`.
 
 Ids are derived from content, so adding the same object twice is a no-op that returns the
 existing record and writes no event. What counts as "the same object" is the id material:
@@ -144,6 +168,7 @@ existing record and writes no event. What counts as "the same object" is the id 
 | `evidence` | `source`, `locator`, `excerpt` |
 | `fact` | `key`, `value`, `from.artifact` |
 | `source` | `title`, `year` |
+| `method` | `name` |
 | `result` | `summary` |
 | `question`, `hypothesis` | sequential `RQ-<n>` / `H-<n>`, deduplicated on normalized `text` |
 
@@ -153,6 +178,17 @@ conflict `status` reports. See [ADR 3](adr/0003-content-derived-ids.md).
 
 `artifact-role` is the exception: it sets `role` on an existing artifact rather than
 creating a new object, and takes `{"id":"ART-…","role":"paper"}`.
+
+A method records how the study was done: `{"name":"Cross-sectional survey","design":"…",
+"paradigm":"quantitative","sampling":"…","instruments":[…],"analysis":[…],"limitations":[…],
+"questions":["RQ-1"]}`. `paradigm` is one of `quantitative`, `qualitative`, `mixed`,
+`computational`, `theoretical`, `archival`, `other`; everything but `name` is optional.
+
+Claims and evidence record where they came from. `provenance.method` defaults to `manual` when
+the actor's agent is `cli` and to `agent-extraction` otherwise, and `provenance.derived_from`
+lists the artifacts behind the object: for evidence, the artifact it cites or its source's
+artifacts; for a claim, the union of its evidence's. Pass `provenance` explicitly to override
+either, e.g. when importing records whose origin you already know.
 
 `--file` resolves relative to the working directory, not the workspace, so it works when
 `--workspace` points somewhere else.
@@ -182,6 +218,7 @@ original record unchanged.
 | claim | evidence | `supported_by` |
 | claim | question | `questions` |
 | hypothesis | question | `questions` |
+| method | question | `questions` |
 | source | artifact | `artifacts` |
 
 `--to` accepts several ids after one flag. Links are additive and idempotent: a target the
@@ -198,7 +235,7 @@ phdude decide propose --title "Resolve sample_size" --rationale "…" \
   --affects FACT-a FACT-b --change '{"fact_key":"sample_size","canonical_value":142}'
 phdude decide approve DEC-… --by "Ada Lovelace"
 phdude decide reject  DEC-… --by "Ada Lovelace" --reason "Evidence is too weak"
-phdude decide supersede DEC-old --by DEC-new
+phdude decide supersede DEC-old --by "Ada Lovelace" --with DEC-new
 ```
 
 `--affects` accepts several ids after one flag.
@@ -207,10 +244,13 @@ A decision's id is derived from `title`, `rationale`, `affects` and `change` tog
 re-proposing under an existing title with a new rationale creates a new proposal instead of
 silently returning the old one. Two identical proposals are still one record.
 
-**`--by` is required on `approve` and `reject`.** It records who made the call, and the
-runtime deliberately does not fall back to the resolved actor: a decision the researcher did
-not make must never end up carrying their name. An agent must never supply a name of its
-own, and must ask the researcher rather than guessing.
+**`--by` is required on `approve`, `reject` and `supersede`.** It records who made the call,
+and the runtime deliberately does not fall back to the resolved actor: a decision the
+researcher did not make must never end up carrying their name. An agent must never supply a
+name of its own, and must ask the researcher rather than guessing.
+
+`supersede` takes the replacing decision in `--with`, not in `--by`: `--by` is the researcher
+every time. The v0.1 form that passed a `DEC-` id to `--by` exits 1 with that correction.
 
 ### `phdude promote <id> --decision <DEC-id>`
 

@@ -15,6 +15,7 @@ const ENTITY_DIRS = {
   result: join('knowledge', 'results'),
   question: join('research', 'questions'),
   hypothesis: join('research', 'hypotheses'),
+  method: join('research', 'methods'),
   decision: 'decisions',
 };
 

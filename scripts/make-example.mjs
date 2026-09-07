@@ -6,7 +6,7 @@ import { rm, utimes } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FsStore } from '../src/adapters/store/fs-store.js';
-import { walk, read } from '../src/adapters/store/fs-walk.js';
+import { walk, read, realpath } from '../src/adapters/store/fs-walk.js';
 import { detectKind, parserFor } from '../src/adapters/documents/index.js';
 import { discoverSkills } from '../src/adapters/skills/loader.js';
 import { initWorkspace } from '../src/application/init.js';
@@ -104,7 +104,7 @@ export async function generate(root) {
   await writeSources(deps.store);
 
   const { artifacts } = await ingest(
-    { ...deps, fs: { walk, read }, parsers: { detectKind, parserFor } },
+    { ...deps, fs: { walk, read, realpath }, parsers: { detectKind, parserFor } },
     { paths: ['sources'] },
   );
 
@@ -131,6 +131,17 @@ export async function generate(root) {
   const { obj: rq } = await addEntity(deps, 'question', {
     text: 'Does mobile note-taking app adoption differ across recruitment channels and campuses?',
     objectives: ['Compare adoption rates across independently recruited student surveys.'],
+  });
+
+  await addEntity(deps, 'method', {
+    name: 'Cross-sectional survey',
+    design: 'Three independently recruited undergraduate samples, one wave each.',
+    paradigm: 'quantitative',
+    sampling: 'Mailing list, campus social media group, and stratified campus sampling.',
+    instruments: ['note-taking app adoption questionnaire'],
+    analysis: ['descriptive comparison of reported daily use'],
+    limitations: ['self-reported use', 'one university system'],
+    questions: [rq.id],
   });
 
   const { obj: evidence1 } = await addEntity(deps, 'evidence', {

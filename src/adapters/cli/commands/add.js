@@ -30,7 +30,7 @@ export default async function addCommand(ctx) {
     throw new PhdudeError(
       'USAGE',
       'add needs an object type',
-      'types: claim, evidence, fact, source, question, hypothesis, result, artifact-role',
+      'types: claim, evidence, fact, source, question, hypothesis, method, result, artifact-role',
     );
   }
 

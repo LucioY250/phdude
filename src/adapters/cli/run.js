@@ -9,7 +9,7 @@ import { DEFAULT_PACKS_DIR, discoverPacks } from '../packs/loader.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
 import { discoverSkills, loadSkill } from '../skills/loader.js';
 import { FsStore } from '../store/fs-store.js';
-import { read, walk } from '../store/fs-walk.js';
+import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
 import { printJson } from './output.js';
 import add from './commands/add.js';
@@ -72,7 +72,7 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
   const deps = {
     store,
     git: gitAdapter,
-    fs: { walk, read },
+    fs: { walk, read, realpath },
     parsers: { detectKind, parserFor },
     parserAdapters: PARSERS,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),

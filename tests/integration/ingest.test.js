@@ -17,7 +17,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
-import { walk, read } from '../../src/adapters/store/fs-walk.js';
+import { walk, read, realpath } from '../../src/adapters/store/fs-walk.js';
 import { detectKind, parserFor } from '../../src/adapters/documents/index.js';
 import { ingest } from '../../src/application/ingest.js';
 import { PhdudeError } from '../../src/domain/errors.js';
@@ -30,7 +30,7 @@ function makeDeps(root) {
   let tick = 0;
   return {
     store: new FsStore(root),
-    fs: { walk, read },
+    fs: { walk, read, realpath },
     parsers: { detectKind, parserFor },
     clock: () => new Date(Date.UTC(2026, 0, 1, 0, 0, tick++)).toISOString(),
     actor,
@@ -254,12 +254,72 @@ test('ingest: a path outside the workspace is refused', async () => {
   assert.equal((await deps.store.listEntities('artifact')).length, 0, 'nothing was recorded');
 });
 
-test('ingest: the workspace root itself is still an acceptable path', async () => {
+test('ingest: the workspace root walks sources/ only, never the recorded knowledge', async () => {
   const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-root-'));
   await setupSources(root);
+  await mkdir(join(root, 'knowledge', 'claims'), { recursive: true });
+  await writeFile(join(root, 'knowledge', 'claims', 'CLAIM-0123456789.yaml'), 'id: x\n');
+  await writeFile(
+    join(root, 'phdude.yaml'),
+    [
+      'schema: phdude.project',
+      'version: 1',
+      'workspace_version: 2',
+      'title: Scoped',
+      'fields: []',
+      'methods: []',
+      'outputs: [thesis]',
+      'mode: full',
+      'agents: []',
+      '',
+    ].join('\n'),
+  );
+  await writeFile(join(root, 'AGENTS.md'), '# agents\n');
+
   const deps = makeDeps(root);
   const result = await ingest(deps, { paths: ['.'] });
+
   assert.ok(result.artifacts.length > 0);
+  for (const artifact of result.artifacts) {
+    for (const p of artifact.paths) {
+      assert.ok(p.startsWith('sources/'), `${p} is not a source file`);
+    }
+  }
+});
+
+test('ingest: an explicit path into the recorded workspace is refused', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-scope-'));
+  await setupSources(root);
+  await mkdir(join(root, 'knowledge', 'claims'), { recursive: true });
+  await writeFile(join(root, 'knowledge', 'claims', 'CLAIM-0123456789.yaml'), 'id: x\n');
+  await writeFile(
+    join(root, 'phdude.yaml'),
+    [
+      'schema: phdude.project',
+      'version: 1',
+      'workspace_version: 2',
+      'title: Scoped',
+      'fields: []',
+      'methods: []',
+      'outputs: [thesis]',
+      'mode: full',
+      'agents: []',
+      '',
+    ].join('\n'),
+  );
+  const deps = makeDeps(root);
+
+  for (const path of ['knowledge', 'knowledge/claims', 'phdude.yaml', '.phdude', 'decisions']) {
+    await assert.rejects(ingest(deps, { paths: [path] }), (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'USAGE');
+      assert.equal(err.message, `not a source path: ${path}`);
+      assert.equal(err.hint, 'put research materials under sources/');
+      return true;
+    });
+  }
+
+  assert.equal((await deps.store.listEntities('artifact')).length, 0, 'nothing was recorded');
 });
 
 test('ingest: symlinks under sources are skipped with a warning, not followed', async (t) => {
@@ -305,8 +365,35 @@ test('ingest: a symlink named directly as a path is skipped, not followed', asyn
   }
 
   const deps = makeDeps(root);
-  const result = await ingest(deps, { paths: ['sources/escape'] });
-  assert.deepEqual(result.artifacts, []);
-  assert.deepEqual(result.warnings, ['skipped symlink: sources/escape']);
+
+  // Lexically `sources/escape` is inside the workspace; it resolves outside it, and the
+  // realpath re-check is what catches that.
+  await assert.rejects(ingest(deps, { paths: ['sources/escape'] }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'USAGE');
+    assert.equal(err.message, 'path is outside the workspace: sources/escape');
+    assert.equal(err.hint, 'copy the files into sources/ first');
+    return true;
+  });
   assert.equal((await deps.store.listEntities('artifact')).length, 0);
+});
+
+test('ingest: a symlink to another place inside the workspace is still walked', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-symlink-inside-'));
+  await mkdir(join(root, 'sources', 'papers'), { recursive: true });
+  await writeFile(join(root, 'sources', 'papers', 'real.md'), '# Real\n\nA genuine source.\n');
+
+  try {
+    await symlink(join(root, 'sources', 'papers'), join(root, 'sources', 'alias'), 'dir');
+  } catch {
+    t.skip('this platform does not allow creating symlinks');
+    return;
+  }
+
+  // The realpath re-check lets it through - it resolves inside the workspace - and the walker
+  // then declines to follow it, exactly as it does for any other symlink.
+  const deps = makeDeps(root);
+  const result = await ingest(deps, { paths: ['sources/alias'] });
+  assert.deepEqual(result.artifacts, []);
+  assert.deepEqual(result.warnings, ['skipped symlink: sources/alias']);
 });

@@ -62,6 +62,25 @@ re-adding it returns the original record unchanged. To attach evidence, a resear
 or an artifact after the fact, use `phdude link <id> --to <id>…`. To change anything else,
 propose a Decision.
 
+## Provenance
+
+The CLI records where every claim and evidence item came from: `provenance.method`
+(`manual` when a researcher typed it, `agent-extraction` when you did, `imported` for records
+that predate the field) and `provenance.derived_from`, the artifacts behind it. You do not
+have to set it, and you must not fake it. When you already know what a record was derived from
+and the default would miss it — an excerpt you read in one artifact but attributed to a source
+that lists several — say so by passing `provenance` explicitly on `phdude add`. Read it back
+with `phdude knowledge trace <id>` before presenting a claim as established: an
+`agent-extraction` claim with an empty `derived_from` rests on nothing you can point at.
+
+## Methods are recorded, not assumed
+
+How the study was done is a `METH-*` object (`phdude add method`), not something you infer in
+prose each time it comes up. Record the design, paradigm, sampling, instruments, analysis and
+limitations the researcher confirms, link each method to the questions it addresses
+(`phdude link METH-x --to RQ-n`), and when a manuscript sentence describes the methodology,
+take it from that record instead of restating it from memory.
+
 ## Never fabricate
 
 Never invent a citation, a source, a page number, or a quote. If a source cannot be found in

@@ -11,7 +11,7 @@ const LINES = [
   '  next                              the highest-impact next action, with reasons',
   '  knowledge list|show|trace         query the knowledge graph',
   '  add <type>                        add claim, evidence, fact, source, question,',
-  '                                    hypothesis, result or artifact-role',
+  '                                    hypothesis, method, result or artifact-role',
   '  link <id> --to <id>…              attach evidence, questions or artifacts to an object',
   '  decide propose|approve|reject|supersede',
   '                                    research decisions; the researcher decides',

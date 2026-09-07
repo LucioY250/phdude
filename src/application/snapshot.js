@@ -10,6 +10,7 @@ const TYPES = [
   ['result', 'results'],
   ['question', 'questions'],
   ['hypothesis', 'hypotheses'],
+  ['method', 'methods'],
   ['decision', 'decisions'],
 ];
 

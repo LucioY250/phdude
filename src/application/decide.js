@@ -159,32 +159,51 @@ export async function reject({ store, clock, actor }, id, { by, reason } = {}) {
 /**
  * @param {{store: object, clock: () => string, actor: object}} deps
  * @param {string} id
- * @param {{by: string}} opts - `by` is the id of the superseding decision
+ * @param {{by: string, with: string}} opts - `by` is the researcher, `with` the new decision
  * @returns {Promise<object>}
  */
-export async function supersede({ store, clock, actor }, id, { by } = {}) {
+export async function supersede({ store, clock, actor }, id, { by, with: withId } = {}) {
   assertUpToDate(await store.readProject());
 
-  const newDecisionId = by;
-  if (newDecisionId === id) {
+  const researcher = requireBy(by, 'supersede', 'supersessions');
+  // v0.1 overloaded `--by` with the superseding decision's id, which read as if the decision
+  // itself had made the call. Naming the old form beats a confusing "not found: DEC-…".
+  if (/^DEC-/.test(researcher)) {
+    throw new PhdudeError(
+      'USAGE',
+      '--by is the researcher; pass the superseding decision with --with',
+      `phdude decide supersede ${id} --by <your-name> --with ${researcher}`,
+      null,
+    );
+  }
+  if (!withId) {
+    throw new PhdudeError(
+      'USAGE',
+      'decide supersede needs --with <DEC-id>, the decision that replaces this one',
+      `phdude decide supersede ${id} --by <your-name> --with <DEC-id>`,
+      null,
+    );
+  }
+  if (withId === id) {
     throw new PhdudeError('USAGE', 'a decision cannot supersede itself', null, null);
   }
+
   const decision = await getDecision(store, id);
-  await getDecision(store, newDecisionId);
+  await getDecision(store, withId);
 
   const updated = {
     ...decision,
     status: 'superseded',
     resolved: clock(),
-    change: { ...decision.change, superseded_by: newDecisionId },
+    change: { ...decision.change, superseded_by: withId },
   };
   await store.writeEntity(updated);
   await store.appendEvent({
     ts: clock(),
     op: 'decide',
     actor,
-    ids: [id, newDecisionId],
-    summary: `decision ${id} superseded by ${newDecisionId}`,
+    ids: [id, withId],
+    summary: `decision ${id} superseded by ${withId}, recorded by ${researcher}`,
   });
   return updated;
 }

@@ -1,6 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseCli } from '../../../src/adapters/cli/args.js';
+import {
+  COMMAND_OPTIONS,
+  GLOBAL_OPTIONS,
+  optionsFor,
+  parseCli,
+} from '../../../src/adapters/cli/args.js';
+import { PhdudeError } from '../../../src/domain/errors.js';
 
 test('parseCli: bare command', () => {
   const cli = parseCli(['status']);
@@ -124,29 +130,44 @@ test('parseCli: --version and --help are flags', () => {
   assert.equal(parseCli(['-h']).flags.help, true);
 });
 
-test('parseCli: workspace, file, reason, role, id and to flags', () => {
-  const cli = parseCli([
-    'add',
-    'artifact-role',
-    '--workspace',
-    '/tmp/ws',
-    '--file',
-    'role.json',
-    '--reason',
-    'bad evidence',
-    '--role',
-    'paper',
-    '--id',
-    'ART-0123456789',
-    '--to',
-    'supported',
-  ]);
+test('parseCli: the global --workspace and --file flags work on any command', () => {
+  const cli = parseCli(['add', 'artifact-role', '--workspace', '/tmp/ws', '--file', 'role.json']);
   assert.equal(cli.flags.workspace, '/tmp/ws');
   assert.equal(cli.flags.file, 'role.json');
-  assert.equal(cli.flags.reason, 'bad evidence');
-  assert.equal(cli.flags.role, 'paper');
-  assert.equal(cli.flags.id, 'ART-0123456789');
-  assert.equal(cli.flags.to, 'supported');
+});
+
+test('parseCli: per-command flags reach the flags object', () => {
+  const rejected = parseCli([
+    'decide',
+    'reject',
+    'DEC-0123456789',
+    '--by',
+    'ada',
+    '--reason',
+    'weak',
+  ]);
+  assert.equal(rejected.flags.by, 'ada');
+  assert.equal(rejected.flags.reason, 'weak');
+
+  const promoted = parseCli(['promote', 'CLAIM-0123456789', '--to', 'supported']);
+  assert.equal(promoted.flags.to, 'supported');
+
+  const shown = parseCli(['knowledge', 'show', '--id', 'ART-0123456789']);
+  assert.equal(shown.flags.id, 'ART-0123456789');
+});
+
+test('parseCli: decide supersede takes --by and --with', () => {
+  const cli = parseCli([
+    'decide',
+    'supersede',
+    'DEC-0123456789',
+    '--by',
+    'Ada Lovelace',
+    '--with',
+    'DEC-9876543210',
+  ]);
+  assert.equal(cli.flags.by, 'Ada Lovelace');
+  assert.equal(cli.flags.with, 'DEC-9876543210');
 });
 
 test('parseCli: --to takes several ids after one flag, like --affects', () => {
@@ -180,8 +201,55 @@ test('parseCli: --paths may be repeated', () => {
   assert.deepEqual(cli.flags.paths, ['sources', 'data']);
 });
 
-test('parseCli: parsing is non-strict, so an unknown flag never crashes the CLI', () => {
-  const cli = parseCli(['status', '--not-a-real-flag', '--json']);
-  assert.equal(cli.command, 'status');
+test('parseCli: an unknown flag is a usage error naming the flag and the allowed ones', () => {
+  assert.throws(
+    () => parseCli(['knowledge', 'list', '--typo', 'x']),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'USAGE');
+      assert.equal(err.message, 'unknown option --typo for knowledge');
+      assert.match(err.hint, /^allowed: /);
+      assert.match(err.hint, /--type/);
+      assert.match(err.hint, /--state/);
+      assert.match(err.hint, /--query/);
+      assert.match(err.hint, /--json/, 'the global flags are allowed too');
+      return true;
+    },
+  );
+});
+
+test('parseCli: a flag that belongs to another command is still unknown here', () => {
+  assert.throws(
+    () => parseCli(['knowledge', 'list', '--rationale', 'x']),
+    (err) => {
+      assert.equal(err.message, 'unknown option --rationale for knowledge');
+      return true;
+    },
+  );
+  assert.doesNotThrow(() =>
+    parseCli(['decide', 'propose', '--title', 't', '--rationale', 'because']),
+  );
+});
+
+test('parseCli: every command accepts the global flags', () => {
+  for (const command of Object.keys(COMMAND_OPTIONS)) {
+    assert.doesNotThrow(
+      () => parseCli([command, '--workspace', '/tmp/ws', '--actor', 'ada', '--json']),
+      `${command} should accept the global flags`,
+    );
+  }
+});
+
+test('parseCli: an unknown command reports the command, not its flags', () => {
+  const cli = parseCli(['frobnicate', '--not-a-real-flag', '--json']);
+  assert.equal(cli.command, 'frobnicate');
   assert.equal(cli.flags.json, true);
+});
+
+test('optionsFor: an unknown command has only the global options', () => {
+  assert.deepEqual(
+    Object.keys(optionsFor('frobnicate')).sort(),
+    Object.keys(GLOBAL_OPTIONS).sort(),
+  );
+  assert.ok(Object.keys(optionsFor('link')).includes('to'));
 });
