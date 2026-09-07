@@ -1920,3 +1920,89 @@ test('e2e: authors add, learn (paths relative to cwd), consensus', async (t) => 
   ]);
   assert.equal(badId.code, 2);
 });
+
+test('e2e: data add profiles a file under data/, re-adds as a no-op, and versions a change', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-data-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'E2E data', '--no-git']);
+
+  const survey = ['id,age,group,joined', '1,31,a,2026-01-02', '2,44,b,2026-02-03', '3,,a,'].join(
+    '\n',
+  );
+  await writeFile(join(ws, 'data', 'survey.csv'), survey + '\n');
+
+  const added = await runJson(ws, [
+    'data',
+    'add',
+    'data/survey.csv',
+    '--json',
+    '{"description":"Pilot survey","license":"CC-BY-4.0"}',
+  ]);
+  assert.equal(added.created, true);
+  assert.match(added.dataset.id, /^DATASET-[0-9a-f]{10}$/);
+  assert.equal(added.dataset.format, 'csv');
+  assert.equal(added.dataset.profile.rows, 3);
+  assert.deepEqual(
+    added.dataset.profile.columns.map((c) => c.inferred_type),
+    ['number', 'number', 'string', 'date'],
+  );
+  assert.ok(
+    await exists(join(ws, 'knowledge', 'datasets', `${added.dataset.id}.yaml`)),
+    'the record lands in knowledge/datasets/',
+  );
+
+  // Re-adding the same bytes is a no-op the researcher can see.
+  const again = await run(ws, ['data', 'add', 'data/survey.csv']);
+  assert.match(again.stdout, /^Unchanged DATASET-/);
+
+  // A dataset outside data/ is refused before anything is read.
+  await writeFile(join(ws, 'sources', 'stray.csv'), 'a,b\n1,2\n');
+  const outside = await phdude(ws, ['data', 'add', 'sources/stray.csv', ...ACTOR]);
+  assert.equal(outside.code, 2);
+  assert.match(outside.stderr, /outside data\//);
+
+  // Editing the file records a new dataset linked to the first.
+  await writeFile(join(ws, 'data', 'survey.csv'), survey + '\n4,52,b,2026-03-04\n');
+  const changed = await runJson(ws, ['data', 'add', 'data/survey.csv']);
+  assert.equal(changed.created, true);
+  assert.equal(changed.dataset.versions_of, added.dataset.id);
+  assert.deepEqual(changed.replaced, [added.dataset.id]);
+
+  const listed = await runJson(ws, ['data', 'list']);
+  assert.equal(listed.length, 2);
+  const listedText = await run(ws, ['data', 'list']);
+  assert.match(listedText.stdout, /superseded/);
+
+  const profile = await runJson(ws, ['data', 'profile', changed.dataset.id]);
+  assert.equal(profile.rows, 4);
+  assert.deepEqual(
+    profile.columns.map((c) => c.name),
+    ['id', 'age', 'group', 'joined'],
+  );
+  const profileText = await run(ws, ['data', 'profile', changed.dataset.id]);
+  assert.match(profileText.stdout, /Column +Type +Missing +Distinct +Samples/);
+
+  const shown = await runJson(ws, ['data', 'show', changed.dataset.id]);
+  assert.equal(shown.id, changed.dataset.id);
+
+  // A sensitive dataset keeps its cell values out of the committed profile.
+  await writeFile(join(ws, 'data', 'people.csv'), 'name,email\nAda,ada@example.org\n');
+  const sensitive = await runJson(ws, [
+    'data',
+    'add',
+    'data/people.csv',
+    '--json',
+    '{"sensitive":true}',
+  ]);
+  for (const column of sensitive.dataset.profile.columns) {
+    assert.equal(Object.hasOwn(column, 'samples'), false, `${column.name} leaked samples`);
+  }
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'data');
+  assert.equal(events.length, 3, 'one data event per registration, none for the no-op');
+});

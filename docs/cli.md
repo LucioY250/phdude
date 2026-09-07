@@ -660,6 +660,58 @@ among the higher-impact rules. `next`'s closing `consistent` line reads
 `N open gap(s); run phdude gaps` whenever the report is not empty, and claims the workspace is
 consistent only when it is.
 
+### `phdude data add <path> | list | show <id> | profile <id>`
+
+```
+phdude data add data/survey.csv
+phdude data add data/interviews.csv --json '{"description":"Round 1","license":"CC-BY-4.0","sensitive":true}'
+phdude data list
+phdude data show DATASET-…
+phdude data profile DATASET-…
+```
+
+Registers a file under `data/` as a research object (spec §3.2) and profiles it, so an analysis
+can say which data it ran on and `repro` can say when that data changed.
+
+The file's bytes are the identity: the id is `DATASET-<first 10 of the sha256 of the bytes>`.
+Adding the same file again is a no-op — no event, no second record, and the reply says
+`Unchanged`. Editing the file and adding it again records a *new* dataset, whose `versions_of`
+points at the first one at that path and whose `latest` is `true`; every earlier version has
+`latest: false`. That is the same shape `phdude ingest` uses for artifact versions, and it is
+why an analysis that ran on the old bytes still names the dataset it actually read.
+
+| Field | Where it comes from |
+|---|---|
+| `path` | The argument, workspace-relative. It must resolve inside `data/`, or the command exits 2. |
+| `hash`, `bytes` | The file itself. |
+| `format` | The extension: `csv`, `tsv`, `json`, `xlsx`, anything else `other`. |
+| `profile` | The parsed table (see below). |
+| `description`, `license`, `sensitive` | `--json '<object>'` or `--file <path>.json`. Nothing else is accepted. |
+| `state` | Always `candidate` on registration, like every other new object. |
+
+The profile is a count of what is in the file, never a finding about it. `csv` and `tsv` are
+read as delimited text, `xlsx` through the OOXML parser (first sheet), and `json` only when it
+is an array of objects, whose keys become the columns. Any other shape — `other`, a bare JSON
+object, an array of numbers — is registered and hashed with an empty profile, because PhDude
+will not guess at a table that is not there.
+
+Per column, over the non-empty cells: `inferred_type` is `number` when every cell is numeric,
+then `boolean` (`true`/`false`/`yes`/`no`), then `date` (`YYYY-MM-DD` or a full ISO timestamp),
+`empty` when the column has no values at all, and `string` otherwise. A column of `0`s and `1`s
+is a `number`: the report says what the cells hold, not what they might have meant. `missing`
+counts the blank cells, including the ones a short row never had. `distinct` is capped at 50,
+and `distinct_truncated: true` says the real count is higher. `samples` carries up to five
+distinct values.
+
+With `sensitive: true` the `samples` are omitted entirely, everywhere. The profile is committed
+to the repository, and five values are enough to expose the column they came from; the types,
+the missing counts and the distinct counts stay.
+
+`data list` prints one line per dataset with its path, format and shape, marking superseded
+versions. `data show` prints the whole record as YAML. `data profile` prints the column table.
+Only `data add` writes: one `data` event per registration, naming the new dataset and every
+version it superseded. The three readers write nothing.
+
 ### `phdude prose <section> | --file <path>`
 
 ```

@@ -4,7 +4,7 @@ import { join, resolve } from 'node:path';
 import { PhdudeError, exitCodeFor } from '../../domain/errors.js';
 import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
-import { detectKind, parserFor, PARSERS } from '../documents/index.js';
+import { detectKind, parseTable, parserFor, PARSERS } from '../documents/index.js';
 import { DEFAULT_PACKS_DIR, discoverPacks, loadProfile } from '../packs/loader.js';
 import { buildProviders } from '../search/index.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
@@ -19,6 +19,7 @@ import add from './commands/add.js';
 import authors from './commands/authors.js';
 import bootstrap from './commands/bootstrap.js';
 import cite from './commands/cite.js';
+import data from './commands/data.js';
 import decide from './commands/decide.js';
 import deslop from './commands/deslop.js';
 import doctor from './commands/doctor.js';
@@ -50,6 +51,7 @@ const COMMANDS = {
   authors,
   bootstrap,
   cite,
+  data,
   decide,
   deslop,
   doctor,
@@ -126,6 +128,8 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     fs: { walk, read, realpath },
     parsers: { detectKind, parserFor },
     parserAdapters: PARSERS,
+    readBytes: (rel) => read(join(workspace, rel)),
+    parseTable,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     loadProfile: (name) =>
       loadProfile(name, [DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),

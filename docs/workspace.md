@@ -32,7 +32,8 @@ my-research/
 │   ├── evidence/   EVID-*.yaml
 │   ├── facts/      FACT-*.yaml
 │   ├── results/    RESULT-*.yaml
-│   └── candidates/ CAND-*.yaml   # literature hits awaiting review, not yet sources
+│   ├── candidates/ CAND-*.yaml   # literature hits awaiting review, not yet sources
+│   └── datasets/   DATASET-*.yaml # files under data/, hashed and profiled
 ├── research/
 │   ├── questions/  RQ-*.yaml
 │   ├── hypotheses/ H-*.yaml

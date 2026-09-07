@@ -10,6 +10,7 @@ import {
   newHypothesis,
   newDecision,
   newMethod,
+  newDataset,
 } from '../../../src/domain/entities.js';
 import { assertValid } from '../../../src/schemas/index.js';
 import { PhdudeError } from '../../../src/domain/errors.js';
@@ -436,4 +437,54 @@ test('newEvidence: provenance defaults the same way and stays out of the id mate
   assert.equal(manual.provenance.method, 'manual');
   assert.equal(extracted.provenance.method, 'agent-extraction');
   assert.equal(manual.id, extracted.id, 'provenance is not part of the id');
+});
+
+test('newDataset: schema-valid, id derived from the file hash, candidate by default', () => {
+  const hash = 'a'.repeat(64);
+  const dataset = newDataset({
+    path: 'data/survey.csv',
+    hash,
+    bytes: 128,
+    format: 'csv',
+    profile: { rows: 0, columns: [] },
+    actor,
+    created,
+  });
+  assertValid('dataset', dataset);
+  assert.equal(dataset.id, `DATASET-${'a'.repeat(10)}`);
+  assert.equal(dataset.state, 'candidate');
+  assert.equal(dataset.sensitive, false);
+  assert.equal(Object.hasOwn(dataset, 'description'), false);
+  assert.equal(Object.hasOwn(dataset, 'license'), false);
+});
+
+test('newDataset: the same bytes at a different path is the same id', () => {
+  const base = {
+    hash: 'b'.repeat(64),
+    bytes: 4,
+    format: 'csv',
+    profile: { rows: 0, columns: [] },
+    actor,
+    created,
+  };
+  assert.equal(
+    newDataset({ ...base, path: 'data/a.csv' }).id,
+    newDataset({ ...base, path: 'data/b.csv' }).id,
+  );
+});
+
+test('newDataset: an empty path is refused', () => {
+  assert.throws(
+    () =>
+      newDataset({
+        path: '  ',
+        hash: 'c'.repeat(64),
+        bytes: 0,
+        format: 'other',
+        profile: { rows: 0, columns: [] },
+        actor,
+        created,
+      }),
+    PhdudeError,
+  );
 });
