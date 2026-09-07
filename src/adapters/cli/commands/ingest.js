@@ -1,12 +1,19 @@
 import { ingest } from '../../../application/ingest.js';
 
 export function renderIngest(result) {
+  const written = new Set(result.artifacts.map((a) => a.id));
   const lines = [
     `Ingested ${result.artifacts.length} artifact(s), ${result.skipped.length} unchanged.`,
+    '',
+    `Inventory (${result.inventory.length} artifact(s), + = written this run):`,
   ];
-  for (const a of result.artifacts) {
-    const chars = a.extracted?.text_chars ?? 0;
-    lines.push(`  ${a.id}  ${a.kind.padEnd(5)} ${a.path} (${a.extracted?.status}, ${chars} chars)`);
+  if (result.inventory.length === 0) lines.push('  (none)');
+  for (const a of result.inventory) {
+    const version = a.latest === false ? ` superseded by a newer version of ${a.versions_of}` : '';
+    lines.push(
+      `  ${written.has(a.id) ? '+' : ' '} ${a.id}  ${a.kind.padEnd(5)} ` +
+        `${a.role.padEnd(12)} ${a.extracted.status.padEnd(11)} ${a.path}${version}`,
+    );
   }
   if (result.warnings.length > 0) {
     lines.push('', 'Warnings:');

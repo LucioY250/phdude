@@ -157,10 +157,29 @@ function sameSet(a, b) {
   return a.length === b.length && a.every((v, i) => v === b[i]);
 }
 
+// The whole workspace inventory after the run, not just what this run changed: an agent
+// re-running ingest on an unchanged workspace still needs the artifact list to work from.
+function toInventory(artifacts) {
+  return [...artifacts]
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    .map((a) => {
+      const entry = {
+        id: a.id,
+        path: a.path,
+        kind: a.kind,
+        role: a.role,
+        extracted: { status: a.extracted.status },
+      };
+      if (a.versions_of !== undefined) entry.versions_of = a.versions_of;
+      if (a.latest !== undefined) entry.latest = a.latest;
+      return entry;
+    });
+}
+
 /**
  * @param {{store: object, fs: {walk: Function, read: Function}, parsers: {detectKind: Function, parserFor: Function}, clock: Function, actor: object}} deps
  * @param {{paths?: string[], force?: boolean}} opts
- * @returns {Promise<{artifacts: object[], skipped: string[], warnings: string[]}>}
+ * @returns {Promise<{artifacts: object[], inventory: object[], skipped: string[], warnings: string[]}>}
  */
 export async function ingest(
   { store, fs, parsers, clock, actor },
@@ -287,5 +306,5 @@ export async function ingest(
     summary: `ingested ${writtenIds.size}, skipped ${skipped.length}`,
   });
 
-  return { artifacts, skipped, warnings };
+  return { artifacts, inventory: toInventory(linked), skipped, warnings };
 }

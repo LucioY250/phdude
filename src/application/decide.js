@@ -13,14 +13,28 @@ async function assertReferenceExists(store, id) {
 async function getDecision(store, id) {
   const obj = await store.readEntity(id);
   if (!obj || obj.schema !== 'phdude.decision') {
-    throw new PhdudeError('USAGE', `not found: ${id}`, null, null);
+    throw new PhdudeError(
+      'USAGE',
+      `not found: ${id}`,
+      'run phdude knowledge list --type decision',
+      null,
+    );
   }
   return obj;
 }
 
-function requireBy(by) {
+// Approvals and rejections are recorded against a named human, never against the agent's
+// resolved actor: a decision the researcher did not make must not carry their name.
+function requireBy(by, verb, noun) {
   const trimmed = String(by ?? '').trim();
-  if (!trimmed) throw new PhdudeError('USAGE', '"by" is required', null, null);
+  if (!trimmed) {
+    throw new PhdudeError(
+      'USAGE',
+      `"--by <researcher>" is required: ${noun} are recorded against a named researcher`,
+      `phdude decide ${verb} <DEC-id> --by <your-name>`,
+      null,
+    );
+  }
   return trimmed;
 }
 
@@ -65,7 +79,7 @@ export async function propose(
  * @returns {Promise<object>}
  */
 export async function approve({ store, clock, actor }, id, { by } = {}) {
-  const approver = requireBy(by);
+  const approver = requireBy(by, 'approve', 'approvals');
   const decision = await getDecision(store, id);
 
   if (decision.status === 'rejected' || decision.status === 'superseded') {
@@ -106,7 +120,7 @@ export async function approve({ store, clock, actor }, id, { by } = {}) {
  * @returns {Promise<object>}
  */
 export async function reject({ store, clock, actor }, id, { by, reason } = {}) {
-  const rejector = requireBy(by);
+  const rejector = requireBy(by, 'reject', 'rejections');
   const decision = await getDecision(store, id);
 
   if (decision.status === 'approved') {
@@ -182,9 +196,14 @@ export async function promote({ store, clock, actor }, id, { to = 'canonical', d
   }
 
   const obj = await store.readEntity(id);
-  if (!obj) throw new PhdudeError('USAGE', `not found: ${id}`, null, null);
+  if (!obj) throw new PhdudeError('USAGE', `not found: ${id}`, 'run phdude knowledge list', null);
   if (obj.state === undefined) {
-    throw new PhdudeError('USAGE', `${id} has no state to promote`, null, null);
+    throw new PhdudeError(
+      'USAGE',
+      `${id} has no state to promote`,
+      'only knowledge objects carry a state; artifacts and decisions do not',
+      null,
+    );
   }
 
   if (obj.state === to) return obj;

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { cp, mkdtemp, rm, stat } from 'node:fs/promises';
+import { cp, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -67,6 +67,22 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
   await cp(FIXTURES_DIR, join(ws, 'sources'), { recursive: true });
   const ingested = await runJson(ws, ['ingest']);
   assert.ok(ingested.artifacts.length >= 5, 'every fixture document is inventoried');
+
+  assert.equal(ingested.inventory.length, 7, 'the inventory lists the whole workspace');
+
+  // Re-ingesting changes nothing, but the inventory still lists every artifact, which is
+  // what an agent re-running bootstrap needs to work from.
+  const reingested = await runJson(ws, ['ingest']);
+  assert.equal(reingested.artifacts.length, 0, 'nothing changed on the second pass');
+  assert.equal(reingested.skipped.length, 7);
+  assert.equal(reingested.inventory.length, 7);
+  const inventoryIds = reingested.inventory.map((a) => a.id);
+  assert.deepEqual(inventoryIds, [...inventoryIds].sort(), 'the inventory is sorted by id');
+  for (const entry of reingested.inventory) {
+    assert.deepEqual(Object.keys(entry).sort(), ['extracted', 'id', 'kind', 'path', 'role']);
+    assert.equal(entry.role, 'unknown');
+    assert.equal(typeof entry.extracted.status, 'string');
+  }
 
   const byKind = Object.fromEntries(ingested.artifacts.map((a) => [a.kind, a]));
   const mdArtifact = byKind.md;
@@ -135,6 +151,19 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
       from: { artifact: txtArtifact.id, locator: 'p. 3' },
     }),
   ]);
+
+  // --file resolves against the working directory and returns the text confirmation,
+  // because it does not set the --json output flag the way an inline payload does
+  await writeFile(
+    join(ws, 'study-period.json'),
+    JSON.stringify({
+      key: 'study_period',
+      value: '2024-2025',
+      from: { artifact: mdArtifact.id },
+    }),
+  );
+  const viaFile = await run(ws, ['add', 'fact', '--file', 'study-period.json']);
+  assert.match(viaFile.stdout, /^Added FACT-[0-9a-f]{10} \(candidate\)$/m);
 
   const status = await runJson(ws, ['status']);
   assert.equal(status.conflicts.length, 1);
@@ -213,6 +242,34 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
   assert.match(unknown.stderr, /Usage/);
 });
 
+test('e2e: usage errors honour --json too', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-usage-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  const unknown = await phdude(ws, ['frobnicate', '--json']);
+  assert.equal(unknown.code, 1);
+  assert.equal(unknown.stdout, '', 'stdout stays empty on error');
+  const unknownError = JSON.parse(unknown.stderr).error;
+  assert.equal(unknownError.code, 'USAGE');
+  assert.match(unknownError.message, /unknown command/);
+  assert.equal(unknownError.hint, 'run phdude help');
+
+  const bare = await phdude(ws, ['--json']);
+  assert.equal(bare.code, 1);
+  assert.equal(bare.stdout, '');
+  assert.equal(JSON.parse(bare.stderr).error.code, 'USAGE');
+});
+
+test('e2e: bootstrap outside a workspace points at init', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-noboot-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  const result = await phdude(ws, ['bootstrap', ...ACTOR]);
+  assert.equal(result.code, 1);
+  assert.match(result.stderr, /not a PhDude workspace/);
+  assert.match(result.stderr, /Suggested action: run phdude init/);
+});
+
 test('e2e: bootstrap ingests, detects packs and prints the agent handoff', async (t) => {
   const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-boot-'));
   t.after(() => rm(ws, { recursive: true, force: true }));
@@ -222,6 +279,7 @@ test('e2e: bootstrap ingests, detects packs and prints the agent handoff', async
 
   const result = await runJson(ws, ['bootstrap']);
   assert.ok(result.ingest.artifacts.length >= 5);
+  assert.equal(result.ingest.inventory.length, 7);
   assert.ok(Array.isArray(result.packs.recommended));
   assert.ok(result.status.inventory.total >= 5);
   assert.ok(result.next.top.why.length > 0);
@@ -270,6 +328,11 @@ test('e2e: errors are typed, and --json reports them as structured output', asyn
   const badPack = await phdude(ws, ['packs', 'apply', 'no-such-pack', ...ACTOR]);
   assert.equal(badPack.code, 1);
   assert.match(badPack.stderr, /unknown pack/);
+
+  const noBy = await phdude(ws, ['decide', 'approve', 'DEC-0123456789', ...ACTOR]);
+  assert.equal(noBy.code, 1);
+  assert.match(noBy.stderr, /"--by <researcher>" is required/);
+  assert.match(noBy.stderr, /Suggested action: phdude decide approve <DEC-id> --by <your-name>/);
 
   const badJson = await phdude(ws, ['add', 'claim', '--json', '{not json', ...ACTOR]);
   assert.equal(badJson.code, 2);

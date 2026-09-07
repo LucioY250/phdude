@@ -126,7 +126,7 @@ export function parseCli(argv) {
       strict: false,
     });
   } catch (err) {
-    throw new PhdudeError('USAGE', err.message, 'run phdude --help');
+    throw new PhdudeError('USAGE', err.message, 'run phdude help');
   }
 
   const { values, positionals } = parsed;

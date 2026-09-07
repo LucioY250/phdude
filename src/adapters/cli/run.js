@@ -111,31 +111,40 @@ function writeError(err, { stderr, json, env }) {
  * @returns {Promise<number>} the process exit code
  */
 export async function run(argv, { stdout, stderr, cwd, env }) {
-  let json = false;
+  // Resolved before parseCli so that a parse failure, a bare invocation and an unknown
+  // command all honour the --json error contract too.
+  const json = argv.some((a) => a === '--json' || a.startsWith('--json='));
+
+  // Usage failures reach the same writer as every other error; humans additionally get the
+  // usage block, which would be noise inside a JSON stream.
+  const usageFailure = (message) => {
+    const code = writeError(new PhdudeError('USAGE', message, 'run phdude help'), {
+      stderr,
+      json,
+      env,
+    });
+    if (!json) stderr.write(`\n${usage()}`);
+    return code;
+  };
+
   try {
     const cli = parseCli(argv);
-    json = cli.flags.json;
 
     if (cli.flags.version) {
       stdout.write(`phdude ${version}\n`);
       return 0;
     }
 
-    if (cli.flags.help || cli.command === 'help' || cli.command === null) {
+    if (cli.command === null && !cli.flags.help) return usageFailure('no command given');
+
+    if (cli.flags.help || cli.command === 'help') {
       const result = await help();
-      if (cli.command === null && !cli.flags.help) {
-        stderr.write(`phdude: no command given\n\n${result.text}`);
-        return 1;
-      }
       stdout.write(json ? printJson(result.json) + '\n' : result.text);
       return 0;
     }
 
     const handler = COMMANDS[cli.command];
-    if (!handler) {
-      stderr.write(`phdude: unknown command "${cli.command}"\n\n${usage()}`);
-      return 1;
-    }
+    if (!handler) return usageFailure(`unknown command "${cli.command}"`);
 
     const result = await handler(await buildContext(cli, { cwd, env, stdout, stderr }));
 

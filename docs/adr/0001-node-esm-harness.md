@@ -32,8 +32,8 @@ Ship PhDude as a single Node ESM package with a `phdude` binary, targeting Node 
 
 ## Consequences
 
-- Installation is `npm i -g phdude` or `npx phdude`, and the source is readable in the
-  installed package.
+- Installation is a clone plus `npm link` today, and `npm i -g phdude` once v0.1 ships to
+  the registry; either way the source is readable in the installed package.
 - The CLI is the public contract: exit codes, `--json` output and error shapes are versioned
   behaviour (see [ADR 4](0004-agent-writes-through-cli.md)).
 - Anything needing a long-lived process (watchers, servers, provider adapters) is out of the

@@ -69,6 +69,19 @@ Files that share a hash under different paths collapse into one artifact with se
 `paths[]`. Extraction is best effort: a PDF with no `pdftotext` on the machine is still
 inventoried and hashed, with `extracted.status` reporting why the text is missing.
 
+The result carries four keys:
+
+| Key | Contents |
+|---|---|
+| `artifacts` | Full Artifact objects for what this run created or updated. Empty when nothing changed. |
+| `inventory` | Every artifact in the workspace after the run, sorted by id, as `{id, path, kind, role, extracted:{status}}` plus `versions_of` and `latest` when the artifact is one of several versions. |
+| `skipped` | Ids of artifacts whose content was unchanged. |
+| `warnings` | Per-file extraction warnings; never fatal. |
+
+Read `inventory` rather than `artifacts` when you need the whole picture: re-running ingest
+on an unchanged workspace reports zero changed artifacts but the same full inventory. The
+text output prints one line per inventory entry, with `+` marking the ones written this run.
+
 ### `phdude status`
 
 Project settings, artifact inventory by kind and extraction status, knowledge counts by type
@@ -108,6 +121,9 @@ record. Objects are created in state `candidate`.
 `artifact-role` is the exception: it sets `role` on an existing artifact rather than
 creating a new object, and takes `{"id":"ART-…","role":"paper"}`.
 
+`--file` resolves relative to the working directory, not the workspace, so it works when
+`--workspace` points somewhere else.
+
 Because `--json` doubles as the payload flag, `phdude add claim --json '{…}'` also prints
 JSON. Use `--file` if you want the short text confirmation instead.
 
@@ -124,8 +140,12 @@ phdude decide reject  DEC-… --by "Ada Lovelace" --reason "Evidence is too weak
 phdude decide supersede DEC-old --by DEC-new
 ```
 
-`--affects` accepts several ids after one flag. Approving and rejecting record who did it;
-that name is the researcher's, and an agent must never supply its own.
+`--affects` accepts several ids after one flag.
+
+**`--by` is required on `approve` and `reject`.** It records who made the call, and the
+runtime deliberately does not fall back to the resolved actor: a decision the researcher did
+not make must never end up carrying their name. An agent must never supply a name of its
+own, and must ask the researcher rather than guessing.
 
 ### `phdude promote <id> --decision <DEC-id>`
 
@@ -150,3 +170,12 @@ Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, the cache entry count, the
 discoverable packs and the schema versions, plus warnings for anything missing. It is
 diagnostic only and never writes.
+
+### `phdude help`
+
+Prints the usage summary and exits 0. `phdude --help` and `phdude -h` do the same. With
+`--json` the summary comes back as `{"usage": "…"}`.
+
+A bare `phdude`, an unknown command and an unparseable argument list are usage errors, not
+help requests: they exit 1 and write the error to stderr, following the `--json` error
+contract above, with the usage block appended in text mode only.

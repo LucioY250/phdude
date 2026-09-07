@@ -56,7 +56,7 @@ export async function list({ store }, { type, state, query } = {}) {
  */
 export async function show({ store }, id) {
   const obj = await store.readEntity(id);
-  if (!obj) throw new PhdudeError('USAGE', `not found: ${id}`);
+  if (!obj) throw new PhdudeError('USAGE', `not found: ${id}`, 'run phdude knowledge list');
   return obj;
 }
 

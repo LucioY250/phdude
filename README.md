@@ -35,10 +35,16 @@ you and it will not pretend a claim is established when the evidence says otherw
 
 ## Install
 
+v0.1 is not yet published to npm. Install it from the repository:
+
 ```
-npm i -g phdude      # or run it without installing:
-npx phdude --version
+git clone https://github.com/LucioY250/phdude && cd phdude
+npm ci
+npm link
+phdude --version
 ```
+
+`npm install` support comes with the 0.1.x release.
 
 Node 22 or newer. `pdftotext` (poppler-utils) is optional; without it PDFs are still
 inventoried and hashed, and `phdude doctor` tells you what is missing.
@@ -81,15 +87,22 @@ Highest-impact next action:
 Resolve the conflicting value(s) for "sample_size"
 
 Why:
-- sample_size: 142 (ART-7867b36c21) vs 118 (ART-6d3e8b2f03)
-- 3 claim(s) depend on the conflicting artifacts
+- sample_size: 312 participants (ART-35146e2f6d, ART-0772a215de) vs 300 participants (ART-f7ced78004)
+- 1 claim(s) depend on the conflicting artifacts
 
 Expected impact:
 HIGH
 
 Command:
-phdude decide propose --title "Resolve sample_size" ...
+phdude decide propose --title "Resolve sample_size" --rationale "…" --affects FACT-2bc4462edb FACT-54af7fa906 FACT-f62e1a2f34 --change '{"fact_key":"sample_size","canonical_value":…}'
+
+Other candidates:
+1. (medium) Classify artifacts with unknown role
+2. (medium) Approve or reject pending decisions
+3. (low) No further automatic recommendations; add new sources or refine claims
 ```
+
+That block is `node bin/phdude.js next --workspace examples/generic-thesis`, verbatim.
 
 ## Commands
 
@@ -101,7 +114,7 @@ phdude decide propose --title "Resolve sample_size" ...
 | `phdude status` | Project, inventory, knowledge counts, conflicts, pending decisions. |
 | `phdude next` | The highest-impact next action, with reasons and the exact command. |
 | `phdude knowledge list\|show\|trace` | Query the knowledge graph and its lineage. |
-| `phdude add <type>` | Add a claim, evidence, fact, source, question, hypothesis, result. |
+| `phdude add <type>` | Add a claim, evidence, fact, source, question, hypothesis or result, or set an artifact's role with `add artifact-role`. |
 | `phdude decide propose\|approve\|reject\|supersede` | Research decisions; the researcher decides. |
 | `phdude promote <id> --decision <DEC-id>` | Move an object to canonical. |
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |
@@ -170,9 +183,9 @@ The reasoning behind the big calls lives in [docs/adr/](docs/adr/).
 
 ## Contributing
 
+Install from source as above, then:
+
 ```
-git clone https://github.com/LucioY250/phdude && cd phdude
-npm ci
 npm test
 ```
 

@@ -22,8 +22,9 @@ phdude ingest --json
 ```
 
 This inventories `sources/`, hashes and extracts text, and caches it under
-`.phdude/cache/ART-<id>/`. Read the JSON result for the list of artifacts and their
-`extracted.status`.
+`.phdude/cache/ART-<id>/`. Read `inventory` in the JSON result for every artifact in the
+workspace with its `id`, `path`, `kind`, `role` and `extracted.status`. (`artifacts` lists
+only what this run changed, and is empty when nothing did, so do not work from it.)
 
 ## 2. Classify unknown artifacts
 
