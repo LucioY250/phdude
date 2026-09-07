@@ -1,8 +1,10 @@
 # Golden tests
 
-Each test here runs a real use case (`status`, `next`, `gaps`, `matrix`, `cite export`) against
-the committed `examples/generic-thesis` workspace and compares the renderer's plain-text output
-to the matching file in `expected/` byte-for-byte.
+Each test here runs a real use case (`status`, `next`, `gaps`, `matrix`, `freshness`,
+`cite export`) against the committed `examples/generic-thesis` workspace and compares the
+renderer's plain-text output to the matching file in `expected/` byte-for-byte. The reports
+that read a calendar are given a fixed present, so an age measured in days or years renders the
+same today and in a year.
 
 The example is generated to reach every `gaps` kind, so `gaps.txt` doubles as the worked example
 of each one; `gaps.test.js` asserts the full set, and adding a kind without giving the example

@@ -166,7 +166,7 @@ const OPENALEX_RESPONSE = {
 // back deliberately - a search dated the same day as everything else would never age.
 async function recordStaleSearch(deps, questionId) {
   const fetch = fakeFetch([{ match: 'api.openalex.org', body: OPENALEX_RESPONSE }]);
-  await research.search(
+  const { candidates } = await research.search(
     {
       ...deps,
       clock: () => '2025-06-01T00:00:00Z',
@@ -178,6 +178,20 @@ async function recordStaleSearch(deps, questionId) {
       allowNetwork: true,
     },
   );
+  return candidates.created;
+}
+
+// One of the two candidates has been reviewed and accepted; the other is still waiting. That
+// is what a real queue looks like, and it is what puts a source in the registry that was found
+// rather than ingested - `phdude cite list` shows it, `phdude knowledge trace` shows where it
+// came from. The preprint is deliberately left pending: the policy requires approval for one.
+async function acceptOneCandidate(deps, candidateIds) {
+  for (const id of candidateIds) {
+    const candidate = await deps.store.readEntity(id);
+    if (candidate.type !== 'article') continue;
+    return research.accept(deps, id);
+  }
+  throw new Error('no article candidate to accept');
 }
 
 export async function generate(root) {
@@ -402,7 +416,7 @@ export async function generate(root) {
     from: { artifact: artCsv, locator: 'row 2' },
   });
 
-  await recordStaleSearch(deps, rq.id);
+  await acceptOneCandidate(deps, await recordStaleSearch(deps, rq.id));
 
   await propose(deps, {
     title: 'Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta',

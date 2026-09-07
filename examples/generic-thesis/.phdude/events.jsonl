@@ -29,4 +29,5 @@
 {"ts":"2026-09-01T00:00:57.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-54af7fa906"],"summary":"fact added"}
 {"ts":"2026-09-01T00:00:59.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-270dc9059c"],"summary":"fact added"}
 {"ts":"2025-06-01T00:00:00Z","op":"search","actor":{"researcher":"example","agent":"script"},"ids":["SEARCH-59780ad3c4"],"summary":"openalex: \"note-taking app adoption undergraduates\" → 2 results"}
-{"ts":"2026-09-01T00:01:01.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-7aa12a7b78"],"summary":"decision proposed"}
+{"ts":"2026-09-01T00:01:00.000Z","op":"research","actor":{"researcher":"example","agent":"script"},"ids":["CAND-25723d177d","SRC-70ee4dce27"],"summary":"accepted CAND-25723d177d as SRC-70ee4dce27"}
+{"ts":"2026-09-01T00:01:02.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-7aa12a7b78"],"summary":"decision proposed"}

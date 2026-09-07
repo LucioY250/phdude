@@ -29,7 +29,7 @@ MEDIUM (4):
     Why: RQ-2 has no method addressing it
     Command: phdude add method --json '{"name":"…","design":"…","paradigm":"quantitative","questions":["RQ-2"]}'
 
-LOW (5):
+LOW (6):
   - [artifact-unmined] ART-d93aa9cdea
     Why: ART-d93aa9cdea (role: notes) is not referenced by any source, fact, or evidence
     Command: phdude add fact --json '{"key":"…","value":"…","from":{"artifact":"ART-d93aa9cdea"}}'
@@ -42,6 +42,9 @@ LOW (5):
   - [stale-search] RQ-1
     Why: RQ-1's last search ran 463 day(s) ago (stale after 180)
     Command: phdude research-fresh --question RQ-1
+  - [uncited-source] SRC-70ee4dce27
+    Why: SRC-70ee4dce27 is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"SRC-70ee4dce27","excerpt":"…","strength":"moderate"}'
   - [uncited-source] SRC-8295946d20
     Why: SRC-8295946d20 is not cited by any evidence
     Command: phdude add evidence --json '{"source":"SRC-8295946d20","excerpt":"…","strength":"moderate"}'

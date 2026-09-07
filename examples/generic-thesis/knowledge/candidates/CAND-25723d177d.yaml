@@ -31,4 +31,5 @@ score_parts:
   citations: 0.395
   recency: 0.9
 needs_approval: false
-state: candidate
+state: accepted
+accepted_as: SRC-70ee4dce27
