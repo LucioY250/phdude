@@ -1,0 +1,101 @@
+examples/generic-thesis/knowledge/artifacts/ART-d93aa9cdea.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 1-23
+examples/generic-thesis/knowledge/claims/CLAIM-ab73621987.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/artifacts/ART-655edfb882.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/claims/CLAIM-84dc3cdd04.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 1-21
+examples/generic-thesis/research/questions/RQ-3.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 1-12
+examples/generic-thesis/knowledge/facts/FACT-270dc9059c.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/evidence/EVID-76dc191034.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/evidence/EVID-09913dd0eb.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/facts/FACT-2bc4462edb.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/sources/SRC-077426a939.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_ab4e433ea47e9c 8-10,15-16,19-20,26-27
+examples/generic-thesis/knowledge/facts/FACT-f62e1a2f34.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/research/questions/RQ-2.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+tests/golden/expected/matrix.md
+  s_946fc7502759d8::t_ab4e433ea47e9c 5
+examples/generic-thesis/knowledge/sources/SRC-04b75ed54a.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/sources/SRC-8295946d20.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+tests/golden/gaps.test.js
+  s_946fc7502759d8::t_12413ca12ae4a6 28-30,33-45
+examples/generic-thesis/research/methods/METH-b137e5e2a3.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4,21
+tests/golden/next.test.js
+  s_946fc7502759d8::t_12413ca12ae4a6 28,36-37
+tests/golden/expected/next.txt
+  s_946fc7502759d8::t_ab4e433ea47e9c 7
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_4cf594a9098fe1 2-31
+examples/generic-thesis/knowledge/claims/CLAIM-a07065ff83.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/claims/CLAIM-e53f6d83dc.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 1-19
+examples/generic-thesis/knowledge/evidence/EVID-495666361d.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+scripts/make-example.mjs
+  s_946fc7502759d8::t_712f8e89e0f816 16,75-81,123-127
+  s_946fc7502759d8::t_4cf594a9098fe1 170,174-185,195,234-242,272-294
+  s_946fc7502759d8::t_895426d6efc069 295
+examples/generic-thesis/knowledge/artifacts/ART-0772a215de.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/claims/CLAIM-3d035aa05b.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/claims/CLAIM-8ad284d305.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/artifacts/ART-35146e2f6d.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/decisions/DEC-7aa12a7b78.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/sources/SRC-c2221faf93.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/evidence/EVID-6c03150777.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 1-17
+tests/golden/expected/gaps.txt
+  s_946fc7502759d8::t_ab4e433ea47e9c 1,8-10,18,22-27,32-35
+examples/generic-thesis/knowledge/artifacts/ART-f7ced78004.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/evidence/EVID-93cd3745fc.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/knowledge/claims/CLAIM-9f7abf99e9.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 1-21
+examples/generic-thesis/knowledge/facts/FACT-54af7fa906.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/research/hypotheses/H-1.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 1-12
+examples/generic-thesis/research/questions/RQ-1.yaml
+  s_946fc7502759d8::t_4cf594a9098fe1 4
+examples/generic-thesis/sources/lab-notebook.md
+  s_946fc7502759d8::t_9d9184440db88a 1-4
+tests/golden/README.md
+  s_946fc7502759d8::t_9638d70a0ee82e 3-9,16-17,20-21,24-25
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b7b79b26f9ddf0d5bd0aef8541f692d7fa7ddc02",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
