@@ -121,7 +121,7 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Result | `RESULT-<hash10>` | `summary`, `from`, `values{}`, `ext.analysis?{key,run_at,unit}`, `superseded_by?` |
 | Analysis | `ANALYSIS-<hash10>` | `name`, `runtime`, `script`, `args[]`, `inputs[]`, `outputs{results,files[]}`, `params`, `runs[]` |
 | Dataset | `DATASET-<hash10>` | `path`, `hash`, `bytes`, `format`, `profile{rows,columns[]}`, `description?`, `license?`, `sensitive`, `versions_of?`, `latest` |
-| Table | `TABLE-<hash10>` | `name`, `caption`, `source{result}｜{dataset,columns?,limit?}`, `columns[]`, `formats[]`, `outputs{md,latex,csv}`, `runs[]` |
+| Table | `TABLE-<hash10>` | `name`, `caption`, `source{result}\|{dataset,columns?,limit?}`, `columns[]`, `formats[]`, `outputs{md,latex,csv}`, `runs[]` |
 | Figure | `FIG-<hash10>` | `name`, `caption`, `alt`, `generator{runtime,script,args[]}`, `inputs[]`, `outputs[{path,format}]`, `runs[]` |
 | ResearchQuestion | `RQ-<n>` | `text`, `objectives[]` |
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
