@@ -1,5 +1,6 @@
 # PhDude
-<img width="1254" height="1254" alt="logoPHDude" src="https://github.com/user-attachments/assets/4834b4b6-aaf8-466f-9cc4-78b5e6d5d515" />
+<img width="634" height="562" alt="84A306A5-0C9C-47B5-B487-B4ADD11DE307_1_201_a" src="https://github.com/user-attachments/assets/208ddeb8-702e-4f8c-b5d9-c113a13e7e15" />
+
 
 
 **The senior researcher in your terminal.**
