@@ -49,7 +49,11 @@ test('listSkills reports the shipped core skills with source "core" and their de
     discoverSkills,
     skillsDir: DEFAULT_SKILLS_DIR,
   });
-  assert.deepEqual(warnings, []);
+  // `research` is the one shipped skill that declares network access, so a workspace with no
+  // policy (the default, closed) reports it - and still lists every skill.
+  assert.deepEqual(warnings, [
+    'skill research requests network access; set skills.allow_network: true in .phdude/research-policy.yaml',
+  ]);
   const bootstrap = skills.find((s) => s.name === 'bootstrap');
   assert.ok(bootstrap, 'bootstrap is a shipped core skill');
   assert.equal(bootstrap.source, 'core');
@@ -148,8 +152,9 @@ test('listSkills isolates one unloadable skill and still lists the others', asyn
     'the core skills survive',
   );
   assert.ok(!skills.some((s) => s.name === 'broken'));
-  assert.equal(warnings.length, 1);
-  assert.match(warnings[0], /^skill broken \(workspace\) could not be loaded: /);
+  const loadFailures = warnings.filter((w) => w.includes('could not be loaded'));
+  assert.equal(loadFailures.length, 1);
+  assert.match(loadFailures[0], /^skill broken \(workspace\) could not be loaded: /);
 });
 
 test('listSkills warns, and does not throw, on a skill the network policy has not allowed', async (t) => {
@@ -168,9 +173,11 @@ test('listSkills warns, and does not throw, on a skill the network policy has no
     skills.some((s) => s.name === 'searcher'),
     'the skill is still listed',
   );
-  assert.deepEqual(warnings, [
-    'skill searcher requests network access; set skills.allow_network: true in .phdude/research-policy.yaml',
-  ]);
+  assert.ok(
+    warnings.includes(
+      'skill searcher requests network access; set skills.allow_network: true in .phdude/research-policy.yaml',
+    ),
+  );
 });
 
 test('listSkills stays quiet once the workspace policy allows network access', async (t) => {

@@ -428,3 +428,133 @@ export function newDecision({
     affects,
   };
 }
+
+/**
+ * A literature hit a provider returned, recorded so the researcher can review it before it
+ * ever becomes a Source. Identity is the provider's own id for the work, so re-running the
+ * same search rewrites nothing and a second provider's copy of the same work is merged into
+ * one candidate upstream (see domain/candidates.js `dedupe`).
+ * @param {object} p
+ * @param {string} p.provider
+ * @param {string[]} [p.providers] - every provider that returned this work
+ * @param {string} p.external_id
+ * @param {string} p.title
+ * @param {string[]} [p.authors]
+ * @param {number|null} [p.year]
+ * @param {string|null} [p.venue]
+ * @param {string|null} [p.doi]
+ * @param {string|null} [p.url]
+ * @param {string|null} [p.abstract]
+ * @param {string} [p.type]
+ * @param {boolean|null} [p.open_access]
+ * @param {number|null} [p.cited_by]
+ * @param {string} p.query
+ * @param {string|null} [p.question] - the RQ id the search was run for
+ * @param {string} p.search - the SEARCH id that produced it
+ * @param {number} [p.score]
+ * @param {object} [p.score_parts]
+ * @param {boolean} [p.needs_approval]
+ * @param {object} [p.ext]
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.candidate`
+ */
+export function newCandidate({
+  provider,
+  providers,
+  external_id,
+  title,
+  authors = [],
+  year = null,
+  venue = null,
+  doi = null,
+  url = null,
+  abstract = null,
+  type = 'other',
+  open_access = null,
+  cited_by = null,
+  query,
+  question = null,
+  search,
+  score = 0,
+  score_parts = {},
+  needs_approval = false,
+  ext,
+  actor,
+  created,
+}) {
+  const name = requireText('provider', provider);
+  const externalId = requireText('external_id', external_id);
+  const candidate = {
+    schema: 'phdude.candidate',
+    version: 1,
+    id: makeId('candidate', `${name}:${externalId}`),
+    created,
+    actor,
+    tags: [],
+    provider: name,
+    providers: providers?.length ? providers : [name],
+    external_id: externalId,
+    title: requireText('title', title),
+    authors,
+    year,
+    venue,
+    doi,
+    url,
+    abstract,
+    type,
+    open_access,
+    cited_by,
+    query,
+    question,
+    search,
+    score,
+    score_parts,
+    needs_approval,
+    state: 'candidate',
+  };
+  if (ext !== undefined) candidate.ext = ext;
+  return candidate;
+}
+
+/**
+ * A recorded search: what was asked, of whom, under which filters, and every time it ran. The
+ * query and the question are its identity, so re-running the same search for the same question
+ * appends a run to one record instead of minting a second one.
+ * @param {object} p
+ * @param {string} p.query
+ * @param {string|null} [p.question]
+ * @param {string[]} [p.providers]
+ * @param {object} [p.filters]
+ * @param {{at: string, provider: string, count: number, new: number}[]} [p.runs]
+ * @param {string} p.last_run
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.search`
+ */
+export function newSearch({
+  query,
+  question = null,
+  providers = [],
+  filters = {},
+  runs = [],
+  last_run,
+  actor,
+  created,
+}) {
+  const text = requireText('query', query);
+  return {
+    schema: 'phdude.search',
+    version: 1,
+    id: makeId('search', `${text}|${question ?? ''}`),
+    created,
+    actor,
+    tags: [],
+    query: text,
+    question,
+    providers,
+    filters,
+    runs,
+    last_run,
+  };
+}

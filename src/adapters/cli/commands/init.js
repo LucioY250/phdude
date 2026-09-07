@@ -40,6 +40,14 @@ export default async function init({ flags, deps, workspace }) {
       ? 'initialized'
       : 'already inside a repository';
 
+  // A skill the policy withheld is reported by name with the setting that would install it:
+  // silently shipping one fewer skill than the package carries is how an agent ends up
+  // looking for a file that is not there.
+  const withheld = result.withheldSkills.flatMap((entry) => [
+    `  skill ${entry.name} was not installed: ${entry.reason}`,
+    `    ${entry.hint}`,
+  ]);
+
   const text =
     [
       `Initialized PhDude workspace at ${workspace}`,
@@ -49,6 +57,7 @@ export default async function init({ flags, deps, workspace }) {
       `  updated: ${result.updated.length}`,
       `  skipped: ${result.skipped.length}`,
       `  git:     ${git}`,
+      ...withheld,
       '',
       'Next: drop research materials into sources/ and run `phdude bootstrap`.',
     ].join('\n') + '\n';

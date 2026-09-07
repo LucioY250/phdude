@@ -8,7 +8,7 @@ import { crossref } from '../../../src/adapters/search/crossref.js';
 import { openalex } from '../../../src/adapters/search/openalex.js';
 import { pubmed } from '../../../src/adapters/search/pubmed.js';
 import { semanticScholar } from '../../../src/adapters/search/semantic-scholar.js';
-import { fakeFetch } from '../../support/fake-fetch.js';
+import { fakeFetch, fakeFetchFromFile } from '../../support/fake-fetch.js';
 
 const fx = (name) =>
   readFileSync(new URL(`../../fixtures/search/${name}`, import.meta.url), 'utf8');
@@ -541,4 +541,18 @@ test('pubmed: a response without a result object is a VALIDATION', async () => {
     assert.match(err.message, /pubmed/);
     return true;
   });
+});
+
+test('fakeFetchFromFile: routes load their bodies from files beside the routes file', async () => {
+  const path = new URL('../../fixtures/search/e2e-routes.json', import.meta.url).pathname;
+  const fetch = await fakeFetchFromFile(path);
+
+  const openalex = await fetch('https://api.openalex.org/works?search=x');
+  assert.equal(openalex.status, 200);
+  assert.equal((await openalex.json()).meta.count, 3);
+
+  const arxiv = await fetch('http://export.arxiv.org/api/query?search_query=x');
+  assert.match(await arxiv.text(), /<feed/);
+
+  await assert.rejects(fetch('https://example.org/nothing'), /no route matches/);
 });

@@ -28,11 +28,13 @@ my-research/
 │   ├── claims/     CLAIM-*.yaml
 │   ├── evidence/   EVID-*.yaml
 │   ├── facts/      FACT-*.yaml
-│   └── results/    RESULT-*.yaml
+│   ├── results/    RESULT-*.yaml
+│   └── candidates/ CAND-*.yaml   # literature hits awaiting review, not yet sources
 ├── research/
 │   ├── questions/  RQ-*.yaml
 │   ├── hypotheses/ H-*.yaml
-│   └── methods/    METH-*.yaml
+│   ├── methods/    METH-*.yaml
+│   └── searches/   SEARCH-*.yaml # what was asked, of whom, and when
 ├── decisions/      DEC-*.yaml
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
 ├── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
@@ -101,9 +103,30 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
 | Method | `METH-<hash10>` | `name`, `design`, `paradigm`, `sampling`, `instruments[]`, `analysis[]`, `limitations[]`, `questions[]` |
 | Decision | `DEC-<hash10>` | `title`, `rationale`, `proposed_by`, `approved_by[]`, `status`, `change`, `affects[]` |
+| Candidate | `CAND-<hash10>` | `provider`, `providers[]`, `external_id`, `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `abstract`, `type`, `open_access`, `cited_by`, `query`, `question`, `search`, `score`, `score_parts`, `needs_approval`, `state`, `reason?`, `accepted_as?` |
+| Search | `SEARCH-<hash10>` | `query`, `question`, `providers[]`, `filters`, `runs[]`, `last_run` |
 
 Ids are derived from content, so the same claim added twice is one file. See
-[ADR 3](adr/0003-content-derived-ids.md).
+[ADR 3](adr/0003-content-derived-ids.md). A candidate's identity is the provider and the
+provider's own id for the work (`<provider>:<external_id>`), so the same search run twice
+rewrites nothing; a search's identity is its normalized query and the question it was run for.
+
+## Candidates and searches
+
+`phdude research` writes both, and neither is knowledge yet.
+
+A **Candidate** is one literature hit a provider returned. It is not a Source: nothing enters
+the citation registry until the researcher accepts it, and `state` says where it stands —
+`candidate` (unreviewed), `accepted` (with `accepted_as` naming the `SRC-` id it became), or
+`dismissed` (with a `reason`). `providers[]` lists every provider that returned the same work,
+and `ext.ids` keeps their own ids for it; `needs_approval: true` marks a preprint the policy
+says the researcher has to approve explicitly. `score_parts` explains the ranking (provider
+rank, citation count, recency) so the order is auditable rather than mysterious.
+
+A **Search** is the record of asking. `runs[]` appends one entry per provider call — `at`,
+`provider`, `count` and how many of those results were `new` — so a query re-run months later
+extends one history instead of minting a second record. `filters` snapshots what the run
+applied, and `last_run` is what freshness is measured against.
 
 ## Knowledge states
 
@@ -174,6 +197,16 @@ opening a file.
 ```json
 {"ts":"2026-09-07T09:12:44.101Z","op":"add","actor":{"researcher":"ada","agent":"claude-code"},"ids":["CLAIM-3d035aa05b"],"summary":"claim added"}
 ```
+
+A network call is audited the same way, one `search` event per provider call:
+
+```json
+{"ts":"2026-09-07T10:02:11.004Z","op":"search","actor":{"researcher":"ada","agent":"cli"},"ids":["SEARCH-7c2d4e6a10"],"summary":"openalex: \"open science practices\" → 3 results"}
+```
+
+The summary carries the provider, the query that left the machine and a count — never a
+result. A provider call that failed is recorded too, as `→ failed`: the query still left the
+machine, so the log still says so.
 
 It is committed, append-only, and independent of git history, so a rebase cannot erase who
 recorded what. Git history complements it with the full content of each change.

@@ -36,12 +36,14 @@ answer. The global options above are accepted everywhere.
 | 1 | Usage | unknown command, missing argument, id not found |
 | 2 | Validation | an object that fails its JSON Schema, malformed `--json` |
 | 3 | Policy | `promote` to canonical without an approved decision |
-| 4 | External tool missing | reserved; no command requires an external tool yet |
+| 4 | External tool missing | every search provider failed on a `phdude research` run |
 
 Errors print the message on stderr, followed by a `Suggested action:` line when the error
 carries a hint. With `--json` they print `{"error":{"code","message","hint","details"}}` on
-stderr instead. Exit code 4 exists but nothing raises it yet, because degradation is the rule:
-a missing `pdftotext` produces a warning and a partial extraction, not a failed command.
+stderr instead. Exit code 4 is rare, because degradation is the rule: a missing `pdftotext`
+produces a warning and a partial extraction, and one failed search provider produces a warning
+and the other providers' results. Only a `phdude research` run where every provider failed
+exits 4.
 
 ## Commands
 
@@ -358,6 +360,64 @@ A source may carry `bibkey` (`^[a-z0-9-]+$`, wins over the derived key), `abstra
 (a string array), and `identifiers: { doi?, isbn?, arxiv?, pmid?, url? }`. The top-level `doi`
 and `url` fields from v0.1 still work; `identifiers.doi` takes precedence when both are set.
 
+### `phdude research "<query>" | list | show`
+
+```
+phdude research "open science practices adoption" --question RQ-1
+phdude research "…" --provider openalex,crossref --from 2022 --limit 10 --allow-network
+phdude research list --state candidate --question RQ-1
+phdude research show CAND-…
+```
+
+Fresh literature search (PRD §22, §71–§77, spec §3.3–§3.4). **This is the only command that
+touches the network**, and it refuses unless `.phdude/research-policy.yaml` sets
+`network.enabled: true` or the call carries `--allow-network`:
+
+```
+network access is disabled
+Suggested action: set network.enabled: true in .phdude/research-policy.yaml or pass --allow-network
+```
+
+Only the query string leaves the machine. Every provider call appends one `search` event
+carrying the provider, the query and a result count — never a result payload.
+
+| Option | Meaning |
+|---|---|
+| `--question RQ-n` | Tie the search and its candidates to a research question. The id must exist, or the command exits 2. Without it the search is still recorded, with `question: null`. |
+| `--provider a,b` | Narrow to a subset of the configured providers, in that order. It can only narrow: a provider the policy does not list is a usage error. |
+| `--from YYYY` | Override `research.year_range.from` for this run, server-side and client-side. |
+| `--limit N` | Override `research.limit` for this run. It is per provider, not a total. |
+| `--allow-network` | Allow this one run through a closed `network.enabled`. |
+| `--state`, `--question` | Filters for `research list`. |
+
+What a run does, in order: check the policy, check the question, call each configured provider
+in turn, deduplicate across providers, apply the policy filters, score, then write. A provider
+that fails is reported as a warning and the run continues on what the others returned; only a
+run where **every** provider failed exits 4 (`all providers failed`).
+
+Two providers returning the same work produce **one** candidate: works match on their DOI
+(case-insensitive) or on their normalized title and year. The first provider to return it owns
+the record — its `provider` and `external_id` are kept — and the others are listed in
+`providers[]` with their own ids under `ext.ids`.
+
+Ranking is deterministic and explained in `--json` under `score_parts`: `rank` is
+`1/(1+position)` after deduplication, `citations` is `log10(1+cited_by)/4` (0 when the provider
+reports none), and `recency` decays linearly over ten years from the current year (0 when the
+year is unknown). Each part is rounded to three decimals and `score` is their sum. It is a
+sorting aid, not a verdict.
+
+A candidate whose `type` is `preprint` is flagged `needs_approval: true` under
+`research.preprints.require_approval` — listed, never hidden, and never accepted on its own.
+
+`research list` prints recorded candidates highest score first, filtered by `--state`
+(`candidate`, `accepted`, `dismissed`) and `--question`. `research show <id>` prints one
+candidate, or the search record behind it, as YAML.
+
+Re-running the same query for the same question appends a run to the same `SEARCH-…` record
+instead of creating a second one, and a candidate already on disk is reported under
+`existing` rather than rewritten — the state and reason a researcher gave it are never reset by
+a re-run.
+
 ### `phdude matrix [--format md|csv] [--question RQ-n]`
 
 ```
@@ -484,7 +544,8 @@ Being the command you run when something is wrong, `doctor` degrades rather than
 whose `SKILL.md` cannot be loaded costs one warning naming that skill, and every other skill is
 still listed. A skill that declares `permissions.network: allowed` while
 `.phdude/research-policy.yaml` has not set `skills.allow_network: true` is listed with a warning
-too — `phdude packs apply` and `phdude init` are where that becomes a refusal (exit 3).
+too. `phdude packs apply` turns that into a refusal (exit 3); `phdude init` instead withholds
+the skill, naming it and the setting that would install it, and installs everything else.
 
 ### `phdude help`
 
@@ -494,3 +555,13 @@ Prints the usage summary and exits 0. `phdude --help` and `phdude -h` do the sam
 A bare `phdude`, an unknown command and an unparseable argument list are usage errors, not
 help requests: they exit 1 and write the error to stderr, following the `--json` error
 contract above, with the usage block appended in text mode only.
+
+## Testing
+
+`PHDUDE_FAKE_FETCH=<path>` is an internal, test-only hook. When it is set, `phdude research`
+builds its providers' `fetch` from the JSON routes file at that path instead of the network, so
+the end-to-end tests can exercise the whole command offline. Each route is
+`{ "match": "<substring of the URL>", "status": 200, "body": …, "bodyFile": "<path relative to
+the routes file>", "headers": {…}, "times": N }`; an unmatched URL throws rather than falling
+through to the real network. Nothing in a normal run reads this variable, and it is not part of
+the CLI's supported surface.

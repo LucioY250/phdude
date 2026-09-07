@@ -1,0 +1,16 @@
+{
+  "schema": "phdude.search",
+  "version": 1,
+  "id": "SEARCH-7c2d4e6a10",
+  "created": "2026-09-07T10:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com", "agent": "cli" },
+  "query": "open science reproducibility",
+  "question": "RQ-1",
+  "providers": ["openalex", "crossref"],
+  "filters": { "from": 2021, "limit": 20, "peer_reviewed": "preferred" },
+  "runs": [
+    { "at": "2026-09-07T10:00:00Z", "provider": "openalex", "count": 3, "new": 3 },
+    { "at": "2026-09-07T10:00:00Z", "provider": "crossref", "count": 3, "new": 1 }
+  ],
+  "last_run": "2026-09-07T10:00:00Z"
+}

@@ -2,7 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CURRENT_WORKSPACE_VERSION } from '../domain/versioning.js';
-import { assertSkillPolicyOk } from './skills.js';
+import { SKILL_POLICY_HINT, skillPolicyViolation } from './skills.js';
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEFAULTS_DIR = join(PACKAGE_ROOT, 'defaults');
@@ -17,9 +17,11 @@ const DIRS = [
   'knowledge/evidence',
   'knowledge/facts',
   'knowledge/results',
+  'knowledge/candidates',
   'research/questions',
   'research/hypotheses',
   'research/methods',
+  'research/searches',
   'decisions',
   'data',
   'analysis',
@@ -93,9 +95,11 @@ async function copyDirInto(srcDir, destRel, store, created, updated, skipped) {
 // (see copyDirInto for the created/updated/skipped classification) and this silently
 // does nothing when srcDir doesn't exist.
 //
-// Every skill under srcDir is validated (contract, and network permission against `policy`)
-// before anything is copied - a corrupt or over-privileged skill in the source tree must not
-// leave a half-populated `.phdude/skills/`. `discoverSkills` is injected (see
+// Every skill under srcDir is loaded and validated before anything is copied - a corrupt skill
+// in the source tree must not leave a half-populated `.phdude/skills/`. A skill whose declared
+// network permission the workspace policy has not opened is *withheld* rather than refused:
+// `init` on a default workspace must still succeed, and simply not install the skill that
+// wanted more than the policy grants. `discoverSkills` is injected (see
 // adapters/skills/loader.js) so this application module never imports an adapter directly.
 export async function copySkills(
   store,
@@ -106,17 +110,26 @@ export async function copySkills(
   { policy, discoverSkills } = {},
 ) {
   const skills = await discoverSkills([{ dir: srcDir, source: 'core' }]);
-  for (const skill of skills) assertSkillPolicyOk(skill, policy);
+  const withheld = [];
+  for (const skill of skills) {
+    const reason = skillPolicyViolation(skill, policy);
+    if (reason) withheld.push({ name: skill.name, reason, hint: SKILL_POLICY_HINT });
+  }
+  const withheldNames = new Set(withheld.map((entry) => entry.name));
+  const installed = skills
+    .filter((skill) => !withheldNames.has(skill.name))
+    .map((skill) => skill.name);
 
   let entries;
   try {
     entries = await readdir(srcDir, { withFileTypes: true });
   } catch (err) {
-    if (err.code === 'ENOENT') return;
+    if (err.code === 'ENOENT') return { withheld, installed };
     throw err;
   }
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
+    if (withheldNames.has(entry.name)) continue;
     await copyDirInto(
       join(srcDir, entry.name),
       join('.phdude', 'skills', entry.name),
@@ -126,10 +139,12 @@ export async function copySkills(
       skipped,
     );
   }
+  return { withheld, installed };
 }
 
 /**
- * @returns {Promise<{ created: string[], updated: string[], skipped: string[], gitInitialized: boolean }>}
+ * @returns {Promise<{ created: string[], updated: string[], skipped: string[],
+ *   withheldSkills: {name: string, reason: string, hint: string}[], gitInitialized: boolean }>}
  */
 export async function initWorkspace(
   { store, git, agentHosts = [], clock, actor, discoverSkills },
@@ -203,7 +218,10 @@ export async function initWorkspace(
   }
 
   const policy = await store.readYaml(join('.phdude', 'research-policy.yaml'));
-  await copySkills(store, SKILLS_DIR, created, updated, skipped, { policy, discoverSkills });
+  const { withheld, installed } = await copySkills(store, SKILLS_DIR, created, updated, skipped, {
+    policy,
+    discoverSkills,
+  });
 
   if (agentHosts.length > 0) {
     const preExisting = await snapshotAgentHostFiles(store);
@@ -212,7 +230,12 @@ export async function initWorkspace(
     // AGENTS.md claude-code just wrote in place), so a path is never reported twice.
     const status = new Map();
     for (const host of agentHosts) {
-      const { written, skipped: hostSkipped } = await host.install(store.root, { project });
+      // The hosts are told which skills were installed, so a withheld one is neither indexed
+      // in AGENTS.md nor inlined into it: withholding a skill has to withhold its content too.
+      const { written, skipped: hostSkipped } = await host.install(store.root, {
+        project,
+        skills: installed,
+      });
       for (const rel of written) status.set(rel, 'written');
       for (const rel of hostSkipped) if (!status.has(rel)) status.set(rel, 'skipped');
     }
@@ -236,5 +259,5 @@ export async function initWorkspace(
     summary: 'workspace initialized',
   });
 
-  return { created, updated, skipped, gitInitialized };
+  return { created, updated, skipped, withheldSkills: withheld, gitInitialized };
 }

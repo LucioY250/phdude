@@ -25,6 +25,8 @@ export const SCHEMA_TYPES = [
   'hypothesis',
   'method',
   'result',
+  'candidate',
+  'search',
   'decision',
   'pack',
   'skill',

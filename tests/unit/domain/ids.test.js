@@ -33,8 +33,10 @@ test('makeSeqId and parseId', () => {
   assert.deepEqual(parseId('RQ-3'), { type: 'question', suffix: '3' });
   assert.deepEqual(parseId('CLAIM-0123456789'), { type: 'claim', suffix: '0123456789' });
   assert.deepEqual(parseId('METH-0123456789'), { type: 'method', suffix: '0123456789' });
+  assert.deepEqual(parseId('CAND-0123456789'), { type: 'candidate', suffix: '0123456789' });
+  assert.deepEqual(parseId('SEARCH-0123456789'), { type: 'search', suffix: '0123456789' });
   assert.equal(parseId('nope'), null);
-  assert.equal(Object.keys(ID_PREFIXES).length, 10);
+  assert.equal(Object.keys(ID_PREFIXES).length, 12);
 });
 
 test('stableStringify sorts keys at every depth and matches JSON.stringify semantics', () => {

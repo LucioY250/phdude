@@ -6,8 +6,11 @@ import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
 import { detectKind, parserFor, PARSERS } from '../documents/index.js';
 import { DEFAULT_PACKS_DIR, discoverPacks } from '../packs/loader.js';
+import { buildProviders } from '../search/index.js';
+import { fakeFetchFromFile } from '../search/fake-fetch.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
 import { discoverSkills, loadSkill } from '../skills/loader.js';
+import { providerNames } from '../../domain/policy.js';
 import { FsStore } from '../store/fs-store.js';
 import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
@@ -29,6 +32,7 @@ import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
 import promote from './commands/promote.js';
+import research from './commands/research.js';
 import status from './commands/status.js';
 
 const { version } = createRequire(import.meta.url)('../../../package.json');
@@ -50,8 +54,32 @@ const COMMANDS = {
   next,
   packs,
   promote,
+  research,
   status,
 };
+
+// The commands allowed to reach a search provider. Only these pay for reading the research
+// policy and building the provider list, and only these can ever hold a `fetch`.
+const NETWORK_COMMANDS = new Set(['research']);
+
+// Test-only hook: with PHDUDE_FAKE_FETCH set to a JSON routes file, every provider talks to
+// that file instead of the network. Documented under "Testing" in docs/cli.md; nothing in a
+// real run sets it.
+async function fetchFor(env) {
+  if (env.PHDUDE_FAKE_FETCH) return fakeFetchFromFile(env.PHDUDE_FAKE_FETCH);
+  return globalThis.fetch;
+}
+
+// The providers this run may call: what `--provider` asked for, else what the policy lists.
+// `mailto` is the polite contact OpenAlex and Crossref ask for, taken from the author profile
+// when the researcher recorded one (spec §3.1).
+async function searchDeps(store, cli, env, fetch) {
+  const policy = await store.readYaml(join('.phdude', 'research-policy.yaml'));
+  const profile = await store.readYaml(join('.phdude', 'author-profile.yaml'));
+  const names = cli.flags.provider ?? providerNames(policy);
+  const mailto = typeof profile?.email === 'string' && profile.email.trim() ? profile.email : null;
+  return buildProviders(names, { fetch, env, version, mailto });
+}
 
 function workspaceFor(cli, cwd) {
   if (cli.flags.workspace) return resolve(cwd, cli.flags.workspace);
@@ -87,9 +115,16 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     skillsDir: DEFAULT_SKILLS_DIR,
     clock: () => new Date().toISOString(),
     actor,
+    env,
+    fetch: globalThis.fetch,
     schemaTypes: SCHEMA_TYPES,
     node: process.version,
   };
+
+  if (NETWORK_COMMANDS.has(cli.command)) {
+    deps.fetch = await fetchFor(env);
+    deps.providers = await searchDeps(store, cli, env, deps.fetch);
+  }
 
   return { ...cli, deps, workspace, cwd, env, stdout, stderr };
 }

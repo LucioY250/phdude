@@ -13,9 +13,11 @@ const ENTITY_DIRS = {
   evidence: join('knowledge', 'evidence'),
   fact: join('knowledge', 'facts'),
   result: join('knowledge', 'results'),
+  candidate: join('knowledge', 'candidates'),
   question: join('research', 'questions'),
   hypothesis: join('research', 'hypotheses'),
   method: join('research', 'methods'),
+  search: join('research', 'searches'),
   decision: 'decisions',
 };
 

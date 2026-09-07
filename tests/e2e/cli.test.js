@@ -12,12 +12,12 @@ const FIXTURES_DIR = join(REPO_ROOT, 'tests', 'fixtures', 'docs');
 const V01_WORKSPACE = join(REPO_ROOT, 'tests', 'fixtures', 'workspaces', 'v0.1-minimal');
 const ACTOR = ['--actor', 'researcher=tester,agent=e2e'];
 
-function phdude(cwd, args) {
+function phdude(cwd, args, env) {
   return new Promise((resolve) => {
     execFile(
       process.execPath,
       [BIN, ...args],
-      { cwd, maxBuffer: 32 * 1024 * 1024 },
+      { cwd, maxBuffer: 32 * 1024 * 1024, env: env ? { ...process.env, ...env } : process.env },
       (err, stdout, stderr) => {
         resolve({ code: err ? (err.code ?? 1) : 0, stdout, stderr });
       },
@@ -25,14 +25,14 @@ function phdude(cwd, args) {
   });
 }
 
-async function run(cwd, args) {
-  const result = await phdude(cwd, [...args, ...ACTOR]);
+async function run(cwd, args, env) {
+  const result = await phdude(cwd, [...args, ...ACTOR], env);
   assert.equal(result.code, 0, `phdude ${args.join(' ')} failed:\n${result.stderr}`);
   return result;
 }
 
-async function runJson(cwd, args) {
-  const { stdout } = await run(cwd, [...args, '--json']);
+async function runJson(cwd, args, env) {
+  const { stdout } = await run(cwd, [...args, '--json'], env);
   return JSON.parse(stdout);
 }
 
@@ -1091,4 +1091,134 @@ test('e2e: matrix (md/csv/--question) and gaps (text/--json) shapes', async (t) 
   assert.match(gapsText.stdout, /HIGH \(\d+\):/);
   assert.match(gapsText.stdout, /MEDIUM \(\d+\):/);
   assert.match(gapsText.stdout, /LOW \(\d+\):/);
+});
+
+test('e2e: research refuses without network, then searches, records and lists candidates', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-research-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  const init = await run(ws, ['init', '--title', 'Research engine', '--no-git']);
+
+  // The research skill declares network access, which the default policy does not grant: init
+  // says so by name and still succeeds.
+  assert.match(init.stdout, /skill research was not installed/);
+  assert.match(init.stdout, /set skills\.allow_network: true/);
+  assert.equal(await exists(join(ws, '.phdude', 'skills', 'research', 'SKILL.md')), false);
+  assert.equal(await exists(join(ws, '.claude', 'commands', 'phdude-research.md')), true);
+  assert.ok(await exists(join(ws, 'knowledge', 'candidates')), 'init creates knowledge/candidates');
+  assert.ok(await exists(join(ws, 'research', 'searches')), 'init creates research/searches');
+
+  const routes = join(REPO_ROOT, 'tests', 'fixtures', 'search', 'e2e-routes.json');
+  const env = { PHDUDE_FAKE_FETCH: routes };
+
+  // Closed by default: the refusal names the two ways to open it, and exits 3.
+  const refused = await phdude(ws, ['research', 'open science', '--json', ...ACTOR], env);
+  assert.equal(refused.code, 3);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'POLICY');
+  assert.equal(refusal.message, 'network access is disabled');
+  assert.match(refusal.hint, /--allow-network/);
+
+  const question = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'How do open science practices spread?' }),
+  ]);
+
+  const searched = await runJson(
+    ws,
+    ['research', 'open science', '--question', question.id, '--allow-network'],
+    env,
+  );
+
+  assert.deepEqual(searched.warnings, []);
+  assert.equal(searched.candidates.created.length, 4, 'three providers, four distinct works');
+  assert.deepEqual(searched.candidates.existing, []);
+  assert.deepEqual(searched.search.providers, ['openalex', 'crossref', 'arxiv']);
+  assert.equal(searched.search.question, question.id);
+  assert.deepEqual(
+    searched.search.runs.map((r) => [r.provider, r.count, r.new]),
+    [
+      ['openalex', 3, 3],
+      ['crossref', 3, 0],
+      ['arxiv', 2, 1],
+    ],
+    'crossref returned only works openalex already had; arxiv added one of its own',
+  );
+  for (const candidate of searched.results) {
+    assert.equal(candidate.question, question.id);
+    assert.ok(candidate.providers.includes(candidate.provider));
+    assert.equal(typeof candidate.score_parts.rank, 'number');
+  }
+  const shared = searched.results.find((c) => c.title.startsWith('A Preprint on'));
+  assert.deepEqual(
+    shared.providers,
+    ['openalex', 'crossref', 'arxiv'],
+    'all three providers returned the same preprint, and it is one candidate',
+  );
+  const preprint = searched.results.find((c) => c.type === 'preprint');
+  assert.equal(preprint.needs_approval, true, 'the policy requires approval for preprints');
+
+  // One event per provider call, carrying the query and a count, never a result.
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'search');
+  assert.deepEqual(
+    events.map((e) => e.summary),
+    [
+      'openalex: "open science" → 3 results',
+      'crossref: "open science" → 3 results',
+      'arxiv: "open science" → 2 results',
+    ],
+  );
+  assert.deepEqual(events[0].ids, [searched.search.id]);
+
+  // A second run of the same query adds nothing and extends the same search record.
+  const again = await runJson(
+    ws,
+    ['research', 'open science', '--question', question.id, '--allow-network'],
+    env,
+  );
+  assert.deepEqual(again.candidates.created, []);
+  assert.equal(again.candidates.existing.length, 4);
+  assert.equal(again.search.id, searched.search.id);
+  assert.equal(again.search.runs.length, 6);
+
+  const listed = await runJson(ws, ['research', 'list', '--state', 'candidate']);
+  assert.equal(listed.length, 4);
+  const shown = await runJson(ws, ['research', 'show', listed[0].id]);
+  assert.equal(shown.id, listed[0].id);
+  assert.equal(shown.schema, 'phdude.candidate');
+
+  const text = await run(ws, ['research', 'list']);
+  assert.match(text.stdout, /4 candidate\(s\)/);
+  assert.match(text.stdout, /\[needs approval\]/);
+
+  // Narrowing to one provider only calls that one.
+  const narrowed = await runJson(
+    ws,
+    ['research', 'reproducible pipelines', '--provider', 'crossref', '--allow-network'],
+    env,
+  );
+  assert.deepEqual(narrowed.search.providers, ['crossref']);
+
+  // Opening the policy installs the research skill on the next init.
+  const policyPath = join(ws, '.phdude', 'research-policy.yaml');
+  await writeFile(
+    policyPath,
+    (await readFile(policyPath, 'utf8'))
+      .replace('allow_network: false', 'allow_network: true')
+      .replace('enabled: false', 'enabled: true'),
+  );
+  const reinit = await run(ws, ['init', '--title', 'Research engine', '--no-git']);
+  assert.doesNotMatch(reinit.stdout, /was not installed/);
+  assert.equal(await exists(join(ws, '.phdude', 'skills', 'research', 'SKILL.md')), true);
+
+  // With the policy open, no flag is needed.
+  const open = await runJson(ws, ['research', 'measurement error'], env);
+  assert.equal(open.candidates.created.length, 0, 'the same works are already recorded');
+  assert.equal(open.candidates.existing.length, 4);
 });
