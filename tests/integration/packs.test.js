@@ -151,6 +151,27 @@ test('apply adds a field pack to the fields list', async () => {
   assert.ok(result.project.fields.includes('computer-science'));
 });
 
+test('apply raises VALIDATION when the project already lists the pack under the wrong collection', async () => {
+  const { deps } = await newWorkspace();
+  const project = await deps.store.readProject();
+  await deps.store.writeProject({ ...project, fields: ['quantitative'] });
+
+  await assert.rejects(
+    () => apply(deps, 'quantitative'),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'VALIDATION');
+      assert.match(err.message, /quantitative is listed under fields.*method pack/);
+      return true;
+    },
+  );
+
+  const onDisk = await deps.store.readProject();
+  assert.deepEqual(onDisk.methods, []);
+  const events = await deps.store.readEvents();
+  assert.equal(events.filter((e) => e.op === 'packs').length, 0);
+});
+
 test('apply of an unknown pack raises USAGE', async () => {
   const { deps } = await newWorkspace();
   await assert.rejects(

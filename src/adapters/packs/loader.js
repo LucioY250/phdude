@@ -1,5 +1,5 @@
 import { readFile, readdir, stat } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'yaml';
 import { assertValid } from '../../schemas/index.js';
@@ -31,7 +31,14 @@ export async function loadPack(dir) {
 
   const skillPaths = [];
   for (const rel of pack.skills) {
-    const abs = join(dir, rel);
+    const abs = resolve(dir, rel);
+    const relBack = relative(dir, abs);
+    if (isAbsolute(rel) || relBack === '' || relBack.startsWith('..') || isAbsolute(relBack)) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `pack ${pack.name}: skill path escapes the pack directory: ${rel}`,
+      );
+    }
     if (!(await exists(abs))) {
       throw new PhdudeError('VALIDATION', `pack ${pack.name}: missing skill file ${rel}`);
     }

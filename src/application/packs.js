@@ -73,6 +73,14 @@ export async function apply({ store, loadPacks, clock, actor }, name) {
 
   const project = await store.readProject();
   const field = FIELD_BY_KIND[pack.kind];
+  const otherField = field === 'fields' ? 'methods' : 'fields';
+  if (project[otherField].includes(name)) {
+    throw new PhdudeError(
+      'VALIDATION',
+      `${name} is listed under ${otherField} in phdude.yaml but is a ${pack.kind} pack`,
+      'fix phdude.yaml',
+    );
+  }
   if (project[field].includes(name)) return { applied: false };
 
   const updated = { ...project, [field]: [...project[field], name] };
