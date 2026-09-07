@@ -3,6 +3,7 @@ import { assignBibkeys } from '../domain/bibkey.js';
 import { DEFAULT_BUDGET_CHARS, assembleContext } from '../domain/context-budget.js';
 import { PhdudeError } from '../domain/errors.js';
 import { SECTION_ID_RE, voiceIdFor } from '../domain/manuscript.js';
+import { assertUpToDate } from './guard.js';
 import { loadSnapshot } from './snapshot.js';
 
 // `phdude write` (spec §3.3) assembles what an agent needs to draft one section and hands it
@@ -51,6 +52,7 @@ function parseBudget(budget) {
  */
 export async function write({ store, clock }, { section, voice, budget } = {}) {
   const snapshot = await loadSnapshot(store, clock);
+  assertUpToDate(snapshot.project);
 
   if (snapshot.manuscript === null) {
     throw new PhdudeError(

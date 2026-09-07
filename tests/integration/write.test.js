@@ -136,6 +136,34 @@ test('write refuses an unknown section, a bad budget and a bad voice id', async 
   );
 });
 
+test('write refuses an un-migrated workspace before it writes its cache', async () => {
+  const { deps } = await workspace();
+  await deps.store.writeProject({
+    schema: 'phdude.project',
+    version: 1,
+    workspace_version: 1,
+    title: 'Outdated',
+    fields: [],
+    methods: [],
+    outputs: [],
+    mode: 'full',
+    agents: [],
+  });
+
+  await assert.rejects(() => write(deps, { section: 'introduction' }), {
+    code: 'USAGE',
+    message: 'workspace needs migration (1 \u2192 2)',
+    hint: 'run phdude migrate',
+  });
+  assert.equal(
+    await readFile(
+      join(deps.store.root, '.phdude', 'cache', 'writing', 'introduction', 'context.md'),
+      'utf8',
+    ).catch(() => null),
+    null,
+  );
+});
+
 test('a draft whose verb outruns its claim is blocked, and writes no section file', async () => {
   const { deps, claim } = await workspace();
   const path = await file(
