@@ -32,6 +32,8 @@
     "docs/extending.md",
     "docs/adr",
     "docs/assets",
+    "!docs/assets/diagrams/*.excalidraw",
+    "!docs/assets/fonts",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
