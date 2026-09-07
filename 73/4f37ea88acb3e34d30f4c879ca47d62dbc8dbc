@@ -1,0 +1,80 @@
+src/application/authors.js
+  s_946fc7502759d8::t_57d104a02337dc 265-275,282-291,293
+  s_946fc7502759d8::t_5c6596f66f1f10 235-242
+  s_946fc7502759d8::t_5dcd2de0f8469e 292,300,303
+src/domain/manuscript.js
+  s_946fc7502759d8::t_b2a82dae576e6b 124-135
+  s_946fc7502759d8::t_f6dcff3bea9e15 123
+src/domain/gates/voice.js
+  s_946fc7502759d8::t_44306deba8f0a2 1-13,17-54,58-85
+  s_946fc7502759d8::t_cf8c3f98d90e55 86
+src/domain/voice.js
+  s_946fc7502759d8::t_07d6a934a3bf9b 388-397,399
+  s_946fc7502759d8::t_706d846709fa81 3-7,9,11-112,115-122,131-132,134-139,143,147-154,171-172,174-181,274-280,282-283,288-370,376-385,400,402-416
+tests/unit/domain/gates/voice.test.js
+  s_946fc7502759d8::t_cf30ad559f05d5 1-181
+docs/cli.md
+  s_946fc7502759d8::t_c8fd1334e4f437 822,891-896
+docs/workspace.md
+  s_946fc7502759d8::t_8f4db3c03d26b1 195-198
+examples/generic-thesis/.phdude/skills/academic-prose/SKILL.md
+  s_946fc7502759d8::t_6fa962828dc782 99-100
+examples/generic-thesis/.phdude/skills/academic-prose/references/voice-matching.md
+  s_946fc7502759d8::t_b3acb638f4181d 48-52
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_ae88738e706387 57,66-71
+examples/generic-thesis/authors/researcher-a.yaml
+  s_946fc7502759d8::t_40ed3bbf17c010 28-30,32-34,43
+skills/academic-prose/SKILL.md
+  s_946fc7502759d8::t_f18c9db89f14f7 99-100
+skills/academic-prose/references/voice-matching.md
+  s_946fc7502759d8::t_ea23dfd552db4d 48-52
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_26460e665dc68c 57,66-71
+src/application/deslop.js
+  s_946fc7502759d8::t_8acd7678a8a94f 84
+src/application/manuscript.js
+  s_946fc7502759d8::t_5ae09a1b458154 1,13,72-74,101-104,116
+src/application/prose.js
+  s_946fc7502759d8::t_50a1a77eb06a5c 87
+src/application/write.js
+  s_946fc7502759d8::t_d6c3aa31c5eaf4 5,73
+src/domain/gates/markers.js
+  s_946fc7502759d8::t_888c734ce17cda 15-18,21-43,46-68
+src/domain/gates/meaning.js
+  s_946fc7502759d8::t_4939ca18fa28b1 7,13,53-71,90
+src/domain/prose-lint.js
+  s_946fc7502759d8::t_5a24992d194662 12,83,309,338,343,441
+tests/integration/authors.test.js
+  s_946fc7502759d8::t_050e77ccd61454 210-278
+tests/integration/write.test.js
+  s_946fc7502759d8::t_8220ecbabf7768 8,306,316-383
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_9302a65aa8bba4 121-124
+tests/unit/domain/gates/evidence.test.js
+  s_946fc7502759d8::t_bbccc254799ddb 87-115
+tests/unit/domain/gates/meaning.test.js
+  s_946fc7502759d8::t_13b64d727f3186 73-109
+tests/unit/domain/gates/pipeline.test.js
+  s_946fc7502759d8::t_6f68c911cc40ea 83-87
+tests/unit/domain/textstats.test.js
+  s_946fc7502759d8::t_42005280f40597 47-51
+tests/unit/domain/voice.test.js
+  s_946fc7502759d8::t_1568a6b59da27d 3-9,12-14,30-31,33,36-37,49,63-67,69-70,239,241-245,251-252,262-267,269,271-274,281-291,294-298,304-305,324,328-399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "734f37ea88acb3e34d30f4c879ca47d62dbc8dbc",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
