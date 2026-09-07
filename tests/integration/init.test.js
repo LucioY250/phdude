@@ -205,29 +205,125 @@ test('copySkills validates every skill before copying and copies nothing when on
   assert.equal(await store.exists(join('.phdude', 'skills', 'good', 'SKILL.md')), false);
 });
 
-test('copySkills refuses a skill that requests network access unless the policy allows it', async () => {
+test('copySkills withholds a networked skill unless the policy allows it, and installs the rest', async () => {
   const root = await mkdtemp(join(tmpdir(), 'phdude-'));
   const store = new FsStore(root);
   const srcDir = await mkdtemp(join(tmpdir(), 'phdude-skills-src-'));
   await writeSkillFile(join(srcDir, 'networked'), 'networked', {
     permissions: 'network: allowed\n    workspace: [read]',
   });
-
-  await assert.rejects(
-    () => copySkills(store, srcDir, [], [], [], { policy: null, discoverSkills }),
-    (err) => {
-      assert.ok(err instanceof PhdudeError);
-      assert.equal(err.code, 'POLICY');
-      assert.equal(err.message, 'skill networked requests network access');
-      return true;
-    },
-  );
-  assert.equal(await store.exists(join('.phdude', 'skills', 'networked', 'SKILL.md')), false);
+  await writeSkillFile(join(srcDir, 'quiet'), 'quiet');
 
   const created = [];
-  await copySkills(store, srcDir, created, [], [], {
+  const result = await copySkills(store, srcDir, created, [], [], {
+    policy: null,
+    discoverSkills,
+  });
+
+  assert.deepEqual(result.withheld, [
+    {
+      name: 'networked',
+      reason: 'skill networked requests network access',
+      hint: 'set skills.allow_network: true in .phdude/research-policy.yaml',
+    },
+  ]);
+  assert.deepEqual(result.installed, ['quiet']);
+  assert.equal(await store.exists(join('.phdude', 'skills', 'networked', 'SKILL.md')), false);
+  assert.ok(
+    created.includes(join('.phdude', 'skills', 'quiet', 'SKILL.md')),
+    'the other skills are still installed',
+  );
+
+  const allowed = [];
+  const second = await copySkills(store, srcDir, allowed, [], [], {
     policy: { skills: { allow_network: true } },
     discoverSkills,
   });
-  assert.ok(created.includes(join('.phdude', 'skills', 'networked', 'SKILL.md')));
+  assert.deepEqual(second.withheld, []);
+  assert.ok(allowed.includes(join('.phdude', 'skills', 'networked', 'SKILL.md')));
+});
+
+test('init installs every skill but the networked one, and says which it withheld', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  const result = await initWorkspace(
+    { ...deps(root), store, agentHosts: [claudeCodeHost, codexHost] },
+    { title: 'A default workspace', noGit: true },
+  );
+
+  assert.deepEqual(
+    result.withheldSkills.map((entry) => entry.name),
+    ['research'],
+    'the default policy leaves skills.allow_network false',
+  );
+  assert.equal(await store.exists(join('.phdude', 'skills', 'research', 'SKILL.md')), false);
+  assert.equal(await store.exists(join('.phdude', 'skills', 'literature', 'SKILL.md')), true);
+
+  // A withheld skill is withheld from the agent-facing files too, or the agent goes looking
+  // for a SKILL.md that was deliberately not installed.
+  const agentsMd = await store.readText('AGENTS.md');
+  assert.ok(agentsMd.includes('**literature**'));
+  assert.ok(!agentsMd.includes('**research**'));
+
+  // The slash command is still installed: the CLI command exists whatever the skill policy
+  // says, and it enforces `network.enabled` on its own.
+  assert.equal(await store.exists(join('.claude', 'commands', 'phdude-research.md')), true);
+});
+
+test('init installs the research skill once the policy allows network skills', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  const hostDeps = { ...deps(root), store, agentHosts: [codexHost] };
+  await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
+
+  const policyPath = join('.phdude', 'research-policy.yaml');
+  const policy = await store.readText(policyPath);
+  await store.writeTextAtomic(
+    policyPath,
+    policy.replace('allow_network: false', 'allow_network: true'),
+  );
+
+  const result = await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
+  assert.deepEqual(result.withheldSkills, []);
+  assert.equal(await store.exists(join('.phdude', 'skills', 'research', 'SKILL.md')), true);
+});
+
+test('init takes an installed skill back off disk when the policy closes again', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  const hostDeps = { ...deps(root), store, agentHosts: [codexHost] };
+  const policyPath = join('.phdude', 'research-policy.yaml');
+  const skillPath = join('.phdude', 'skills', 'research', 'SKILL.md');
+
+  await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
+  await store.writeTextAtomic(
+    policyPath,
+    (await store.readText(policyPath)).replace('allow_network: false', 'allow_network: true'),
+  );
+  const opened = await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
+  assert.deepEqual(opened.removed, []);
+  assert.equal(await store.exists(skillPath), true);
+
+  // Withdrawing the permission has to withdraw the skill: de-indexing it from AGENTS.md alone
+  // would leave the file for anything that reads `.phdude/skills/` directly.
+  await store.writeTextAtomic(
+    policyPath,
+    (await store.readText(policyPath)).replace('allow_network: true', 'allow_network: false'),
+  );
+  const closed = await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
+
+  assert.deepEqual(closed.removed, [join('.phdude', 'skills', 'research')]);
+  assert.equal(await store.exists(skillPath), false);
+  assert.equal(await store.exists(join('.phdude', 'skills', 'research')), false);
+  assert.deepEqual(
+    closed.withheldSkills.map((entry) => entry.name),
+    ['research'],
+  );
+
+  // Every other skill is untouched, and a third run has nothing left to remove.
+  assert.equal(await store.exists(join('.phdude', 'skills', 'phdude-core', 'SKILL.md')), true);
+  assert.deepEqual(
+    (await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true })).removed,
+    [],
+  );
 });

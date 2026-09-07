@@ -68,7 +68,10 @@ export async function writeManagedFile(root, rel, content) {
   return { rel, status: 'written' };
 }
 
-async function listSkillNames(skillsDir) {
+// `only` is the list of skills actually installed in this workspace. A skill the research
+// policy withheld (a network skill without `skills.allow_network`) must not be indexed here or
+// inlined below either: withholding a skill has to withhold its content, not just its file.
+async function listSkillNames(skillsDir, only) {
   let entries;
   try {
     entries = await readdir(skillsDir, { withFileTypes: true });
@@ -76,10 +79,11 @@ async function listSkillNames(skillsDir) {
     if (err.code === 'ENOENT') return [];
     throw err;
   }
-  return entries
+  const names = entries
     .filter((e) => e.isDirectory())
     .map((e) => e.name)
     .sort();
+  return Array.isArray(only) ? names.filter((name) => only.includes(name)) : names;
 }
 
 async function readSkill(skillsDir, name) {
@@ -117,6 +121,22 @@ export const COMMAND_ROWS = [
     'cite list|check|export',
     'Citation registry: list sources, verify them, export BibTeX/CSL-JSON.',
   ],
+  [
+    'research "<query>"|list|show|accept|dismiss',
+    'Search the literature through the configured providers and record the candidates; the researcher accepts them, never you.',
+  ],
+  [
+    'research-fresh',
+    'Re-run the recorded searches that have gone stale, and report only what is new.',
+  ],
+  [
+    'freshness',
+    'Report the last search per research question, the age of every source, and what is stale.',
+  ],
+  [
+    "edit <id> --json '<fields>'",
+    'Correct the non-identity fields of a non-canonical object; identity fields are never editable.',
+  ],
   ['matrix', 'Literature matrix: one row per source, with the questions and claims it reaches.'],
   [
     'gaps',
@@ -140,13 +160,16 @@ function renderCommandTable() {
 // `inlineSkills: true` (codex, which has no on-demand skill loading) inlines each skill's full
 // body under `## Skill: <name>`. `inlineSkills: false` (Claude Code, which loads
 // `.phdude/skills/<name>/SKILL.md` progressively) instead emits a one-line index per skill, so
-// the file Claude Code auto-loads every session stays small (PRD S41b, S70).
+// the file Claude Code auto-loads every session stays small (PRD S41b, S70). `skills`, when
+// given, is the list of skill names actually installed; anything else under `skillsDir` is left
+// out of both forms.
 export async function renderAgentsMd({
   project,
   skillsDir = DEFAULT_SKILLS_DIR,
   inlineSkills = true,
+  skills,
 }) {
-  const names = await listSkillNames(skillsDir);
+  const names = await listSkillNames(skillsDir, skills);
   const core = names.includes('phdude-core')
     ? await readSkill(skillsDir, 'phdude-core')
     : { meta: {}, body: '' };

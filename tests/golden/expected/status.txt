@@ -11,7 +11,7 @@ Inventory:
   Unknown role: 4
 
 Knowledge:
-  source: total=4 (candidate=4)
+  source: total=5 (candidate=5)
   claim: total=7 (candidate=4, disputed=2, supported=1)
   evidence: total=5 (candidate=5)
   fact: total=4 (candidate=4)
@@ -19,6 +19,11 @@ Knowledge:
   question: total=3 (candidate=3)
   hypothesis: total=1 (candidate=1)
   method: total=1 (candidate=1)
+
+Literature:
+  Candidates: total=2 (accepted=1, candidate=1)
+  Searches: 1
+  Questions with a stale or missing search: 3 of 3
 
 Conflicts (1 open of 1 total):
   - sample_size: 312 participants (FACT-2bc4462edb from ART-35146e2f6d) vs 312 participants (FACT-54af7fa906 from ART-0772a215de) vs 300 participants (FACT-f62e1a2f34 from ART-f7ced78004) [open]
@@ -32,6 +37,6 @@ Pending decisions (1):
 Recent events:
   add: fact added
   add: fact added
-  add: fact added
-  add: fact added
+  search: openalex: "note-taking app adoption undergraduates" → 2 results
+  research: accepted CAND-25723d177d as SRC-70ee4dce27
   decide: decision proposed

@@ -1,12 +1,13 @@
 import { dirname, join } from 'node:path';
 import { PhdudeError } from '../domain/errors.js';
 
-const POLICY_HINT = 'set skills.allow_network: true in .phdude/research-policy.yaml';
+export const SKILL_POLICY_HINT = 'set skills.allow_network: true in .phdude/research-policy.yaml';
 
 /**
  * Whether a skill's declared network permission is at odds with the workspace policy. A skill
  * without that permission, or a missing/absent policy that defaults closed, is never a
- * violation. `packs apply` and `init` turn this into a refusal; `doctor` only reports it.
+ * violation. `packs apply` turns this into a refusal; `init` withholds the skill and `doctor`
+ * only reports it.
  * @param {{name: string, contract: object}} skill
  * @param {object|null} policy - the parsed `.phdude/research-policy.yaml`
  * @returns {string|null} the message, or null when there is nothing to report
@@ -26,7 +27,7 @@ export function skillPolicyViolation(skill, policy) {
  */
 export function assertSkillPolicyOk(skill, policy) {
   const message = skillPolicyViolation(skill, policy);
-  if (message) throw new PhdudeError('POLICY', message, POLICY_HINT);
+  if (message) throw new PhdudeError('POLICY', message, SKILL_POLICY_HINT);
 }
 
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
@@ -67,13 +68,21 @@ export async function listSkills({ store, loadPacks, discoverSkills, skillsDir }
 
   roots.push({ dir: join(store.root, '.phdude', 'skills'), source: 'workspace' });
 
-  const policy = await store.readYaml(POLICY_PATH);
+  // A policy this cannot parse reads as closed, like a missing one. Its own caller, `doctor`,
+  // reads the same file and reports that it is unreadable, so raising here would only turn one
+  // clear line into an unrelated "skills could not be loaded".
+  let policy = null;
+  try {
+    policy = await store.readYaml(POLICY_PATH);
+  } catch {
+    policy = null;
+  }
   const skills = await discoverSkills(roots, { onError });
 
   return {
     skills: skills.map((skill) => {
       const violation = skillPolicyViolation(skill, policy);
-      if (violation) warnings.push(`${violation}; ${POLICY_HINT}`);
+      if (violation) warnings.push(`${violation}; ${SKILL_POLICY_HINT}`);
       return {
         name: skill.name,
         // `init` copies the shipped skills into `.phdude/skills/`, so discovery finds every core

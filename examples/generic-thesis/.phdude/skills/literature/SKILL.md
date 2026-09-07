@@ -47,8 +47,8 @@ finding kind must be resolved first (the command exits 2 while any of them remai
 | Finding kind | What it means | How to fix it |
 | --- | --- | --- |
 | `evidence-missing-source` | An evidence item's `source` id does not exist. | Find the right id with `phdude knowledge list`, then add a corrected evidence item citing it — an evidence item's `source` cannot be edited in place. |
-| `invalid-doi` | A DOI does not match `^10\.\d{4,9}/\S+$`. | Correct the DOI (`identifiers.doi` or `doi`) on a re-added source, or drop it if it was never a real DOI. |
-| `missing-field` | A source is missing `title`, `authors`, or `year`. | Add a corrected source with the field set (see above) — a source's id is derived from `title` and `year`, so correcting either mints a new record. |
+| `invalid-doi` | A DOI does not match `^10\.\d{4,9}/\S+$`. | A DOI is not part of a source's identity, so correct it in place: `phdude edit SRC-… --json '{"identifiers":{"doi":"10.…"}}'`, or drop it if it was never a real DOI. |
+| `missing-field` | A source is missing `title`, `authors`, or `year`. | `authors` is editable in place (`phdude edit SRC-… --json '{"authors":["…"]}'`). `title` and `year` are the source's identity, so correcting either means adding a corrected source and leaving the original as the history of what was believed. |
 | `duplicate-source` | Two or more sources share the same normalized `title` + `year`. | Confirm with the researcher which one is canonical, then stop citing the other; do not silently pick one yourself. |
 | `duplicate-bibkey` | Two or more sources declare the same explicit `bibkey`. | Give each a distinct `bibkey`, or drop the explicit one so it is derived instead. |
 
@@ -96,10 +96,40 @@ high → medium → low. Work it in that order:
 4. An `uncited-source` or `artifact-unmined` gap is often fine to leave open for a while (low
    severity) — note it, do not treat it as urgent.
 
-### Reporting to the researcher
+## Freshness
 
-Report the matrix and the gaps together, in 10 lines or fewer: how many sources are recorded and
-how many are actually used in a claim, the top 1-2 high-severity gaps with their `why`, and the
-one action you recommend next (usually the top gap's `command`, or `phdude next` if something
-else outranks it). Skip anything the researcher did not ask about — this is a status update, not
-the full report.
+```
+phdude freshness --json
+```
+
+Read-only, and it never touches the network. Returns `{ questions, sources, summary }`: per
+research question the last search, `daysAgo`, whether the policy calls that `stale`, and how
+many searches it has; per source its `year` and `age` in years; then the counts.
+
+Read it as two different problems, not one number:
+
+1. **`lastSearch: null` — never searched.** There is no literature behind that question at all.
+   This is the more urgent case, not the exempt one. The fix is a first search
+   (`phdude research "…" --question RQ-n`), which needs the network policy open — report that
+   and ask, do not pass `--allow-network` yourself (`[[phdude-core]]`).
+2. **`stale: true` with a date — the search has aged out.** The fix is
+   `phdude research-fresh --question RQ-n`, which re-runs it exactly as it ran before and
+   reports only what is new. See `[[research]]`.
+
+The same two show up in `phdude gaps` as the kinds `question-never-searched` and `stale-search`,
+and in `phdude next` as the `stale-search` rule. `stale-search` is low severity.
+`question-never-searched` is medium while the policy has the network open and low while it is
+closed — a workspace that closed the network has decided where its literature comes from, and
+both reports then recommend opening the policy first rather than a command that would refuse.
+
+Source `age` is context, not a verdict: a 2019 paper is not stale because it is old, it is the
+foundational reference for half the field. Report the median and the oldest so the researcher
+can see the shape of the bibliography, and never recommend dropping a source on age alone.
+
+## Reporting to the researcher
+
+Report the matrix, the gaps and the freshness together, in 10 lines or fewer: how many sources
+are recorded and how many are actually used in a claim, the top 1-2 high-severity gaps with
+their `why`, any question with no literature behind it at all, and the one action you recommend
+next (usually the top gap's `command`, or `phdude next` if something else outranks it). Skip
+anything the researcher did not ask about — this is a status update, not the full report.

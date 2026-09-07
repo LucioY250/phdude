@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "count": 3,
+    "db_response_time_ms": 41,
+    "page": 1,
+    "per_page": 3
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W3138516171",
+      "doi": "https://doi.org/10.1109/ICCV48922.2021.00986",
+      "title": "Open Science Practices in Applied Research",
+      "display_name": "Open Science Practices in Applied Research",
+      "publication_year": 2021,
+      "publication_date": "2021-10-01",
+      "language": "en",
+      "type": "article",
+      "primary_location": {
+        "is_oa": true,
+        "landing_page_url": "https://example.org/articles/open-science-practices",
+        "pdf_url": null,
+        "source": {
+          "id": "https://openalex.org/S4363607764",
+          "display_name": "Journal of Research Practice",
+          "type": "journal"
+        },
+        "version": "publishedVersion"
+      },
+      "open_access": {
+        "is_oa": true,
+        "oa_status": "gold",
+        "oa_url": "https://example.org/articles/open-science-practices.pdf"
+      },
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5100349451",
+            "display_name": "Ada Lovelace",
+            "orcid": "https://orcid.org/0000-0001-8512-5408"
+          },
+          "institutions": []
+        },
+        {
+          "author_position": "last",
+          "author": {
+            "id": "https://openalex.org/A5102798361",
+            "display_name": "Charles Babbage",
+            "orcid": null
+          },
+          "institutions": []
+        }
+      ],
+      "cited_by_count": 128,
+      "abstract_inverted_index": {
+        "Open": [0],
+        "science": [1],
+        "practices": [2],
+        "are": [3],
+        "spreading": [4],
+        "across": [5],
+        "applied": [6],
+        "fields.": [7]
+      },
+      "is_retracted": false,
+      "updated_date": "2026-01-14T08:12:03.412881"
+    },
+    {
+      "id": "https://openalex.org/W4200491214",
+      "doi": null,
+      "title": "A Preprint on Reproducible Pipelines",
+      "display_name": "A Preprint on Reproducible Pipelines",
+      "publication_year": 2023,
+      "publication_date": "2023-04-18",
+      "language": "en",
+      "type": "preprint",
+      "primary_location": {
+        "is_oa": true,
+        "landing_page_url": "https://arxiv.org/abs/2304.09999",
+        "pdf_url": "https://arxiv.org/pdf/2304.09999",
+        "source": {
+          "id": "https://openalex.org/S4306400194",
+          "display_name": "arXiv (Cornell University)",
+          "type": "repository"
+        },
+        "version": "submittedVersion"
+      },
+      "open_access": {
+        "is_oa": true,
+        "oa_status": "green",
+        "oa_url": "https://arxiv.org/pdf/2304.09999"
+      },
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5061234567",
+            "display_name": "Grace Hopper",
+            "orcid": null
+          },
+          "institutions": []
+        }
+      ],
+      "cited_by_count": 4,
+      "abstract_inverted_index": null,
+      "is_retracted": false,
+      "updated_date": "2026-01-11T22:40:55.101922"
+    },
+    {
+      "id": "https://openalex.org/W2998877665",
+      "doi": "https://doi.org/10.1007/978-3-030-12345-6_7",
+      "title": "Measurement Error in Survey Chapters",
+      "display_name": "Measurement Error in Survey Chapters",
+      "publication_year": 2022,
+      "publication_date": "2022-06-30",
+      "language": "en",
+      "type": "book-chapter",
+      "primary_location": {
+        "is_oa": false,
+        "landing_page_url": "https://doi.org/10.1007/978-3-030-12345-6_7",
+        "pdf_url": null,
+        "source": {
+          "id": "https://openalex.org/S1234567890",
+          "display_name": "Handbook of Survey Methods",
+          "type": "book series"
+        },
+        "version": null
+      },
+      "open_access": {
+        "is_oa": false,
+        "oa_status": "closed",
+        "oa_url": null
+      },
+      "authorships": [
+        {
+          "author_position": "first",
+          "author": {
+            "id": "https://openalex.org/A5099887766",
+            "display_name": "Rosalind Franklin",
+            "orcid": null
+          },
+          "institutions": []
+        }
+      ],
+      "cited_by_count": 0,
+      "abstract_inverted_index": null,
+      "is_retracted": false,
+      "updated_date": "2026-01-02T10:05:19.884411"
+    }
+  ]
+}

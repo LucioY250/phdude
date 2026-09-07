@@ -1,0 +1,35 @@
+schema: phdude.candidate
+version: 1
+id: CAND-25723d177d
+created: 2025-06-01T00:00:00Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+provider: openalex
+providers:
+  - openalex
+external_id: W4390110022
+title: "Note-Taking Application Adoption Among Undergraduates: A Multi-Campus Survey"
+authors:
+  - F. Zeta
+  - G. Eta
+year: 2024
+venue: Journal of Educational Technology Research
+doi: 10.1234/jetr.2024.0142
+url: https://example.org/articles/multi-campus-note-taking
+abstract: Across four campuses we compare self-reported adoption of note-taking applications and find that recruitment channel explains most of the variance between samples.
+type: article
+open_access: true
+cited_by: 37
+query: note-taking app adoption undergraduates
+question: RQ-1
+search: SEARCH-59780ad3c4
+score: 2.295
+score_parts:
+  rank: 1
+  citations: 0.395
+  recency: 0.9
+needs_approval: false
+state: accepted
+accepted_as: SRC-70ee4dce27

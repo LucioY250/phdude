@@ -3,7 +3,7 @@ import { join } from 'node:path';
 /**
  * @typedef {object} AgentHost
  * @property {string} name
- * @property {(root: string, opts: { project: object, skillsDir?: string, commandsDir?: string }) => Promise<{ written: string[], skipped: string[] }>} install
+ * @property {(root: string, opts: { project: object, skills?: string[], skillsDir?: string, commandsDir?: string }) => Promise<{ written: string[], skipped: string[] }>} install
  */
 
 /**

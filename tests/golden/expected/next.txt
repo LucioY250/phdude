@@ -15,6 +15,7 @@ phdude decide propose --title "Resolve sample_size" --rationale "…" --affects 
 Other candidates:
 1. (medium) Review the research gaps report
 2. (medium) Classify artifacts with unknown role
-3. (medium) Approve or reject pending decisions
-4. (medium) Close the evidence gap for unaddressed research questions
-5. (low) 11 open gap(s); run phdude gaps
+3. (medium) Refresh the literature behind the research questions
+4. (medium) Approve or reject pending decisions
+5. (medium) Close the evidence gap for unaddressed research questions
+6. (low) 15 open gap(s); run phdude gaps

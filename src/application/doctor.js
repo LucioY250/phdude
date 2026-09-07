@@ -1,6 +1,10 @@
+import { join } from 'node:path';
+import { networkAllowed, providerNames } from '../domain/policy.js';
 import { CURRENT_WORKSPACE_VERSION, workspaceVersionOf } from '../domain/versioning.js';
 import { migrationWarning } from './guard.js';
 import { listSkills } from './skills.js';
+
+const POLICY_PATH = join('.phdude', 'research-policy.yaml');
 
 // v0.1 stamps every canonical object at schema version 1 (design spec S5); the migration
 // system that makes this per-type is v0.2 (PRD S112).
@@ -13,6 +17,7 @@ const SCHEMA_VERSION = 1;
  *   skillsDir: string}} deps
  * @returns {Promise<{node: string, pdftotext: boolean, git: boolean, workspace: boolean,
  *   workspaceVersion: number|null, workspaceVersionCurrent: number, parsers: object,
+ *   policyError: string|null, network: boolean|null, providers: string[],
  *   schemaVersions: object, cacheEntries: number, packsAvailable: string[],
  *   skills: object[], warnings: string[]}>}
  */
@@ -59,6 +64,19 @@ export async function doctor({
     warnings.push('pdftotext is not installed; PDF text extraction is unavailable');
   }
 
+  // Reported, never exercised: doctor says what the network policy allows without making a
+  // single call. A policy it cannot read is reported as unreadable rather than answered with the
+  // built-in defaults - "what does this workspace's policy say" is the question doctor exists
+  // to answer, so presenting a fiction here is worse than presenting nothing.
+  let policy = null;
+  let policyError = null;
+  try {
+    policy = await store.readYaml(POLICY_PATH);
+  } catch (err) {
+    policyError = err.message;
+    warnings.push(`research-policy.yaml could not be read: ${err.message}`);
+  }
+
   let packsAvailable = [];
   try {
     packsAvailable = (await loadPacks()).map((p) => p.name);
@@ -85,6 +103,9 @@ export async function doctor({
     workspaceVersion,
     workspaceVersionCurrent: CURRENT_WORKSPACE_VERSION,
     parsers: parserAvailability,
+    policyError,
+    network: policyError === null ? networkAllowed(policy, {}) : null,
+    providers: policyError === null ? providerNames(policy) : [],
     schemaVersions: Object.fromEntries(schemaTypes.map((t) => [t, SCHEMA_VERSION])),
     cacheEntries: (await store.listCacheEntries()).length,
     packsAvailable,

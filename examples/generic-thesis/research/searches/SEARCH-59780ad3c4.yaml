@@ -1,0 +1,26 @@
+schema: phdude.search
+version: 1
+id: SEARCH-59780ad3c4
+created: 2025-06-01T00:00:00Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+query: note-taking app adoption undergraduates
+question: RQ-1
+providers:
+  - openalex
+filters:
+  from: 2021
+  limit: 20
+  languages:
+    - en
+    - es
+  peer_reviewed: preferred
+  preprints_require_approval: true
+runs:
+  - at: 2025-06-01T00:00:00Z
+    provider: openalex
+    count: 2
+    new: 2
+last_run: 2025-06-01T00:00:00Z

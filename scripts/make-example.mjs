@@ -14,11 +14,18 @@ import { ingest } from '../src/application/ingest.js';
 import { addEntity } from '../src/application/add.js';
 import { promote, propose } from '../src/application/decide.js';
 import { link } from '../src/application/link.js';
+import * as research from '../src/application/research.js';
+import { buildProviders } from '../src/adapters/search/index.js';
+import { fakeFetch } from '../src/adapters/search/fake-fetch.js';
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ROOT = join(PACKAGE_ROOT, 'examples', 'generic-thesis');
 
 const ACTOR = { researcher: 'example', agent: 'script' };
+
+// Only ever seen by a provider's User-Agent header, and the stubbed fetch below ignores it; a
+// fixed string keeps the generator's output independent of the package version.
+const EXAMPLE_VERSION = 'example';
 
 // A fixed clock, advancing 1s per call, so every timestamp the generator writes is stable
 // across regenerations - the whole point of this script being safe to diff or re-run in CI.
@@ -96,6 +103,95 @@ function artifactIdFor(artifacts, relPath) {
   const found = artifacts.find((a) => a.paths.includes(relPath));
   if (!found) throw new Error(`artifact not found for ${relPath}`);
   return found.id;
+}
+
+// OpenAlex ships abstracts as a word -> positions index for copyright reasons, so a stubbed
+// response has to speak the same shape the real adapter reads.
+function invertedAbstract(text) {
+  const index = {};
+  text.split(' ').forEach((word, position) => {
+    (index[word] ??= []).push(position);
+  });
+  return index;
+}
+
+// One stubbed provider response. Nothing here reaches the network: `fakeFetch` answers the
+// adapter's request from this object, which is what lets the example carry a real recorded
+// search without the generator ever being online.
+const OPENALEX_RESPONSE = {
+  results: [
+    {
+      id: 'https://openalex.org/W4390110022',
+      doi: 'https://doi.org/10.1234/jetr.2024.0142',
+      display_name: 'Note-Taking Application Adoption Among Undergraduates: A Multi-Campus Survey',
+      publication_year: 2024,
+      language: 'en',
+      type: 'article',
+      primary_location: {
+        landing_page_url: 'https://example.org/articles/multi-campus-note-taking',
+        source: { display_name: 'Journal of Educational Technology Research' },
+      },
+      open_access: { is_oa: true },
+      cited_by_count: 37,
+      authorships: [
+        { author: { display_name: 'F. Zeta' } },
+        { author: { display_name: 'G. Eta' } },
+      ],
+      abstract_inverted_index: invertedAbstract(
+        'Across four campuses we compare self-reported adoption of note-taking applications ' +
+          'and find that recruitment channel explains most of the variance between samples.',
+      ),
+    },
+    {
+      id: 'https://openalex.org/W4312884501',
+      doi: null,
+      display_name: 'Self-Reported Versus Logged Use of Note-Taking Applications',
+      publication_year: 2023,
+      language: 'en',
+      type: 'preprint',
+      primary_location: {
+        landing_page_url: 'https://example.org/preprints/self-reported-versus-logged',
+        source: { display_name: 'Open Education Preprints' },
+      },
+      open_access: { is_oa: true },
+      cited_by_count: 4,
+      authorships: [{ author: { display_name: 'H. Theta' } }],
+    },
+  ],
+};
+
+// A literature search recorded a year before the rest of the example, so the workspace carries
+// what a real one carries after a while: a queue of candidates nobody has ruled on yet, and a
+// search old enough that `phdude gaps` and `phdude next` both call it stale. The clock is wound
+// back deliberately - a search dated the same day as everything else would never age.
+async function recordStaleSearch(deps, questionId) {
+  const fetch = fakeFetch([{ match: 'api.openalex.org', body: OPENALEX_RESPONSE }]);
+  const { candidates } = await research.search(
+    {
+      ...deps,
+      clock: () => '2025-06-01T00:00:00Z',
+      providers: buildProviders(['openalex'], { fetch, env: {}, version: EXAMPLE_VERSION }),
+    },
+    {
+      query: 'note-taking app adoption undergraduates',
+      question: questionId,
+      allowNetwork: true,
+    },
+  );
+  return candidates.created;
+}
+
+// One of the two candidates has been reviewed and accepted; the other is still waiting. That
+// is what a real queue looks like, and it is what puts a source in the registry that was found
+// rather than ingested - `phdude cite list` shows it, `phdude knowledge trace` shows where it
+// came from. The preprint is deliberately left pending: the policy requires approval for one.
+async function acceptOneCandidate(deps, candidateIds) {
+  for (const id of candidateIds) {
+    const candidate = await deps.store.readEntity(id);
+    if (candidate.type !== 'article') continue;
+    return research.accept(deps, id);
+  }
+  throw new Error('no article candidate to accept');
 }
 
 export async function generate(root) {
@@ -319,6 +415,8 @@ export async function generate(root) {
     value: 'Peru',
     from: { artifact: artCsv, locator: 'row 2' },
   });
+
+  await acceptOneCandidate(deps, await recordStaleSearch(deps, rq.id));
 
   await propose(deps, {
     title: 'Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta',

@@ -52,14 +52,26 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 ## The only way to write
 
 Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude link CLAIM-a
---contradicts CLAIM-b`), `phdude decide`, `phdude promote`, `phdude packs apply`, or
-`phdude mode`. (`phdude init` creates the workspace and `phdude ingest` writes the artifact
-inventory and its cache — expected setup steps, not knowledge edits. `phdude cite export`
-writes `references.bib` or `references.json` at the workspace root, a derived file that records
-no event and is never a substitute for the `SRC-` id itself.) Every other command —
-`phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `packs list|detect`,
-`doctor`, `help` — only reads or derives from what is already recorded. Never write YAML files
-directly, even to "fix a typo".
+--contradicts CLAIM-b`), `phdude edit`, `phdude decide`, `phdude promote`,
+`phdude research accept`, `phdude research dismiss`, `phdude packs apply`, or `phdude mode`.
+(`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
+cache — expected setup steps, not knowledge edits. `phdude research` and `phdude research-fresh`
+write candidates and search records, which are not knowledge until accepted. `phdude cite
+export` writes `references.bib` or `references.json` at the workspace root, a derived file that
+records no event and is never a substitute for the `SRC-` id itself.) Every other command —
+`phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `freshness`,
+`packs list|detect`, `doctor`, `help` — only reads or derives from what is already recorded.
+Never write YAML files directly, even to "fix a typo".
+
+### Correcting a record
+
+`phdude edit <id> --json '<fields>'` corrects the non-identity fields of a **non-canonical**
+object — a source's `venue`, a method's `limitations`, an artifact's `role`. It refuses three
+things and each refusal is information, not an obstacle: a `canonical` object (propose a
+Decision), an identity field (the id is derived from it, so record the correction with
+`phdude add` and leave the original as the history of what was believed), and a field the
+schema does not know. `state` is not editable either — that is `phdude promote`. Never work
+around a refusal by editing the YAML.
 
 ## Contradictions are recorded, not resolved by you
 
@@ -104,6 +116,20 @@ not a problem for you to clear. Reads keep working; every write is refused until
 Tell them what you saw and ask them to run `phdude migrate` themselves — do not run it, and do
 not pass `--force`. It rewrites files in place and git is the only undo, so whether the tree is
 clean enough for that is their call, not yours.
+
+## Network only through `phdude research`
+
+**Never fetch on your own.** No browser tool, no `curl`, no web search, no reciting a paper
+from memory. The only way anything reaches the network is `phdude research` and
+`phdude research-fresh`, and only when `.phdude/research-policy.yaml` allows it. That is not a
+performance detail: it is what makes the audit trail complete. Every provider call appends a
+`search` event carrying the query and a count, so the workspace can always say exactly what
+left the machine and when. A fetch you made yourself is invisible to that record, which makes
+whatever you learned from it unciteable.
+
+If the policy refuses a search, report the refusal and ask. Do not pass `--allow-network` on
+your own initiative, and never present something you did not get from a recorded search as a
+literature result. See `[[research]]`.
 
 ## Never fabricate
 

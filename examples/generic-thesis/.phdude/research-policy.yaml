@@ -1,6 +1,14 @@
 schema: phdude.research-policy
 version: 1
 
+network:
+  enabled: false
+
+providers:
+  - openalex
+  - crossref
+  - arxiv
+
 research:
   year_range:
     from: 2021
@@ -22,9 +30,12 @@ research:
 
   freshness:
     always_check_recent: true
+    stale_after_days: 180
 
   preprints:
     require_approval: true
+
+  limit: 20
 
 skills:
   allow_network: false

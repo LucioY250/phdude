@@ -1,0 +1,67 @@
+{
+  "$id": "phdude://candidate",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.candidate" },
+        "provider": { "type": "string" },
+        "providers": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "external_id": { "type": "string" },
+        "title": { "type": "string" },
+        "authors": { "type": "array", "items": { "type": "string" } },
+        "year": { "type": ["integer", "null"] },
+        "venue": { "type": ["string", "null"] },
+        "doi": { "type": ["string", "null"] },
+        "url": { "type": ["string", "null"] },
+        "abstract": { "type": ["string", "null"] },
+        "type": { "enum": ["article", "preprint", "book", "chapter", "other"] },
+        "open_access": { "type": ["boolean", "null"] },
+        "cited_by": { "type": ["integer", "null"] },
+        "query": { "type": "string" },
+        "question": {
+          "anyOf": [{ "$ref": "phdude://common#/$defs/id" }, { "type": "null" }]
+        },
+        "search": { "$ref": "phdude://common#/$defs/id" },
+        "score": { "type": "number" },
+        "score_parts": {
+          "type": "object",
+          "properties": {
+            "rank": { "type": "number" },
+            "citations": { "type": "number" },
+            "recency": { "type": "number" }
+          },
+          "additionalProperties": { "type": "number" }
+        },
+        "needs_approval": { "type": "boolean" },
+        "state": { "enum": ["candidate", "accepted", "dismissed"] },
+        "reason": { "type": "string" },
+        "accepted_as": { "$ref": "phdude://common#/$defs/id" }
+      },
+      "required": [
+        "provider",
+        "providers",
+        "external_id",
+        "title",
+        "authors",
+        "year",
+        "venue",
+        "doi",
+        "url",
+        "abstract",
+        "type",
+        "open_access",
+        "cited_by",
+        "query",
+        "question",
+        "search",
+        "score",
+        "score_parts",
+        "needs_approval",
+        "state"
+      ]
+    }
+  ],
+  "unevaluatedProperties": false
+}

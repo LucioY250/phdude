@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom">
+  <link href="http://export.arxiv.org/api/query?search_query=all:open+science&amp;start=0&amp;max_results=3" rel="self" type="application/atom+xml"/>
+  <title type="html">ArXiv Query: search_query=all:open science</title>
+  <id>http://arxiv.org/api/dPz9k6QW3xY7vB2N1cJhT5rM8oA</id>
+  <updated>2026-01-14T00:00:00-05:00</updated>
+  <opensearch:totalResults xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">3</opensearch:totalResults>
+  <opensearch:startIndex xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">0</opensearch:startIndex>
+  <opensearch:itemsPerPage xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/">3</opensearch:itemsPerPage>
+  <entry>
+    <id>http://arxiv.org/abs/2304.09999v2</id>
+    <updated>2023-04-20T00:00:00Z</updated>
+    <published>2023-04-18T00:00:00Z</published>
+    <title>A Preprint on Reproducible Pipelines</title>
+    <summary>
+      Open science practices are spreading across applied fields.
+    </summary>
+    <author>
+      <name>Grace Hopper</name>
+    </author>
+    <link href="http://arxiv.org/abs/2304.09999v2" rel="alternate" type="text/html"/>
+    <link title="pdf" href="http://arxiv.org/pdf/2304.09999v2" rel="related" type="application/pdf"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/2101.00001v1</id>
+    <updated>2021-01-02T00:00:00Z</updated>
+    <published>2021-01-02T00:00:00Z</published>
+    <title>
+      Toward Reproducible Machine Learning Benchmarks
+    </title>
+    <summary>Benchmarks rarely replicate outside the lab that published them.</summary>
+    <author>
+      <name>Ada Lovelace</name>
+    </author>
+    <author>
+      <name>Charles Babbage</name>
+    </author>
+    <arxiv:doi xmlns:arxiv="http://arxiv.org/schemas/atom">10.48550/arXiv.2101.00001</arxiv:doi>
+    <link href="http://arxiv.org/abs/2101.00001v1" rel="alternate" type="text/html"/>
+    <link title="pdf" href="http://arxiv.org/pdf/2101.00001v1" rel="related" type="application/pdf"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/1906.01234v3</id>
+    <updated>2019-06-10T00:00:00Z</updated>
+    <published>2019-06-05T00:00:00Z</published>
+    <title>Measurement Error in Survey Chapters (Preprint)</title>
+    <summary>A preprint companion to the later book chapter of the same name.</summary>
+    <author>
+      <name>Rosalind Franklin</name>
+    </author>
+    <link href="http://arxiv.org/abs/1906.01234v3" rel="alternate" type="text/html"/>
+    <link title="pdf" href="http://arxiv.org/pdf/1906.01234v3" rel="related" type="application/pdf"/>
+    <arxiv:primary_category xmlns:arxiv="http://arxiv.org/schemas/atom" term="stat.ME" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ME" scheme="http://arxiv.org/schemas/atom"/>
+  </entry>
+</feed>

@@ -1,0 +1,5 @@
+[
+  { "match": "api.openalex.org", "bodyFile": "openalex/search.json" },
+  { "match": "api.crossref.org", "bodyFile": "crossref/search.json" },
+  { "match": "export.arxiv.org", "bodyFile": "arxiv/search.xml" }
+]

@@ -28,11 +28,13 @@ my-research/
 │   ├── claims/     CLAIM-*.yaml
 │   ├── evidence/   EVID-*.yaml
 │   ├── facts/      FACT-*.yaml
-│   └── results/    RESULT-*.yaml
+│   ├── results/    RESULT-*.yaml
+│   └── candidates/ CAND-*.yaml   # literature hits awaiting review, not yet sources
 ├── research/
 │   ├── questions/  RQ-*.yaml
 │   ├── hypotheses/ H-*.yaml
-│   └── methods/    METH-*.yaml
+│   ├── methods/    METH-*.yaml
+│   └── searches/   SEARCH-*.yaml # what was asked, of whom, and when
 ├── decisions/      DEC-*.yaml
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
 ├── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
@@ -92,7 +94,7 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Object | Id | Key fields |
 |---|---|---|
 | Artifact | `ART-<hash10>` | `path`, `paths[]`, `hash`, `bytes`, `mime`, `kind`, `extracted`, `role` |
-| Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]`, `bibkey?`, `abstract?`, `keywords[]?`, `identifiers?{doi,isbn,arxiv,pmid,url}` |
+| Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]`, `bibkey?`, `abstract?`, `keywords[]?`, `identifiers?{doi,isbn,arxiv,pmid,url}`, `provenance?` |
 | Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]`, `provenance` |
 | Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength`, `provenance` |
 | Fact | `FACT-<hash10>` | `key`, `value`, `unit`, `from {artifact, locator}` |
@@ -101,9 +103,72 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
 | Method | `METH-<hash10>` | `name`, `design`, `paradigm`, `sampling`, `instruments[]`, `analysis[]`, `limitations[]`, `questions[]` |
 | Decision | `DEC-<hash10>` | `title`, `rationale`, `proposed_by`, `approved_by[]`, `status`, `change`, `affects[]` |
+| Candidate | `CAND-<hash10>` | `provider`, `providers[]`, `external_id`, `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `abstract`, `type`, `open_access`, `cited_by`, `query`, `question`, `search`, `score`, `score_parts`, `needs_approval`, `state`, `reason?`, `accepted_as?` |
+| Search | `SEARCH-<hash10>` | `query`, `question`, `providers[]`, `filters`, `runs[]`, `last_run` |
 
 Ids are derived from content, so the same claim added twice is one file. See
-[ADR 3](adr/0003-content-derived-ids.md).
+[ADR 3](adr/0003-content-derived-ids.md). A candidate's identity is the **work**, not the
+provider that returned it: its DOI when it has one (`doi:<lowercased doi>`), otherwise its
+normalized title and year (`title:<title>|<year>`). Searching the same work again through a
+different provider list therefore lands on the same `CAND-` record instead of a second one. A
+search's identity is its normalized query and the question it was run for.
+
+## Candidates and searches
+
+`phdude research` writes both, and neither is knowledge yet.
+
+A **Candidate** is one literature hit a provider returned. It is not a Source: nothing enters
+the citation registry until the researcher accepts it, and `state` says where it stands —
+`candidate` (unreviewed), `accepted` (with `accepted_as` naming the `SRC-` id it became), or
+`dismissed` (with a `reason`). `providers[]` lists every provider that returned the same work,
+and `ext.ids` keeps their own ids for it; `needs_approval: true` marks a preprint the policy
+says the researcher has to approve explicitly.
+
+Two providers returning the same work produce one candidate. The first provider in the run owns
+the record — its `provider` and `external_id` are the ones kept — but a field it left empty
+(`doi`, `url`, `venue`, `abstract`, `year`, `cited_by`, `open_access`) is filled from another
+provider that did report it. A field it *did* report is never overwritten, so a candidate is
+always one provider's account of a work plus whatever it did not know. `score_parts` explains the ranking (provider
+rank, citation count, recency) so the order is auditable rather than mysterious.
+
+A **Search** is the record of asking. `runs[]` appends one entry per provider call — `at`,
+`provider`, `count` and how many of those results were `new` — so a query re-run months later
+extends one history instead of minting a second record. `filters` snapshots what the run
+applied, and `last_run` is what freshness is measured against — by `phdude freshness`, by the
+`stale-search` gap and `next` rule, and by `phdude research-fresh`, which re-runs a stale search
+from exactly that snapshot.
+
+A stored candidate is never rewritten by a later run, with one exception: a work recorded
+without a DOI, because the provider that returned it did not report one, takes the DOI a later
+run learns. Its identity moves from the title key to the DOI key, so `doi`, `url`, `ext.ids`
+and `providers[]` are filled in and the record keeps the id it already has. It still counts as
+already known, not as a new candidate, and its `state` and `reason` are untouched.
+
+## Accepting a candidate
+
+`phdude research accept CAND-…` is the only path from a candidate into the citation registry.
+The Source it writes carries what the providers actually reported — `title`, `authors`, `year`,
+`venue`, `abstract`, `type`, and `identifiers` holding only the ids some provider returned
+(`doi`, `url`, `arxiv`, `pmid`) — plus two records of where it came from:
+
+```yaml
+provenance:
+  method: imported
+  derived_from: []
+ext:
+  research:
+    candidate: CAND-9574a4d19b
+    provider: openalex
+    external_id: W4390110022
+    accepted_by:
+      researcher: ada
+      agent: cli
+```
+
+`derived_from` is empty because nothing was read out of an ingested artifact: the record came
+from a provider, not from a document in `sources/`. The candidate moves to `accepted` and
+records `accepted_as`. If the workspace already records that Source — the same normalized title
+and year — the candidate is linked to it and the existing record is left exactly as it is.
 
 ## Knowledge states
 
@@ -174,6 +239,20 @@ opening a file.
 ```json
 {"ts":"2026-09-07T09:12:44.101Z","op":"add","actor":{"researcher":"ada","agent":"claude-code"},"ids":["CLAIM-3d035aa05b"],"summary":"claim added"}
 ```
+
+Accepting or dismissing a candidate writes one `research` event
+(`accepted CAND-… as SRC-…`, or `dismissed CAND-…: <reason>`), and `phdude edit` writes one
+`edit` event naming the fields that changed.
+
+A network call is audited the same way, one `search` event per provider call:
+
+```json
+{"ts":"2026-09-07T10:02:11.004Z","op":"search","actor":{"researcher":"ada","agent":"cli"},"ids":["SEARCH-7c2d4e6a10"],"summary":"openalex: \"open science practices\" → 3 results"}
+```
+
+The summary carries the provider, the query that left the machine and a count — never a
+result. A provider call that failed is recorded too, as `→ failed`: the query still left the
+machine, so the log still says so.
 
 It is committed, append-only, and independent of git history, so a rebase cannot erase who
 recorded what. Git history complements it with the full content of each change.

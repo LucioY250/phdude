@@ -1,11 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
+import { mkdtemp, readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { COMMAND_OPTIONS } from '../../../src/adapters/cli/args.js';
 import { usage } from '../../../src/adapters/cli/commands/help.js';
 import { COMMAND_ROWS } from '../../../src/adapters/agents/shared.js';
+import { claudeCodeHost } from '../../../src/adapters/agents/claude-code.js';
 
 // Every surface that names a command drifted at least once during v0.1 and v0.2: the AGENTS.md
 // table, the slash-command templates, docs/cli.md and the README all listed a different set. The
@@ -88,10 +91,34 @@ test('the README slash-command list names every installed template', () => {
   }
 });
 
+test("CLAUDE.md's slash-command list names every command", async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-surface-'));
+  await claudeCodeHost.install(root, { project: { title: 'Surface' } });
+  const claudeMd = await readFile(join(root, 'CLAUDE.md'), 'utf8');
+
+  assert.ok(claudeMd.includes('`/phdude`'), 'the dispatcher is missing');
+  for (const command of COMMANDS) {
+    assert.ok(
+      claudeMd.includes(`\`/phdude-${command}\``),
+      `CLAUDE.md does not name the /phdude-${command} slash command`,
+    );
+  }
+});
+
 test('the phdude-core skill lists every write command as CLI-only', () => {
   // Only these commands mutate recorded research state; the skill's "the only way to write"
   // section has to name each of them, or an agent will reach for a file edit instead.
-  const writeCommands = ['add', 'link', 'decide', 'promote', 'packs apply', 'mode'];
+  const writeCommands = [
+    'add',
+    'link',
+    'edit',
+    'decide',
+    'promote',
+    'research accept',
+    'research dismiss',
+    'packs apply',
+    'mode',
+  ];
   const skill = read('skills', 'phdude-core', 'SKILL.md');
   const section = skill.slice(skill.indexOf('## The only way to write'));
   for (const command of writeCommands) {

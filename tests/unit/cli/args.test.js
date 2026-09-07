@@ -260,3 +260,46 @@ test('optionsFor: an unknown command has only the global options', () => {
   );
   assert.ok(Object.keys(optionsFor('link')).includes('to'));
 });
+
+test('parseCli: research keeps a quoted query as a positional and parses its flags', () => {
+  const cli = parseCli([
+    'research',
+    'open science practices',
+    '--question',
+    'RQ-1',
+    '--provider',
+    'openalex, crossref',
+    '--from',
+    '2022',
+    '--limit',
+    '5',
+    '--allow-network',
+  ]);
+  assert.equal(cli.command, 'research');
+  assert.equal(cli.sub, 'open science practices');
+  assert.equal(cli.flags.question, 'RQ-1');
+  assert.deepEqual(cli.flags.provider, ['openalex', 'crossref']);
+  assert.equal(cli.flags.from, '2022');
+  assert.equal(cli.flags.limit, '5');
+  assert.equal(cli.flags.allowNetwork, true);
+});
+
+test('parseCli: research list takes the shared state and question filters', () => {
+  const cli = parseCli(['research', 'list', '--state', 'candidate', '--question', 'RQ-2']);
+  assert.equal(cli.sub, 'list');
+  assert.equal(cli.flags.state, 'candidate');
+  assert.equal(cli.flags.question, 'RQ-2');
+  assert.equal(cli.flags.allowNetwork, false);
+});
+
+test('parseCli: --allow-network is a usage error on any command but research', () => {
+  assert.throws(
+    () => parseCli(['status', '--allow-network']),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'USAGE');
+      assert.match(err.message, /unknown option --allow-network for status/);
+      return true;
+    },
+  );
+});

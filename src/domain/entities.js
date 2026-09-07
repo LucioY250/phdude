@@ -1,3 +1,4 @@
+import { identityKey } from './candidates.js';
 import { makeId, makeSeqId } from './ids.js';
 import { normalizeKey, stableStringify } from './normalize.js';
 import { PhdudeError } from './errors.js';
@@ -209,6 +210,8 @@ export function newFact({ key, value, unit, from, tags = [], actor, created }) {
  * @param {string} [p.abstract]
  * @param {string[]} [p.keywords]
  * @param {{doi?: string, isbn?: string, arxiv?: string, pmid?: string, url?: string}} [p.identifiers]
+ * @param {object} [p.provenance]
+ * @param {object} [p.ext]
  * @param {object} p.actor
  * @param {string} p.created
  * @returns {object} a schema-valid `phdude.source`
@@ -227,6 +230,8 @@ export function newSource({
   abstract,
   keywords,
   identifiers,
+  provenance,
+  ext,
   actor,
   created,
 }) {
@@ -252,6 +257,8 @@ export function newSource({
   if (abstract !== undefined) source.abstract = abstract;
   if (keywords !== undefined) source.keywords = keywords;
   if (identifiers !== undefined) source.identifiers = identifiers;
+  if (provenance !== undefined) source.provenance = provenance;
+  if (ext !== undefined) source.ext = ext;
   return source;
 }
 
@@ -426,5 +433,137 @@ export function newDecision({
     status: 'proposed',
     change,
     affects,
+  };
+}
+
+/**
+ * A literature hit a provider returned, recorded so the researcher can review it before it
+ * ever becomes a Source. Identity is the work itself - its DOI, or its normalized title and
+ * year (see domain/candidates.js `identityKey`) - never the provider that happened to return
+ * it. Searching the same work again through a different provider list therefore lands on the
+ * same record instead of a second one.
+ * @param {object} p
+ * @param {string} p.provider
+ * @param {string[]} [p.providers] - every provider that returned this work
+ * @param {string} p.external_id
+ * @param {string} p.title
+ * @param {string[]} [p.authors]
+ * @param {number|null} [p.year]
+ * @param {string|null} [p.venue]
+ * @param {string|null} [p.doi]
+ * @param {string|null} [p.url]
+ * @param {string|null} [p.abstract]
+ * @param {string} [p.type]
+ * @param {boolean|null} [p.open_access]
+ * @param {number|null} [p.cited_by]
+ * @param {string} p.query
+ * @param {string|null} [p.question] - the RQ id the search was run for
+ * @param {string} p.search - the SEARCH id that produced it
+ * @param {number} [p.score]
+ * @param {object} [p.score_parts]
+ * @param {boolean} [p.needs_approval]
+ * @param {object} [p.ext]
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.candidate`
+ */
+export function newCandidate({
+  provider,
+  providers,
+  external_id,
+  title,
+  authors = [],
+  year = null,
+  venue = null,
+  doi = null,
+  url = null,
+  abstract = null,
+  type = 'other',
+  open_access = null,
+  cited_by = null,
+  query,
+  question = null,
+  search,
+  score = 0,
+  score_parts = {},
+  needs_approval = false,
+  ext,
+  actor,
+  created,
+}) {
+  const name = requireText('provider', provider);
+  const externalId = requireText('external_id', external_id);
+  const titleText = requireText('title', title);
+  const candidate = {
+    schema: 'phdude.candidate',
+    version: 1,
+    id: makeId('candidate', identityKey({ doi, title: titleText, year })),
+    created,
+    actor,
+    tags: [],
+    provider: name,
+    providers: providers?.length ? providers : [name],
+    external_id: externalId,
+    title: titleText,
+    authors,
+    year,
+    venue,
+    doi,
+    url,
+    abstract,
+    type,
+    open_access,
+    cited_by,
+    query,
+    question,
+    search,
+    score,
+    score_parts,
+    needs_approval,
+    state: 'candidate',
+  };
+  if (ext !== undefined) candidate.ext = ext;
+  return candidate;
+}
+
+/**
+ * A recorded search: what was asked, of whom, under which filters, and every time it ran. The
+ * query and the question are its identity, so re-running the same search for the same question
+ * appends a run to one record instead of minting a second one.
+ * @param {object} p
+ * @param {string} p.query
+ * @param {string|null} [p.question]
+ * @param {string[]} [p.providers]
+ * @param {object} [p.filters]
+ * @param {{at: string, provider: string, count: number, new: number}[]} [p.runs]
+ * @param {string} p.last_run
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.search`
+ */
+export function newSearch({
+  query,
+  question = null,
+  providers = [],
+  filters = {},
+  runs = [],
+  last_run,
+  actor,
+  created,
+}) {
+  const text = requireText('query', query);
+  return {
+    schema: 'phdude.search',
+    version: 1,
+    id: makeId('search', `${text}|${question ?? ''}`),
+    created,
+    actor,
+    tags: [],
+    query: text,
+    question,
+    providers,
+    filters,
+    runs,
+    last_run,
   };
 }

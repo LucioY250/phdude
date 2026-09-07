@@ -12,12 +12,12 @@ const FIXTURES_DIR = join(REPO_ROOT, 'tests', 'fixtures', 'docs');
 const V01_WORKSPACE = join(REPO_ROOT, 'tests', 'fixtures', 'workspaces', 'v0.1-minimal');
 const ACTOR = ['--actor', 'researcher=tester,agent=e2e'];
 
-function phdude(cwd, args) {
+function phdude(cwd, args, env) {
   return new Promise((resolve) => {
     execFile(
       process.execPath,
       [BIN, ...args],
-      { cwd, maxBuffer: 32 * 1024 * 1024 },
+      { cwd, maxBuffer: 32 * 1024 * 1024, env: env ? { ...process.env, ...env } : process.env },
       (err, stdout, stderr) => {
         resolve({ code: err ? (err.code ?? 1) : 0, stdout, stderr });
       },
@@ -25,14 +25,14 @@ function phdude(cwd, args) {
   });
 }
 
-async function run(cwd, args) {
-  const result = await phdude(cwd, [...args, ...ACTOR]);
+async function run(cwd, args, env) {
+  const result = await phdude(cwd, [...args, ...ACTOR], env);
   assert.equal(result.code, 0, `phdude ${args.join(' ')} failed:\n${result.stderr}`);
   return result;
 }
 
-async function runJson(cwd, args) {
-  const { stdout } = await run(cwd, [...args, '--json']);
+async function runJson(cwd, args, env) {
+  const { stdout } = await run(cwd, [...args, '--json'], env);
   return JSON.parse(stdout);
 }
 
@@ -225,6 +225,11 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
   assert.equal(typeof doctor.pdftotext, 'boolean');
   assert.equal(typeof doctor.git, 'boolean');
   assert.equal(doctor.schemaVersions.claim, 1);
+  assert.equal(doctor.network, false, 'a fresh workspace keeps the network closed');
+  assert.deepEqual(doctor.providers, ['openalex', 'crossref', 'arxiv']);
+  const doctorText = await run(ws, ['doctor']);
+  assert.match(doctorText.stdout, /network: +disabled/);
+  assert.match(doctorText.stdout, /providers: +openalex, crossref, arxiv/);
   assert.ok(doctor.cacheEntries >= 1);
   assert.ok(doctor.packsAvailable.includes('quantitative'));
   const bootstrapSkill = doctor.skills.find((s) => s.name === 'bootstrap');
@@ -389,6 +394,51 @@ test('e2e: a malformed entity file makes status exit 2 and names the file', asyn
   assert.equal(payload.code, 'VALIDATION');
   assert.equal(payload.message, 'malformed entity file: knowledge/facts/FACT-0123456789.yaml');
   assert.equal(payload.hint, 'fix or delete the file');
+});
+
+test('e2e: a malformed research policy is typed, and doctor says so instead of guessing', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-badpolicy-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Broken policy', '--no-git']);
+  // The README sends every researcher to hand-edit this file, so a two-line syntax error in it
+  // is an ordinary accident rather than an exotic one.
+  await writeFile(
+    join(ws, '.phdude', 'research-policy.yaml'),
+    'network:\n  enabled: true\n  providers\n',
+  );
+
+  for (const command of [
+    ['status'],
+    ['gaps'],
+    ['next'],
+    ['freshness'],
+    ['cite', 'check'],
+    ['research', 'open science'],
+  ]) {
+    const result = await phdude(ws, [...command, '--json', ...ACTOR]);
+    assert.equal(result.code, 2, `phdude ${command.join(' ')} should exit 2`);
+    const payload = JSON.parse(result.stderr).error;
+    assert.equal(payload.code, 'VALIDATION');
+    assert.equal(payload.message, 'malformed YAML: .phdude/research-policy.yaml');
+    assert.equal(payload.hint, 'fix the file');
+  }
+
+  // doctor is the command you run when something is off, so it survives - but it must not
+  // present the built-in defaults as though they were this workspace's policy.
+  const report = await phdude(ws, ['doctor', ...ACTOR]);
+  assert.equal(report.code, 0);
+  assert.match(
+    report.stdout,
+    /policy: +unreadable \(malformed YAML: \.phdude\/research-policy\.yaml\)/,
+  );
+  assert.doesNotMatch(report.stdout, /^providers:/m);
+  assert.doesNotMatch(report.stdout, /^network:/m);
+
+  const json = JSON.parse((await phdude(ws, ['doctor', '--json', ...ACTOR])).stdout);
+  assert.equal(json.policyError, 'malformed YAML: .phdude/research-policy.yaml');
+  assert.equal(json.network, null);
+  assert.deepEqual(json.providers, []);
 });
 
 test('e2e: packs outside a workspace point at init instead of crashing', async (t) => {
@@ -1086,4 +1136,309 @@ test('e2e: matrix (md/csv/--question) and gaps (text/--json) shapes', async (t) 
   assert.match(gapsText.stdout, /HIGH \(\d+\):/);
   assert.match(gapsText.stdout, /MEDIUM \(\d+\):/);
   assert.match(gapsText.stdout, /LOW \(\d+\):/);
+});
+
+test('e2e: research refuses without network, then searches, records and lists candidates', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-research-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  const init = await run(ws, ['init', '--title', 'Research engine', '--no-git']);
+
+  // The research skill declares network access, which the default policy does not grant: init
+  // says so by name and still succeeds.
+  assert.match(init.stdout, /skill research was not installed/);
+  assert.match(init.stdout, /set skills\.allow_network: true/);
+  assert.equal(await exists(join(ws, '.phdude', 'skills', 'research', 'SKILL.md')), false);
+  assert.equal(await exists(join(ws, '.claude', 'commands', 'phdude-research.md')), true);
+  assert.ok(await exists(join(ws, 'knowledge', 'candidates')), 'init creates knowledge/candidates');
+  assert.ok(await exists(join(ws, 'research', 'searches')), 'init creates research/searches');
+
+  const routes = join(REPO_ROOT, 'tests', 'fixtures', 'search', 'e2e-routes.json');
+  const env = { PHDUDE_FAKE_FETCH: routes };
+
+  // Closed by default: the refusal names the two ways to open it, and exits 3.
+  const refused = await phdude(ws, ['research', 'open science', '--json', ...ACTOR], env);
+  assert.equal(refused.code, 3);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'POLICY');
+  assert.equal(refusal.message, 'network access is disabled');
+  assert.match(refusal.hint, /--allow-network/);
+
+  const question = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'How do open science practices spread?' }),
+  ]);
+
+  const searched = await runJson(
+    ws,
+    ['research', 'open science', '--question', question.id, '--allow-network'],
+    env,
+  );
+
+  assert.deepEqual(searched.warnings, []);
+  assert.equal(searched.candidates.created.length, 4, 'three providers, four distinct works');
+  assert.deepEqual(searched.candidates.existing, []);
+  assert.deepEqual(searched.search.providers, ['openalex', 'crossref', 'arxiv']);
+  assert.equal(searched.search.question, question.id);
+  assert.deepEqual(
+    searched.search.runs.map((r) => [r.provider, r.count, r.new]),
+    [
+      ['openalex', 3, 3],
+      ['crossref', 3, 0],
+      ['arxiv', 2, 1],
+    ],
+    'crossref returned only works openalex already had; arxiv added one of its own',
+  );
+  for (const candidate of searched.results) {
+    assert.equal(candidate.question, question.id);
+    assert.ok(candidate.providers.includes(candidate.provider));
+    assert.equal(typeof candidate.score_parts.rank, 'number');
+  }
+  const shared = searched.results.find((c) => c.title.startsWith('A Preprint on'));
+  assert.deepEqual(
+    shared.providers,
+    ['openalex', 'crossref', 'arxiv'],
+    'all three providers returned the same preprint, and it is one candidate',
+  );
+  const preprint = searched.results.find((c) => c.type === 'preprint');
+  assert.equal(preprint.needs_approval, true, 'the policy requires approval for preprints');
+
+  // One event per provider call, carrying the query and a count, never a result.
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'search');
+  assert.deepEqual(
+    events.map((e) => e.summary),
+    [
+      'openalex: "open science" → 3 results',
+      'crossref: "open science" → 3 results',
+      'arxiv: "open science" → 2 results',
+    ],
+  );
+  assert.deepEqual(events[0].ids, [searched.search.id]);
+
+  // A second run of the same query adds nothing and extends the same search record.
+  const again = await runJson(
+    ws,
+    ['research', 'open science', '--question', question.id, '--allow-network'],
+    env,
+  );
+  assert.deepEqual(again.candidates.created, []);
+  assert.equal(again.candidates.existing.length, 4);
+  assert.equal(again.search.id, searched.search.id);
+  assert.equal(again.search.runs.length, 6);
+
+  const listed = await runJson(ws, ['research', 'list', '--state', 'candidate']);
+  assert.equal(listed.length, 4);
+  const shown = await runJson(ws, ['research', 'show', listed[0].id]);
+  assert.equal(shown.id, listed[0].id);
+  assert.equal(shown.schema, 'phdude.candidate');
+
+  const text = await run(ws, ['research', 'list']);
+  assert.match(text.stdout, /4 candidate\(s\)/);
+  assert.match(text.stdout, /\[needs approval\]/);
+
+  // Narrowing to one provider only calls that one.
+  const narrowed = await runJson(
+    ws,
+    ['research', 'reproducible pipelines', '--provider', 'crossref', '--allow-network'],
+    env,
+  );
+  assert.deepEqual(narrowed.search.providers, ['crossref']);
+  assert.deepEqual(
+    narrowed.candidates.created,
+    [],
+    'narrowing to one provider re-finds the same works, it does not duplicate them',
+  );
+  assert.equal(narrowed.candidates.existing.length, 3);
+
+  // A provider the policy never listed is refused before anything is dispatched: `--provider`
+  // narrows the policy's list, it does not replace it.
+  const widened = await phdude(
+    ws,
+    [
+      'research',
+      'open science',
+      '--provider',
+      'semantic-scholar',
+      '--allow-network',
+      '--json',
+      ...ACTOR,
+    ],
+    env,
+  );
+  assert.equal(widened.code, 1);
+  const rejected = JSON.parse(widened.stderr).error;
+  assert.equal(rejected.code, 'USAGE');
+  assert.equal(rejected.message, 'provider semantic-scholar is not in the workspace policy');
+  assert.match(rejected.hint, /research-policy\.yaml/);
+
+  // Opening the policy installs the research skill on the next init.
+  const policyPath = join(ws, '.phdude', 'research-policy.yaml');
+  await writeFile(
+    policyPath,
+    (await readFile(policyPath, 'utf8'))
+      .replace('allow_network: false', 'allow_network: true')
+      .replace('enabled: false', 'enabled: true'),
+  );
+  const reinit = await run(ws, ['init', '--title', 'Research engine', '--no-git']);
+  assert.doesNotMatch(reinit.stdout, /was not installed/);
+  assert.equal(await exists(join(ws, '.phdude', 'skills', 'research', 'SKILL.md')), true);
+
+  // With the policy open, no flag is needed.
+  const open = await runJson(ws, ['research', 'measurement error'], env);
+  assert.equal(open.candidates.created.length, 0, 'the same works are already recorded');
+  assert.equal(open.candidates.existing.length, 4);
+});
+
+test('e2e: research, accept, dismiss, cite check, edit, freshness and research-fresh', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-accept-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Accepting candidates', '--no-git']);
+  const routes = join(REPO_ROOT, 'tests', 'fixtures', 'search', 'e2e-routes.json');
+  const env = { PHDUDE_FAKE_FETCH: routes };
+
+  const question = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'How do open science practices spread?' }),
+  ]);
+
+  const searched = await runJson(
+    ws,
+    ['research', 'open science', '--question', question.id, '--allow-network'],
+    env,
+  );
+  assert.equal(searched.candidates.created.length, 4);
+
+  const listed = await runJson(ws, ['research', 'list', '--state', 'candidate']);
+  const preprint = listed.find((c) => c.needs_approval);
+  const article = listed.find((c) => !c.needs_approval && c.doi);
+  const spare = listed.find((c) => c.id !== preprint.id && c.id !== article.id);
+
+  // A preprint the policy flagged is refused until the researcher has said yes to that one.
+  const refused = await phdude(ws, ['research', 'accept', preprint.id, '--json', ...ACTOR], env);
+  assert.equal(refused.code, 1);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'USAGE');
+  assert.match(refusal.hint, /--approve-preprint/);
+  assert.equal((await runJson(ws, ['research', 'show', preprint.id])).state, 'candidate');
+
+  const accepted = await runJson(ws, ['research', 'accept', article.id, '--type', 'article']);
+  assert.equal(accepted.created, true);
+  assert.equal(accepted.candidate.state, 'accepted');
+  assert.equal(accepted.candidate.accepted_as, accepted.source.id);
+  assert.equal(accepted.source.identifiers.doi, article.doi);
+  assert.deepEqual(accepted.source.provenance, { method: 'imported', derived_from: [] });
+  assert.equal(accepted.source.ext.research.candidate, article.id);
+  assert.ok(
+    await exists(join(ws, 'knowledge', 'sources', `${accepted.source.id}.yaml`)),
+    'the source is written to knowledge/sources',
+  );
+
+  const approved = await runJson(ws, ['research', 'accept', preprint.id, '--approve-preprint']);
+  assert.equal(approved.source.type, 'preprint');
+
+  const dismissed = await runJson(ws, [
+    'research',
+    'dismiss',
+    spare.id,
+    '--reason',
+    'measures a different construct',
+  ]);
+  assert.equal(dismissed.state, 'dismissed');
+  assert.equal(dismissed.reason, 'measures a different construct');
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'research');
+  assert.deepEqual(
+    events.map((e) => e.summary),
+    [
+      `accepted ${article.id} as ${accepted.source.id}`,
+      `accepted ${preprint.id} as ${approved.source.id}`,
+      `dismissed ${spare.id}: measures a different construct`,
+    ],
+  );
+
+  // Accepted sources are recorded but not yet cited, which `cite check` reports without failing.
+  const checked = await runJson(ws, ['cite', 'check']);
+  assert.equal(checked.ok, true);
+  const uncited = checked.findings.filter((f) => f.kind === 'uncited-source').map((f) => f.id);
+  assert.deepEqual(uncited.sort(), [accepted.source.id, approved.source.id].sort());
+  const registry = await runJson(ws, ['cite', 'list']);
+  assert.equal(registry.length, 2);
+  assert.ok(registry.every((row) => row.bibkey));
+
+  // A field the provider did not fill is corrected in place; the identity fields are not.
+  const edited = await runJson(ws, [
+    'edit',
+    accepted.source.id,
+    '--json',
+    JSON.stringify({ venue: 'Journal of Research Practice', tags: ['read'] }),
+  ]);
+  assert.equal(edited.id, accepted.source.id);
+  assert.equal(edited.venue, 'Journal of Research Practice');
+
+  const rejectedEdit = await phdude(
+    ws,
+    ['edit', accepted.source.id, '--json', JSON.stringify({ title: 'Something else' }), '--json'],
+    env,
+  );
+  assert.equal(rejectedEdit.code, 2);
+  assert.match(JSON.parse(rejectedEdit.stderr).error.message, /identity field/);
+
+  const editEvents = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'edit');
+  assert.deepEqual(
+    editEvents.map((e) => e.summary),
+    [`edited ${accepted.source.id}: tags, venue`],
+  );
+
+  // Freshness: the question was searched a moment ago, so nothing is stale and nothing re-runs.
+  const fresh = await runJson(ws, ['freshness']);
+  assert.equal(fresh.questions.length, 1);
+  assert.equal(fresh.questions[0].question, question.id);
+  assert.equal(fresh.questions[0].stale, false);
+  assert.equal(fresh.summary.searches, 1);
+  assert.equal(fresh.summary.sources, 2);
+
+  const freshText = await run(ws, ['freshness']);
+  assert.match(freshText.stdout, /Questions \(1\): 0 stale, 0 never searched/);
+
+  // research-fresh reaches the network, so it refuses on a closed policy exactly like research.
+  const closed = await phdude(ws, ['research-fresh', '--json', ...ACTOR], env);
+  assert.equal(closed.code, 3);
+  assert.equal(JSON.parse(closed.stderr).error.code, 'POLICY');
+
+  const nothingDue = await runJson(ws, ['research-fresh', '--allow-network'], env);
+  assert.deepEqual(nothingDue.reran, [], 'a search run a moment ago is not stale');
+  assert.deepEqual(nothingDue.newCandidates, []);
+
+  const all = await runJson(ws, ['research-fresh', '--all', '--allow-network'], env);
+  assert.deepEqual(all.reran, [searched.search.id]);
+  assert.deepEqual(all.newCandidates, [], 'the same literature again is not news');
+  const text = await run(ws, ['research-fresh', '--all', '--allow-network'], env);
+  assert.match(text.stdout, /1 search\(es\) re-run, 0 new candidate\(s\)/);
+
+  // Re-running never resets a review the researcher already made.
+  const after = await runJson(ws, ['research', 'list']);
+  assert.deepEqual(
+    after
+      .filter((c) => c.state !== 'candidate')
+      .map((c) => c.state)
+      .sort(),
+    ['accepted', 'accepted', 'dismissed'],
+  );
 });

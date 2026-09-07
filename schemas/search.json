@@ -1,0 +1,35 @@
+{
+  "$id": "phdude://search",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.search" },
+        "query": { "type": "string" },
+        "question": {
+          "anyOf": [{ "$ref": "phdude://common#/$defs/id" }, { "type": "null" }]
+        },
+        "providers": { "type": "array", "items": { "type": "string" } },
+        "filters": { "type": "object" },
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "provider": { "type": "string" },
+              "count": { "type": "integer", "minimum": 0 },
+              "new": { "type": "integer", "minimum": 0 }
+            },
+            "required": ["at", "provider", "count", "new"],
+            "additionalProperties": false
+          }
+        },
+        "last_run": { "type": "string", "format": "date-time" }
+      },
+      "required": ["query", "question", "providers", "filters", "runs", "last_run"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

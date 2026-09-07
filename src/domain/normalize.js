@@ -25,3 +25,15 @@ export function stableStringify(value) {
   }
   return `{${members.join(',')}}`;
 }
+
+// A DOI as the registry defines it: no resolver prefix, lowercased so two providers reporting
+// the same work compare equal. Anything that is not a DOI is null rather than a guess.
+export function normalizeDoi(value) {
+  if (typeof value !== 'string') return null;
+  const doi = value
+    .trim()
+    .replace(/^https?:\/\/(dx\.)?doi\.org\//i, '')
+    .replace(/^doi:/i, '')
+    .toLowerCase();
+  return /^10\.\d{4,9}\/\S+$/.test(doi) ? doi : null;
+}
