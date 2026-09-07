@@ -254,6 +254,7 @@ const REASON_TEXT = {
   'missing-input': (r) => `input gone: ${r.input}`,
   'stale-input': (r) => `input ${r.input} changed since the last run`,
   'unregistered-input': (r) => `input ${r.input} bytes changed on disk`,
+  'upstream-stale': (r) => `input ${r.input} comes from ${r.analysis}, which is ${r.status}`,
 };
 
 const REPRO_STATUSES = ['up-to-date', 'stale', 'never-run', 'missing-output'];

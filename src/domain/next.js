@@ -3,6 +3,7 @@ import { sectionClaims } from './context-budget.js';
 import { openConflicts } from './conflicts.js';
 import { questionFreshness } from './freshness.js';
 import { findGaps } from './gaps.js';
+import { makeHashId } from './ids.js';
 import { DEFAULT_FILTERS, ENABLE_EXECUTION, ENABLE_NETWORK } from './policy.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
@@ -366,6 +367,46 @@ function resultsBehindStatedClaims(snapshot) {
   return new Set((snapshot.evidence ?? []).filter((e) => cited.has(e.id)).map((e) => e.source));
 }
 
+// An input whose file no longer matches the DATASET record is a different fix from an input that
+// merely moved: `analyze run` refuses it outright, because recording the registered hash for
+// bytes it did not read would write down a lineage the run never had. Clearing it takes three
+// steps, and all three can be named here - a dataset's id is the hash of its bytes, and the
+// staleness report already carries the hash the file has now.
+function redeclare(snapshot, item) {
+  const analysis = (snapshot.analyses ?? []).find((a) => a.id === item.id);
+  const drifted = item.reasons.filter((reason) => reason.kind === 'unregistered-input');
+  if (analysis === undefined || drifted.length === 0) return null;
+
+  const byId = new Map((snapshot.datasets ?? []).map((d) => [d.id, d]));
+  const registered = new Map();
+  const why = [];
+  for (const reason of drifted) {
+    const path = byId.get(reason.input)?.path;
+    if (path === undefined) return null;
+    why.push(`${path} is not the file ${reason.input} was registered against`);
+    registered.set(reason.input, [path, makeHashId('dataset', reason.current)]);
+  }
+
+  const declaration = {
+    name: analysis.name,
+    runtime: analysis.runtime,
+    script: analysis.script,
+    args: analysis.args ?? [],
+    inputs: (analysis.inputs ?? []).map((id) => registered.get(id)?.[1] ?? id),
+    outputs: analysis.outputs,
+    params: analysis.params ?? {},
+  };
+
+  return {
+    why,
+    command: [
+      ...[...registered.values()].map(([path]) => `phdude data add ${path}`),
+      `phdude analyze add --json '${JSON.stringify(declaration)}'`,
+      `phdude analyze run ${analysis.id}`,
+    ].join(', then '),
+  };
+}
+
 // A run only stays true as long as its inputs do. `repro check` reports the same items; this is
 // the one line of it that belongs in "what should I do next", ranked by whether the numbers it
 // produced are already in the argument.
@@ -395,26 +436,16 @@ function ruleAnalysisStale(snapshot) {
     );
   }
 
-  // An input whose file no longer matches the DATASET record is a different fix from an input
-  // that merely moved: re-running would read bytes the workspace never registered, and
-  // `analyze run` would refuse anyway, because the record it compares against has not changed.
-  const drifted = stale[0].reasons.find((reason) => reason.kind === 'unregistered-input');
-  const path = (snapshot.datasets ?? []).find((d) => d.id === drifted?.input)?.path;
-  if (path !== undefined) {
-    why.push(`${path} is not the file ${drifted.input} was registered against`);
-  }
-  const command =
-    path === undefined ? `phdude analyze run ${stale[0].id}` : `phdude data add ${path}`;
+  const drift = redeclare(snapshot, stale[0]);
+  if (drift !== null) why.push(...drift.why);
+  const command = drift === null ? `phdude analyze run ${stale[0].id}` : drift.command;
 
   return {
     rule: 'analysis-stale',
     action: 'Re-run the analyses whose data has changed',
     why,
     impact: load.length > 0 ? 'high' : 'medium',
-    command:
-      snapshot.executionEnabled === false && path === undefined
-        ? `${ENABLE_EXECUTION}, then ${command}`
-        : command,
+    command: snapshot.executionEnabled === false ? `${ENABLE_EXECUTION}, then ${command}` : command,
     dependents: stale.length,
   };
 }

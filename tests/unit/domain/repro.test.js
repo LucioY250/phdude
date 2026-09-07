@@ -311,6 +311,78 @@ test('staleness reports one drifted file once, as drift rather than as two reaso
   ]);
 });
 
+test('staleness carries an analysis that is stale or never run into the table and figure', () => {
+  const values = { share: 0.75 };
+  const hash = resultHash(values);
+  const drawn = figure({
+    inputs: ['RESULT-1111111111'],
+    runs: [
+      {
+        at: '2026-09-01T00:00:00Z',
+        exit: 0,
+        duration_ms: 0,
+        input_hashes: { 'RESULT-1111111111': hash },
+        output_hashes: {},
+      },
+    ],
+  });
+  const snapshot = {
+    analyses: [analysis({ runs: [analysisRun()] })],
+    tables: [table({ runs: [{ at: '2026-09-01T00:00:00Z', source_hash: hash }] })],
+    figures: [drawn],
+    results: [result({ values })],
+    datasets: [dataset()],
+    fileHashes: { 'data/survey.csv': OLD },
+    present: {
+      'analysis/out/describe/results.json': true,
+      'tables/out/daily-use.md': true,
+      'figures/out/respondents.svg': true,
+    },
+  };
+
+  assert.deepEqual(
+    staleness(snapshot).map((item) => item.status),
+    ['up-to-date', 'up-to-date', 'up-to-date'],
+  );
+
+  // The file under the analysis moved. The RESULT record has not, but the numbers it holds are
+  // no longer the ones the data supports, so everything drawn from it moved with it.
+  const edited = staleness({ ...snapshot, fileHashes: { 'data/survey.csv': NEW } });
+  assert.deepEqual(
+    edited.map((item) => item.status),
+    ['stale', 'stale', 'stale'],
+  );
+  for (const item of edited.slice(1)) {
+    assert.deepEqual(item.reasons, [
+      {
+        kind: 'upstream-stale',
+        input: 'RESULT-1111111111',
+        analysis: 'ANALYSIS-2222222222',
+        status: 'stale',
+      },
+    ]);
+  }
+
+  const unrun = staleness({ ...snapshot, analyses: [analysis()] });
+  assert.deepEqual(
+    unrun.map((item) => item.status),
+    ['never-run', 'stale', 'stale'],
+  );
+  assert.equal(unrun[1].reasons[0].status, 'never-run');
+});
+
+test('staleness leaves a table read from a result no analysis produced alone', () => {
+  const values = { share: 0.75 };
+  const hash = resultHash(values);
+  const [, rendered] = staleness({
+    analyses: [analysis()],
+    tables: [table({ runs: [{ at: '2026-09-01T00:00:00Z', source_hash: hash }] })],
+    results: [result({ values, from: 'ART-0123456789' })],
+    present: { 'tables/out/daily-use.md': true },
+  });
+  assert.equal(rendered.status, 'up-to-date');
+});
+
 test('staleness is pure: it never touches the records it was given', () => {
   const records = {
     analyses: [analysis({ runs: [analysisRun()] })],

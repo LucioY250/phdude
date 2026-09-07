@@ -360,6 +360,61 @@ test('--force re-runs; identical findings are kept rather than rewritten', async
   );
 });
 
+test('a dataset edited without data add refuses the run, with or without --force', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  const { analysis, dataset } = await declare(deps);
+  await analyze.run(deps, { id: analysis.id });
+  const before = await events(deps.store, 'analyze');
+
+  await writeFile(join(root, 'data', 'survey.csv'), EDITED);
+
+  for (const options of [{ id: analysis.id }, { id: analysis.id, force: true }]) {
+    await assert.rejects(analyze.run(deps, options), (err) => {
+      assert.equal(err.code, 'VALIDATION');
+      assert.equal(
+        err.message,
+        `dataset ${dataset.id} (data/survey.csv) changed on disk since it was registered`,
+      );
+      assert.match(err.hint, /phdude data add data\/survey\.csv/);
+      assert.match(err.hint, /phdude analyze add/);
+      assert.match(err.hint, new RegExp(`phdude analyze run ${analysis.id}`));
+      return true;
+    });
+  }
+
+  const recorded = await deps.store.readEntity(analysis.id);
+  assert.equal(recorded.runs.length, 1, 'no run was recorded');
+  assert.deepEqual(await events(deps.store, 'analyze'), before, 'no event was appended');
+});
+
+test('the run records the bytes it read: no run ever writes down a hash it did not see', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  const { analysis } = await declare(deps);
+  await analyze.run(deps, { id: analysis.id });
+
+  await writeFile(join(root, 'data', 'survey.csv'), EDITED);
+  const { dataset: second } = await data.add(deps, 'data/survey.csv');
+  await analyze.add(deps, {
+    name: 'describe survey',
+    runtime: 'node',
+    script: 'analysis/echo.mjs',
+    args: ['--input', 'data/survey.csv', '--out', RESULTS],
+    inputs: [second.id],
+  });
+  await analyze.run(deps, { id: analysis.id });
+
+  const recorded = await deps.store.readEntity(analysis.id);
+  assert.equal(
+    recorded.runs.at(-1).input_hashes[second.id],
+    sha256(Buffer.from(EDITED)),
+    'the hash on the run is the hash of the file the script actually read',
+  );
+});
+
 test('a changed dataset makes a new result and marks the old one superseded', async (t) => {
   const root = await newRoot();
   t.after(() => rm(root, { recursive: true, force: true }));

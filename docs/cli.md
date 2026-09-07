@@ -779,6 +779,7 @@ version it superseded. The three readers write nothing.
 
 ```
 phdude analyze add --json '{"name":"describe survey","runtime":"node","script":"analysis/describe.mjs","inputs":["DATASET-8f0a1c2b3d"]}'
+phdude analyze add --file analysis.json
 phdude analyze list
 phdude analyze show ANALYSIS-…
 phdude analyze run ANALYSIS-… --allow-exec
@@ -788,7 +789,8 @@ phdude analyze runs ANALYSIS-…
 
 Declares a script as a research object, runs it under the workspace execution policy, and turns
 what it reports into `RESULT-` objects (spec §3.3). `add` never runs anything; `run` is the only
-command in PhDude that executes a researcher's code.
+command in PhDude that executes a researcher's code. `add` takes the declaration inline with
+`--json` or from a file with `--file <path>.json`, exactly like `data`, `table` and `figure`.
 
 | Field | What it holds |
 |---|---|
@@ -830,19 +832,24 @@ the analysis, `values` as written, and `ext.analysis: { key, run_at, unit? }`.
 #### What a run does, in order
 
 1. The workspace must be current, or the run stops and asks for `phdude migrate`.
-2. `execution.enabled` must be true, or `--allow-exec` must be passed. Otherwise: exit 3.
-3. If every input dataset is at the same bytes as the last **successful** run, the run is
+2. The id must resolve to a declared analysis, or: exit 1.
+3. `execution.enabled` must be true, or `--allow-exec` must be passed. Otherwise: exit 3.
+4. Every input dataset's file must still hash to what its `DATASET` record was registered
+   against. A file edited without `phdude data add` is refused — exit 2, no run, no event —
+   because the run would write down the registered hash for bytes it did not read. `--force`
+   does not override this: there is no reading of "run it anyway" that leaves the record true.
+5. If every input dataset is at the same bytes as the last **successful** run, the run is
    refused as up to date — exit 0, no event, nothing written. `--force` runs it anyway.
-4. The runner spawns the script with the policy's `timeout_seconds`.
-5. A non-zero exit records the run with its exit code and the last 2000 characters of stderr,
+6. The runner spawns the script with the policy's `timeout_seconds`.
+7. A non-zero exit records the run with its exit code and the last 2000 characters of stderr,
    writes no result, and exits 4. A run that outran the timeout is recorded the same way with
    `timed_out: true`, and one a signal ended with `exit: null` and `signal: SIGKILL` — never as
    a success, because a killed run is shaped like a clean one apart from the missing code.
    Either way the analysis stays stale, so the next run is not refused.
-6. On success, `results.json` is read and validated. A missing, unparseable or off-contract file
+8. On success, `results.json` is read and validated. A missing, unparseable or off-contract file
    is a validation error (exit 2) that records **nothing** — a run PhDude cannot read the
    results of must not count as the successful run that makes an analysis up to date.
-7. Each finding is matched against what this analysis already recorded, by its `key`:
+9. Each finding is matched against what this analysis already recorded, by its `key`:
 
 | The key came back… | What happens |
 |---|---|
@@ -979,7 +986,7 @@ is recorded:
 | Status | What it means |
 |---|---|
 | `up-to-date` | Every input still hashes to what the last successful run recorded, and every declared output is on disk. |
-| `stale` | An input moved: its bytes or its values are not what the run read. |
+| `stale` | An input moved: its bytes or its values are not what the run read, or it comes from an analysis that is itself stale or has never run. |
 | `never-run` | Nothing has been produced yet — no run, or none that succeeded. |
 | `missing-output` | The record claims a file that is not there. |
 
@@ -989,25 +996,31 @@ Each line that is not `up-to-date` carries its reasons:
 ANALYSIS-9d0e26cb51  daily-use-by-channel    stale
   - input DATASET-f4b21a0c3d bytes changed on disk
 TABLE-58c0f31a72     daily-use-by-channel    stale
-  - input RESULT-1b90ce4a77 changed since the last run
+  - input RESULT-1b90ce4a77 comes from ANALYSIS-9d0e26cb51, which is stale
 FIG-2a1c7e5b90       respondents-by-channel  never-run
   - no successful run recorded
 ```
 
-The two stale reasons are different problems with different fixes:
+The three stale reasons are different problems with different fixes:
 
 - **`bytes changed on disk`** — the file is not the one its `DATASET` record was registered
-  against. Someone edited `data/survey.csv` and the workspace was never told. Re-register it with
-  `phdude data add data/survey.csv`, point the analysis at the new `DATASET` id, then re-run.
-  Until you do, `phdude analyze run` will answer *up to date*: it compares the records the
-  analysis names, and those have not moved.
+  against. Someone edited `data/survey.csv` and the workspace was never told. Until it is,
+  `phdude analyze run` refuses: recording the registered hash for bytes it did not read would
+  write down a lineage the run never had. The fix is three steps, and `phdude next` prints all
+  three: `phdude data add data/survey.csv`, then `phdude analyze add` with the new `DATASET` id,
+  then `phdude analyze run`.
 - **`changed since the last run`** — the input itself moved: a re-run produced different values,
   or the analysis was re-pointed at a dataset its last run never read. `phdude analyze run`,
   `phdude table build` or `phdude figure build` is the fix.
+- **`comes from ANALYSIS-…, which is stale`** — the table or figure reads a `RESULT` whose
+  analysis has not been re-run yet, so the numbers it renders are no longer the ones the data
+  supports. Deal with the analysis first, then rebuild.
 
 A dataset is hashed from its file's bytes, which is what makes an edit to `data/survey.csv`
 visible here without anything having to watch the file. A result is hashed from its `values`, so
-editing a result's summary does not ask for a rebuild.
+editing a result's summary does not ask for a rebuild — and staleness travels one hop through
+the analysis that wrote those values, so editing the data marks the analysis, the table and the
+figure in the same report.
 
 `repro check` runs nothing, writes nothing and **always exits 0**. It is a report: which stale
 item to deal with, and when, is the researcher's call. `phdude next` picks the same items up as

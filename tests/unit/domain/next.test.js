@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { recommendNext } from '../../../src/domain/next.js';
 import { detectFactConflicts } from '../../../src/domain/conflicts.js';
+import { makeHashId } from '../../../src/domain/ids.js';
 
 const created = '2026-09-07T00:00:00Z';
 const NOW = '2026-09-07T12:00:00Z';
@@ -776,25 +777,47 @@ test('recommendNext: a workspace with nothing declared recommends none of the an
   }
 });
 
-test('recommendNext: analysis-stale asks for the file to be registered again when it drifted', () => {
+test('recommendNext: analysis-stale names the whole sequence that clears a drifted input', () => {
+  const current = 'b'.repeat(64);
   const snapshot = emptySnapshot({
     questions: [question('RQ-1')],
-    executionEnabled: false,
+    executionEnabled: true,
     datasets: [{ id: 'DATASET-1', schema: 'phdude.dataset', path: 'data/survey.csv', hash: 'a' }],
+    analyses: [
+      {
+        id: 'ANALYSIS-1',
+        schema: 'phdude.analysis',
+        name: 'describe',
+        runtime: 'node',
+        script: 'analysis/describe.mjs',
+        args: ['--out', 'analysis/out/describe/results.json'],
+        inputs: ['DATASET-1'],
+        outputs: { results: 'analysis/out/describe/results.json', files: [] },
+        params: {},
+      },
+    ],
     repro: [
       {
         kind: 'analysis',
         id: 'ANALYSIS-1',
         name: 'describe',
         status: 'stale',
-        reasons: [
-          { kind: 'unregistered-input', input: 'DATASET-1', registered: 'a', current: 'b' },
-        ],
+        reasons: [{ kind: 'unregistered-input', input: 'DATASET-1', registered: 'a', current }],
       },
     ],
   });
 
   const action = recommendNext(snapshot, []).find((a) => a.rule === 'analysis-stale');
-  assert.equal(action.command, 'phdude data add data/survey.csv');
+  const steps = action.command.split(', then ');
+  assert.deepEqual(steps.slice(0, 1), ['phdude data add data/survey.csv']);
+  assert.equal(steps.at(-1), 'phdude analyze run ANALYSIS-1');
+  const declared = JSON.parse(steps[1].replace(/^phdude analyze add --json '/, '').slice(0, -1));
+  assert.deepEqual(declared.inputs, [makeHashId('dataset', current)]);
+  assert.equal(declared.name, 'describe');
+  assert.equal(declared.script, 'analysis/describe.mjs');
+  assert.deepEqual(declared.outputs, {
+    results: 'analysis/out/describe/results.json',
+    files: [],
+  });
   assert.match(action.why.at(-1), /data\/survey\.csv is not the file DATASET-1 was registered/);
 });

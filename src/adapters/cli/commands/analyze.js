@@ -7,7 +7,7 @@ import { parseJsonArg } from '../args.js';
 
 const ADD_USAGE =
   `phdude analyze add --json '{"name":"describe survey","runtime":"node",` +
-  `"script":"analysis/describe.mjs","inputs":["DATASET-…"]}'`;
+  `"script":"analysis/describe.mjs","inputs":["DATASET-…"]}' (or --file analysis.json)`;
 
 async function readSpec({ flags, cwd }) {
   if (flags.jsonPayload) return parseJsonArg(flags.jsonPayload, '--json');

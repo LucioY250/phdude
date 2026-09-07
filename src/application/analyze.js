@@ -287,6 +287,23 @@ async function readResults({ store, actor }, analysis, at) {
   return results;
 }
 
+// The run trigger is the DATASET record's hash, so a file edited without `phdude data add`
+// would be read by the script and written down on the run as the bytes the record holds - a
+// lineage the run never had. It is refused instead, before anything spawns, `--force` included:
+// there is no reading of "run it anyway" that leaves the record true.
+async function assertInputsRegistered(store, analysis, datasets) {
+  for (const dataset of datasets) {
+    const bytes = await store.readBytes(dataset.path);
+    if (bytes === null || sha256(bytes) === dataset.hash) continue;
+    throw new PhdudeError(
+      'VALIDATION',
+      `dataset ${dataset.id} (${dataset.path}) changed on disk since it was registered`,
+      `phdude data add ${dataset.path}, then phdude analyze add with the new DATASET id, ` +
+        `then phdude analyze run ${analysis.id}`,
+    );
+  }
+}
+
 async function recordFailure(deps, analysis, run, summary) {
   const recorded = await appendRun(deps.store, analysis, run);
   await deps.store.appendEvent({
@@ -339,6 +356,7 @@ export async function run(deps, { id, allowExec = false, force = false }) {
     }
     datasets.push(dataset);
   }
+  await assertInputsRegistered(store, analysis, datasets);
 
   const { inputHashes, upToDate } = planRun(analysis, datasets);
   if (upToDate && !force) {

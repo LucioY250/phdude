@@ -87,6 +87,12 @@ That is information: the numbers would be the same. Reach for `--force` only whe
 asks. A run refused for policy (`script execution is disabled`) is not a problem to route
 around: tell the researcher which setting opens it and let them decide.
 
+A run is also refused when an input file no longer matches the `DATASET` record it was registered
+against — `dataset DATASET-… (data/survey.csv) changed on disk since it was registered`. `--force`
+does not get past it, and should not: the run would write down bytes it never read. Clearing it
+takes three steps, and `phdude next` prints all three — `phdude data add <path>`, then
+`phdude analyze add` with the new `DATASET` id, then `phdude analyze run`.
+
 ### 6. Verify the output
 
 ```

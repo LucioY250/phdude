@@ -27,7 +27,11 @@ declares. Each entry becomes a `RESULT-` object.
 
 A run whose inputs have not changed since the last successful one is refused as up to date. That
 is information, not an obstacle: re-running it would produce the same numbers. Pass `--force`
-only when the researcher asks for it.
+only when the researcher asks for it. A run whose input file no longer matches its `DATASET`
+record is refused too, and `--force` does not get past that one: register the file again, point
+the analysis at the new id, then run. `phdude next` prints the sequence.
+
+`add` takes `--json '<declaration>'` or `--file <path>.json`; the two are the same declaration.
 
 Report the findings as the analysis stated them, with their units. Do not restate a number as a
 conclusion, and do not call anything significant that the script did not.

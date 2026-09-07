@@ -2396,17 +2396,34 @@ test('e2e: data, analyze, table, figure and repro check through the binary', asy
   });
 
   // Editing the file under the analysis: the report says the bytes are not the registered ones,
-  // `next` recommends registering them again, and the whole thing still exits 0.
+  // the table and the figure drawn from its result move with it, and the whole thing still
+  // exits 0.
   await writeFile(join(ws, 'data', 'survey.csv'), survey + '4,social,no\n');
   const drifted = await run(ws, ['repro', 'check']);
   assert.equal(drifted.code, 0);
-  assert.match(drifted.stdout, /stale/);
   assert.match(drifted.stdout, /bytes changed on disk/);
+  assert.match(drifted.stdout, /3 stale/);
+  assert.match(drifted.stdout, /which is stale/);
+
+  // The run is refused rather than recording a hash for bytes it did not read.
+  const refusedRun = await phdude(ws, [
+    'analyze',
+    'run',
+    analysis.analysis.id,
+    '--allow-exec',
+    ...ACTOR,
+  ]);
+  assert.equal(refusedRun.code, 2);
+  assert.match(refusedRun.stderr, /changed on disk since it was registered/);
 
   const next = await runJson(ws, ['next']);
   const stale = next.actions.find((a) => a.rule === 'analysis-stale');
   assert.ok(stale, 'next never recommended re-running the stale analysis');
-  assert.equal(stale.command, 'phdude data add data/survey.csv');
+  const steps = stale.command.split(', then ');
+  assert.match(steps[0], /^set execution\.enabled: true/, 'the run at the end needs the policy');
+  assert.equal(steps[1], 'phdude data add data/survey.csv');
+  assert.match(steps[2], /^phdude analyze add --json /);
+  assert.equal(steps[3], `phdude analyze run ${analysis.analysis.id}`);
 
   const unknown = await phdude(ws, ['repro', 'rebuild', ...ACTOR]);
   assert.equal(unknown.code, 1);

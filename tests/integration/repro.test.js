@@ -14,6 +14,8 @@ import * as data from '../../src/application/data.js';
 import * as figure from '../../src/application/figure.js';
 import * as repro from '../../src/application/repro.js';
 import * as table from '../../src/application/table.js';
+import { loadSnapshot } from '../../src/application/snapshot.js';
+import { recommendNext } from '../../src/domain/next.js';
 
 const actor = { researcher: 'test', agent: 'node' };
 
@@ -186,10 +188,10 @@ test('check reports what has been declared and never produced', async (t) => {
   assert.equal(report.attention, 1);
 });
 
-// The spec's success condition, followed all the way through: one edit to the csv, and the
-// report says the analysis is reading a file nobody registered - then registering it, pointing
-// the analysis at the new dataset and re-running carries the staleness downstream.
-test('editing the dataset file makes the analysis stale, and the re-run carries it downstream', async (t) => {
+// The spec's success condition, verbatim: one edit to the csv, and the report says the analysis,
+// the table *and* the figure are stale - then registering the file, pointing the analysis at the
+// new dataset and re-running clears the analysis and leaves the two downstream rebuilds.
+test('editing the dataset file makes the analysis, the table and the figure stale', async (t) => {
   const root = await newRoot();
   t.after(() => rm(root, { recursive: true, force: true }));
   const deps = makeDeps(root);
@@ -205,10 +207,19 @@ test('editing the dataset file makes the analysis stale, and the re-run carries 
   );
   assert.equal(items[built.analysis.id].reasons[0].registered, built.dataset.hash);
 
-  // The table and the figure read the RESULT, which has not moved yet: they go stale when the
-  // re-run replaces the numbers, not when the file under the analysis changes.
-  assert.equal(items[built.table.id].status, 'up-to-date');
-  assert.equal(items[built.figure.id].status, 'up-to-date');
+  // The table and the figure read a RESULT the analysis has not re-written yet. The numbers in
+  // them are no longer the numbers the data supports, so they are stale by that hop.
+  for (const id of [built.table.id, built.figure.id]) {
+    assert.equal(items[id].status, 'stale', id);
+    assert.deepEqual(items[id].reasons, [
+      {
+        kind: 'upstream-stale',
+        input: built.result.id,
+        analysis: built.analysis.id,
+        status: 'stale',
+      },
+    ]);
+  }
 
   const registered = await data.add(deps, 'data/survey.csv');
   assert.notEqual(registered.dataset.id, built.dataset.id);
@@ -227,21 +238,48 @@ test('editing the dataset file makes the analysis stale, and the re-run carries 
   assert.equal(after[built.figure.id].status, 'stale');
 });
 
-// `analyze run` compares the DATASET records it was told to read, not the files under them, so
-// a file edited without `phdude data add` leaves the analysis stale and the re-run refused. That
-// is why `next` recommends registering the file rather than re-running.
-test('a file edited without registering it leaves analyze run reporting up to date', async (t) => {
+// `analyze run` records the DATASET record's hash, so a file edited without `phdude data add`
+// cannot be run against: the run would write down bytes it did not read. The sequence `next`
+// hands the researcher is followed here exactly as printed, and it terminates.
+test('the sequence next recommends for a drifted input clears it, and does not loop', async (t) => {
   const root = await newRoot();
   t.after(() => rm(root, { recursive: true, force: true }));
   const deps = makeDeps(root);
   const built = await buildEverything(deps);
 
   await writeFile(join(root, 'data', 'survey.csv'), EDITED);
-  const rerun = await analyze.run(deps, { id: built.analysis.id });
+  await assert.rejects(analyze.run(deps, { id: built.analysis.id }), { code: 'VALIDATION' });
 
-  assert.equal(rerun.ran, false);
-  assert.equal(rerun.reason, 'up to date');
-  assert.equal(byId(await repro.check(deps))[built.analysis.id].status, 'stale');
+  const snapshot = await loadSnapshot(deps.store, deps.clock);
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'analysis-stale');
+  const steps = action.command.split(', then ');
+  assert.equal(steps.length, 3);
+
+  // Step one, as printed: `phdude data add data/survey.csv`.
+  assert.equal(steps[0], 'phdude data add data/survey.csv');
+  const registered = await data.add(deps, 'data/survey.csv');
+
+  // Step two, as printed: the declaration it names is re-declared verbatim, and the id it
+  // predicted for the file's new bytes is the id `data add` actually minted.
+  const declaration = JSON.parse(
+    steps[1].replace(/^phdude analyze add --json '/, '').replace(/'$/, ''),
+  );
+  assert.deepEqual(declaration.inputs, [registered.dataset.id]);
+  await analyze.add(deps, declaration);
+
+  // Step three, as printed.
+  assert.equal(steps[2], `phdude analyze run ${built.analysis.id}`);
+  const rerun = await analyze.run(deps, { id: built.analysis.id });
+  assert.equal(rerun.ran, true);
+
+  const items = byId(await repro.check(deps));
+  assert.equal(items[built.analysis.id].status, 'up-to-date');
+  const after = recommendNext(await loadSnapshot(deps.store, deps.clock), []);
+  assert.equal(
+    after.some((a) => a.rule === 'analysis-stale'),
+    false,
+    'the recommendation is gone, so following it terminates',
+  );
 });
 
 test('check reports a declared output that has been deleted', async (t) => {
@@ -335,5 +373,9 @@ test('status counts the analysis objects and what is stale among them', async (t
   });
 
   await writeFile(join(root, 'data', 'survey.csv'), EDITED);
-  assert.equal((await status(deps)).analysis.stale, 1);
+  assert.equal(
+    (await status(deps)).analysis.stale,
+    3,
+    'the analysis, and the table and figure drawn from its result',
+  );
 });

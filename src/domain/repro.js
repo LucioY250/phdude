@@ -11,8 +11,9 @@ const ORDER = ['up-to-date', 'stale', 'never-run', 'missing-output'];
 
 /**
  * What every DATASET and RESULT the workspace holds hashes to right now. A dataset is its file's
- * bytes, which is why editing the file makes everything downstream stale; a result is its
- * values, because a summary edit does not change what a table would render.
+ * bytes; a result is its values, because a summary edit does not change what a table would
+ * render. Editing the file moves the analysis directly, and the table and figure drawn from its
+ * results through `upstreamByResult` below.
  * @param {{datasets?: object[], results?: object[], fileHashes?: Record<string, string|null>}} snapshot
  * @returns {Record<string, string|null>}
  */
@@ -65,8 +66,38 @@ function inputReasons(inputs, recorded, current, registered) {
 
 function statusFrom(reasons) {
   if (reasons.some((r) => r.kind === 'missing-output')) return 'missing-output';
-  const moved = ['stale-input', 'missing-input', 'unregistered-input'];
+  const moved = ['stale-input', 'missing-input', 'unregistered-input', 'upstream-stale'];
   return reasons.some((r) => moved.includes(r.kind)) ? 'stale' : 'up-to-date';
+}
+
+// A RESULT is only as current as the analysis that produced it. Staleness has to travel that hop
+// or the report says a figure in the draft is fine at exactly the moment its numbers stopped
+// being the ones on disk - the spec's success condition is the analysis, the table *and* the
+// figure. `never-run` travels for the same reason: nothing has produced those numbers yet.
+const UPSTREAM_STALE = ['stale', 'never-run'];
+
+function upstreamByResult(analyses, results = []) {
+  const stale = new Map(
+    analyses
+      .filter((item) => UPSTREAM_STALE.includes(item.status))
+      .map((item) => [item.id, item.status]),
+  );
+  const byResult = new Map();
+  for (const result of results) {
+    const status = stale.get(result.from);
+    if (status !== undefined) byResult.set(result.id, { analysis: result.from, status });
+  }
+  return byResult;
+}
+
+function upstreamReasons(inputs, upstream) {
+  const reasons = [];
+  for (const input of inputs) {
+    const hop = upstream?.get(input);
+    if (hop === undefined) continue;
+    reasons.push({ kind: 'upstream-stale', input, analysis: hop.analysis, status: hop.status });
+  }
+  return reasons;
 }
 
 function neverRun(kind, obj, reasons = []) {
@@ -104,17 +135,19 @@ function analysisItem(analysis, { present, current, registered }) {
 
 // A table's build reads exactly one source, so its run records one `source_hash` rather than a
 // map. Every build succeeds or throws, which is why there is no exit code to skip past here.
-function tableItem(table, { present, current, registered }) {
+function tableItem(table, { present, current, registered, upstream }) {
   const run = Array.isArray(table.runs) ? (table.runs.at(-1) ?? null) : null;
   if (run === null) return neverRun('table', table);
 
   const source = table.source?.result ?? table.source?.dataset ?? null;
+  const sources = source === null ? [] : [source];
   const recorded = source === null ? {} : { [source]: run.source_hash ?? null };
   const reasons = [
     ...Object.values(table.outputs ?? {})
       .filter((path) => present[path] !== true)
       .map((path) => ({ kind: 'missing-output', path })),
-    ...inputReasons(source === null ? [] : [source], recorded, current, registered),
+    ...inputReasons(sources, recorded, current, registered),
+    ...upstreamReasons(sources, upstream),
   ];
   return { kind: 'table', id: table.id, name: table.name, status: statusFrom(reasons), reasons };
 }
@@ -122,7 +155,7 @@ function tableItem(table, { present, current, registered }) {
 // The figure rules already say everything a figure can be wrong about (missing alt text
 // included), so they are read rather than reimplemented; only the unregistered-input reading,
 // which needs the DATASET records, is added on top.
-function figureItem(figure, { present, current, registered }) {
+function figureItem(figure, { present, current, registered, upstream }) {
   const report = figureStaleness(figure, { inputHashes: current, present });
   if (report.status === 'never-run') {
     return {
@@ -144,6 +177,7 @@ function figureItem(figure, { present, current, registered }) {
   const reasons = [
     ...report.findings.filter((f) => !(f.kind === 'stale-input' && drift.has(f.input))),
     ...drift.values(),
+    ...upstreamReasons(figure.inputs ?? [], upstream),
   ];
   return {
     kind: 'figure',
@@ -174,10 +208,13 @@ export function staleness(snapshot = {}) {
     registered: registeredHashes(snapshot.datasets),
   };
 
+  const analyses = (snapshot.analyses ?? []).map((a) => analysisItem(a, state));
+  const downstream = { ...state, upstream: upstreamByResult(analyses, snapshot.results) };
+
   return [
-    ...(snapshot.analyses ?? []).map((a) => analysisItem(a, state)),
-    ...(snapshot.tables ?? []).map((t) => tableItem(t, state)),
-    ...(snapshot.figures ?? []).map((f) => figureItem(f, state)),
+    ...analyses,
+    ...(snapshot.tables ?? []).map((t) => tableItem(t, downstream)),
+    ...(snapshot.figures ?? []).map((f) => figureItem(f, downstream)),
   ];
 }
 

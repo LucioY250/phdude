@@ -37,7 +37,8 @@ does any of this still hold? See
   `analyze run <id> [--allow-exec] [--force]`. An analysis declares a script under `analysis/`,
   the datasets it reads, and where it leaves `results.json`. A run records `at`, `exit`,
   `duration_ms`, the hash of every input and every output, and the results it wrote; a run whose
-  inputs have not changed since the last successful one is refused as "up to date". Each entry
+  inputs have not changed since the last successful one is refused as "up to date", and a run
+  whose input file no longer matches its `DATASET` record is refused outright. Each entry
   in `results.json` becomes a citable `RESULT` with `from` pointing at the analysis. A re-run
   that reports a key under a **different summary** marks the old result `rejected` with
   `superseded_by` pointing at the new one; a re-run that reports **new values under the same
@@ -61,8 +62,9 @@ does any of this still hold? See
 - **`phdude repro check [--json]`.** One line per analysis, table and figure:
   `up-to-date | stale | never-run | missing-output`, each with the reasons behind it. It
   distinguishes an input that moved since the run that read it from a file whose bytes no longer
-  match the `DATASET` record registered against them, because the fixes differ. It runs nothing,
-  writes nothing, and always exits 0.
+  match the `DATASET` record registered against them, because the fixes differ, and it carries a
+  stale or never-run analysis into the table and the figure drawn from its results — so editing
+  the data marks all three in one report. It runs nothing, writes nothing, and always exits 0.
 - **The reports read it too.** `phdude status` gains an `Analysis:` block (datasets, analyses,
   results, tables, figures, and how many are stale or unbuilt). `phdude next` gains
   `analysis-stale` — high once a supported or canonical claim rests on one of that analysis's
@@ -105,9 +107,10 @@ does any of this still hold? See
 - Node remains the only runtime the test suite requires; the runner's contract suite skips
   `python3` and `Rscript` honestly when they are not installed.
 - `phdude analyze run` compares the `DATASET` records an analysis names, not the files under
-  them. A file edited without `phdude data add` therefore leaves the analysis stale in
-  `repro check` while `analyze run` reports "up to date" — which is why `phdude next` recommends
-  registering the file rather than re-running.
+  them, so a file edited without `phdude data add` is a refusal (exit 2, nothing recorded)
+  rather than a run: writing down the registered hash for bytes the script did not read would
+  make the lineage false. `phdude next` prints the whole sequence that clears it — register the
+  file, re-declare the analysis against the new `DATASET` id, re-run.
 
 ## [0.4.0] — 2026-09-07
 
