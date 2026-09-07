@@ -34,7 +34,11 @@ export const COMMAND_OPTIONS = {
     id: { type: 'string' },
   },
   add: {},
-  link: { to: { type: 'string', multiple: true }, id: { type: 'string' } },
+  link: {
+    to: { type: 'string', multiple: true },
+    id: { type: 'string' },
+    contradicts: { type: 'string' },
+  },
   decide: {
     title: { type: 'string' },
     rationale: { type: 'string' },
@@ -227,6 +231,7 @@ function build(argv, { variadicTo = false, command = null, strict = false } = {}
       with: values.with,
       decision: values.decision,
       to: variadicTo ? to : values.to,
+      contradicts: values.contradicts,
       file: values.file,
       rationale: values.rationale,
       reason: values.reason,

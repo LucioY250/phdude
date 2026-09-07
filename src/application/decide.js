@@ -242,7 +242,41 @@ export async function promote({ store, clock, actor }, id, { to = 'canonical', d
     throw new PhdudeError('POLICY', `cannot move ${id} from ${obj.state} to ${to}`, null, null);
   }
 
-  if (to === 'canonical') {
+  // Leaving `disputed` for `supported`/`canonical` is resolving a contradiction, not an
+  // ordinary promotion: it needs a decision that names both claims in the pair, not the
+  // generic `affects` check below. `disputed` -> `rejected` needs no decision (PRD §3.5).
+  if (obj.state === 'disputed' && (to === 'supported' || to === 'canonical')) {
+    const hint = 'propose a decision with change.resolves_contradiction: [a, b]';
+    if (!decision) {
+      throw new PhdudeError(
+        'POLICY',
+        `promoting ${id} out of disputed requires a decision that resolves the contradiction`,
+        hint,
+        null,
+      );
+    }
+    const decisionObj = await store.readEntity(decision);
+    if (!decisionObj || decisionObj.schema !== 'phdude.decision') {
+      throw new PhdudeError('POLICY', `unknown decision ${decision}`, hint, null);
+    }
+    if (decisionObj.status !== 'approved') {
+      throw new PhdudeError('POLICY', `decision ${decision} is not approved`, hint, null);
+    }
+    const resolves = decisionObj.change?.resolves_contradiction;
+    const contradicts = obj.contradicts ?? [];
+    const resolvesThisPair =
+      Array.isArray(resolves) &&
+      resolves.includes(id) &&
+      resolves.some((other) => other !== id && contradicts.includes(other));
+    if (!resolvesThisPair) {
+      throw new PhdudeError(
+        'POLICY',
+        `decision ${decision} does not resolve ${id}'s contradiction`,
+        hint,
+        null,
+      );
+    }
+  } else if (to === 'canonical') {
     const hint = `propose and approve a decision that affects ${id}`;
     if (!decision) {
       throw new PhdudeError(

@@ -64,6 +64,11 @@ Use `trace` to answer "where did this come from?" or "what breaks if this change
 researcher asks why a sentence is hedged a certain way, trace the claim to its evidence and read
 the evidence's `strength` — that is the answer.
 
+A `disputed` claim's `trace` lists the claim it contradicts under `down`, as a related object
+rather than a dependency — a contradiction does not mean either claim depends on the other.
+`phdude status` lists every open disputed pair under "Disputed claims"; do not present either
+side of one as settled until it is resolved (see `.phdude/skills/decisions/SKILL.md`).
+
 ## Describing state to the researcher
 
 Always name the state when you present an object: "CLAIM-3f2a1b9c8d (candidate, one moderate

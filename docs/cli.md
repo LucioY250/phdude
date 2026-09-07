@@ -117,8 +117,14 @@ text output prints one line per inventory entry, with `+` marking the ones writt
 ### `phdude status`
 
 Project settings, artifact inventory by kind and extraction status, knowledge counts by type
-and state, open and resolved fact conflicts, pending decisions, and the last events. Every
-number is derived on read; nothing is cached.
+and state, open and resolved fact conflicts, disputed claim pairs, pending decisions, and the
+last events. Every number is derived on read; nothing is cached.
+
+Disputed claim pairs come from marking claims as contradicting each other (see `phdude link`
+below, PRD §3.5): a pair is listed while at least one of the two claims is still `disputed`,
+and drops out once both have moved on (one promoted out via a resolving decision, the other
+rejected). `--json` reports them as `disputedPairs: [[a, b], …]`; the text renderer also shows
+each claim's statement, truncated to 60 characters.
 
 ### `phdude next`
 
@@ -228,6 +234,27 @@ event. Every target must exist and be of a type the relation accepts, or the com
 A `canonical` object cannot be linked: it exits 3 and points at `decide propose`, because
 canonical knowledge changes only through an approved decision.
 
+### `phdude link <CLAIM-a> --contradicts <CLAIM-b>`
+
+```
+phdude link CLAIM-3d035aa05b --contradicts CLAIM-8e21a9c440
+```
+
+Records that two claims contradict each other (PRD §3.5, §38). `--contradicts` is mutually
+exclusive with `--to` and exits 1 if both are given. Both ids must exist and be claims, or the
+command exits 2; a claim contradicting itself exits 1.
+
+The relation is symmetric: `contradicts` is written to both claims, deduped and sorted, and
+each side moves to `disputed` when its current state allows the transition
+(`candidate`/`supported`/`canonical`). A `canonical` claim can be disputed this way with no
+decision required - unlike `--to`, the canonical guard does not apply, because surfacing a
+contradiction is exactly what PhDude should do proactively (PRD §3.3). A claim already
+`disputed` or `rejected` keeps its state. One `link` event is recorded; running the same
+`--contradicts` call again writes nothing and records no event.
+
+See [`decisions`](../skills/decisions/SKILL.md) for how a disputed pair gets resolved, and
+`phdude status` for where disputed pairs are reported.
+
 ### `phdude decide propose|approve|reject|supersede`
 
 ```
@@ -257,6 +284,15 @@ every time. The v0.1 form that passed a `DEC-` id to `--by` exits 1 with that co
 Moves an object to `canonical` (or to another state with `--to`). Promotion to canonical
 requires a decision that is `approved` and lists the object in `affects`; anything else
 exits 3. This is where human authority over canonical knowledge is enforced.
+
+Promoting a `disputed` claim to `supported` or `canonical` is resolving a contradiction, not an
+ordinary promotion: it requires an approved decision whose `change.resolves_contradiction`
+array (see `phdude decide propose` below, payload key `resolves_contradiction`) names both the
+claim being promoted and (at least) one of its `contradicts` partners; anything else exits 3.
+Promoting the losing claim to `rejected` needs no decision, same as any other
+`disputed → rejected` move. Resolving the pair does not touch the other claim automatically -
+`contradicts` is kept on the survivor as history, and the loser is only rejected by a separate
+explicit promote to `rejected`.
 
 ### `phdude packs list|detect|apply <name>`
 

@@ -99,7 +99,8 @@ Ids are derived from content, so the same claim added twice is one file. See
 - **`supported`** — evidence exists and a human has looked at it.
 - **`canonical`** — established project knowledge. Only reachable through an approved
   Decision that names the object in `affects`.
-- **`disputed`** — a conflict is open; never silently pick a side.
+- **`disputed`** — a conflict is open; never silently pick a side. Claims reach this state
+  automatically via `phdude link --contradicts` (below), never by hand.
 - **`rejected`** — do not cite as knowledge.
 
 The state is not decoration. It tells the agent how strongly it is allowed to write about
@@ -116,6 +117,22 @@ Fact the Decision never saw therefore reopens the conflict rather than inheritin
 resolution, so a later revision of a source can never be silently absorbed into a decision
 nobody made about it. `phdude next` suggests a `decide propose` command whose `--affects`
 already lists every Fact in the group.
+
+## Claim contradictions
+
+`phdude link CLAIM-a --contradicts CLAIM-b` (PRD §3.5, §38) records that two claims cannot
+both be true. The relation is symmetric - `contradicts` is written to both claims - and each
+side moves to `disputed` when its current state allows it (`candidate`/`supported`/`canonical`
+all do; `rejected` and already-`disputed` claims are left alone). A `canonical` claim can be
+disputed this way with no Decision required: surfacing a contradiction is proactive by design
+(PRD §3.3), unlike changing what a canonical claim says.
+
+`phdude status` lists disputed pairs while at least one side is still `disputed`. Resolving one
+takes an approved Decision whose `change.resolves_contradiction` names both claims in the
+pair; `phdude promote CLAIM-a --to supported --decision DEC-x` then moves the surviving claim
+on. The losing claim is not touched automatically - reject it explicitly with
+`phdude promote CLAIM-b --to rejected` (no Decision needed for that step). The `contradicts`
+entry itself is never removed; once resolved it stays as history of the dispute.
 
 ## Provenance and the audit trail
 

@@ -51,11 +51,22 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 
 ## The only way to write
 
-Write to the workspace ONLY via `phdude add`, `phdude link`, `phdude decide`, `phdude promote`,
-`phdude packs apply`, or `phdude mode`. (`phdude init` creates the workspace and `phdude ingest`
-writes the artifact inventory and its cache — expected setup steps, not knowledge edits.) Every
-other command only reads or derives from what is already recorded. Never write YAML files
-directly, even to "fix a typo".
+Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude link CLAIM-a
+--contradicts CLAIM-b`), `phdude decide`, `phdude promote`, `phdude packs apply`, or
+`phdude mode`. (`phdude init` creates the workspace and `phdude ingest` writes the artifact
+inventory and its cache — expected setup steps, not knowledge edits.) Every other command only
+reads or derives from what is already recorded. Never write YAML files directly, even to "fix
+a typo".
+
+## Contradictions are recorded, not resolved by you
+
+When two claims cannot both be true, record the contradiction rather than picking one:
+`phdude link CLAIM-a --contradicts CLAIM-b`. This moves both to `disputed` (a `canonical`
+claim included, no Decision required — surfacing a contradiction is proactive by design, PRD
+§3.3) and needs no researcher approval. Getting a claim back out of `disputed` does need an
+approved Decision naming both claims in `change.resolves_contradiction`; see `[[decisions]]`.
+Never promote one side of a live contradiction without that Decision, and never present a
+`disputed` claim as settled in either direction.
 
 Ids are derived from content, so `phdude add` cannot correct an object that already exists:
 re-adding it returns the original record unchanged. To attach evidence, a research question

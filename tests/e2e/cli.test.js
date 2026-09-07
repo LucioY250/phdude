@@ -722,3 +722,92 @@ test('e2e: ingest . walks sources/ only and refuses a path into the knowledge ba
   assert.match(refused.stderr, /not a source path: knowledge/);
   assert.match(refused.stderr, /Suggested action: put research materials under sources\//);
 });
+
+test('e2e: link --contradicts disputes both claims and promote requires a resolving decision', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-contradicts-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Contradicts thesis', '--no-git']);
+
+  const claimA = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'The effect of the intervention is positive.' }),
+  ]);
+  const claimB = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'The effect of the intervention is negative.' }),
+  ]);
+
+  const linked = await runJson(ws, ['link', claimA.id, '--contradicts', claimB.id]);
+  assert.equal(linked.linked, true);
+  assert.equal(linked.a.state, 'disputed');
+  assert.equal(linked.b.state, 'disputed');
+
+  const status = await runJson(ws, ['status']);
+  const pair = [claimA.id, claimB.id].sort();
+  assert.deepEqual(status.disputedPairs, [pair]);
+
+  const statusText = await run(ws, ['status']);
+  assert.match(statusText.stdout, /Disputed claims \(1 pairs\):/);
+  assert.match(statusText.stdout, new RegExp(`${pair[0]} ⟷ ${pair[1]}`));
+
+  // `--to` and `--contradicts` are mutually exclusive.
+  const conflictingFlags = await phdude(ws, [
+    'link',
+    claimA.id,
+    '--to',
+    claimB.id,
+    '--contradicts',
+    claimB.id,
+    ...ACTOR,
+  ]);
+  assert.equal(conflictingFlags.code, 1);
+  assert.match(conflictingFlags.stderr, /mutually exclusive/);
+
+  // A claim cannot contradict itself.
+  const selfLink = await phdude(ws, ['link', claimA.id, '--contradicts', claimA.id, ...ACTOR]);
+  assert.equal(selfLink.code, 1);
+  assert.match(selfLink.stderr, /cannot contradict itself/);
+
+  // Re-running the same contradiction changes nothing and is not an error.
+  const again = await runJson(ws, ['link', claimA.id, '--contradicts', claimB.id]);
+  assert.equal(again.linked, false);
+
+  // Promoting a disputed claim out to supported without a resolving decision is blocked.
+  const blocked = await phdude(ws, ['promote', claimA.id, '--to', 'supported', ...ACTOR]);
+  assert.equal(blocked.code, 3);
+  assert.match(blocked.stderr, /resolves_contradiction/);
+
+  const decision = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Resolve the effect-direction contradiction',
+    '--rationale',
+    'The negative-effect claim relied on a flawed measure.',
+    '--affects',
+    claimA.id,
+    claimB.id,
+    '--change',
+    JSON.stringify({ resolves_contradiction: [claimA.id, claimB.id] }),
+  ]);
+  await run(ws, ['decide', 'approve', decision.id, '--by', 'Ada Lovelace']);
+
+  const promoted = await runJson(ws, [
+    'promote',
+    claimA.id,
+    '--to',
+    'supported',
+    '--decision',
+    decision.id,
+  ]);
+  assert.equal(promoted.state, 'supported');
+
+  await run(ws, ['promote', claimB.id, '--to', 'rejected']);
+  const finalStatus = await runJson(ws, ['status']);
+  assert.deepEqual(finalStatus.disputedPairs, []);
+});

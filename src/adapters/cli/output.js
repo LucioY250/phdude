@@ -24,6 +24,16 @@ function renderConflictLine(c) {
   return `  - ${c.key}: ${values} [${status}]`;
 }
 
+function truncate(text, max = 60) {
+  return text.length > max ? `${text.slice(0, max)}…` : text;
+}
+
+function renderDisputedLine([a, b], disputedClaims) {
+  const statementA = truncate(disputedClaims[a] ?? '');
+  const statementB = truncate(disputedClaims[b] ?? '');
+  return `  - ${a} ⟷ ${b}: "${statementA}" vs "${statementB}"`;
+}
+
 /**
  * @param {object} report - a StatusReport, see application/status.js
  * @returns {string} plain-text, deterministic rendering (no timestamps besides event op/summary)
@@ -50,6 +60,16 @@ export function renderStatus(report) {
     lines.push('  (none)');
   } else {
     for (const c of report.conflicts) lines.push(renderConflictLine(c));
+  }
+  lines.push('');
+
+  lines.push(`Disputed claims (${report.disputedPairs.length} pairs):`);
+  if (report.disputedPairs.length === 0) {
+    lines.push('  (none)');
+  } else {
+    for (const pair of report.disputedPairs) {
+      lines.push(renderDisputedLine(pair, report.disputedClaims));
+    }
   }
   lines.push('');
 
