@@ -122,6 +122,20 @@ test('buildGraph: dangling reference is reported in graph.dangling, not thrown',
   ]);
 });
 
+test('buildGraph: a decision affecting a manuscript section is neither an edge nor dangling', () => {
+  const decision = {
+    schema: 'phdude.decision',
+    version: 1,
+    id: 'DEC-1111111111',
+    affects: ['manuscript:introduction', 'CLAIM-0000000000'],
+  };
+  const graph = buildGraph([decision]);
+  assert.deepEqual(graph.edges, []);
+  assert.deepEqual(graph.dangling, [
+    { from: 'DEC-1111111111', to: 'CLAIM-0000000000', rel: 'affects' },
+  ]);
+});
+
 test('trace: unknown id returns empty up/down', () => {
   const graph = chainGraph();
   assert.deepEqual(trace(graph, 'CLAIM-0000000000'), { up: [], down: [] });

@@ -1,3 +1,5 @@
+import { MANUSCRIPT_AFFECTS_RE } from './manuscript.js';
+
 const RELATIONS = {
   'phdude.evidence': [{ field: 'source', rel: 'cites', multi: false }],
   'phdude.claim': [
@@ -60,6 +62,9 @@ export function buildGraph(objects) {
       const targets = multi ? (value ?? []) : value === undefined ? [] : [value];
       for (const to of targets) {
         if (to === undefined || to === null) continue;
+        // A decision may name a manuscript section in `affects` (spec §3.6). A section is not
+        // an entity, so it is not a node here and its absence is not a dangling reference.
+        if (MANUSCRIPT_AFFECTS_RE.test(to)) continue;
         const edge = { from: obj.id, to, rel };
         if (nodes.has(to)) edges.push(edge);
         else dangling.push(edge);
