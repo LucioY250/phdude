@@ -1,0 +1,20 @@
+tests/unit/domain/gates/citations.test.js
+  s_946fc7502759d8::t_da5dabfea329c1 122,126,128
+  s_946fc7502759d8::t_4128b9796d8584 115-121,123-125,127,129-133
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "643f433b370a5c9dc09cb7516091529c19baef7e",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
