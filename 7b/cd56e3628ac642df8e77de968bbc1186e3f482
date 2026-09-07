@@ -1,0 +1,23 @@
+docs/PRD.md
+  s_946fc7502759d8::t_2eff62dccf7136 1-3748
+docs/superpowers/plans/2026-09-07-phdude-v0.1.md
+  s_946fc7502759d8::t_97aff01b0e3732 403,590,599,606,863
+docs/superpowers/specs/2026-09-07-phdude-v0.1-design.md
+  s_946fc7502759d8::t_cefc5506ae790c 68,71,171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "7bcd56e3628ac642df8e77de968bbc1186e3f482",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "unknown"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
