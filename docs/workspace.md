@@ -192,9 +192,10 @@ absolute otherwise, with `approved: true` only when `--approved` was passed.
 fields (tone, sentence style, transitions, language) by majority vote — a tie keeps whichever
 profile was read first — `terminology.preserve` by union, `terminology.avoid` by intersection,
 and every numeric `learned` field by median across the profiles that have actually run `learn`.
-It writes `authors/project-consensus.yaml` on every run, and proposes a Decision titled "Update
-project-consensus voice" only when the merged content changed, naming the participating author
-ids so the researcher can see whose profiles moved the result. A manuscript names its active
+It writes `authors/project-consensus.yaml` only when the merged content differs from what is
+already there, and proposes a Decision titled "Update project-consensus voice" with it, naming
+the participating author ids so the researcher can see whose profiles moved the result. A rerun
+with nothing new to merge leaves the file exactly as it was and proposes nothing. A manuscript names its active
 voice with `writing.primary_voice: <id>` or `writing.voice: project-consensus` (PRD §30.2); the
 Author Voice Check gate (v0.4's writing pipeline) compares a draft's own statistics against
 that profile's `learned` fields and reports deviations rather than silently rewriting.

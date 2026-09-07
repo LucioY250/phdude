@@ -819,7 +819,7 @@ The gates, in the order they report:
 | `gate-citations` | a `[@key]` that resolves to no recorded source, or one whose accepting candidate was dismissed | — |
 | `gate-evidence` | a `<!-- claim:/fact:/result: -->` marker naming nothing, a paragraph asserting a `rejected` claim, a verb stronger than the claim's state or its evidence allows | a numeral of two digits or more with neither a marker nor a citation in its sentence |
 | `gate-prose` | every prose rule, in `ruthless` mode | every prose rule, in `full` mode |
-| `gate-voice` | — | nothing yet: the author-voice comparison arrives with `phdude authors` |
+| `gate-voice` | — (voice never blocks, `ruthless` mode included: a learned baseline describes a habit, not a defect) | with an author profile that has run `learn`: any of mean sentence length, its spread, opening diversity, transition rate and first-person rate outside its tolerance, named with the observed value, the learned value and the band (`mean sentence length 31.2 vs learned 18.4 ± 4.6`); a word the profile's `terminology.avoid` lists. A term the section's claims use and the profile preserves, missing from the draft, is `info`. Author Voice scores 100 − 25 × the mean deviation across those five metrics, each in multiples of its own tolerance |
 | `gate-meaning` | on `--revision` only: a claim, citation, number or negation the revision dropped, or a claim or citation it added without `--allow-additions` | — |
 | `gate-profile` | with `target_profile` set: a section over the venue's word limit | a section the venue does not list, or one out of the venue's order |
 
@@ -888,9 +888,12 @@ before the researcher has actually signed off on it.
 sentence style, transitions, language) by majority vote, ties won by whichever profile was
 read first; `terminology.preserve` by union; `terminology.avoid` by intersection (a word every
 participant wants avoided); every numeric `learned` field by median across the profiles that
-have run `learn`. It always rewrites `authors/project-consensus.yaml`, and proposes a Decision
-titled "Update project-consensus voice" only when the merged content actually changed - running
-it again with nothing new to learn from is a no-op that proposes nothing. Never approve that
+have run `learn`. It rewrites `authors/project-consensus.yaml` only when the merged content
+differs from what is already there (`learned.learned_at` aside, since a timestamp is not
+content), and proposes a Decision titled "Update project-consensus voice" with it - running it
+again with nothing new to learn from leaves the file byte for byte as it was and proposes
+nothing. The Decision's id is keyed on the voice it proposes, so recomputing a consensus you
+have already been offered finds that same Decision instead of a second copy of it. Never approve that
 Decision on the researcher's behalf.
 
 ### `phdude packs list|detect|apply <name>`

@@ -1,222 +1,155 @@
 // Author voice profiles (PRD S30): descriptive statistics only, never opaque embeddings, so a
 // researcher can inspect and correct what PhDude inferred. Pure - no I/O, no clock.
+//
+// Every sentence, word and rate here comes from `textstats`, the one text-analysis primitive in
+// PhDude, so a profile learned from a sample and a draft measured against it are read the same
+// way. The only word list this module owns is the stopword list `preserved_terms` filters on:
+// terminology extraction is not a prose rule, so it does not live in the language tables.
 
-// TODO(v0.4-T4): replace basicStats with textstats.stats(text, lang); this module's own
-// sentence/word handling is a stand-in until that lands.
-const WORD_RE = /[A-Za-z]+(?:'[A-Za-z]+)?/g;
+import { findPhrases, stats, words } from './textstats.js';
 
-const LEXICONS = {
-  en: {
-    transitions: new Set([
-      'however',
-      'therefore',
-      'moreover',
-      'furthermore',
-      'additionally',
-      'consequently',
-      'nevertheless',
-      'nonetheless',
-      'thus',
-      'hence',
-      'meanwhile',
-      'accordingly',
-    ]),
-    firstPerson: new Set([
-      'i',
-      "i'm",
-      "i've",
-      "i'll",
-      "i'd",
-      'me',
-      'my',
-      'mine',
-      'myself',
-      'we',
-      "we're",
-      "we've",
-      "we'll",
-      "we'd",
-      'us',
-      'our',
-      'ours',
-      'ourselves',
-    ]),
-    hedges: new Set([
-      'may',
-      'might',
-      'could',
-      'possibly',
-      'perhaps',
-      'likely',
-      'somewhat',
-      'arguably',
-      'seems',
-      'appears',
-      'suggests',
-      'tends',
-      'relatively',
-    ]),
-    stopwords: new Set([
-      'about',
-      'after',
-      'again',
-      'against',
-      'before',
-      'being',
-      'below',
-      'between',
-      'cannot',
-      'during',
-      'either',
-      'further',
-      'having',
-      'inside',
-      'little',
-      'myself',
-      'others',
-      'people',
-      'should',
-      'shall',
-      'their',
-      'theirs',
-      'themselves',
-      'there',
-      'these',
-      'those',
-      'through',
-      'under',
-      'until',
-      'where',
-      'which',
-      'while',
-      'would',
-      'across',
-      'around',
-      'because',
-      'without',
-      'within',
-      'toward',
-      'towards',
-      'upon',
-      'yourself',
-      'yourselves',
-      'something',
-      'someone',
-      'anything',
-      'everything',
-      'nothing',
-      'always',
-      'usually',
-      'however',
-      'therefore',
-      'moreover',
-    ]),
-  },
+const STOPWORDS = {
+  en: new Set([
+    'about',
+    'across',
+    'after',
+    'again',
+    'against',
+    'always',
+    'anything',
+    'around',
+    'because',
+    'before',
+    'being',
+    'below',
+    'between',
+    'cannot',
+    'during',
+    'either',
+    'everything',
+    'further',
+    'having',
+    'however',
+    'inside',
+    'little',
+    'moreover',
+    'myself',
+    'nothing',
+    'others',
+    'people',
+    'shall',
+    'should',
+    'someone',
+    'something',
+    'their',
+    'theirs',
+    'themselves',
+    'there',
+    'therefore',
+    'these',
+    'those',
+    'through',
+    'toward',
+    'towards',
+    'under',
+    'until',
+    'upon',
+    'usually',
+    'where',
+    'which',
+    'while',
+    'within',
+    'without',
+    'would',
+    'yourself',
+    'yourselves',
+  ]),
+  es: new Set([
+    'además',
+    'algunas',
+    'algunos',
+    'aquella',
+    'aquellas',
+    'aquello',
+    'aquellos',
+    'cualquier',
+    'cuando',
+    'debido',
+    'dentro',
+    'desde',
+    'después',
+    'donde',
+    'durante',
+    'entonces',
+    'entre',
+    'aunque',
+    'hacia',
+    'incluso',
+    'mediante',
+    'mientras',
+    'misma',
+    'mismas',
+    'mismo',
+    'mismos',
+    'mucha',
+    'muchas',
+    'mucho',
+    'muchos',
+    'nosotras',
+    'nosotros',
+    'nuestra',
+    'nuestras',
+    'nuestro',
+    'nuestros',
+    'porque',
+    'siempre',
+    'sobre',
+    'también',
+    'tampoco',
+    'todas',
+    'todos',
+    'aquel',
+  ]),
 };
 
-// Only `en` is defined for now (see the T4 TODO above); an unrecognised language falls back to
-// it rather than reporting every rate as zero.
-function lexiconFor(lang) {
-  return LEXICONS[lang] ?? LEXICONS.en;
+const MIN_TERM_LENGTH = 6;
+const PRESERVED_TERMS = 15;
+
+function stopwordsFor(lang) {
+  const code = String(lang ?? '')
+    .toLowerCase()
+    .split(/[-_]/)[0];
+  return STOPWORDS[code] ?? new Set();
 }
 
 function round3(n) {
   return Math.round(n * 1000) / 1000;
 }
 
-function words(text) {
-  return text.match(WORD_RE) ?? [];
-}
-
-// Splits on a `.?!` run followed by whitespace (or end of string), which is what the researcher
-// asked this stopgap to do; abbreviations like "e.g." will over-split, same as any naive
-// sentence splitter.
-function splitSentences(text) {
-  const flat = text.replace(/\s+/g, ' ').trim();
-  if (!flat) return [];
-  return flat
-    .split(/(?<=[.?!])\s+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-}
-
-function splitParagraphs(text) {
-  return text
-    .split(/\n\s*\n+/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-}
-
-function mean(nums) {
-  return nums.length === 0 ? 0 : nums.reduce((a, b) => a + b, 0) / nums.length;
-}
-
-function stddev(nums, avg) {
-  if (nums.length === 0) return 0;
-  return Math.sqrt(mean(nums.map((n) => (n - avg) ** 2)));
-}
-
-/**
- * Pure. Descriptive statistics for one block of text, in the shape both `learnFrom` and
- * `voiceDeviation` use: explicit, human-readable numbers plus the raw tokens and normalized
- * text a caller needs for terminology checks. Never an opaque embedding (PRD S30).
- * @param {string} text
- * @param {string} [lang] - only `en` word lists exist today; anything else falls back to them
- * @returns {{sentence_length_mean: number, sentence_length_sd: number, opening_diversity: number,
- *   transition_rate: number, first_person_rate: number, hedge_rate: number,
- *   paragraph_density: number, tokens: string[], text: string}}
- */
-export function basicStats(text, lang) {
-  const lexicon = lexiconFor(lang);
-  const source = String(text ?? '');
-  const sentences = splitSentences(source);
-  const paragraphs = splitParagraphs(source);
-  const tokens = words(source).map((w) => w.toLowerCase());
-
-  const sentenceLengths = sentences.map((s) => words(s).length);
-  const openings = sentences.map((s) => words(s)[0]?.toLowerCase()).filter(Boolean);
-  const sentencesWithTransition = sentences.filter((s) =>
-    words(s).some((w) => lexicon.transitions.has(w.toLowerCase())),
-  ).length;
-
-  const sentenceLengthMean = mean(sentenceLengths);
-  const firstPersonCount = tokens.filter((t) => lexicon.firstPerson.has(t)).length;
-  const hedgeCount = tokens.filter((t) => lexicon.hedges.has(t)).length;
-
-  return {
-    sentence_length_mean: round3(sentenceLengthMean),
-    sentence_length_sd: round3(stddev(sentenceLengths, sentenceLengthMean)),
-    opening_diversity: round3(
-      sentences.length === 0 ? 0 : new Set(openings).size / sentences.length,
-    ),
-    transition_rate: round3(
-      sentences.length === 0 ? 0 : sentencesWithTransition / sentences.length,
-    ),
-    first_person_rate: round3(tokens.length === 0 ? 0 : firstPersonCount / tokens.length),
-    hedge_rate: round3(tokens.length === 0 ? 0 : hedgeCount / tokens.length),
-    paragraph_density: round3(
-      paragraphs.length === 0 ? sentences.length : sentences.length / paragraphs.length,
-    ),
-    tokens,
-    text: source.toLowerCase(),
-  };
-}
-
 // Top 15 non-stopword tokens at least 6 letters long, by frequency, ties broken alphabetically.
 // Explicit and inspectable, never an embedding (PRD S30).
-function preservedTerms(tokens, lang) {
-  const lexicon = lexiconFor(lang);
+function preservedTerms(text, lang) {
+  const stopwords = stopwordsFor(lang);
   const freq = new Map();
-  for (const raw of tokens) {
-    const t = raw.toLowerCase();
-    if (lexicon.stopwords.has(t)) continue;
-    if (t.replace(/'/g, '').length < 6) continue;
-    freq.set(t, (freq.get(t) ?? 0) + 1);
+  for (const raw of words(text)) {
+    const term = raw.toLowerCase();
+    if (stopwords.has(term)) continue;
+    if (!/\p{L}/u.test(term)) continue;
+    if (term.replace(/['’-]/g, '').length < MIN_TERM_LENGTH) continue;
+    freq.set(term, (freq.get(term) ?? 0) + 1);
   }
   return [...freq.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 15)
+    .slice(0, PRESERVED_TERMS)
     .map(([term]) => term);
+}
+
+// A language with no prose table has no transition, first-person or hedge rate at all
+// (`textstats` reports null rather than a misleading zero). The profile schema wants a number,
+// so an unmeasurable rate is recorded as 0 - and `gate-voice` never compares it, because the
+// draft's own rate is null for the same language and the comparison is skipped.
+function rateOf(value) {
+  return typeof value === 'number' ? value : 0;
 }
 
 /**
@@ -235,16 +168,17 @@ export function learnFrom(texts, lang) {
   const list = (Array.isArray(texts) ? texts : [texts]).filter(
     (t) => typeof t === 'string' && t.trim() !== '',
   );
-  const stats = basicStats(list.join('\n\n'), lang);
+  const corpus = list.join('\n\n');
+  const measured = stats(corpus, lang);
   return {
-    sentence_length_mean: stats.sentence_length_mean,
-    sentence_length_sd: stats.sentence_length_sd,
-    opening_diversity: stats.opening_diversity,
-    transition_rate: stats.transition_rate,
-    first_person_rate: stats.first_person_rate,
-    hedge_rate: stats.hedge_rate,
-    paragraph_density: stats.paragraph_density,
-    preserved_terms: preservedTerms(stats.tokens, lang),
+    sentence_length_mean: measured.meanLen,
+    sentence_length_sd: measured.sdLen,
+    opening_diversity: measured.openingDiversity,
+    transition_rate: rateOf(measured.transitionRate),
+    first_person_rate: rateOf(measured.firstPersonRate),
+    hedge_rate: rateOf(measured.hedgeRate),
+    paragraph_density: measured.paragraphDensity,
+    preserved_terms: preservedTerms(corpus, lang),
     sample_count: list.length,
   };
 }
@@ -337,84 +271,147 @@ export function consensus(profiles) {
   return merged;
 }
 
-const DEFAULT_TOLERANCES = {
+/**
+ * The tolerance each compared metric is allowed to drift by. Sentence length and its spread are
+ * relative (a fraction of the profile's own value, because a mean of 30 words tolerates more
+ * absolute drift than a mean of 12); the three rates are absolute, because they are already
+ * fractions of 1.
+ */
+export const DEFAULT_TOLERANCES = {
   sentence_length: 0.25,
+  sentence_length_sd: 0.5,
+  opening_diversity: 0.15,
   transition_rate: 0.1,
   first_person_rate: 0.1,
-  opening_diversity: 0.15,
 };
 
-function escapeRegExp(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+// The five metrics spec S3.4 gate 4 names, each mapping a `textstats.stats` field onto the
+// `learned` field it is compared against.
+const METRICS = [
+  {
+    kind: 'sentence-length',
+    label: 'mean sentence length',
+    stat: 'meanLen',
+    learned: 'sentence_length_mean',
+    tolerance: 'sentence_length',
+    relative: true,
+  },
+  {
+    kind: 'sentence-length-sd',
+    label: 'sentence length spread',
+    stat: 'sdLen',
+    learned: 'sentence_length_sd',
+    tolerance: 'sentence_length_sd',
+    relative: true,
+  },
+  {
+    kind: 'opening-diversity',
+    label: 'opening diversity',
+    stat: 'openingDiversity',
+    learned: 'opening_diversity',
+    tolerance: 'opening_diversity',
+    relative: false,
+  },
+  {
+    kind: 'transition-rate',
+    label: 'transition rate',
+    stat: 'transitionRate',
+    learned: 'transition_rate',
+    tolerance: 'transition_rate',
+    relative: false,
+  },
+  {
+    kind: 'first-person-rate',
+    label: 'first-person rate',
+    stat: 'firstPersonRate',
+    learned: 'first_person_rate',
+    tolerance: 'first_person_rate',
+    relative: false,
+  },
+];
+
+// Every metric both sides can supply, with the tolerance band expressed in the metric's own
+// units so a finding can name it. A metric whose band works out to zero - a relative tolerance
+// on a learned value of 0 - is not comparable and is skipped rather than always deviating.
+function comparisons(measured, learned, tolerances) {
+  const rows = [];
+  for (const metric of METRICS) {
+    const actual = measured?.[metric.stat];
+    const expected = learned?.[metric.learned];
+    if (typeof actual !== 'number' || typeof expected !== 'number') continue;
+    const allowed = tolerances?.[metric.tolerance] ?? DEFAULT_TOLERANCES[metric.tolerance];
+    if (typeof allowed !== 'number') continue;
+    const band = metric.relative ? round3(Math.abs(expected) * allowed) : allowed;
+    if (!(band > 0)) continue;
+    const deviation = round3(Math.abs(actual - expected));
+    rows.push({ ...metric, actual, expected, band, deviation, ratio: round3(deviation / band) });
+  }
+  return rows;
+}
+
+function avoidedWords(text, profile) {
+  const avoid = profile?.terminology?.avoid ?? [];
+  if (avoid.length === 0 || typeof text !== 'string' || text === '') return [];
+  const byLower = new Map(avoid.map((word) => [String(word).toLowerCase(), word]));
+  const found = new Map();
+  for (const hit of findPhrases(text, [...byLower.keys()])) {
+    if (!found.has(hit.phrase)) found.set(hit.phrase, hit.index);
+  }
+  return [...found.entries()]
+    .sort((a, b) => a[1] - b[1])
+    .map(([phrase, index]) => {
+      const word = byLower.get(phrase);
+      return {
+        kind: 'avoid-word',
+        why: `uses "${word}", which the profile's terminology.avoid lists`,
+        word,
+        index,
+      };
+    });
 }
 
 /**
  * Pure. Compares a draft's descriptive statistics against the active voice profile's `learned`
  * baseline and reports deviations beyond `tolerances`, plus any use of a word listed in
- * `terminology.avoid` - never a silent rewrite (PRD S30.2). Sentence length is compared
- * relatively (a fraction of the profile's own mean); the rate fields are compared as absolute
- * differences, since they are already fractions.
- * @param {{sentence_length_mean?: number, transition_rate?: number, first_person_rate?: number,
- *   opening_diversity?: number, text?: string}} stats - from `basicStats` (or, later, textstats.stats)
- * @param {object} profile - a `phdude.author-profile`; findings are empty when it has no `learned`
- * @param {{sentence_length?: number, transition_rate?: number, first_person_rate?: number,
- *   opening_diversity?: number}} [tolerances]
- * @returns {{kind: string, why: string, expected: number, actual: number, deviation: number}[]
- *   | {kind: 'avoid-word', why: string, word: string}[]}
+ * `terminology.avoid` - never a silent rewrite (PRD S30.2). `deviation` is always the absolute
+ * difference in the metric's own units and `tolerance` is the band it was judged against, so a
+ * caller can print "31.2 vs learned 18.4 ± 4.6" without knowing which metrics are relative.
+ * @param {object} stats - a `textstats.stats` result, carrying additionally the `text` it was
+ *   measured over (the terminology check reads words, not numbers)
+ * @param {object} profile - a `phdude.author-profile`; only `terminology.avoid` is read when it
+ *   has no `learned` block
+ * @param {object} [tolerances] - defaults to `DEFAULT_TOLERANCES`
+ * @returns {object[]} findings, deviations first in metric order, then avoided words in the
+ *   order they appear in the text
  */
 export function voiceDeviation(stats, profile, tolerances = DEFAULT_TOLERANCES) {
-  const findings = [];
-  const learned = profile?.learned;
+  const outside = comparisons(stats, profile?.learned, tolerances)
+    .filter((row) => row.ratio > 1)
+    .map((row) => ({
+      kind: row.kind,
+      why: `${row.label} ${row.actual} vs learned ${row.expected} ± ${row.band}`,
+      expected: row.expected,
+      actual: row.actual,
+      deviation: row.deviation,
+      tolerance: row.band,
+    }));
 
-  if (learned) {
-    if (
-      typeof stats.sentence_length_mean === 'number' &&
-      typeof learned.sentence_length_mean === 'number' &&
-      learned.sentence_length_mean !== 0
-    ) {
-      const deviation = round3(
-        Math.abs(stats.sentence_length_mean - learned.sentence_length_mean) /
-          learned.sentence_length_mean,
-      );
-      if (deviation > tolerances.sentence_length) {
-        findings.push({
-          kind: 'sentence-length',
-          why:
-            `average sentence length ${stats.sentence_length_mean} deviates from the ` +
-            `profile's ${learned.sentence_length_mean} by ${deviation * 100}%`,
-          expected: learned.sentence_length_mean,
-          actual: stats.sentence_length_mean,
-          deviation,
-        });
-      }
-    }
+  return [...outside, ...avoidedWords(stats?.text, profile)];
+}
 
-    for (const field of ['transition_rate', 'first_person_rate', 'opening_diversity']) {
-      if (typeof stats[field] !== 'number' || typeof learned[field] !== 'number') continue;
-      const deviation = round3(Math.abs(stats[field] - learned[field]));
-      if (deviation > tolerances[field]) {
-        findings.push({
-          kind: field.replace(/_/g, '-'),
-          why: `${field.replace(/_/g, ' ')} ${stats[field]} deviates from the profile's ${learned[field]} by ${deviation}`,
-          expected: learned[field],
-          actual: stats[field],
-          deviation,
-        });
-      }
-    }
-  }
-
-  const text = stats?.text ?? '';
-  for (const word of profile?.terminology?.avoid ?? []) {
-    const re = new RegExp(`\\b${escapeRegExp(word.toLowerCase())}\\b`);
-    if (re.test(text)) {
-      findings.push({
-        kind: 'avoid-word',
-        why: `uses "${word}", which the profile's terminology.avoid lists`,
-        word,
-      });
-    }
-  }
-
-  return findings;
+/**
+ * Pure. How closely a draft matches the profile it was written under, 0-100: 100 minus 25 times
+ * the mean deviation of the compared metrics, each deviation measured in multiples of its own
+ * tolerance. A draft sitting exactly on every tolerance scores 75; one four times outside every
+ * tolerance scores 0.
+ * @param {object} stats - a `textstats.stats` result
+ * @param {object} profile - a `phdude.author-profile`
+ * @param {object} [tolerances]
+ * @returns {number|null} null when nothing is comparable (no profile, or none learned yet)
+ */
+export function voiceScore(stats, profile, tolerances = DEFAULT_TOLERANCES) {
+  const rows = comparisons(stats, profile?.learned, tolerances);
+  if (rows.length === 0) return null;
+  const mean = rows.reduce((sum, row) => sum + row.ratio, 0) / rows.length;
+  return Math.max(0, Math.min(100, Math.round(100 - 25 * mean)));
 }

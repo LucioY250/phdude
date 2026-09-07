@@ -84,6 +84,35 @@ test('a candidate claim may suggest, and may not show, demonstrate, prove or est
   }
 });
 
+test('a plural subject overreaches exactly as a singular one does, in both languages', () => {
+  const candidate = {
+    id: 'CLAIM-4444444444',
+    state: 'candidate',
+    supported_by: ['EVID-1111111111'],
+  };
+  const world2 = ctx({ claims: [candidate], evidence: [MODERATE] });
+
+  for (const verb of ['demonstrate', 'show', 'prove', 'establish']) {
+    const findings = evidenceGate.run(
+      `The data ${verb} a lag.\n<!-- claim: CLAIM-4444444444 -->\n`,
+      world2,
+    );
+    assert.equal(findings.length, 1, verb);
+    assert.equal(findings[0].severity, 'block');
+    assert.match(findings[0].message, new RegExp(`"${verb}"`));
+  }
+
+  const spanish = ctx({ claims: [candidate], evidence: [MODERATE], lang: 'es' });
+  for (const verb of ['demuestran', 'muestran', 'prueban', 'establecen']) {
+    const findings = evidenceGate.run(
+      `Los datos ${verb} un retraso.\n<!-- claim: CLAIM-4444444444 -->\n`,
+      spanish,
+    );
+    assert.equal(findings.length, 1, verb);
+    assert.equal(findings[0].severity, 'block');
+  }
+});
+
 test('a supported claim may show, and may not demonstrate or prove', () => {
   assert.deepEqual(
     evidenceGate.run('The survey shows a lag.\n<!-- claim: CLAIM-1111111111 -->\n', world),

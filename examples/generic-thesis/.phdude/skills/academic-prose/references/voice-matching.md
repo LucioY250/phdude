@@ -45,7 +45,9 @@ worse than writing in none.
 
 ## What the gate checks
 
-`gate-voice` compares the draft's statistics with the profile's learned fields within the
-policy's tolerances and warns on a deviation; a term from `terminology.avoid` warns; preserved
-terminology the claims use but the prose does not is reported as `info`. It never blocks: voice
+`gate-voice` compares five of the draft's statistics with the profile's learned fields - mean
+sentence length, its spread, opening diversity, transition rate, first-person rate - and warns
+on any that fall outside the gate's tolerance for it, naming the observed value, the learned
+value and the band. A term from `terminology.avoid` warns; preserved terminology the claims use
+but the prose does not is reported as `info`. It never blocks, `ruthless` mode included: voice
 is a matter of degree, and the researcher is the authority on their own.

@@ -232,10 +232,14 @@ function withoutLearnedAt(profile) {
 }
 
 /**
- * Merges every author profile (except `project-consensus` itself) into `project-consensus` and
- * writes it. When the merged content actually changed, proposes a Decision recording who
- * participated - constructed and written directly here (not via `decide.propose`) so this
- * remains one event for the whole operation.
+ * Merges every author profile (except `project-consensus` itself) into `project-consensus`.
+ * The file is written only when the merged content differs from what is already on disk
+ * (`learned.learned_at` excluded, since a timestamp is not content): rerunning `consensus` with
+ * nothing new to merge leaves the file byte for byte as it was. A real change also proposes a
+ * Decision recording the voice it proposes - constructed and written directly here (not via
+ * `decide.propose`) so this remains one event for the whole operation, and keyed on the merged
+ * voice itself, so recomputing the same consensus finds the same Decision instead of proposing
+ * a second copy of it.
  * @param {{store: object, clock: () => string, actor: object}} deps
  * @returns {Promise<{changed: boolean, decision: object|null, profile: object}>}
  */
@@ -258,38 +262,43 @@ export async function consensus({ store, clock, actor }) {
   const previous = await readProfile(store, CONSENSUS_ID);
   const changed = stableStringify(withoutLearnedAt(previous)) !== stableStringify(merged);
 
+  if (!changed) {
+    await store.appendEvent({
+      ts: clock(),
+      op: 'authors',
+      actor,
+      ids: [],
+      summary: 'project-consensus voice unchanged',
+    });
+    return { changed: false, decision: null, profile: previous };
+  }
+
   const toWrite = merged.learned
     ? { ...merged, learned: { ...merged.learned, learned_at: clock() } }
     : merged;
   assertValid('author-profile', toWrite);
   await store.writeYamlAtomic(pathFor(CONSENSUS_ID), toWrite);
 
-  let decision = null;
-  if (changed) {
-    const candidate = newDecision({
-      title: 'Update project-consensus voice',
-      rationale: `Recomputed the project-consensus voice from ${ids.length} author profile(s): ${ids.join(', ')}.`,
-      proposed_by: actor,
-      affects: [],
-      change: { consensus: { participants: ids, learned_at: toWrite.learned?.learned_at ?? null } },
-      created: clock(),
-    });
-    const existing = await store.readEntity(candidate.id);
-    if (existing) {
-      decision = existing;
-    } else {
-      await store.writeEntity(candidate);
-      decision = candidate;
-    }
-  }
+  const candidate = newDecision({
+    title: 'Update project-consensus voice',
+    rationale: `Recomputed the project-consensus voice from ${ids.length} author profile(s): ${ids.join(', ')}.`,
+    proposed_by: actor,
+    affects: [],
+    // `merged` carries no `learned_at` - the clock is stamped on the copy that is written - so
+    // the Decision's id keys off the proposed voice and nothing else.
+    change: { consensus: { participants: ids, voice: merged } },
+    created: clock(),
+  });
+  const existing = await store.readEntity(candidate.id);
+  if (!existing) await store.writeEntity(candidate);
 
   await store.appendEvent({
     ts: clock(),
     op: 'authors',
     actor,
     ids: [],
-    summary: changed ? 'project-consensus voice updated' : 'project-consensus voice unchanged',
+    summary: 'project-consensus voice updated',
   });
 
-  return { changed, decision, profile: toWrite };
+  return { changed: true, decision: existing ?? candidate, profile: toWrite };
 }

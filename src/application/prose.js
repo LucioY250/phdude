@@ -84,6 +84,7 @@ export async function proseSection({ store, loadProfile }, section) {
     lang: ctx.lang,
     mode: ctx.mode === 'ruthless' ? 'ruthless' : 'full',
     markers: markerCounts(markerInventory(body, ctx)),
+    profile: ctx.voiceProfile,
   });
 
   const stored = (await store.readReport(entry.id)) ?? {

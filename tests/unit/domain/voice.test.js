@@ -1,10 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { learnFrom, consensus, voiceDeviation } from '../../../src/domain/voice.js';
+import {
+  DEFAULT_TOLERANCES,
+  consensus,
+  learnFrom,
+  voiceDeviation,
+  voiceScore,
+} from '../../../src/domain/voice.js';
 
 // Two short, hand-checked writing samples. The exact numbers below were verified by hand
-// against the sentence/word counts in each sample (see the module's TODO(v0.4-T4) note on the
-// stopgap sentence splitter this exercises).
+// against the sentences `textstats` finds in each sample: SAMPLE_1 is four sentences of 12, 6,
+// 9 and 8 words over two paragraphs. The rates are per sentence, not per token, because that
+// is what `textstats.stats` measures and every feature reads its statistics from there.
 const SAMPLE_1 =
   `We surveyed 312 undergraduate students about their use of mobile note-taking apps. ` +
   `However, adoption varies across recruitment channels.\n\n` +
@@ -20,12 +27,14 @@ const SAMPLE_2 =
 test('learnFrom: a single sample is deterministic and matches the hand-checked numbers', () => {
   const learned = learnFrom([SAMPLE_1], 'en');
   assert.deepEqual(learned, {
+    // 35 words over 4 sentences; the two sentences opening "However," and "Moreover," are the
+    // transitions, "We surveyed" and "Our approach" carry the first person, "suggests" hedges.
     sentence_length_mean: 8.75,
-    sentence_length_sd: 2.165,
+    sentence_length_sd: 2.17,
     opening_diversity: 1,
     transition_rate: 0.5,
-    first_person_rate: 0.057,
-    hedge_rate: 0.029,
+    first_person_rate: 0.5,
+    hedge_rate: 0.25,
     paragraph_density: 2,
     preserved_terms: [
       'adoption',
@@ -37,12 +46,12 @@ test('learnFrom: a single sample is deterministic and matches the hand-checked n
       'habits',
       'improves',
       'mobile',
+      'note-taking',
       'recruitment',
       'results',
       'sampling',
       'shapes',
       'stratified',
-      'students',
     ],
     sample_count: 1,
   });
@@ -51,12 +60,14 @@ test('learnFrom: a single sample is deterministic and matches the hand-checked n
 test('learnFrom: two samples are combined into one corpus, not averaged per-sample', () => {
   const learned = learnFrom([SAMPLE_1, SAMPLE_2], 'en');
   assert.deepEqual(learned, {
-    sentence_length_mean: 8.625,
-    sentence_length_sd: 1.867,
-    opening_diversity: 0.875,
+    // 8 sentences over 4 paragraphs; 4 open with a transition, 3 use the first person
+    // ("We surveyed", "Our approach", "We believe"), 2 hedge ("suggests", "may explain").
+    sentence_length_mean: 8.63,
+    sentence_length_sd: 2.12,
+    opening_diversity: 1,
     transition_rate: 0.5,
-    first_person_rate: 0.043,
-    hedge_rate: 0.029,
+    first_person_rate: 0.375,
+    hedge_rate: 0.25,
     paragraph_density: 2,
     preserved_terms: [
       'campus',
@@ -225,20 +236,22 @@ test('consensus: no participating profile has learned data -> merged profile has
   assert.equal('learned' in merged, false);
 });
 
-test('voiceDeviation: relative tolerance for sentence length, absolute for rates', () => {
+test('voiceDeviation: relative band for sentence length, absolute for the rates', () => {
   const stats = {
-    sentence_length_mean: 20,
-    transition_rate: 0.5,
-    first_person_rate: 0.3,
-    opening_diversity: 0.1,
+    meanLen: 20,
+    sdLen: 6,
+    openingDiversity: 0.1,
+    transitionRate: 0.5,
+    firstPersonRate: 0.3,
     text: 'this leverages a robust cutting-edge approach',
   };
   const profile = {
     learned: {
       sentence_length_mean: 10,
+      sentence_length_sd: 5,
+      opening_diversity: 0.8,
       transition_rate: 0.1,
       first_person_rate: 0.02,
-      opening_diversity: 0.8,
     },
     terminology: { avoid: ['leverage', 'robust', 'cutting-edge', 'agile'] },
   };
@@ -246,30 +259,52 @@ test('voiceDeviation: relative tolerance for sentence length, absolute for rates
   const findings = voiceDeviation(stats, profile);
   const byKind = Object.fromEntries(findings.map((f) => [f.kind, f]));
 
-  assert.equal(byKind['sentence-length'].deviation, 1); // (20-10)/10
-  assert.equal(byKind['transition-rate'].deviation, 0.4);
-  assert.equal(byKind['first-person-rate'].deviation, 0.28);
+  // Sentence length: 10 words away from a learned 10, against a band of 25% of 10.
+  assert.equal(byKind['sentence-length'].deviation, 10);
+  assert.equal(byKind['sentence-length'].tolerance, 2.5);
+  assert.equal(byKind['sentence-length'].why, 'mean sentence length 20 vs learned 10 ± 2.5');
   assert.equal(byKind['opening-diversity'].deviation, 0.7);
+  assert.equal(byKind['opening-diversity'].tolerance, 0.15);
+  assert.equal(byKind['transition-rate'].deviation, 0.4);
+  assert.equal(byKind['transition-rate'].tolerance, 0.1);
+  assert.equal(byKind['first-person-rate'].deviation, 0.28);
+  assert.equal(byKind['first-person-rate'].tolerance, 0.1);
+  // The spread is 6 against a learned 5, inside a band of 50% of 5: no finding.
+  assert.equal('sentence-length-sd' in byKind, false);
+
   // "leverages" does not exactly match the avoided word "leverage" (whole-word match only);
   // "agile" never appears in the text; "robust" and "cutting-edge" do.
   const avoidWords = findings.filter((f) => f.kind === 'avoid-word').map((f) => f.word);
   assert.deepEqual(avoidWords.sort(), ['cutting-edge', 'robust']);
 });
 
+test('voiceDeviation: the spread deviates on its own, and says by how much', () => {
+  const findings = voiceDeviation(
+    { meanLen: 10, sdLen: 12 },
+    { learned: { sentence_length_mean: 10, sentence_length_sd: 4 } },
+  );
+  assert.deepEqual(
+    findings.map((f) => [f.kind, f.why]),
+    [['sentence-length-sd', 'sentence length spread 12 vs learned 4 ± 2']],
+  );
+});
+
 test('voiceDeviation: within tolerance, and no avoid words used, reports nothing', () => {
   const stats = {
-    sentence_length_mean: 11,
-    transition_rate: 0.12,
-    first_person_rate: 0.03,
-    opening_diversity: 0.75,
+    meanLen: 11,
+    sdLen: 5,
+    openingDiversity: 0.75,
+    transitionRate: 0.12,
+    firstPersonRate: 0.03,
     text: 'a plain sentence with no forbidden terminology at all',
   };
   const profile = {
     learned: {
       sentence_length_mean: 10,
+      sentence_length_sd: 5,
+      opening_diversity: 0.8,
       transition_rate: 0.1,
       first_person_rate: 0.02,
-      opening_diversity: 0.8,
     },
     terminology: { avoid: ['leverage'] },
   };
@@ -286,6 +321,79 @@ test('voiceDeviation: a profile with no learned data still checks avoid words', 
       kind: 'avoid-word',
       why: 'uses "robust", which the profile\'s terminology.avoid lists',
       word: 'robust',
+      index: 14,
     },
   ]);
+});
+
+test('voiceDeviation: a learned value of zero is not comparable, so it never deviates', () => {
+  const findings = voiceDeviation(
+    { meanLen: 24, sdLen: 8, transitionRate: 0.4 },
+    { learned: { sentence_length_mean: 0, sentence_length_sd: 0, transition_rate: 0 } },
+  );
+  assert.deepEqual(
+    findings.map((f) => f.kind),
+    ['transition-rate'],
+  );
+});
+
+test('voiceScore: a draft on every tolerance edge scores 75, and a matching draft 100', () => {
+  const learned = {
+    sentence_length_mean: 20,
+    sentence_length_sd: 4,
+    opening_diversity: 0.8,
+    transition_rate: 0.1,
+    first_person_rate: 0.02,
+  };
+  const identical = {
+    meanLen: 20,
+    sdLen: 4,
+    openingDiversity: 0.8,
+    transitionRate: 0.1,
+    firstPersonRate: 0.02,
+  };
+  assert.equal(voiceScore(identical, { learned }), 100);
+
+  // Exactly one tolerance away on every metric: 20 ± 5, 4 ± 2, 0.8 ± 0.15, 0.1 ± 0.1, 0.02 ± 0.1.
+  const atTheEdge = {
+    meanLen: 25,
+    sdLen: 6,
+    openingDiversity: 0.65,
+    transitionRate: 0.2,
+    firstPersonRate: 0.12,
+  };
+  assert.equal(voiceScore(atTheEdge, { learned }), 75);
+});
+
+test('voiceScore: nothing comparable scores null, not zero', () => {
+  assert.equal(voiceScore({ meanLen: 20 }, null), null);
+  assert.equal(voiceScore({ meanLen: 20 }, { terminology: { avoid: [] } }), null);
+  assert.equal(voiceScore({}, { learned: { sentence_length_mean: 20 } }), null);
+});
+
+test('voiceScore: a wildly different draft is clamped at 0, never negative', () => {
+  const learned = { sentence_length_mean: 10, opening_diversity: 0.9 };
+  assert.equal(voiceScore({ meanLen: 80, openingDiversity: 0.1 }, { learned }), 0);
+});
+
+test('the default tolerances are the five metrics spec §3.4 gate 4 names', () => {
+  assert.deepEqual(Object.keys(DEFAULT_TOLERANCES).sort(), [
+    'first_person_rate',
+    'opening_diversity',
+    'sentence_length',
+    'sentence_length_sd',
+    'transition_rate',
+  ]);
+});
+
+test('voiceDeviation: a caller may narrow the tolerances', () => {
+  const stats = { meanLen: 11 };
+  const profile = { learned: { sentence_length_mean: 10 } };
+  assert.deepEqual(voiceDeviation(stats, profile), []);
+  assert.deepEqual(
+    voiceDeviation(stats, profile, { ...DEFAULT_TOLERANCES, sentence_length: 0.05 }).map(
+      (f) => f.kind,
+    ),
+    ['sentence-length'],
+  );
 });

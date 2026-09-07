@@ -12,20 +12,60 @@ const NUMERAL = /\p{Nd}[\p{Nd}.,]*\p{Nd}/u;
 // The verbs a state may not use, from `skills/academic-prose/references/epistemic-language.md`.
 // A claim's evidence outranks its state: evidence that is entirely `weak` forbids the same verbs
 // a candidate claim forbids, whatever the claim was promoted to.
+//
+// Both third-person forms are listed per verb. "The data demonstrate" and "the data demonstrates"
+// overreach identically, and a plural subject - data, findings, results, los datos - is the
+// ordinary way to write the sentence, so matching the singular alone would let it through.
 const EPISTEMIC = {
   en: {
-    candidate: ['demonstrates', 'shows', 'proves', 'establishes'],
-    disputed: ['demonstrates', 'shows', 'proves', 'establishes'],
-    supported: ['demonstrates', 'proves'],
-    canonical: ['proves'],
-    weak: ['shows', 'demonstrates'],
+    candidate: [
+      'demonstrate',
+      'demonstrates',
+      'show',
+      'shows',
+      'prove',
+      'proves',
+      'establish',
+      'establishes',
+    ],
+    disputed: [
+      'demonstrate',
+      'demonstrates',
+      'show',
+      'shows',
+      'prove',
+      'proves',
+      'establish',
+      'establishes',
+    ],
+    supported: ['demonstrate', 'demonstrates', 'prove', 'proves'],
+    canonical: ['prove', 'proves'],
+    weak: ['show', 'shows', 'demonstrate', 'demonstrates'],
   },
   es: {
-    candidate: ['demuestra', 'muestra', 'prueba', 'establece'],
-    disputed: ['demuestra', 'muestra', 'prueba', 'establece'],
-    supported: ['demuestra', 'prueba'],
-    canonical: ['prueba'],
-    weak: ['muestra', 'demuestra'],
+    candidate: [
+      'demuestra',
+      'demuestran',
+      'muestra',
+      'muestran',
+      'prueba',
+      'prueban',
+      'establece',
+      'establecen',
+    ],
+    disputed: [
+      'demuestra',
+      'demuestran',
+      'muestra',
+      'muestran',
+      'prueba',
+      'prueban',
+      'establece',
+      'establecen',
+    ],
+    supported: ['demuestra', 'demuestran', 'prueba', 'prueban'],
+    canonical: ['prueba', 'prueban'],
+    weak: ['muestra', 'muestran', 'demuestra', 'demuestran'],
   },
 };
 

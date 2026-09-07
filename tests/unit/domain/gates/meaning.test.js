@@ -70,6 +70,43 @@ test('losing one of two identical numbers blocks: the multiset counts', () => {
   );
 });
 
+test('a bare single digit may be spelled out; two digits may not be changed', () => {
+  assert.deepEqual(run('We ran 3 waves in total.', 'We ran three waves in total.'), []);
+
+  const findings = run('We surveyed 312 participants.', 'We surveyed 300 participants.');
+  assert.deepEqual(
+    findings.map((f) => [f.severity, f.message]),
+    [['block', 'the revision drops the number 312']],
+  );
+});
+
+test('a decimal, a percentage and a marked single digit are all meaning', () => {
+  const cases = [
+    ['The effect was 3.4 points.', 'The effect was three point four points.', '3.4'],
+    ['Use rose by 7% overall.', 'Use rose by seven percent overall.', '7'],
+    [
+      'We ran 3 waves <!-- result: RESULT-1111111111 -->.',
+      'We ran three waves <!-- result: RESULT-1111111111 -->.',
+      '3',
+    ],
+  ];
+  for (const [before, after, number] of cases) {
+    assert.deepEqual(
+      run(before, after).map((f) => f.message),
+      [`the revision drops the number ${number}`],
+      before,
+    );
+  }
+});
+
+test('the signature leaves bare single digits out of the numeral multiset', () => {
+  assert.deepEqual([...signature('We ran 3 waves over 12 months.', 'en').numerals], [['12', 1]]);
+  assert.deepEqual(
+    [...signature('We ran 3 waves <!-- fact: FACT-1111111111 -->.', 'en').numerals],
+    [['3', 1]],
+  );
+});
+
 test('an added claim or citation blocks, and --allow-additions lets it through', () => {
   const added = ORIGINAL + '\n\nA third point [@lopez2023].\n<!-- claim: CLAIM-2222222222 -->';
   const findings = run(ORIGINAL, added);

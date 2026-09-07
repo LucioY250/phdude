@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { assignBibkeys } from '../domain/bibkey.js';
 import { PhdudeError } from '../domain/errors.js';
 import { runGates } from '../domain/gates/index.js';
@@ -9,6 +10,7 @@ import {
   parseSectionFile,
   renderSectionFile,
   sectionHash,
+  voiceIdFor,
 } from '../domain/manuscript.js';
 import { parseId } from '../domain/ids.js';
 import { assertUpToDate } from './guard.js';
@@ -67,8 +69,9 @@ function withoutApproval(entry) {
 
 /**
  * Everything the gates read, gathered once: the citation registry, the claims and evidence a
- * marker resolves against, the manuscript's language and venue, and the review mode. The gates
- * themselves are pure, so this is the only place that reaches the store on their behalf.
+ * marker resolves against, the manuscript's language, venue and author voice, and the review
+ * mode. The gates themselves are pure, so this is the only place that reaches the store on
+ * their behalf.
  * @param {{store: object, loadProfile?: (name: string) => Promise<object|null>}} deps
  * @param {{manuscript: object, entry: object}} input
  * @returns {Promise<object>} the gate context
@@ -95,6 +98,10 @@ export async function gateContext({ store, loadProfile }, { manuscript, entry } 
   const target = manuscript?.target_profile ?? null;
   const venueProfile = target && loadProfile ? await loadProfile(target) : null;
 
+  // The voice the manuscript writes in, read where `phdude authors` writes it. A workspace with
+  // no profile yet is not an error: `gate-voice` stays silent and `authorVoice` stays null.
+  const voiceProfile = await store.readYaml(join('authors', `${voiceIdFor(manuscript)}.yaml`));
+
   return {
     sourcesById: new Map(sources.map((source) => [source.id, source])),
     sourcesByBibkey: new Map(sources.map((source) => [bibkeys.get(source.id), source])),
@@ -106,6 +113,7 @@ export async function gateContext({ store, loadProfile }, { manuscript, entry } 
     lang: manuscript?.language ?? project?.language ?? 'en',
     mode: project?.mode ?? DEFAULT_MODE,
     venueProfile,
+    voiceProfile,
     section: entry?.id ?? null,
     sectionOrder: entry?.order ?? null,
   };

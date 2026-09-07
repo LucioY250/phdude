@@ -4,12 +4,13 @@
 // of them blocks. Adding a claim or a citation blocks too, unless the researcher asked for it
 // with `--allow-additions`: new assertions belong to a draft, not to a cleanup pass.
 
-import { stripMarkup } from '../textstats.js';
+import { sentenceSpans, stripMarkup } from '../textstats.js';
 import { citationsIn } from './citations.js';
 
 const NAME = 'gate-meaning';
 const CLAIM_RE = /<!--\s*claim\s*:\s*([A-Za-z0-9][A-Za-z0-9_-]*)\s*-->/gi;
 const NUMERAL_RE = /\p{Nd}[\p{Nd}.,]*\p{Nd}|\p{Nd}/gu;
+const NUMERAL_MARKER = /<!--\s*(?:fact|result)\s*:/i;
 
 // Negation is meaning: "does not reduce" and "reduces" are different findings. The cues are
 // counted as a multiset rather than matched sentence by sentence, so rewording a negated
@@ -49,6 +50,25 @@ function tally(values) {
   return counts;
 }
 
+// The numbers a section states. A bare single digit is not one of them: "3 waves" and "three
+// waves" say the same thing, and spelling one out is exactly the kind of change a revision is
+// for. Everything else is meaning - two digits or more, a decimal, a thousands-separated
+// number, a percentage - and so is any numeral, single digit included, in a sentence that marks
+// where it came from (spec §3.4: "numerals with their markers").
+function numeralsIn(source, lang) {
+  const found = [];
+  for (const span of sentenceSpans(source, lang)) {
+    const marked = NUMERAL_MARKER.test(span.text);
+    const prose = stripMarkup(span.text);
+    for (const match of prose.matchAll(NUMERAL_RE)) {
+      const value = match[0];
+      const percentage = prose[match.index + value.length] === '%';
+      if (marked || percentage || value.length > 1) found.push(value);
+    }
+  }
+  return found;
+}
+
 /**
  * What a text asserts, as four multisets.
  * @param {string} text
@@ -67,7 +87,7 @@ export function signature(text, lang) {
   return {
     claims: tally([...source.matchAll(CLAIM_RE)].map((m) => m[1])),
     citations: tally(citationsIn(source).map((c) => c.key)),
-    numerals: tally(prose.match(NUMERAL_RE) ?? []),
+    numerals: tally(numeralsIn(source, lang)),
     negations,
   };
 }

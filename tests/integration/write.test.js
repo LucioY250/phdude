@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
 import { addEntity } from '../../src/application/add.js';
+import * as authors from '../../src/application/authors.js';
 import { approve as approveDecision, promote, propose } from '../../src/application/decide.js';
 import { deslop } from '../../src/application/deslop.js';
 import * as manuscript from '../../src/application/manuscript.js';
@@ -302,7 +303,7 @@ test('prose on a section scores against the evidence graph and stores the scores
   assert.equal(report.section.id, 'introduction');
   assert.equal(typeof report.scores.evidenceAlignment, 'number');
   assert.equal(typeof report.scores.epistemicPrecision, 'number');
-  assert.equal(report.scores.authorVoice, null, 'the voice profiles are not here yet');
+  assert.equal(report.scores.authorVoice, null, 'this workspace records no voice');
   assert.equal(typeof report.aggregate, 'number');
 
   const stored = await deps.store.readReport('introduction');
@@ -310,6 +311,74 @@ test('prose on a section scores against the evidence graph and stores the scores
   assert.ok(!('authorVoice' in stored.scores));
 
   assert.equal((await deps.store.readEvents()).length, before, 'a report records no event');
+});
+
+// The project voice, learned from one plain sample and merged into `project-consensus`, which
+// is the profile a manuscript with no named author writes in.
+async function withVoice(deps, { avoid = [] } = {}) {
+  await authors.add(deps, {
+    id: 'researcher-a',
+    language: 'en',
+    tone: { academic: true, assertiveness: 'moderate', first_person: 'sparing' },
+    sentences: { length: 'varied', openings: 'varied' },
+    paragraphs: { density: 'medium' },
+    transitions: 'minimal',
+    terminology: { preserve: [], avoid },
+  });
+  await file(
+    deps,
+    'sample.md',
+    [
+      'Adoption held steady across the three recruited cohorts of small firms.',
+      'Participants drawn from the general mailing list reported slightly higher use.',
+      '',
+      'Stratified sampling across further regions corroborates the original estimate.',
+      'The third survey reproduces a similar rate under a different sampling design.',
+    ].join('\n'),
+  );
+  await authors.learn(
+    { ...deps, cwd: deps.store.root, readText: (p) => readFile(join(deps.store.root, p), 'utf8') },
+    'researcher-a',
+    { paths: ['sample.md'], approved: true },
+  );
+  await authors.consensus(deps);
+}
+
+test('with a voice on file the pipeline scores authorVoice and warns without blocking', async () => {
+  const { deps, claim } = await workspace();
+  await withVoice(deps, { avoid: ['robust'] });
+
+  const draft = [
+    'Small firms move toward automated tooling at their own pace, and the surveyed population',
+    'shows a robust lag in every single recruitment channel that we examined [@zeta2020adoption].',
+    `<!-- claim: ${claim.id} -->`,
+    '',
+    'The gap matters because the firms that lag have the least slack to recover it.',
+  ].join('\n');
+  const path = await file(deps, 'draft.md', draft);
+
+  const result = await manuscript.submit(deps, { section: 'introduction', file: path });
+
+  const voice = result.findings.filter((f) => f.gate === 'gate-voice');
+  assert.ok(voice.length > 0, 'the gate had something to say');
+  assert.deepEqual([...new Set(voice.map((f) => f.severity))], ['warn'], 'voice never blocks');
+  assert.ok(
+    voice.some((f) => f.message.includes('terminology.avoid')),
+    JSON.stringify(voice),
+  );
+  assert.equal(result.report.gates.find((row) => row.gate === 'gate-voice').blocked, false);
+  assert.equal(typeof result.report.scores.authorVoice, 'number');
+
+  const stored = await deps.store.readReport('introduction');
+  assert.equal(stored.scores.authorVoice, result.report.scores.authorVoice);
+
+  // The section's own prose report reads the same profile, so it does not erase the score.
+  const report = await proseSection(deps, 'introduction');
+  assert.equal(report.scores.authorVoice, result.report.scores.authorVoice);
+  assert.equal(
+    (await deps.store.readReport('introduction')).scores.authorVoice,
+    result.report.scores.authorVoice,
+  );
 });
 
 test('prose refuses a planned section, and an approved section refuses deslop', async () => {

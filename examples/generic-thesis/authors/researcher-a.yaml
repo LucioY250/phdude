@@ -25,13 +25,13 @@ samples:
   - path: authors/samples/researcher-a/intro-approved.md
     approved: true
 learned:
-  sentence_length_mean: 27.125
-  sentence_length_sd: 9.993
-  opening_diversity: 0.875
+  sentence_length_mean: 26.88
+  sentence_length_sd: 9.89
+  opening_diversity: 1
   transition_rate: 0
-  first_person_rate: 0.005
-  hedge_rate: 0.009
-  paragraph_density: 2.667
+  first_person_rate: 0.125
+  hedge_rate: 0.25
+  paragraph_density: 2.67
   preserved_terms:
     - channel
     - recruitment
@@ -40,11 +40,11 @@ learned:
     - recruited
     - survey
     - independently
+    - note-taking
     - pattern
     - reported
     - samples
     - sampling
-    - taking
     - whether
     - account
     - additional

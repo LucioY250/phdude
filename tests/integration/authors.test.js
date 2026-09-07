@@ -207,6 +207,75 @@ test('consensus: merges profiles, proposes a Decision once, then is a no-op unti
   assert.notEqual(third.decision.id, first.decision.id);
 });
 
+test('consensus: an unchanged rerun rewrites nothing and proposes the same decision once', async () => {
+  const root = await newWorkspace();
+  const deps = makeDeps(root);
+  const consensusPath = join(root, 'authors', 'project-consensus.yaml');
+
+  await authors.add(deps, PROFILE_FIELDS);
+  await writeFile(join(root, 'sample.md'), 'A learned sample, so the consensus carries numbers.');
+  await authors.learn({ ...deps, cwd: root, readText: readTextRelativeTo(root) }, 'researcher-a', {
+    paths: ['sample.md'],
+  });
+
+  const first = await authors.consensus(deps);
+  assert.equal(first.changed, true);
+  assert.ok(first.profile.learned.learned_at, 'the written consensus is stamped');
+  const afterFirst = await readFile(consensusPath, 'utf8');
+
+  const second = await authors.consensus(deps);
+  assert.equal(second.changed, false);
+  assert.equal(second.decision, null);
+  // Byte for byte: an unchanged consensus is not rewritten, so `learned_at` does not move.
+  assert.equal(await readFile(consensusPath, 'utf8'), afterFirst);
+  assert.deepEqual(second.profile, first.profile);
+
+  const decisions = (await deps.store.listEntities('decision')).filter(
+    (d) => d.title === 'Update project-consensus voice',
+  );
+  assert.equal(decisions.length, 1);
+
+  // A different sample moves the consensus, and proposes a second, distinct decision.
+  await writeFile(
+    join(root, 'other.md'),
+    'A second, longer sample whose sentences run to a noticeably different average length here.',
+  );
+  const learnDeps = { ...deps, cwd: root, readText: readTextRelativeTo(root) };
+  await authors.learn(learnDeps, 'researcher-a', { paths: ['other.md'] });
+  const third = await authors.consensus(deps);
+  assert.equal(third.changed, true);
+  assert.notEqual(third.decision.id, first.decision.id);
+
+  // Going back to the first sample recomputes a voice that was already proposed: the file
+  // changes, the decision does not - `readEntity` finds the one that is already recorded.
+  await authors.learn(learnDeps, 'researcher-a', { paths: ['sample.md'] });
+  const fourth = await authors.consensus(deps);
+  assert.equal(fourth.changed, true);
+  assert.equal(fourth.decision.id, first.decision.id, 'the same voice keys the same decision');
+  assert.equal(
+    (await deps.store.listEntities('decision')).filter(
+      (d) => d.title === 'Update project-consensus voice',
+    ).length,
+    2,
+    'two distinct voices were proposed, and neither was proposed twice',
+  );
+
+  const events = (await deps.store.readEvents()).filter((e) => e.op === 'authors');
+  assert.deepEqual(
+    events.map((e) => e.summary.replace(/researcher-a/, 'X')),
+    [
+      'author profile X added',
+      'author profile X learned from 1 sample(s)',
+      'project-consensus voice updated',
+      'project-consensus voice unchanged',
+      'author profile X learned from 1 sample(s)',
+      'project-consensus voice updated',
+      'author profile X learned from 1 sample(s)',
+      'project-consensus voice updated',
+    ],
+  );
+});
+
 test('consensus: refuses when there are no author profiles yet', async () => {
   const root = await newWorkspace();
   const deps = makeDeps(root);

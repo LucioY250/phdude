@@ -80,8 +80,11 @@ test('a ruthless prose finding blocks the whole run', () => {
   assert.equal(result.gates.find((row) => row.gate === 'gate-prose').blocked, true);
 });
 
-test('gate-voice is registered and reports nothing until the author profiles land', () => {
-  assert.deepEqual(voiceGate.run('anything', EMPTY), []);
+test('gate-voice is silent, and scores nothing, without an author profile', () => {
+  assert.deepEqual(voiceGate.run('anything', EMPTY), {
+    findings: [],
+    scores: { authorVoice: null },
+  });
 });
 
 test('gate-profile is silent without a target profile', () => {

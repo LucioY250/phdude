@@ -121,6 +121,19 @@ export function sectionHash(body) {
 }
 
 /**
+ * The author profile a manuscript writes in, as the id of the file under `authors/`. A
+ * manuscript that names no author writes in the project consensus, which is where
+ * `phdude authors consensus` puts it. `phdude write --voice` overrides both.
+ * @param {object|null} manuscript
+ * @param {string} [override]
+ * @returns {string}
+ */
+export function voiceIdFor(manuscript, override) {
+  if (typeof override === 'string' && override !== '') return override;
+  return manuscript?.voice?.kind === 'author' ? manuscript.voice.author : 'project-consensus';
+}
+
+/**
  * @param {{title: string, language?: string, voice?: {kind: string, author?: string}}} input
  * @returns {object} a manuscript with every standard section `planned` and no file written
  */

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { assignBibkeys } from '../domain/bibkey.js';
 import { DEFAULT_BUDGET_CHARS, assembleContext } from '../domain/context-budget.js';
 import { PhdudeError } from '../domain/errors.js';
-import { SECTION_ID_RE } from '../domain/manuscript.js';
+import { SECTION_ID_RE, voiceIdFor } from '../domain/manuscript.js';
 import { loadSnapshot } from './snapshot.js';
 
 // `phdude write` (spec §3.3) assembles what an agent needs to draft one section and hands it
@@ -27,12 +27,6 @@ function contractFor(section) {
     ...DRAFT_CONTRACT,
     `Submit it with: phdude manuscript submit ${section} --file <draft.md>`,
   ];
-}
-
-function resolveVoiceId(manuscript, voice) {
-  if (voice !== undefined && voice !== null && voice !== '') return voice;
-  if (manuscript.voice?.kind === 'author') return manuscript.voice.author;
-  return 'project-consensus';
 }
 
 function parseBudget(budget) {
@@ -76,7 +70,7 @@ export async function write({ store, clock }, { section, voice, budget } = {}) {
     );
   }
 
-  const voiceId = resolveVoiceId(snapshot.manuscript, voice);
+  const voiceId = voiceIdFor(snapshot.manuscript, voice);
   if (!SECTION_ID_RE.test(voiceId)) {
     throw new PhdudeError(
       'VALIDATION',

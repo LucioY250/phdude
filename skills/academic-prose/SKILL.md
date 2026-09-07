@@ -96,7 +96,8 @@ one set of rules.
 Three sub-scores - Evidence Alignment, Epistemic Precision and Author Voice - print as
 `n/a (needs manuscript context)` for a bare text file. They are computed against the evidence
 graph and the active voice profile, which only a manuscript section has. On a section, Evidence
-Alignment and Epistemic Precision are real numbers and the section's report records them.
+Alignment and Epistemic Precision are real numbers, and so is Author Voice once the workspace
+records a profile that has run `phdude authors learn`; the section's report records them.
 
 Options that name a detector or a humanizer (`detector`, `humanize`, `humanize-to`,
 `detector-target`) are refused with a policy error, whatever command they are written for.

@@ -44,6 +44,11 @@ test('splitSentences: abbreviations from the language table never split', () => 
   assert.deepEqual(splitSentences('Lopez et al. reported the same effect.', 'en'), [
     'Lopez et al. reported the same effect.',
   ]);
+  // `etc.` is on both language lists, so a sentence carrying one mid-thought stays whole.
+  assert.deepEqual(
+    splitSentences('The dataset includes surveys, interviews, etc. All were coded.', 'en'),
+    ['The dataset includes surveys, interviews, etc. All were coded.'],
+  );
   assert.deepEqual(splitSentences('Véase la fig. 3 del anexo.', 'es'), [
     'Véase la fig. 3 del anexo.',
   ]);

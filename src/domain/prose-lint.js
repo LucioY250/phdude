@@ -9,6 +9,7 @@ import {
   stripMarkup,
   words,
 } from './textstats.js';
+import { voiceScore } from './voice.js';
 
 // The single source of truth for prose observations (spec §4). `gate-prose` calls it on a
 // manuscript section, `phdude prose --file` calls it on any text, and the `academic-prose`
@@ -79,7 +80,7 @@ export const FORMULAS = {
   structuralVariation:
     '100 x (0.4 x min(1, sdLen/6) + 0.4 x openingDiversity + 0.2 x (1 - min(1, transitionRate/0.4))); without a language table the transition term is dropped and the other two weigh 0.5 each',
   authorVoice:
-    'computed against the active author voice profile by the writing pipeline (gate-voice); null without a profile',
+    '100 - 25 x the mean deviation of the five metrics gate-voice compares (mean sentence length, its spread, opening diversity, transition rate, first-person rate), each measured in multiples of its own tolerance, clamped to 0-100; a draft sitting exactly on every tolerance scores 75; null without an author profile that has run learn',
   conciseness:
     '100 - 10 x (empty-phrase + intensifier occurrences) per 100 words - 3 x max(0, meanLen - 30), clamped to 0-100',
   aggregate: 'weighted mean of the non-null sub-scores, weights 0.20/0.20/0.20/0.15/0.15/0.10',
@@ -305,7 +306,7 @@ function evidenceScores(markers, counts) {
   };
 }
 
-function computeScores(observations, measurements, markers) {
+function computeScores(observations, measurements, markers, profile) {
   const counts = countByRule(observations);
   const perHundred = Math.max(1, measurements.words / 100);
   const intensifiers = measurements.intensifierCount ?? 0;
@@ -334,13 +335,12 @@ function computeScores(observations, measurements, markers) {
   );
 
   // Author voice is measured against the active profile, which no text file carries (PRD
-  // §39.1); the writing pipeline supplies it through gate-voice, and a run without a profile
-  // reports null rather than a number invented from prose alone.
+  // §39.1); a run without one reports null rather than a number invented from prose alone.
   return {
     specificity,
     ...evidenceScores(markers, counts),
     structuralVariation,
-    authorVoice: null,
+    authorVoice: voiceScore(measurements, profile),
     conciseness,
   };
 }
@@ -438,7 +438,7 @@ export function lint(text, { lang = 'en', mode = 'full', markers = null, profile
   );
 
   const measurements = stats(source, lang);
-  const scores = computeScores(observations, measurements, markers);
+  const scores = computeScores(observations, measurements, markers, profile);
 
   return {
     observations,

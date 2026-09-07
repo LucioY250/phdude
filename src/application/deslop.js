@@ -81,6 +81,7 @@ export async function deslop(
       lang: ctx.lang,
       mode: ctx.mode === 'ruthless' ? 'ruthless' : 'full',
       markers: markerCounts(markerInventory(current, ctx)),
+      profile: ctx.voiceProfile,
     });
     return {
       section: entry,
