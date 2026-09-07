@@ -113,7 +113,8 @@ does any of this still hold? See
   PhDude reads.
 - **A run a signal ended is a failure, never a quiet success.** `RunResult` carries `signal`
   alongside `timedOut`, and `exit: null` with no timeout is named as what it is — `the analysis
-  script was killed by SIGKILL` — rather than read as a run that returned nothing.
+  script was killed by SIGKILL`, `the generator was killed by SIGKILL building <figure>` —
+  rather than read as a run that returned nothing. Both records keep `signal` and `timed_out`.
 
 ### Notes
 

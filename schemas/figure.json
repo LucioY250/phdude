@@ -49,7 +49,9 @@
                 "type": "object",
                 "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
               },
-              "script_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+              "script_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "timed_out": { "const": true },
+              "signal": { "type": "string", "minLength": 1 }
             },
             "required": ["at", "exit", "duration_ms", "input_hashes", "output_hashes"],
             "additionalProperties": false

@@ -219,6 +219,7 @@ export async function build(deps, id, { allowExec = false, force = false } = {})
   });
 
   const at = clock();
+  const signal = typeof result.signal === 'string' && result.signal !== '' ? result.signal : null;
   const failed = {
     at,
     exit: result.exitCode,
@@ -226,6 +227,8 @@ export async function build(deps, id, { allowExec = false, force = false } = {})
     input_hashes: inputHashes,
     output_hashes: {},
   };
+  if (result.timedOut) failed.timed_out = true;
+  if (signal !== null) failed.signal = signal;
   if (scriptHash !== null) failed.script_hash = scriptHash;
 
   if (result.timedOut) {
@@ -238,6 +241,21 @@ export async function build(deps, id, { allowExec = false, force = false } = {})
   }
 
   if (result.exitCode !== 0) {
+    const details = (result.stderr || result.stdout).trim().split('\n').filter(Boolean).slice(-10);
+
+    // No exit code and no timeout means a signal ended the run. "exited null" reads as a
+    // generator that returned nothing; it never got to return anything.
+    if (result.exitCode === null) {
+      const named = signal === null ? '' : ` by ${signal}`;
+      await recordRun(deps, figure, failed, `figure killed${named}: ${figure.name}`);
+      throw new PhdudeError(
+        'EXECUTION',
+        `the generator was killed${named} building ${figure.name}`,
+        `something outside PhDude ended the run; the recorded run is in phdude figure show ${figure.id}`,
+        details,
+      );
+    }
+
     await recordRun(
       deps,
       figure,
@@ -248,7 +266,7 @@ export async function build(deps, id, { allowExec = false, force = false } = {})
       'EXECUTION',
       `${figure.generator.script} exited ${result.exitCode} building ${figure.name}`,
       'fix the generator, then run phdude figure build again',
-      (result.stderr || result.stdout).trim().split('\n').filter(Boolean).slice(-10),
+      details,
     );
   }
 

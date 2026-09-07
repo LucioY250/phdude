@@ -978,7 +978,9 @@ the ones that failed:
 - A generator that exits 0 without writing what it declared is treated the same way: the run is
   recorded, nothing is hashed, and the missing paths are named. Exit 4.
 - A generator that outruns `execution.timeout_seconds` records the run with `exit: null` and
-  exits 4 pointing at the policy key.
+  `timed_out: true`, and exits 4 pointing at the policy key.
+- A generator a signal ended records the run with `exit: null` and `signal`, and exits 4 naming
+  the signal — never as a run that returned nothing, which is the shape it otherwise has.
 
 `check` reports, for every figure: `up-to-date`, `stale` (an input hashes differently from the
 last successful run, or is gone), `missing-output` (a declared file is not on disk) or

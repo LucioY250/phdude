@@ -438,6 +438,44 @@ test('a generator that exits non-zero records the run, hashes nothing, and repor
   assert.equal((await events(deps.store, 'figure')).length, 2, 'a failed run is still an event');
 });
 
+// A signal-killed generator arrives as `exitCode: null` with `timedOut: false`, a shape that
+// used to render as "exited null". Driven through a stub: a real signal kill is the local
+// adapter's own contract suite to prove, not this one's.
+test('a generator a signal ended names the signal, and records it', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root, {
+    runner: {
+      name: 'stub',
+      available: async () => true,
+      run: async () => ({
+        stdout: '',
+        stderr: 'Killed\n',
+        durationMs: 12,
+        exitCode: null,
+        timedOut: false,
+        signal: 'SIGKILL',
+      }),
+    },
+  });
+  const result = await withResult(deps);
+  const { figure: declared } = await figure.add(deps, { ...FIELDS, inputs: [result.id] });
+
+  await assert.rejects(figure.build(deps, declared.id, {}), (err) => {
+    assert.equal(err.code, 'EXECUTION');
+    assert.match(err.message, /killed by SIGKILL/);
+    assert.doesNotMatch(err.message, /exited null/);
+    return true;
+  });
+
+  const stored = await figure.show(deps, declared.id);
+  assert.equal(stored.runs.length, 1);
+  assert.equal(stored.runs[0].exit, null);
+  assert.equal(stored.runs[0].signal, 'SIGKILL');
+  assert.equal(stored.runs[0].timed_out, undefined, 'a signal kill is not a timeout');
+  assert.match((await events(deps.store, 'figure')).at(-1).summary, /killed by SIGKILL/);
+});
+
 test('a generator that exits 0 without writing its outputs is reported, not believed', async (t) => {
   const root = await newRoot();
   t.after(() => rm(root, { recursive: true, force: true }));
