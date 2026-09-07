@@ -383,22 +383,31 @@ phdude research accept CAND-… --type article
 phdude research dismiss CAND-… --reason "measures a different construct"
 ```
 
-Fresh literature search (PRD §22, §71–§77, spec §3.3–§3.4). **This is the only command that
-touches the network**, and it refuses unless `.phdude/research-policy.yaml` sets
-`network.enabled: true` or the call carries `--allow-network`:
+Fresh literature search (PRD §22, §71–§77, spec §3.3–§3.4). **This and `research-fresh` are the
+only commands that touch the network**, and it refuses unless `.phdude/research-policy.yaml`
+sets `network.enabled: true` or the call carries `--allow-network`:
 
 ```
 network access is disabled
 Suggested action: set network.enabled: true in .phdude/research-policy.yaml or pass --allow-network
 ```
 
-Only the query string leaves the machine. Every provider call appends one `search` event
-carrying the provider, the query and a result count — never a result payload.
+A call carries the query string, the result limit and `from` year as that provider's own filter
+parameters, a `phdude/<version>` User-Agent, and — where they apply — the polite `mailto` and
+the provider's API key (see below). Nothing from the workspace's documents goes with it: no
+file, no excerpt, no filename. Every provider call appends one `search` event carrying the
+provider, the query and a result count — never a result payload, and never a key.
 
 The five providers are `openalex`, `crossref`, `arxiv`, `semantic-scholar` and `pubmed`;
-`providers:` in the policy names which of them this workspace uses, and in what order. Only
-Semantic Scholar takes a key, from `PHDUDE_S2_API_KEY` in the environment — no key is ever read
-from the workspace, and without one that provider still answers at the anonymous rate limit.
+`providers:` in the policy names which of them this workspace uses, and in what order.
+
+Two of them take an API key, and both are read from the environment only — no key is ever read
+from the workspace, and both providers answer at the anonymous rate limit without one. Semantic
+Scholar takes `PHDUDE_S2_API_KEY`, sent as an `x-api-key` header. PubMed takes
+`PHDUDE_NCBI_API_KEY`, sent as the `api_key` query parameter NCBI documents — a key in a query
+string is logged by proxies in a way a header is not, which is worth knowing before you set it.
+Neither key ever reaches an error message or the event log.
+
 OpenAlex and Crossref ask for a polite contact address: PhDude sends the `email` from
 `.phdude/author-profile.yaml` as `mailto` when the profile has one, and nothing when it does
 not.

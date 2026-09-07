@@ -39,7 +39,11 @@ Then build the query from three things, in this order:
    means `interview`, `thematic analysis`, `case study`. Add them only when the question is
    about how something was studied, not about what was found.
 
-Keep the query short and literal. `phdude research` sends the query string and nothing else.
+Keep the query short and literal. A provider call carries the query, the policy's `limit` and
+`from` filters, a `phdude/<version>` User-Agent, and — where the workspace configured them — the
+polite `mailto` from the author profile and the provider's API key from the environment. Nothing
+from the researcher's documents goes with it: no file, no excerpt, no filename. Say that plainly
+if they ask; do not claim the query is the only thing sent.
 
 ## Running the search
 

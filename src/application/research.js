@@ -158,9 +158,10 @@ function carryOverDoi(index, candidate) {
 
 /**
  * Runs one literature search across the configured providers and records what came back as
- * candidates the researcher still has to review. Nothing leaves the machine but the query text
- * (spec §3.1): the policy gate is checked first, every provider call is audited as its own
- * event, and no result payload is ever written to the event log.
+ * candidates the researcher still has to review. Nothing from the workspace's documents leaves
+ * the machine (spec §3.1) - the call carries the query and the policy's filters, and nothing
+ * else: the policy gate is checked first, every provider call is audited as its own event, and
+ * no result payload is ever written to the event log.
  *
  * A provider that fails costs a warning, not the run: the others still contribute, because a
  * half-answered search beats no answer. Only a run where every provider failed is an error.

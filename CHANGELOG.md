@@ -10,8 +10,8 @@ All notable changes to PhDude are recorded here. The format follows
 
 The Research Engine. PhDude can go and find current literature for each research question, and
 it does so under a policy the researcher owns. **The network is off until you turn it on**,
-**only the query text leaves the machine**, and **every provider call is recorded as an event**
-carrying the provider, the query and a result count — never a result payload.
+**nothing from your documents leaves the machine**, and **every provider call is recorded as an
+event** carrying the provider, the query and a result count — never a result payload.
 
 ### Added
 
@@ -27,7 +27,7 @@ carrying the provider, the query and a result count — never a result payload.
   candidate shape, treats the response as untrusted, and goes through a shared HTTP policy — a
   15 s timeout, exactly one retry on 429/503 with a backoff capped at 2 s, a `phdude/<version>`
   User-Agent, and typed errors naming the provider. `fetch` is injected, never imported, so no
-  test can reach the network. `searchProviderContract` runs the same six checks against any
+  test can reach the network. `searchProviderContract` runs the same eight checks against any
   implementation, yours included.
 - **Candidates.** `CAND-*` records in `knowledge/candidates/`, one per *work* rather than per
   provider hit: two providers returning the same paper — same DOI, or same normalized title and
@@ -92,9 +92,14 @@ carrying the provider, the query and a result count — never a result payload.
 ### Notes
 
 - Requires Node 22 or newer. `pdftotext` (poppler-utils) is still optional.
-- Only Semantic Scholar takes an API key, read from `PHDUDE_S2_API_KEY` in the environment and
-  never from the workspace. OpenAlex and Crossref receive the `email` from
-  `.phdude/author-profile.yaml` as a polite `mailto` when the profile has one.
+- A provider call carries the query, the `limit` and `from` filters, a `phdude/<version>`
+  User-Agent, and nothing from the workspace's documents — no file, no excerpt, no filename.
+- Two providers take an API key, both read from the environment and never from the workspace:
+  Semantic Scholar takes `PHDUDE_S2_API_KEY` as an `x-api-key` header, and PubMed takes
+  `PHDUDE_NCBI_API_KEY` as the `api_key` query parameter NCBI documents. Neither key reaches an
+  error message or the event log; both providers answer at the anonymous rate limit without one.
+- OpenAlex and Crossref receive the `email` from `.phdude/author-profile.yaml` as a polite
+  `mailto` when the profile has one, and nothing when it does not.
 - The workspace version is unchanged at 2: `knowledge/candidates/` and `research/searches/` are
   new directories, created lazily on the first write, so no migration is needed.
 

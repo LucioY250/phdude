@@ -132,10 +132,14 @@ plus a warning: `skill <name>: no phdude contract, least privilege assumed`. A s
 is present but invalid fails to load with a `VALIDATION` error naming the offending fields.
 
 **Network permission.** `.phdude/research-policy.yaml` carries `skills.allow_network` (default
-`false`). A skill that declares `permissions.network: allowed` is refused with a `POLICY` error
-unless that policy is `true` — enforced by `phdude init` (before any core skill is copied) and by
-`phdude packs apply` (before a pack's skills are adopted). Nothing is copied or applied when one
-skill in the batch is invalid or over-privileged.
+`false`), and a skill that declares `permissions.network: allowed` needs it. The two commands
+that install skills treat that differently. `phdude packs apply` refuses the whole pack with a
+`POLICY` error, because adopting half a pack is not what anyone asked for. `phdude init`
+*withholds* the skill and installs every other one, exiting 0 — a default workspace must still
+initialize — and names the skill and the setting that would install it; re-running `init` after
+setting `skills.allow_network: false` again removes a skill installed under the earlier
+permission and reports it as `removed`. An invalid skill still stops both: nothing is copied or
+applied when one skill in the batch fails to load.
 
 **Discovery order.** `discoverSkills` (`src/adapters/skills/loader.js`) walks a list of roots in
 order — the package's own `skills/`, each applied pack's skill directories, then

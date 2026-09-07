@@ -42,8 +42,8 @@ and review questions arrive as packs.
 > citation registry, the literature matrix and gap report, workspace migrations, and the Claude
 > Code and Codex adapters. New in this release, PhDude can go and *find* literature: five search
 > providers, candidate review, freshness tracking. The network is off until you turn it on, and
-> only the query text ever leaves the machine. Analysis execution and the writing engine come
-> next; see the [roadmap](#roadmap).
+> nothing from your documents ever leaves the machine. Analysis execution and the writing engine
+> come next; see the [roadmap](#roadmap).
 
 ## What's new in 0.3
 
@@ -60,9 +60,10 @@ look — carefully, under a policy you control, and with a receipt for every cal
   going in, so the next reader knows it was read rather than missed.
 - **The network is off by default.** Nothing reaches a provider unless
   `.phdude/research-policy.yaml` says `network.enabled: true` or the call carries
-  `--allow-network`. Only the query text leaves the machine. Every call appends an event with
-  the provider, the query and a result count — never a result payload — so the workspace can
-  always say exactly what it asked, of whom, and when.
+  `--allow-network`. Nothing from your documents goes with the query; [what actually leaves your
+  machine](#what-actually-leaves-your-machine) is the exact list. Every call appends an event
+  with the provider, the query and a result count — never a result payload — so the workspace
+  can always say exactly what it asked, of whom, and when.
 - **Freshness.** `phdude freshness` reports the last search behind every research question, how
   long ago it ran, and whether the policy calls that stale. `phdude research-fresh` re-runs the
   stale ones exactly as they ran the first time and reports **only what is new** — "nothing has
@@ -127,7 +128,7 @@ talk its way around it, and neither can a tired researcher at 2 a.m.
 
 ### How "what next?" is decided
 
-<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, eleven rules, ranking, top action with reasons" width="900"></p>
+<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, thirteen rules, ranking, top action with reasons" width="900"></p>
 
 Every rule is deterministic and every recommendation carries its reasons, its impact, and the
 command that does it. There is no hidden score.
@@ -279,16 +280,23 @@ counts as a paper worth returning:
 network:
   enabled: true              # nothing leaves the machine until this is true
 
+skills:
+  allow_network: true        # installs the research skill your agent follows
+
 providers: [openalex, crossref, arxiv]   # also available: semantic-scholar, pubmed
 
 research:
   year_range: { from: 2021 }
-  languages: [en]
+  languages: [en, es]
   peer_reviewed: preferred   # preferred | required | any
   preprints: { require_approval: true }
   freshness: { stale_after_days: 180 }
   limit: 20                  # per provider, not a total
 ```
+
+`skills.allow_network` is a separate switch on purpose: it is what lets `phdude init` install
+the `research` skill, which is the one skill that touches the network. Run `phdude init` again
+after you set it, and the skill lands in `.phdude/skills/research/`.
 
 Then ask a question of the literature, tied to one of your research questions:
 
@@ -326,18 +334,28 @@ is new.
 
 ### What actually leaves your machine
 
-The query string. That is the whole list. No document, no excerpt, no filename, no fragment of
-your workspace. Every call appends one line to `.phdude/events.jsonl` naming the provider, the
-query and how many results came back — a failed call included, because the query left the
-machine either way:
+A provider call carries exactly this, and nothing else:
+
+- **the query string** — what you or your agent typed, verbatim;
+- **the result limit and the `from` year** (`research.limit` and `research.year_range.from`, or
+  `--limit` and `--from`), sent as that provider's own filter parameters;
+- **a `phdude/<version>` User-Agent**, so an API owner can see who is asking;
+- **your `email` from `.phdude/author-profile.yaml`**, as the polite `mailto` that OpenAlex and
+  Crossref ask for — only to those two, and only if you filled one in;
+- **`PHDUDE_S2_API_KEY`**, as an `x-api-key` header, only to Semantic Scholar, only if it is set;
+- **`PHDUDE_NCBI_API_KEY`**, as the `api_key` query parameter NCBI documents, only to PubMed,
+  only if it is set.
+
+Nothing from your workspace goes with it: no document, no excerpt, no filename, no path, no
+title of anything you ingested. Both API keys are read from your environment and never from the
+workspace, and neither one reaches an error message or the event log. Every call appends one
+line to `.phdude/events.jsonl` naming the provider, the query and how many results came back — a
+failed call included, because the query left the machine either way:
 
 ```json
 {"ts":"…","op":"search","actor":{…},"ids":["SEARCH-7c2d4e6a10"],"summary":"openalex: \"open science practices\" → 3 results"}
 ```
 
-Only Semantic Scholar takes an API key, read from `PHDUDE_S2_API_KEY` in your environment and
-never from the workspace. OpenAlex and Crossref ask for a polite contact address; PhDude sends
-the `email` from `.phdude/author-profile.yaml` if you filled one in, and nothing if you did not.
 `phdude doctor` prints the policy and the configured providers without calling anything.
 
 Your agent is held to the same rule: the core skill forbids it from fetching a paper, an

@@ -15,7 +15,9 @@ limits, and none of them may be reachable from a test run.
 Network access is closed by default and opened in exactly two places: `network.enabled: true` in
 `.phdude/research-policy.yaml`, or `--allow-network` on the command. `src/domain/policy.js` is the
 only thing that decides, as a pure function, and refuses with `PhdudeError('POLICY', …)` naming
-both ways in. Only the query string ever leaves the machine.
+both ways in. What leaves the machine is the query, the limit and `from` filters, a
+`phdude/<version>` User-Agent, and where configured the polite `mailto` and the provider's own
+API key — never a document, an excerpt or a filename.
 
 Providers sit behind one port, `src/ports/search-provider.js`: a `search(query, { from, limit,
 signal })` returning normalized `Candidate` objects, so the domain never sees a provider's
