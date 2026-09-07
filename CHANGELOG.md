@@ -6,6 +6,98 @@ All notable changes to PhDude are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-09-07
+
+The Research Engine. PhDude can go and find current literature for each research question, and
+it does so under a policy the researcher owns. **The network is off until you turn it on**,
+**only the query text leaves the machine**, and **every provider call is recorded as an event**
+carrying the provider, the query and a result count — never a result payload.
+
+### Added
+
+- **Literature search.** `phdude research "<query>" [--question RQ-n] [--provider a,b]
+  [--from YYYY] [--limit N] [--allow-network]` queries the providers the workspace configured
+  and records what came back. Nothing reaches a provider unless `.phdude/research-policy.yaml`
+  sets `network.enabled: true` or the call carries `--allow-network`; otherwise it exits 3 with
+  `network access is disabled`. A provider that fails is a warning and the run continues on
+  what the others returned; only a run where every provider failed exits 4. See
+  [ADR 7](docs/adr/0007-network-policy-and-search-providers.md).
+- **Five search providers** behind one port (`src/ports/search-provider.js`): OpenAlex,
+  Crossref, arXiv, Semantic Scholar and PubMed. Each maps its own response into one normalized
+  candidate shape, treats the response as untrusted, and goes through a shared HTTP policy — a
+  15 s timeout, exactly one retry on 429/503 with a backoff capped at 2 s, a `phdude/<version>`
+  User-Agent, and typed errors naming the provider. `fetch` is injected, never imported, so no
+  test can reach the network. `searchProviderContract` runs the same six checks against any
+  implementation, yours included.
+- **Candidates.** `CAND-*` records in `knowledge/candidates/`, one per *work* rather than per
+  provider hit: two providers returning the same paper — same DOI, or same normalized title and
+  year — produce one candidate, with the extra providers in `providers[]`, their ids under
+  `ext.ids`, and a field the first provider left empty filled by one that reported it. A
+  candidate found again by a later run is reported as existing, never rewritten: the verdict a
+  researcher gave it is not something a re-run may reset.
+- **Recorded searches.** `SEARCH-*` records in `research/searches/` carry the query, the
+  question, the providers, the filters that were applied and one entry per run, so a re-run can
+  repeat a search exactly as it ran rather than as the policy reads today.
+- **Candidate review.** `phdude research list|show` to read the queue, `phdude research accept
+  CAND-… [--type t] [--approve-preprint]` to turn one into a `SRC-` with its identifiers,
+  provenance and a note of where it came from, and `phdude research dismiss CAND-… --reason "…"`
+  to record why one is not going in. A preprint needs `--approve-preprint` under
+  `research.preprints.require_approval`. Accept invents nothing: a field no provider reported
+  stays empty and `cite check` reports it afterwards.
+- **Freshness.** `phdude freshness` reports the last search behind every research question, how
+  many days ago it ran and whether the policy calls that stale, plus the age of every source and
+  a summary. `phdude research-fresh [--question RQ-n] [--all]` re-runs the stale searches and
+  reports **only new candidates** — a re-run that finds the same literature again is the answer
+  "nothing has changed". Read-only `freshness` never touches the network.
+- **`phdude edit <id> --json '<fields>'`** — the v0.2 backlog item. It corrects the non-identity
+  fields of a non-canonical object in place and writes one `edit` event naming what changed. It
+  refuses a `canonical` object (propose a Decision), an identity field (the id is derived from
+  it, so record the correction with `phdude add`), and a field the schema does not know. `state`
+  is not editable: that is `phdude promote`.
+- **A new `research` skill**, the first with `permissions.network: allowed` and therefore the
+  first installed only when the policy sets `skills.allow_network: true`. It covers writing a
+  query from a research question, reading candidates with the researcher, and never accepting
+  one whose abstract nobody read.
+- **Slash commands** `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness` and
+  `/phdude-edit`.
+
+### Changed
+
+- `phdude next` ranks thirteen rules rather than eleven: `stale-search` (medium — a question
+  never searched, or whose newest search has aged past `research.freshness.stale_after_days`)
+  and `candidates-pending` (medium, at five or more unreviewed candidates).
+- `phdude gaps` reports two more kinds: `question-never-searched` and `stale-search` (low). Both
+  read the network policy — with the network closed the command they print opens the policy
+  first, and `question-never-searched` drops from medium to low, since a workspace that closed
+  the network has decided where its literature comes from rather than overlooked it.
+- `phdude status` gains a Literature block: candidates by state, searches recorded, and how many
+  questions have a stale or missing search. Candidates and searches are counted there rather
+  than in the knowledge counts — a candidate is not knowledge until it is accepted.
+- `schemas/source.json` accepts `provenance`, which an accepted source carries.
+- The example workspace records a search a year old and two candidates, one of them accepted, so
+  the freshness and staleness rules have something honest to report; a `freshness` golden joins
+  the five that were already there, and every calendar-reading golden runs against a fixed
+  present.
+- `phdude doctor` prints the network policy and the configured providers. It never calls out.
+
+### Fixed
+
+- **`phdude research-fresh` failed the whole run over one unrunnable search.** A stored search
+  whose question is no longer on disk threw, discarding the results of every re-run already done
+  in the same invocation. That record is now a warning (`skipped SEARCH-…: …`) and the rest
+  still run.
+- **A result's `from` could never be corrected.** It was refused as an identity field, but a
+  result's id is derived from its `summary` alone. It is editable now.
+
+### Notes
+
+- Requires Node 22 or newer. `pdftotext` (poppler-utils) is still optional.
+- Only Semantic Scholar takes an API key, read from `PHDUDE_S2_API_KEY` in the environment and
+  never from the workspace. OpenAlex and Crossref receive the `email` from
+  `.phdude/author-profile.yaml` as a polite `mailto` when the profile has one.
+- The workspace version is unchanged at 2: `knowledge/candidates/` and `research/searches/` are
+  new directories, created lazily on the first write, so no migration is needed.
+
 ## [0.2.0] — 2026-09-07
 
 The Research Brain. The workspace starts reasoning about the literature it holds. Still no
@@ -142,6 +234,7 @@ First release: the deterministic harness. No model is involved in anything below
 - Requires Node 22 or newer. `pdftotext` (poppler-utils) is optional.
 - No network access and no shell interpolation anywhere in the runtime.
 
-[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/LucioY250/phdude/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/LucioY250/phdude/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/LucioY250/phdude/releases/tag/v0.1.0
