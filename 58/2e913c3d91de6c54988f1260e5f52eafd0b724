@@ -1,0 +1,37 @@
+src/domain/errors.js
+  s_946fc7502759d8::t_6edb502779459e 12-14
+  s_946fc7502759d8::t_a16dbad379aabf 1-11,15
+tests/unit/domain/errors.test.js
+  s_946fc7502759d8::t_0cbfc29a06cc2a 1-10
+src/domain/states.js
+  s_946fc7502759d8::t_33a81dcab9035d 1-12
+tests/unit/domain/ids.test.js
+  s_946fc7502759d8::t_b5350baca96f21 1-32
+src/domain/ids.js
+  s_946fc7502759d8::t_cccf0455785199 1-2,14-28
+  s_946fc7502759d8::t_6edb502779459e 3-13
+src/domain/normalize.js
+  s_946fc7502759d8::t_b8465f07543d37 1-4,8
+  s_946fc7502759d8::t_6edb502779459e 5-7
+tests/unit/domain/states.test.js
+  s_946fc7502759d8::t_c8f14732e494d7 1-4,12-20
+  s_946fc7502759d8::t_6edb502779459e 5-11
+src/domain/hash.js
+  s_946fc7502759d8::t_96fb7580c88afb 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "582e913c3d91de6c54988f1260e5f52eafd0b724",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
