@@ -4,6 +4,7 @@ import { mkdtemp, readdir, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
+import { PhdudeError } from '../../src/domain/errors.js';
 
 const actor = { researcher: 'test', agent: 'node' };
 const claim = {
@@ -43,6 +44,16 @@ test('events append as JSONL', async () => {
   const lines = (await readFile(join(root, '.phdude', 'events.jsonl'), 'utf8')).trim().split('\n');
   assert.equal(lines.length, 2);
   assert.equal((await store.readEvents(1))[0].summary, 'b');
+});
+test('writeEntity rejects a malformed id with a typed error and leaves no file', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  await assert.rejects(store.writeEntity({ ...claim, id: 'nope' }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'VALIDATION');
+    return true;
+  });
+  assert.equal(await store.exists('knowledge/claims/nope.yaml'), false);
 });
 test('writeYamlAtomic leaves no tmp file behind after success', async () => {
   const root = await mkdtemp(join(tmpdir(), 'phdude-'));

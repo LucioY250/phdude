@@ -2,6 +2,7 @@ import { readFile, appendFile, mkdir, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { parseId } from '../../domain/ids.js';
+import { PhdudeError } from '../../domain/errors.js';
 import { assertValid } from '../../schemas/index.js';
 import { writeFileAtomic } from './atomic.js';
 
@@ -72,7 +73,14 @@ export class FsStore {
   }
 
   async writeEntity(obj) {
-    const type = parseId(obj.id).type;
+    const parsed = parseId(obj?.id);
+    if (!parsed)
+      throw new PhdudeError(
+        'VALIDATION',
+        `invalid entity id: ${obj?.id}`,
+        'ids look like CLAIM-<10 hex> or RQ-<n>',
+      );
+    const type = parsed.type;
     assertValid(type, obj);
     const relPath = join(this.entityDir(type), `${obj.id}.yaml`);
     await this.writeYamlAtomic(relPath, obj);
@@ -132,8 +140,9 @@ export class FsStore {
     try {
       await stat(join(this.root, relPath));
       return true;
-    } catch {
-      return false;
+    } catch (err) {
+      if (err.code === 'ENOENT' || err.code === 'ENOTDIR') return false;
+      throw err;
     }
   }
 }
