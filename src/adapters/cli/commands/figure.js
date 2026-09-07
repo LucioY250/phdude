@@ -4,6 +4,7 @@ import { stringify } from 'yaml';
 import * as figure from '../../../application/figure.js';
 import { PhdudeError } from '../../../domain/errors.js';
 import { parseJsonArg } from '../args.js';
+import { reproReason } from '../output.js';
 
 async function readFields({ flags, cwd }) {
   if (flags.jsonPayload) return parseJsonArg(flags.jsonPayload, '--json');
@@ -43,20 +44,12 @@ function renderList(figures) {
   return lines.join('\n') + '\n';
 }
 
-const FINDING_TEXT = {
-  'missing-alt': () => 'no alt text; a figure without one cannot be published (PRD §100)',
-  'never-run': () => 'never built',
-  'missing-output': (f) => `output missing: ${f.path}`,
-  'missing-input': (f) => `input gone: ${f.input}`,
-  'stale-input': (f) => `input changed since the last build: ${f.input}`,
-};
-
 function renderCheck(report) {
   if (report.figures.length === 0) return '(no figures)\n';
   const lines = [];
   for (const fig of report.figures) {
     lines.push(`${fig.id}  ${fig.name}  ${fig.status}`);
-    for (const finding of fig.findings) lines.push(`  - ${FINDING_TEXT[finding.kind](finding)}`);
+    for (const reason of fig.reasons) lines.push(`  - ${reproReason(reason)}`);
   }
   lines.push(
     '',
@@ -132,7 +125,7 @@ export default async function figureCommand(ctx) {
   }
 
   if (sub === 'check') {
-    const report = await figure.check({ store: deps.store, readBytes: deps.readBytes });
+    const report = await figure.check({ store: deps.store, clock: deps.clock });
     return { text: renderCheck(report), json: report };
   }
 

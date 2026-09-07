@@ -982,10 +982,14 @@ the ones that failed:
 - A generator a signal ended records the run with `exit: null` and `signal`, and exits 4 naming
   the signal — never as a run that returned nothing, which is the shape it otherwise has.
 
-`check` reports, for every figure: `up-to-date`, `stale` (an input hashes differently from the
-last successful run, or is gone), `missing-output` (a declared file is not on disk) or
-`never-run`, plus `missing-alt` for a figure whose alt text was edited away. It runs nothing,
-writes nothing and always exits 0 — a stale figure is a state to fix, not a failure.
+`check` reports, for every figure: `up-to-date`, `stale`, `missing-output` (a declared file is
+not on disk) or `never-run`, plus `missing-alt` for a figure whose alt text was edited away. The
+rows are the figure rows of `phdude repro check`, taken from the same computation rather than a
+second one, so the two commands say the same thing about the same figure — including the drift
+reading (`bytes changed on disk`) and the upstream hop (`comes from ANALYSIS-…, which is stale`).
+`--json` reports each figure as `{kind, id, name, status, reasons}`, the shape `repro check` uses.
+It runs nothing, writes nothing and always exits 0 — a stale figure is a state to fix, not a
+failure.
 
 ### `phdude repro check [--json]`
 

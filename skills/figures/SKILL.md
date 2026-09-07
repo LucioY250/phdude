@@ -88,13 +88,16 @@ phdude figure check
 passes `--allow-exec`. That refusal is the researcher's decision to make, not an obstacle to
 route around: report it and stop.
 
-Every build is recorded, including the ones that fail. A non-zero exit, a timeout, or a
+Every build that ran is recorded, including the ones that fail. A non-zero exit, a timeout, or a
 generator that wrote nothing all leave a run on the record with its exit code — so a reader can
-see the figure was attempted and did not render.
+see the figure was attempted and did not render. A build whose inputs, generator and output files
+are all what the last successful run recorded reports `up to date` and runs nothing; reach for
+`--force` only when the researcher asks.
 
-`check` reports what needs doing before a figure is cited: `never-run`, `missing-output`,
-`stale` (an input has changed since the build that used it), and `missing-alt`. Run it before
-putting a figure in a section, and rebuild rather than citing a stale one.
+`check` reports what needs doing before a figure is cited: `never-run`, `missing-output`, `stale`
+and `missing-alt`. It is the figure half of `phdude repro check` and says exactly what that
+command says, so a figure whose result came from an analysis that is itself stale reads `stale`
+here too. Run it before putting a figure in a section, and rebuild rather than citing a stale one.
 
 ## Writing about a figure
 

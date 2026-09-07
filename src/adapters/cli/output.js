@@ -246,7 +246,8 @@ export function renderGaps(report) {
 }
 
 // What each reason means, in the researcher's terms. The domain names the kind; the wording of
-// it is the CLI's, exactly as `figure check` renders its own findings.
+// it is the CLI's. `figure check` renders the same reasons through `reproReason` below, so the
+// two commands never say the same thing two ways.
 const REASON_TEXT = {
   'missing-alt': () => 'no alt text; a figure without one cannot be published (PRD §100)',
   'never-run': () => 'no successful run recorded',
@@ -258,6 +259,14 @@ const REASON_TEXT = {
 };
 
 const REPRO_STATUSES = ['up-to-date', 'stale', 'never-run', 'missing-output'];
+
+/**
+ * @param {{kind: string}} reason - one entry of a repro item's `reasons`
+ * @returns {string} the researcher-facing line for it
+ */
+export function reproReason(reason) {
+  return REASON_TEXT[reason.kind](reason);
+}
 
 /**
  * @param {{items: object[], counts: Record<string, number>, attention: number}} report
@@ -274,7 +283,7 @@ export function renderRepro(report) {
     lines.push(
       `${item.id.padEnd(idWidth)}  ${String(item.name ?? '').padEnd(nameWidth)}  ${item.status}`,
     );
-    for (const reason of item.reasons) lines.push(`  - ${REASON_TEXT[reason.kind](reason)}`);
+    for (const reason of item.reasons) lines.push(`  - ${reproReason(reason)}`);
   }
 
   const tally = REPRO_STATUSES.filter((s) => counts[s] > 0).map((s) => `${counts[s]} ${s}`);

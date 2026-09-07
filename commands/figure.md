@@ -30,5 +30,7 @@ A build whose inputs, generator and output files are all exactly what the last s
 recorded reports `up to date` and runs nothing; `--force` builds anyway. Reach for `--force` only
 when the researcher asks.
 
-`check` reports missing alt text, outputs that are not on disk, and inputs that have changed
-since the build that used them. Read it before citing a figure in the manuscript.
+`check` reports missing alt text, outputs that are not on disk, inputs that have changed since
+the build that used them, and results whose analysis is itself stale. It is the figure half of
+`phdude repro check` and says exactly what that command says. Read it before citing a figure in
+the manuscript.

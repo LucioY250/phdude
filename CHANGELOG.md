@@ -56,7 +56,8 @@ does any of this still hold? See
   runs the generator through the runner, verifies every declared output exists, and hashes it; a
   generator that exits 0 without writing what it declared is treated as a failure. A build whose
   inputs, generator script and output files are all what the last successful run recorded reports
-  `up to date` and spawns nothing; `--force` builds anyway.
+  `up to date` and spawns nothing; `--force` builds anyway. `check` reports the figure rows of
+  `repro check`, from the same computation, so the two commands never disagree about a figure.
 - **A reference generator.** `generators/bar-chart.mjs` — plain Node, no dependencies — draws an
   accessible SVG with a title, a description carrying the alt text, real axis labels, one
   colourblind-safe hue and no timestamp, from a result's values or a dataset column. A figure

@@ -1,12 +1,13 @@
 import { join } from 'node:path';
 import { newFigure } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
-import { generatorScript, staleness, upToDate, validateFigure } from '../domain/figures.js';
+import { generatorScript, upToDate, validateFigure } from '../domain/figures.js';
 import { sha256 } from '../domain/hash.js';
 import { parseId } from '../domain/ids.js';
 import { stableStringify } from '../domain/normalize.js';
 import { assertExecutionAllowed, executionTimeoutMs, runtimeCommand } from '../domain/policy.js';
 import { assertUpToDate } from './guard.js';
+import { loadSnapshot } from './snapshot.js';
 import { assertPathsInsideRoot } from './paths.js';
 import { sourceHash } from './table.js';
 
@@ -310,26 +311,16 @@ export async function build(deps, id, { allowExec = false, force = false } = {})
 }
 
 /**
- * What is wrong with every figure in the workspace: alt text that is not there, outputs that
- * are not on disk, and inputs that have moved since the run that produced them. It reports; a
- * rebuild is the answer, so nothing here is an error.
- * @param {{store: object, readBytes: (rel: string) => Promise<Buffer>}} deps
+ * What is wrong with every figure in the workspace: alt text that is not there, outputs that are
+ * not on disk, inputs that have moved since the run that produced them, and results whose
+ * analysis is itself stale. It reports; a rebuild is the answer, so nothing here is an error.
+ *
+ * The rows are the figure rows of `phdude repro check`, taken from the same computation rather
+ * than a second one, so the two commands cannot say different things about the same figure.
+ * @param {{store: object, clock?: () => string}} deps
  * @returns {Promise<{figures: object[], findings: number}>}
  */
-export async function check(deps) {
-  const { store } = deps;
-  const figures = [];
-  for (const figure of await store.listEntities('figure')) {
-    const present = {};
-    for (const output of figure.outputs ?? []) {
-      present[output.path] = await store.exists(output.path);
-    }
-    figures.push(
-      staleness(figure, {
-        inputHashes: await currentInputHashes(deps, figure.inputs ?? []),
-        present,
-      }),
-    );
-  }
-  return { figures, findings: figures.reduce((n, f) => n + f.findings.length, 0) };
+export async function check({ store, clock }) {
+  const figures = (await loadSnapshot(store, clock)).repro.filter((item) => item.kind === 'figure');
+  return { figures, findings: figures.reduce((n, f) => n + f.reasons.length, 0) };
 }

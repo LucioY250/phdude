@@ -645,12 +645,14 @@ test('check reports never-run, then up-to-date, then stale once the input moves'
   assert.equal(fresh.figures[0].status, 'up-to-date');
   assert.equal(fresh.findings, 0);
 
+  // Edited without `phdude data add`, so the reason is the drift reading, exactly as
+  // `repro check` reports it - the two commands read the same report.
   await writeFile(join(root, 'data', 'survey.csv'), SURVEY + '4,29,c\n');
   const stale = await figure.check(deps);
   assert.equal(stale.figures[0].status, 'stale');
   assert.deepEqual(
-    stale.figures[0].findings.map((f) => f.kind),
-    ['stale-input'],
+    stale.figures[0].reasons.map((f) => f.kind),
+    ['unregistered-input'],
   );
 
   await rm(join(root, 'figures', 'out', 'groups.svg'));
@@ -671,7 +673,7 @@ test('check reports a figure whose alt text was edited away, without running any
 
   const report = await figure.check(deps);
   assert.deepEqual(
-    report.figures[0].findings.map((f) => f.kind),
+    report.figures[0].reasons.map((f) => f.kind),
     ['missing-alt', 'never-run'],
   );
   assert.equal(report.findings, 2);

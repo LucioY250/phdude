@@ -2275,11 +2275,26 @@ test('e2e: table build and figure build through the CLI, with the execution poli
   assert.equal(forced.built, true);
   assert.equal(forced.run.exit, 0);
 
-  // Editing the data under the figure makes it stale, without anything having watched the file.
+  // Editing the data under the figure makes it stale, without anything having watched the file -
+  // and `figure check` says exactly what `repro check` says, because it reads the same report.
   await writeFile(join(ws, 'data', 'survey.csv'), survey + '4,29,c\n');
   const stale = await run(ws, ['figure', 'check']);
   assert.match(stale.stdout, /stale/);
-  assert.match(stale.stdout, /input changed since the last build/);
+  assert.match(stale.stdout, /bytes changed on disk/);
+  const repro = await run(ws, ['repro', 'check']);
+  // `repro check` pads its columns across three kinds of item, so the block is compared with
+  // runs of spaces collapsed: the status and the reasons have to be the same, not the padding.
+  const figureBlock = (text) => {
+    const lines = text.split('\n').map((line) => line.replace(/ {2,}/g, ' ').trimEnd());
+    const start = lines.findIndex((line) => line.startsWith('FIG-'));
+    const block = [lines[start]];
+    for (const line of lines.slice(start + 1)) {
+      if (!line.startsWith(' -')) break;
+      block.push(line.trim());
+    }
+    return block;
+  };
+  assert.deepEqual(figureBlock(stale.stdout), figureBlock(repro.stdout));
 
   const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
     .split('\n')
