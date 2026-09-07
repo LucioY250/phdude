@@ -395,6 +395,14 @@ Suggested action: set network.enabled: true in .phdude/research-policy.yaml or p
 Only the query string leaves the machine. Every provider call appends one `search` event
 carrying the provider, the query and a result count — never a result payload.
 
+The five providers are `openalex`, `crossref`, `arxiv`, `semantic-scholar` and `pubmed`;
+`providers:` in the policy names which of them this workspace uses, and in what order. Only
+Semantic Scholar takes a key, from `PHDUDE_S2_API_KEY` in the environment — no key is ever read
+from the workspace, and without one that provider still answers at the anonymous rate limit.
+OpenAlex and Crossref ask for a polite contact address: PhDude sends the `email` from
+`.phdude/author-profile.yaml` as `mailto` when the profile has one, and nothing when it does
+not.
+
 | Option | Meaning |
 |---|---|
 | `--question RQ-n` | Tie the search and its candidates to a research question. The id must exist, or the command exits 2. Without it the search is still recorded, with `question: null`. |
@@ -492,6 +500,10 @@ It reports **only new candidates**: `{ reran, newCandidates, warnings }`. A re-r
 the same literature again is the answer "nothing has changed", and listing the same twenty
 papers a second time would bury it.
 
+A stored search can outlive what it points at — a question deleted by hand, say. That one record
+is reported as a warning (`skipped SEARCH-…: unknown question RQ-n`) and the rest of the due
+searches still run; one unrunnable record does not discard the re-runs already done.
+
 ### `phdude freshness [--json]`
 
 ```
@@ -529,7 +541,7 @@ Three refusals, and they are the point of the command:
 | Refusal | Exit | Why |
 |---|---|---|
 | The object is `canonical` | 3 | Canonical knowledge belongs to the researcher. Propose a Decision instead. |
-| The field is an identity field | 2 | Ids are derived from these (ADR 0003), so changing one would mean a different object wearing the old object's id. Record the correction with `phdude add`; the original stays as the history of what was believed. |
+| The field is an identity field | 2 | Most ids are derived from these (ADR 0003), so changing one would mean a different object wearing the old object's id. Record the correction with `phdude add`; the original stays as the history of what was believed. |
 | The field is not editable | 2 | A field the schema does not know is a typo, and the fields other commands own are left to them. |
 
 | Type | Identity fields (never editable) | Editable |
@@ -538,7 +550,7 @@ Three refusals, and they are the point of the command:
 | `evidence` | `source`, `locator`, `excerpt` | `strength`, `provenance`, `tags` |
 | `fact` | `key`, `value`, `from` | `unit`, `tags` |
 | `source` | `title`, `year` | `authors`, `venue`, `doi`, `url`, `type`, `artifacts`, `bibkey`, `abstract`, `keywords`, `identifiers`, `provenance`, `tags` |
-| `result` | `summary`, `from` | `values`, `tags` |
+| `result` | `summary` | `from`, `values`, `tags` |
 | `decision` | `title`, `rationale`, `affects`, `change` | `tags` |
 | `method` | `name` | `design`, `paradigm`, `sampling`, `instruments`, `analysis`, `limitations`, `questions`, `tags` |
 | `question` | `text` | `objectives`, `tags` |
@@ -601,7 +613,7 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 | `question-without-claims` | high | No claim addresses this research question. |
 | `question-only-candidates` | medium | Every claim addressing this question is still `candidate`. |
 | `question-without-method` | medium | No method's `questions` includes this research question. |
-| `question-never-searched` | medium | No recorded search is tied to this research question. |
+| `question-never-searched` | medium, or low with the network closed | No recorded search is tied to this research question. |
 | `stale-search` | low | The question's newest search ran at least `research.freshness.stale_after_days` days ago. |
 | `claim-without-evidence` | high | A non-`rejected` claim's `supported_by` is empty. |
 | `claim-weak-evidence` | medium | Every evidence item supporting the claim has `strength: weak`. |
@@ -615,6 +627,12 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 `phdude freshness` reports in full and `next` raises as its `stale-search` rule. The
 never-searched case outranks the aged one: a question with an old search at least has
 literature behind it.
+
+Both read the network policy. With `network.enabled: false` the command a gap prints becomes
+`set network.enabled: true in .phdude/research-policy.yaml, then phdude research …`, because the
+search on its own would refuse; `question-never-searched` also drops to `low`, since a workspace
+that closed the network has decided where its literature comes from rather than overlooked it.
+`next`'s `stale-search` rule carries the same prefix on the same condition.
 
 `gaps` is read-only; it writes no event. `next` recommends running it (rule `gaps`, medium)
 once one high-severity gap or 3 gaps of any severity exist; the ranking decides where that lands
@@ -700,7 +718,7 @@ A bare `phdude`, an unknown command and an unparseable argument list are usage e
 help requests: they exit 1 and write the error to stderr, following the `--json` error
 contract above, with the usage block appended in text mode only.
 
-## Testing
+## Internal
 
 `PHDUDE_FAKE_FETCH=<path>` is an internal, test-only hook. When it is set, `phdude research`
 and `phdude research-fresh` build their providers' `fetch` from the JSON routes file at that

@@ -9,7 +9,7 @@
 Your AI can write. PhDude helps make the research worth publishing.
 
 [![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.2.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.3.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
@@ -37,55 +37,50 @@ It makes no assumptions about your field. A clinical trial, an archival history 
 empirical software-engineering paper get the same treatment; discipline-specific vocabulary
 and review questions arrive as packs.
 
-> **Where things stand.** This is v0.2. The deterministic core is done and tested: workspace,
+> **Where things stand.** This is v0.3. The deterministic core is done and tested: workspace,
 > ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the
 > citation registry, the literature matrix and gap report, workspace migrations, and the Claude
-> Code and Codex adapters. Literature search, analysis execution and the writing engine come
+> Code and Codex adapters. New in this release, PhDude can go and *find* literature: five search
+> providers, candidate review, freshness tracking. The network is off until you turn it on, and
+> only the query text ever leaves the machine. Analysis execution and the writing engine come
 > next; see the [roadmap](#roadmap).
 
-## What's new in 0.2
+## What's new in 0.3
 
-v0.2 is the Research Brain. The workspace stops being a filing cabinet and starts having an
-opinion about the literature it holds.
+v0.3 is the Research Engine. Until now PhDude only knew what you gave it. Now it can go and
+look — carefully, under a policy you control, and with a receipt for every call.
 
-- **Citations.** `phdude cite list|check|export` derives a stable bibkey for every source,
-  verifies the registry, and exports BibTeX or CSL-JSON. Offline, and derived rather than
-  canonical: `references.bib` is an output, the `SRC-` id is still the citation.
-- **The literature matrix.** `phdude matrix` prints one row per source — the research questions
-  and claims its evidence reaches, the strongest evidence citing it, the facts drawn from its
-  artifacts. A row with no questions is a source you have cited but never actually used.
-- **Research gaps.** `phdude gaps` reports twelve kinds of gap by severity, each with the reason
-  it fired and a command that addresses it. `phdude next` recommends it on the first
-  high-severity gap, or once three of any severity accumulate, and never calls a workspace with
-  open gaps consistent.
-- **Contradictions.** `phdude link CLAIM-a --contradicts CLAIM-b` moves both claims to
-  `disputed` with no decision needed, because surfacing a contradiction should never wait for
-  approval. Getting one back out does: the decision has to name which claim survives.
-- **Methods.** `phdude add method` records design, paradigm, sampling, instruments, analysis and
-  limitations as an object, and `phdude link METH-… --to RQ-n` attaches it to the questions it
-  answers — so the methodology section is read from the record, not from memory.
-- **Provenance.** Every claim and evidence item records whether a human or an agent produced it
-  and which artifacts it came from. `phdude knowledge trace` prints it, so "an agent extracted
-  this from one PDF" and "you told me this" stop looking the same.
-- **Migrations.** `phdude.yaml` carries a `workspace_version`, and `phdude migrate` upgrades a
-  workspace written by an older PhDude. Reads warn, writes stop until it is run. A workspace
-  written by a *newer* PhDude warns and stops writes too, pointing at the upgrade instead.
-- **Skill contracts.** Every `SKILL.md` declares what it reads, what it writes and what it is
-  permitted to do; the contract is validated on load, network access is refused unless the
-  workspace policy allows it, and `phdude doctor` lists the lot.
-
-One thing v0.2 deliberately does not add is editing. Ids are derived from content, so
-`phdude add` cannot correct an object that already exists — re-adding it returns the original
-record unchanged. `phdude link` attaches what was missing, and changing anything else means
-proposing a decision or adding a corrected object and retiring the old one.
+- **Literature search.** `phdude research "…" --question RQ-1` queries OpenAlex, Crossref,
+  arXiv, Semantic Scholar and PubMed, merges what comes back into one candidate per paper, and
+  records the search. Two providers returning the same work give you one row, not two: they
+  match on DOI, or on title and year.
+- **Candidate review.** A search result is not a source. It lands as a `CAND-` record and stays
+  there until you say otherwise. `phdude research accept` turns one into a `SRC-` with its
+  identifiers and its provenance; `phdude research dismiss --reason "…"` records why one is not
+  going in, so the next reader knows it was read rather than missed.
+- **The network is off by default.** Nothing reaches a provider unless
+  `.phdude/research-policy.yaml` says `network.enabled: true` or the call carries
+  `--allow-network`. Only the query text leaves the machine. Every call appends an event with
+  the provider, the query and a result count — never a result payload — so the workspace can
+  always say exactly what it asked, of whom, and when.
+- **Freshness.** `phdude freshness` reports the last search behind every research question, how
+  long ago it ran, and whether the policy calls that stale. `phdude research-fresh` re-runs the
+  stale ones exactly as they ran the first time and reports **only what is new** — "nothing has
+  changed since March" is a real answer, and a better one than the same twenty papers again.
+  `gaps` and `next` learned the matching rules.
+- **Editing, finally.** `phdude edit <id> --json '{"venue":"…"}'` corrects the non-identity
+  fields of a non-canonical object in place. It refuses three things, and each refusal is the
+  point: a canonical object (propose a decision), an identity field (the id is derived from it),
+  and a field the schema does not know.
 
 ## Contents
 
-- [What's new in 0.2](#whats-new-in-02)
+- [What's new in 0.3](#whats-new-in-03)
 - [How it works](#how-it-works)
 - [Install](#install)
 - [Set up your agent](#set-up-your-agent) (Claude Code, Codex, anything else)
 - [A first session](#a-first-session)
+- [Finding literature](#finding-literature)
 - [What's in the box](#whats-in-the-box)
 - [Your workspace](#your-workspace)
 - [Commands](#commands)
@@ -139,13 +134,13 @@ command that does it. There is no hidden score.
 
 ## Install
 
-v0.2 is not on npm yet. Install it from the repository:
+v0.3 is not on npm yet. Install it from the repository:
 
 ```
 git clone https://github.com/LucioY250/phdude && cd phdude
 npm ci
 npm link
-phdude --version      # phdude 0.2.0
+phdude --version      # phdude 0.3.0
 ```
 
 Node 22 or newer. `pdftotext` (poppler-utils) is optional: without it PDFs are still
@@ -254,10 +249,12 @@ Command:
 phdude decide propose --title "Resolve sample_size" --rationale "…" --affects FACT-2bc4462edb FACT-54af7fa906 FACT-f62e1a2f34 --change '{"fact_key":"sample_size","canonical_value":…}'
 
 Other candidates:
-1. (medium) Classify artifacts with unknown role
-2. (medium) Approve or reject pending decisions
-3. (medium) Close the evidence gap for unaddressed research questions
-4. (low) No further automatic recommendations; add new sources or refine claims
+1. (medium) Review the research gaps report
+2. (medium) Classify artifacts with unknown role
+3. (medium) Refresh the literature behind the research questions
+4. (medium) Approve or reject pending decisions
+5. (medium) Close the evidence gap for unaddressed research questions
+6. (low) 15 open gap(s); run phdude gaps
 ```
 
 That block is the real output of `phdude next` on the [example workspace](examples/generic-thesis)
@@ -272,20 +269,95 @@ phdude decide approve DEC-… --by lucio
 phdude promote CLAIM-… --decision DEC-…
 ```
 
+## Finding literature
+
+By default PhDude never touches the network. Turning that on is a two-line edit to
+`.phdude/research-policy.yaml`, which is also where you say who you want searched and what
+counts as a paper worth returning:
+
+```yaml
+network:
+  enabled: true              # nothing leaves the machine until this is true
+
+providers: [openalex, crossref, arxiv]   # also available: semantic-scholar, pubmed
+
+research:
+  year_range: { from: 2021 }
+  languages: [en]
+  peer_reviewed: preferred   # preferred | required | any
+  preprints: { require_approval: true }
+  freshness: { stale_after_days: 180 }
+  limit: 20                  # per provider, not a total
+```
+
+Then ask a question of the literature, tied to one of your research questions:
+
+```
+phdude research "note-taking app adoption undergraduates" --question RQ-1
+```
+
+Every provider in the list gets the same query. What comes back is deduplicated into one
+candidate per paper — same DOI, or same title and year — merged so a field one provider left
+empty is filled by one that reported it, and ranked by a score that is written down rather than
+hidden (`score_parts` explains it in `--json`). None of it is knowledge yet:
+
+```
+phdude research list --state candidate
+phdude research show CAND-…
+phdude research accept CAND-… --type article
+phdude research dismiss CAND-… --reason "measures a different construct"
+```
+
+`accept` is the only path from a search result into your citation registry. It creates the
+`SRC-` record with whatever identifiers the providers actually reported, notes where it came
+from, and invents nothing — run `phdude cite check` afterwards and it will tell you what is
+still missing. A preprint needs `--approve-preprint` on top, because
+`preprints.require_approval` says a preprint is your call, not the tool's.
+
+Literature ages whether or not anyone looks at it:
+
+```
+phdude freshness                   # last search per question, age per source, what is stale
+phdude research-fresh --question RQ-1
+```
+
+`research-fresh` re-runs a stale search exactly as it ran the first time and tells you only what
+is new.
+
+### What actually leaves your machine
+
+The query string. That is the whole list. No document, no excerpt, no filename, no fragment of
+your workspace. Every call appends one line to `.phdude/events.jsonl` naming the provider, the
+query and how many results came back — a failed call included, because the query left the
+machine either way:
+
+```json
+{"ts":"…","op":"search","actor":{…},"ids":["SEARCH-7c2d4e6a10"],"summary":"openalex: \"open science practices\" → 3 results"}
+```
+
+Only Semantic Scholar takes an API key, read from `PHDUDE_S2_API_KEY` in your environment and
+never from the workspace. OpenAlex and Crossref ask for a polite contact address; PhDude sends
+the `email` from `.phdude/author-profile.yaml` if you filled one in, and nothing if you did not.
+`phdude doctor` prints the policy and the configured providers without calling anything.
+
+Your agent is held to the same rule: the core skill forbids it from fetching a paper, an
+abstract or a DOI on its own, by any means. If the policy is closed, it reports that and asks
+you — it does not pass `--allow-network` on your behalf.
+
 ## What's in the box
 
 ```
 phdude/
 ├── bin/phdude.js          the CLI entry point
 ├── src/
-│   ├── domain/            pure logic: ids, hashing, lineage, conflicts, gaps, matrix, rules
-│   ├── application/       use cases: init, ingest, add, link, decide, cite, matrix, gaps, …
+│   ├── domain/            pure logic: ids, hashing, lineage, conflicts, gaps, candidates, rules
+│   ├── application/       use cases: init, ingest, add, link, decide, cite, research, edit, …
 │   ├── ports/             the contracts adapters implement (+ their contract test suites)
-│   ├── adapters/          filesystem store, document parsers, git, agent hosts, CLI
+│   ├── adapters/          filesystem store, document parsers, git, search providers, agent hosts, CLI
 │   └── schemas/           the JSON Schema validator
 ├── schemas/               one JSON Schema per research object, plus the skill contract
 ├── migrations/            one module per workspace-version step
-├── skills/                the seven core skills, one SKILL.md directory each
+├── skills/                the eight core skills, one SKILL.md directory each
 ├── commands/              the Claude Code slash-command templates
 ├── packs/                 seven starter packs: fields/ and methods/
 ├── defaults/              the research constitution and policies a new workspace gets
@@ -294,8 +366,10 @@ phdude/
 └── tests/                 unit · contract · integration · golden · e2e (node:test only)
 ```
 
-Three runtime dependencies (`yaml`, `ajv`, `fflate`). No network calls anywhere. The domain
-layer cannot import the filesystem, and a test makes sure it never does.
+Three runtime dependencies (`yaml`, `ajv`, `fflate`). The only code that can reach the network
+is a search provider under `src/adapters/search/`, and only `phdude research` and
+`phdude research-fresh` can call one — under the policy above. The domain layer cannot import
+the filesystem, and a test makes sure it never does.
 
 ## Your workspace
 
@@ -318,8 +392,10 @@ my-research/
 │   ├── claims/          # CLAIM-*.yaml
 │   ├── evidence/        # EVID-*.yaml
 │   ├── facts/           # FACT-*.yaml  project facts with their origin
-│   └── results/         # RESULT-*.yaml
+│   ├── results/         # RESULT-*.yaml
+│   └── candidates/      # CAND-*.yaml  literature hits awaiting your verdict, not yet sources
 ├── research/            # questions/ RQ-*.yaml · hypotheses/ H-*.yaml · methods/ METH-*.yaml
+│                        # searches/  SEARCH-*.yaml  what was asked, of whom, and when
 ├── decisions/           # DEC-*.yaml
 ├── references.bib       # written by `phdude cite export`; derived, not knowledge
 └── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
@@ -380,7 +456,8 @@ Writing your own is a `pack.yaml` and a `SKILL.md`: see [docs/extending.md](docs
   belong to the researcher. The agent proposes; approval is a human act, enforced by the CLI.
 - **Field agnosticism.** No discipline is assumed. Domain knowledge arrives as packs.
 - **Local-first, and the data is yours.** Your research lives in your repository, in a format
-  that outlives this tool. Nothing is sent anywhere.
+  that outlives this tool. The only thing that ever leaves it is a literature query you asked
+  for, and the workspace records every one.
 - **Token-efficient by architecture.** Agents read cached sections, not whole documents, and
   load a skill only when they need it.
 - **Skill-first, not skill-only.** Skills define capabilities. Core defines truth.
@@ -392,8 +469,8 @@ The reasoning behind the big calls is in [docs/adr/](docs/adr/).
 | Version | Theme | Highlights |
 |---|---|---|
 | v0.1 | MVP | workspace, ingestion, knowledge graph, decisions, conflicts, status, next, packs, Claude Code and Codex adapters |
-| **v0.2** | Research Brain | citation registry, literature matrix, research gaps, contradictions, methods, provenance, workspace migrations, skill contracts |
-| v0.3 | Research Engine | fresh literature search, provider adapters, candidate review, freshness tracking |
+| v0.2 | Research Brain | citation registry, literature matrix, research gaps, contradictions, methods, provenance, workspace migrations, skill contracts |
+| **v0.3** | Research Engine | fresh literature search, five provider adapters, candidate review, freshness tracking, `phdude edit` |
 | v0.4 | Co-Author | author voice profiles, section writing, the `academic-prose` skill, `/phdude deslop`, writing gates |
 | v0.5 | Analysis & Visualization | analysis skills, tables, charts, figures, reproducibility lineage |
 | v0.6 | Document Factory | DOCX, PDF, LaTeX, PPTX and XLSX output, venue packs (IEEE, ACM) |

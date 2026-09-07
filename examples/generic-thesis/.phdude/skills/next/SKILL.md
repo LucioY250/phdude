@@ -33,7 +33,9 @@ Four rules are worth knowing by name.
   Its `why` says which questions and how old the oldest search is, and its command is a first
   `phdude research` or a `phdude research-fresh`, depending on which case the question is in.
   Both reach the network, so report it and ask rather than running it yourself
-  (`[[phdude-core]]`).
+  (`[[phdude-core]]`). With the policy closed the command is prefixed with `set
+  network.enabled: true in .phdude/research-policy.yaml, then …` — that first half is the
+  researcher's to do, not yours.
 - **`candidates-pending`** (medium) fires at five or more candidates still in state `candidate`.
   It is a queue, not an error: the researcher reviews and accepts them, never you. Follow
   `[[research]]`.

@@ -47,8 +47,8 @@ finding kind must be resolved first (the command exits 2 while any of them remai
 | Finding kind | What it means | How to fix it |
 | --- | --- | --- |
 | `evidence-missing-source` | An evidence item's `source` id does not exist. | Find the right id with `phdude knowledge list`, then add a corrected evidence item citing it — an evidence item's `source` cannot be edited in place. |
-| `invalid-doi` | A DOI does not match `^10\.\d{4,9}/\S+$`. | Correct the DOI (`identifiers.doi` or `doi`) on a re-added source, or drop it if it was never a real DOI. |
-| `missing-field` | A source is missing `title`, `authors`, or `year`. | Add a corrected source with the field set (see above) — a source's id is derived from `title` and `year`, so correcting either mints a new record. |
+| `invalid-doi` | A DOI does not match `^10\.\d{4,9}/\S+$`. | A DOI is not part of a source's identity, so correct it in place: `phdude edit SRC-… --json '{"identifiers":{"doi":"10.…"}}'`, or drop it if it was never a real DOI. |
+| `missing-field` | A source is missing `title`, `authors`, or `year`. | `authors` is editable in place (`phdude edit SRC-… --json '{"authors":["…"]}'`). `title` and `year` are the source's identity, so correcting either means adding a corrected source and leaving the original as the history of what was believed. |
 | `duplicate-source` | Two or more sources share the same normalized `title` + `year`. | Confirm with the researcher which one is canonical, then stop citing the other; do not silently pick one yourself. |
 | `duplicate-bibkey` | Two or more sources declare the same explicit `bibkey`. | Give each a distinct `bibkey`, or drop the explicit one so it is derived instead. |
 
@@ -116,8 +116,11 @@ Read it as two different problems, not one number:
    `phdude research-fresh --question RQ-n`, which re-runs it exactly as it ran before and
    reports only what is new. See `[[research]]`.
 
-The same two show up in `phdude gaps` as `question-never-searched` (medium) and `stale-search`
-(low), and in `phdude next` as the `stale-search` rule.
+The same two show up in `phdude gaps` as the kinds `question-never-searched` and `stale-search`,
+and in `phdude next` as the `stale-search` rule. `stale-search` is low severity.
+`question-never-searched` is medium while the policy has the network open and low while it is
+closed — a workspace that closed the network has decided where its literature comes from, and
+both reports then recommend opening the policy first rather than a command that would refuse.
 
 Source `age` is context, not a verdict: a 2019 paper is not stale because it is old, it is the
 foundational reference for half the field. Report the median and the oldest so the researcher
