@@ -162,6 +162,50 @@ test('search: a second run adds only what is new and appends its runs to the sam
   assert.equal((await research.list(second)).length, 3, 'no duplicate candidate objects');
 });
 
+test('search: the same query through a different provider order adds nothing new', async () => {
+  const root = await newRoot();
+  const first = makeDeps(root);
+  const created = await research.search(first, { query: 'open science' });
+  assert.equal(created.candidates.created.length, 3);
+
+  // Reversed order: the owning provider changes, the works do not, so nothing is new.
+  const reversed = makeDeps(root, successRoutes(), ['crossref', 'openalex'], 30);
+  const back = await research.search(reversed, { query: 'open science' });
+  assert.deepEqual(back.candidates.created, [], 'reversing the providers creates no duplicates');
+  assert.deepEqual(back.candidates.existing.sort(), created.candidates.created.sort());
+  assert.deepEqual(
+    back.search.runs.slice(2).map((r) => r.new),
+    [0, 0],
+  );
+
+  // One provider on its own: still the same works, still nothing new.
+  const alone = makeDeps(root, successRoutes(), ['crossref'], 60);
+  const single = await research.search(alone, { query: 'open science' });
+  assert.deepEqual(single.candidates.created, []);
+  assert.equal(single.candidates.existing.length, 3);
+  assert.deepEqual(
+    single.search.runs.slice(4).map((r) => r.new),
+    [0],
+  );
+
+  assert.equal((await research.list(alone)).length, 3, 'three works, three candidate files');
+});
+
+test('search: a candidate takes the DOI a second provider knows and the first did not', async () => {
+  const root = await newRoot();
+  const deps = makeDeps(root);
+  await research.search(deps, { query: 'open science' });
+
+  const preprint = (await research.list(deps)).find((c) => c.type === 'preprint');
+  assert.equal(preprint.provider, 'openalex', 'openalex ran first and owns the record');
+  assert.equal(
+    preprint.doi,
+    '10.31224/7150',
+    'openalex returned no DOI for the preprint; crossref did',
+  );
+  assert.equal(preprint.ext.ids.crossref, '10.31224/7150');
+});
+
 test('search: a provider that fails is a warning, and the other providers still land', async () => {
   const root = await newRoot();
   const deps = makeDeps(root, [

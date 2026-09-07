@@ -1,12 +1,27 @@
 import { normalizeDoi, normalizeText } from './normalize.js';
 
+/**
+ * The one key that says which work a candidate is: its DOI when it has one, otherwise its
+ * normalized title and year. This, not the provider that happened to return it first, is what a
+ * candidate's `CAND-` id is derived from - so the same work searched again through a different
+ * provider list lands on the same record instead of a second one. A malformed DOI is treated as
+ * no DOI rather than as an identity, so a provider's bad data cannot merge two unrelated works.
+ * @param {object} candidate
+ * @returns {string}
+ */
+export function identityKey(candidate) {
+  const doi = normalizeDoi(candidate.doi);
+  if (doi) return `doi:${doi}`;
+  return `title:${normalizeText(candidate.title ?? '')}|${candidate.year ?? ''}`;
+}
+
 // Two providers describing the same work have to collapse into one candidate, or the
 // researcher reviews the same paper once per provider. Spec §3.3 makes that an either/or: the
 // same DOI, *or* the same normalized title and year. Both keys are registered for every
-// candidate, so a work one provider has a DOI for and another does not still merges - which is
-// the common case for preprints, and for a preprint and its published version. A malformed DOI
-// is treated as no DOI rather than as an identity, so a provider's bad data cannot merge two
-// unrelated works on its own.
+// candidate while grouping, so a work one provider has a DOI for and another does not still
+// merges - which is the common case for preprints, and for a preprint and its published
+// version. The group's own identity is `identityKey` of the merged record, computed once the
+// merge has filled in what the first provider did not know.
 function identityKeys(candidate) {
   const keys = [];
   const doi = normalizeDoi(candidate.doi);
@@ -16,12 +31,25 @@ function identityKeys(candidate) {
   return keys;
 }
 
+// What one provider left null another may know. Filling only nulls can never overwrite what the
+// owning provider reported, and it is what keeps a work's identity stable: the OpenAlex preprint
+// with no DOI takes Crossref's, so both describe the same `doi:` identity either way round.
+const FILLABLE = ['doi', 'url', 'venue', 'abstract', 'year', 'cited_by', 'open_access'];
+
+function fillNulls(target, source) {
+  for (const field of FILLABLE) {
+    if (target[field] !== null && target[field] !== undefined) continue;
+    if (source[field] === null || source[field] === undefined) continue;
+    target[field] = source[field];
+  }
+}
+
 /**
  * Collapses cross-provider duplicates, first occurrence wins. The winner keeps its own
  * `provider` and `external_id`; every provider that returned the work is listed in
  * `providers`, and the losers' ids are kept under `ext.ids[provider]` so a later lookup can
- * still reach the work through the provider that did not own it. Fields are never merged
- * across providers: one record's description of a work stays one provider's description.
+ * still reach the work through the provider that did not own it. A field the winner left null
+ * is filled from a later member (see FILLABLE); a field it reported is never overwritten.
  * @param {import('../ports/search-provider.js').Candidate[]} candidates - in rank order
  * @returns {object[]} deduplicated candidates in the same order, each with `providers[]`
  */
@@ -29,18 +57,27 @@ export function dedupe(candidates) {
   const byIdentity = new Map();
   const merged = [];
 
+  const register = (candidate, group) => {
+    for (const key of identityKeys(candidate)) if (!byIdentity.has(key)) byIdentity.set(key, group);
+  };
+
   for (const candidate of candidates) {
-    const keys = identityKeys(candidate);
-    const existing = keys.map((key) => byIdentity.get(key)).find(Boolean);
+    const existing = identityKeys(candidate)
+      .map((key) => byIdentity.get(key))
+      .find(Boolean);
     if (!existing) {
       const copy = { ...candidate, providers: [candidate.provider] };
-      for (const key of keys) byIdentity.set(key, copy);
+      register(copy, copy);
       merged.push(copy);
       continue;
     }
     // The loser's keys now point at the winner too, so a third provider matching either one
-    // joins the same group instead of starting a second.
-    for (const key of keys) if (!byIdentity.has(key)) byIdentity.set(key, existing);
+    // joins the same group instead of starting a second - including the key the winner only
+    // gained by being filled in here.
+    register(candidate, existing);
+    fillNulls(existing, candidate);
+    register(existing, existing);
+
     if (existing.providers.includes(candidate.provider)) continue;
     existing.providers.push(candidate.provider);
     existing.ext = {

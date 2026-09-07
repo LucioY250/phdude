@@ -107,9 +107,11 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Search | `SEARCH-<hash10>` | `query`, `question`, `providers[]`, `filters`, `runs[]`, `last_run` |
 
 Ids are derived from content, so the same claim added twice is one file. See
-[ADR 3](adr/0003-content-derived-ids.md). A candidate's identity is the provider and the
-provider's own id for the work (`<provider>:<external_id>`), so the same search run twice
-rewrites nothing; a search's identity is its normalized query and the question it was run for.
+[ADR 3](adr/0003-content-derived-ids.md). A candidate's identity is the **work**, not the
+provider that returned it: its DOI when it has one (`doi:<lowercased doi>`), otherwise its
+normalized title and year (`title:<title>|<year>`). Searching the same work again through a
+different provider list therefore lands on the same `CAND-` record instead of a second one. A
+search's identity is its normalized query and the question it was run for.
 
 ## Candidates and searches
 
@@ -120,7 +122,13 @@ the citation registry until the researcher accepts it, and `state` says where it
 `candidate` (unreviewed), `accepted` (with `accepted_as` naming the `SRC-` id it became), or
 `dismissed` (with a `reason`). `providers[]` lists every provider that returned the same work,
 and `ext.ids` keeps their own ids for it; `needs_approval: true` marks a preprint the policy
-says the researcher has to approve explicitly. `score_parts` explains the ranking (provider
+says the researcher has to approve explicitly.
+
+Two providers returning the same work produce one candidate. The first provider in the run owns
+the record — its `provider` and `external_id` are the ones kept — but a field it left empty
+(`doi`, `url`, `venue`, `abstract`, `year`, `cited_by`, `open_access`) is filled from another
+provider that did report it. A field it *did* report is never overwritten, so a candidate is
+always one provider's account of a work plus whatever it did not know. `score_parts` explains the ranking (provider
 rank, citation count, recency) so the order is auditable rather than mysterious.
 
 A **Search** is the record of asking. `runs[]` appends one entry per provider call — `at`,

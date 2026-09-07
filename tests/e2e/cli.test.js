@@ -1204,6 +1204,12 @@ test('e2e: research refuses without network, then searches, records and lists ca
     env,
   );
   assert.deepEqual(narrowed.search.providers, ['crossref']);
+  assert.deepEqual(
+    narrowed.candidates.created,
+    [],
+    'narrowing to one provider re-finds the same works, it does not duplicate them',
+  );
+  assert.equal(narrowed.candidates.existing.length, 3);
 
   // Opening the policy installs the research skill on the next init.
   const policyPath = join(ws, '.phdude', 'research-policy.yaml');

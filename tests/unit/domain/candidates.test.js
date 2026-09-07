@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyFilters, dedupe, score } from '../../../src/domain/candidates.js';
+import { applyFilters, dedupe, identityKey, score } from '../../../src/domain/candidates.js';
 
 function candidate(overrides = {}) {
   return {
@@ -96,7 +96,79 @@ test('dedupe merges a work one provider has a DOI for and another does not', () 
   const result = dedupe([withoutDoi, withDoi]);
   assert.equal(result.length, 1);
   assert.deepEqual(result[0].providers, ['openalex', 'crossref']);
-  assert.equal(result[0].doi, null, "the first provider's fields are kept as they were");
+  assert.equal(result[0].doi, '10.31224/7150', 'the missing DOI is filled from the other provider');
+  assert.equal(
+    identityKey(result[0]),
+    'doi:10.31224/7150',
+    'the merged work is identified by the DOI whichever provider ran first',
+  );
+});
+
+test('dedupe reaches the same identity whichever provider ran first', () => {
+  const withoutDoi = candidate({ doi: null, title: 'A Preprint', year: 2023 });
+  const withDoi = candidate({
+    provider: 'crossref',
+    external_id: '10.31224/7150',
+    doi: '10.31224/7150',
+    title: 'A Preprint',
+    year: 2023,
+  });
+
+  const forward = dedupe([withoutDoi, withDoi]);
+  const backward = dedupe([withDoi, withoutDoi]);
+
+  assert.equal(identityKey(forward[0]), identityKey(backward[0]));
+  assert.equal(forward[0].provider, 'openalex');
+  assert.equal(backward[0].provider, 'crossref', 'the owner still follows the run order');
+});
+
+test('dedupe fills only the fields the winner left null', () => {
+  // They meet on the DOI, so the year may differ between them and still be filled in.
+  const sparse = candidate({
+    doi: '10.1234/rich',
+    url: null,
+    venue: null,
+    abstract: null,
+    cited_by: null,
+    open_access: null,
+    year: null,
+    title: 'A Sparse Record',
+  });
+  const rich = candidate({
+    provider: 'crossref',
+    external_id: 'rich',
+    doi: '10.1234/rich',
+    url: 'https://example.org/rich',
+    venue: 'Journal of Filled Fields',
+    abstract: 'An abstract the first provider did not return.',
+    cited_by: 12,
+    open_access: false,
+    year: 2022,
+    title: 'A Sparse Record',
+  });
+
+  const [merged] = dedupe([sparse, rich]);
+  assert.equal(merged.url, 'https://example.org/rich');
+  assert.equal(merged.venue, 'Journal of Filled Fields');
+  assert.match(merged.abstract, /^An abstract/);
+  assert.equal(merged.cited_by, 12);
+  assert.equal(merged.open_access, false);
+  assert.equal(merged.year, 2022);
+});
+
+test('dedupe never overwrites a field the winner reported', () => {
+  const first = candidate({ doi: '10.1234/first', venue: 'First Venue', cited_by: 0 });
+  const second = candidate({
+    provider: 'crossref',
+    external_id: 'second',
+    doi: '10.1234/first',
+    venue: 'Second Venue',
+    cited_by: 900,
+  });
+
+  const [merged] = dedupe([first, second]);
+  assert.equal(merged.venue, 'First Venue');
+  assert.equal(merged.cited_by, 0, 'zero is a reported value, not a missing one');
 });
 
 test('dedupe merges a preprint and its published version when title and year agree', () => {
@@ -128,6 +200,27 @@ test('dedupe does not mutate its input', () => {
   dedupe([a, b]);
   assert.equal(a.providers, undefined);
   assert.equal(a.ext, undefined);
+});
+
+test('identityKey is the DOI when there is one, lowercased and without the resolver prefix', () => {
+  assert.equal(identityKey({ doi: 'https://doi.org/10.1234/ABC', title: 'X' }), 'doi:10.1234/abc');
+  assert.equal(identityKey({ doi: 'doi:10.1234/abc', title: 'X' }), 'doi:10.1234/abc');
+});
+
+test('identityKey falls back to the normalized title and year without a usable DOI', () => {
+  assert.equal(
+    identityKey({ doi: null, title: 'Open   Science  Reproducibility', year: 2023 }),
+    'title:open science reproducibility|2023',
+  );
+  assert.equal(
+    identityKey({ doi: 'not-a-doi', title: 'Open Science', year: 2023 }),
+    'title:open science|2023',
+    'a malformed DOI is no identity at all',
+  );
+  assert.equal(
+    identityKey({ doi: null, title: 'Open Science', year: null }),
+    'title:open science|',
+  );
 });
 
 test('applyFilters drops candidates published before year_range.from', () => {

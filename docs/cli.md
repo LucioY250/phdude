@@ -398,7 +398,14 @@ run where **every** provider failed exits 4 (`all providers failed`).
 Two providers returning the same work produce **one** candidate: works match on their DOI
 (case-insensitive) or on their normalized title and year. The first provider to return it owns
 the record — its `provider` and `external_id` are kept — and the others are listed in
-`providers[]` with their own ids under `ext.ids`.
+`providers[]` with their own ids under `ext.ids`. A field the owner left empty (`doi`, `url`,
+`venue`, `abstract`, `year`, `cited_by`, `open_access`) is filled from a provider that did
+report it; a field it reported is never overwritten.
+
+A candidate's `CAND-` id is derived from the **work** — its DOI, or its normalized title and
+year — not from the provider that returned it. Re-running a query with a different `--provider`
+order, or with only one of them, therefore finds the same candidates rather than creating a
+second copy of each.
 
 Ranking is deterministic and explained in `--json` under `score_parts`: `rank` is
 `1/(1+position)` after deduplication, `citations` is `log10(1+cited_by)/4` (0 when the provider
@@ -416,7 +423,8 @@ candidate, or the search record behind it, as YAML.
 Re-running the same query for the same question appends a run to the same `SEARCH-…` record
 instead of creating a second one, and a candidate already on disk is reported under
 `existing` rather than rewritten — the state and reason a researcher gave it are never reset by
-a re-run.
+a re-run. Nothing a later run learned is merged into a stored candidate either: what is on disk
+is what the run that first recorded it saw.
 
 ### `phdude matrix [--format md|csv] [--question RQ-n]`
 

@@ -1,3 +1,4 @@
+import { identityKey } from './candidates.js';
 import { makeId, makeSeqId } from './ids.js';
 import { normalizeKey, stableStringify } from './normalize.js';
 import { PhdudeError } from './errors.js';
@@ -431,9 +432,10 @@ export function newDecision({
 
 /**
  * A literature hit a provider returned, recorded so the researcher can review it before it
- * ever becomes a Source. Identity is the provider's own id for the work, so re-running the
- * same search rewrites nothing and a second provider's copy of the same work is merged into
- * one candidate upstream (see domain/candidates.js `dedupe`).
+ * ever becomes a Source. Identity is the work itself - its DOI, or its normalized title and
+ * year (see domain/candidates.js `identityKey`) - never the provider that happened to return
+ * it. Searching the same work again through a different provider list therefore lands on the
+ * same record instead of a second one.
  * @param {object} p
  * @param {string} p.provider
  * @param {string[]} [p.providers] - every provider that returned this work
@@ -485,17 +487,18 @@ export function newCandidate({
 }) {
   const name = requireText('provider', provider);
   const externalId = requireText('external_id', external_id);
+  const titleText = requireText('title', title);
   const candidate = {
     schema: 'phdude.candidate',
     version: 1,
-    id: makeId('candidate', `${name}:${externalId}`),
+    id: makeId('candidate', identityKey({ doi, title: titleText, year })),
     created,
     actor,
     tags: [],
     provider: name,
     providers: providers?.length ? providers : [name],
     external_id: externalId,
-    title: requireText('title', title),
+    title: titleText,
     authors,
     year,
     venue,
