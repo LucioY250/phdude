@@ -1,0 +1,73 @@
+docs/assets/diagrams/lineage.svg
+  s_946fc7502759d8::t_162c61f73910a6 17-21
+  s_946fc7502759d8::t_bf147a0af3d67f 1-2,4-16,22-23
+  s_946fc7502759d8::t_9016815852848d 3
+docs/assets/diagrams/layers.excalidraw
+  s_946fc7502759d8::t_bf147a0af3d67f 1-1554
+docs/assets/diagrams/ingest.excalidraw
+  s_946fc7502759d8::t_bf147a0af3d67f 1-136,139-420,423-821
+  s_946fc7502759d8::t_162c61f73910a6 137-138,421-422
+docs/assets/diagrams/loop.excalidraw
+  s_946fc7502759d8::t_bf147a0af3d67f 1-822
+docs/assets/diagrams/next.svg
+  s_946fc7502759d8::t_9016815852848d 3
+  s_946fc7502759d8::t_5aacce58b3a30e 26-37
+  s_946fc7502759d8::t_bf147a0af3d67f 1-2,4-25,38-39
+docs/assets/fonts/PatrickHand-OFL.txt
+  s_946fc7502759d8::t_9016815852848d 1-93
+docs/assets/diagrams/layers.svg
+  s_946fc7502759d8::t_bf147a0af3d67f 1-2,4-53
+  s_946fc7502759d8::t_9016815852848d 3
+docs/assets/diagrams/states.excalidraw
+  s_946fc7502759d8::t_bf147a0af3d67f 1-805
+docs/assets/diagrams/states.svg
+  s_946fc7502759d8::t_bf147a0af3d67f 1-2,4-14,18-20,22-23
+  s_946fc7502759d8::t_162c61f73910a6 15-17,21
+  s_946fc7502759d8::t_9016815852848d 3
+docs/assets/diagrams/lineage.excalidraw
+  s_946fc7502759d8::t_bf147a0af3d67f 1-908
+docs/assets/diagrams/loop.svg
+  s_946fc7502759d8::t_bf147a0af3d67f 1-2,4-16,20-23
+  s_946fc7502759d8::t_9016815852848d 3
+  s_946fc7502759d8::t_162c61f73910a6 17-19
+docs/assets/diagrams/ingest.svg
+  s_946fc7502759d8::t_162c61f73910a6 8,16
+  s_946fc7502759d8::t_bf147a0af3d67f 1-2,4-7,9-15,17-26
+  s_946fc7502759d8::t_9016815852848d 3
+README.md
+  s_946fc7502759d8::t_e5c4b1b73a995d 63,69,76,82,89,97
+scripts/make-diagrams.mjs
+  s_946fc7502759d8::t_5aacce58b3a30e 121-130,136-141,194-195,202-203,230-234,236-258,263-266,270-274,277-284,342-347,352-357,366-370,386-394,399-406,417-427,430-462,470-478,488-523,528-536,561-621,632-639,648-687,689-698,706-713,738-750,760-781,784-793,797-816,820-831,846-849
+  s_946fc7502759d8::t_50733c452a3495 1-120,131-135,142-162,167-172,185-189,191,193,196-201,204,206,214,221,223-229,235,259-262,267-269,275-276,285-341,348-351,358-365,371-385,395-398,407-416,428-429,463-469,479-487,524-527,537-560,622-631,640-647,688,699-705,714-737,751-759,782-783,794-796,817-819,832-845,850-851
+  s_946fc7502759d8::t_7d86605894a385 173-184,190,192
+  s_946fc7502759d8::t_2f7696de53d2ae 205,207-213,215-220,222
+  s_946fc7502759d8::t_ac525e457f3841 163-166
+docs/assets/diagrams/next.excalidraw
+  s_946fc7502759d8::t_bf147a0af3d67f 1-1448
+package.json
+  s_0690fd0bbb54b8::t_cd844728c706a9 44-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "271bf244428741cd25b4f7decbadcdbab27c631c",
+  "prompts": {},
+  "sessions": {
+    "s_0690fd0bbb54b8": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a06d6a-70d5-7793-9200-19966b38bc18",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    },
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
