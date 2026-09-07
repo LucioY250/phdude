@@ -2260,6 +2260,21 @@ test('e2e: table build and figure build through the CLI, with the execution poli
 
   assert.equal((await runJson(ws, ['figure', 'check'])).figures[0].status, 'up-to-date');
 
+  // Nothing moved, so a second build spawns nothing and records nothing; --force builds anyway.
+  const skipped = await runJson(ws, ['figure', 'build', figure.figure.id, '--allow-exec']);
+  assert.equal(skipped.built, false);
+  assert.equal(skipped.reason, 'up to date');
+  assert.equal(skipped.run, null);
+  const forced = await runJson(ws, [
+    'figure',
+    'build',
+    figure.figure.id,
+    '--allow-exec',
+    '--force',
+  ]);
+  assert.equal(forced.built, true);
+  assert.equal(forced.run.exit, 0);
+
   // Editing the data under the figure makes it stale, without anything having watched the file.
   await writeFile(join(ws, 'data', 'survey.csv'), survey + '4,29,c\n');
   const stale = await run(ws, ['figure', 'check']);
@@ -2271,7 +2286,11 @@ test('e2e: table build and figure build through the CLI, with the execution poli
     .filter(Boolean)
     .map((line) => JSON.parse(line));
   assert.equal(events.filter((e) => e.op === 'table').length, 2, 'one declaration, one build');
-  assert.equal(events.filter((e) => e.op === 'figure').length, 2, 'one declaration, one build');
+  assert.equal(
+    events.filter((e) => e.op === 'figure').length,
+    3,
+    'one declaration and two builds; the skipped build recorded nothing',
+  );
 });
 
 test('e2e: data, analyze, table, figure and repro check through the binary', async (t) => {

@@ -48,7 +48,8 @@
               "output_hashes": {
                 "type": "object",
                 "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
-              }
+              },
+              "script_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
             },
             "required": ["at", "exit", "duration_ms", "input_hashes", "output_hashes"],
             "additionalProperties": false

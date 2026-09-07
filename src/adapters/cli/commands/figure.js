@@ -20,7 +20,10 @@ async function readFields({ flags, cwd }) {
   throw new PhdudeError(
     'USAGE',
     'figure add needs a declaration',
-    `phdude figure add --file figure.json (name, caption, alt, generator, inputs, outputs)`,
+    `phdude figure add --json '{"name":"mean-weight","caption":"…","alt":"…",` +
+      `"generator":{"runtime":"node","script":"phdude:bar-chart","args":[…]},` +
+      `"inputs":["RESULT-…"],"outputs":[{"path":"figures/out/mean-weight.svg","format":"svg"}]}'` +
+      ` (or --file figure.json)`,
   );
 }
 
@@ -111,8 +114,16 @@ export default async function figureCommand(ctx) {
         generatorsDir: deps.generatorsDir,
       },
       id,
-      { allowExec: flags.allowExec },
+      { allowExec: flags.allowExec, force: flags.force },
     );
+    if (!result.built) {
+      return {
+        text:
+          `${result.figure.id} is ${result.reason}: nothing has changed since the last build.\n` +
+          'Build it anyway with --force.\n',
+        json: result,
+      };
+    }
     const written = result.outputs.map((o) => `  ${o.path}`).join('\n');
     return {
       text: `Built ${result.figure.name} in ${result.run.duration_ms}ms\n${written}\n`,

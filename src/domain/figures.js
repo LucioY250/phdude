@@ -170,6 +170,32 @@ function lastSuccessfulRun(figure) {
 }
 
 /**
+ * Pure: whether building the figure again would only write what is already there. The last
+ * successful run's inputs, its generator and the files it wrote all have to be exactly what the
+ * workspace holds now - the same reading `table build` takes of its source and its rendered
+ * files. A shipped generator hashes to `null` on both sides: it is PhDude's own code, versioned
+ * with the package, the way a table renderer is.
+ * @param {object} figure
+ * @param {{inputHashes?: Record<string, string|null>, scriptHash?: string|null,
+ *   outputHashes?: Record<string, string|null>}} state
+ * @returns {boolean}
+ */
+export function upToDate(figure, { inputHashes = {}, scriptHash = null, outputHashes = {} } = {}) {
+  const run = lastSuccessfulRun(figure);
+  if (run === null) return false;
+  if ((run.script_hash ?? null) !== scriptHash) return false;
+  for (const input of figure.inputs ?? []) {
+    const current = inputHashes[input] ?? null;
+    if (current === null || current !== (run.input_hashes?.[input] ?? null)) return false;
+  }
+  for (const output of figure.outputs ?? []) {
+    const current = outputHashes[output.path] ?? null;
+    if (current === null || current !== (run.output_hashes?.[output.path] ?? null)) return false;
+  }
+  return true;
+}
+
+/**
  * Pure: what is wrong with one figure. Freshness is the last successful run's input hashes
  * against the ones the workspace holds now, so editing a dataset makes every figure built from
  * it stale without anything having to watch the file. Missing alt text is reported alongside,

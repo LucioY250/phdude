@@ -320,10 +320,12 @@ export async function run(deps, { id, allowExec = false, force = false }) {
   const { store, clock, actor, runner, readBytes, realpath } = deps;
   assertUpToDate(await store.readProject());
 
+  // The id is resolved before the policy, so a typo'd id is a usage error on both `analyze run`
+  // and `figure build` rather than "execution is disabled" on one of them.
+  const analysis = await show({ store }, id);
+
   const policy = await store.readYaml(POLICY_PATH);
   assertExecutionAllowed(policy, { allowExec });
-
-  const analysis = await show({ store }, id);
 
   const datasets = [];
   for (const input of analysis.inputs) {

@@ -12,7 +12,8 @@ Run:
 phdude table $ARGUMENTS --json
 ```
 
-(`add --json '<declaration>'`, or `list`, `show <TABLE-id>`, `build <TABLE-id>`.)
+(`add --json '<declaration>'`, or `list`, `show <TABLE-id>`, `build <TABLE-id>
+[--format md,latex,csv] [--force]`.)
 
 A declaration is `{"name":"mean-weight","caption":"…","source":{…},"columns":[…],"formats":[…]}`.
 `source` is `{"result":"RESULT-…"}` or `{"dataset":"DATASET-…","columns":["…"],"limit":20}` —
@@ -23,6 +24,7 @@ The name is the identity: declaring the same name again corrects the declaration
 keeps the build history. Never edit a file under `tables/out/` — it is generated, and the next
 build overwrites it.
 
-`build` renders and records the hash of what it read and what it wrote. A build whose source has
-not moved reports `up to date` and writes nothing; `--force` rebuilds anyway. Report the table by
+`build` renders and records the hash of what it read and what it wrote. `--format` narrows it to
+some of the formats the table declares; one it does not declare is an error. A build whose source
+has not moved reports `up to date` and writes nothing; `--force` rebuilds anyway. Report the table by
 what it says, not by the fact that it rendered, and cite the RESULT rather than the file.

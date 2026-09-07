@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { newFigure } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
-import { generatorScript, staleness, validateFigure } from '../domain/figures.js';
+import { generatorScript, staleness, upToDate, validateFigure } from '../domain/figures.js';
 import { sha256 } from '../domain/hash.js';
 import { parseId } from '../domain/ids.js';
 import { stableStringify } from '../domain/normalize.js';
@@ -145,19 +145,35 @@ async function recordRun({ store, actor }, figure, run, summary) {
   return withRun;
 }
 
+// What the workspace holds for each of a figure's declared outputs right now, `null` where the
+// file is gone. The up-to-date rule needs the bytes, not only whether the path exists: a
+// generator that was re-run by hand leaves the path there holding something else.
+async function currentOutputHashes(store, figure) {
+  const hashes = {};
+  for (const output of figure.outputs ?? []) {
+    const bytes = await store.readBytes(output.path);
+    hashes[output.path] = bytes === null ? null : sha256(bytes);
+  }
+  return hashes;
+}
+
 /**
  * Runs a figure's generator through the AnalysisRunner and records what it read and what it
- * wrote. A run that fails is still a run: the record keeps its exit code so the next reader can
- * see the figure was attempted and did not render, rather than that it was never tried.
+ * wrote. A build whose inputs, generator and output files are all exactly what the last
+ * successful run recorded is reported as up to date: it spawns nothing, writes nothing and
+ * records nothing, the way `table build` does. `--force` builds anyway.
+ *
+ * A run that fails is still a run: the record keeps its exit code so the next reader can see the
+ * figure was attempted and did not render, rather than that it was never tried.
  * @param {{store: object, clock: () => string, actor: object, runner: object,
  *   readBytes: (rel: string) => Promise<Buffer>,
  *   realpath: (path: string) => Promise<string>, generatorsDir: string}} deps
  * @param {string} id
- * @param {{allowExec?: boolean}} [opts]
- * @returns {Promise<{figure: object, run: object,
+ * @param {{allowExec?: boolean, force?: boolean}} [opts]
+ * @returns {Promise<{figure: object, built: boolean, reason: string|null, run: object|null,
  *   outputs: {path: string, format: string, hash: string}[]}>}
  */
-export async function build(deps, id, { allowExec = false } = {}) {
+export async function build(deps, id, { allowExec = false, force = false } = {}) {
   const { store, clock, runner, readBytes, realpath, generatorsDir } = deps;
   assertUpToDate(await store.readProject());
 
@@ -177,6 +193,22 @@ export async function build(deps, id, { allowExec = false } = {}) {
   const timeoutMs = executionTimeoutMs(policy);
   const inputHashes = await currentInputHashes(deps, figure.inputs);
 
+  // A workspace generator is the researcher's code and can change under the figure; a shipped
+  // one is PhDude's, versioned with the package, so it has no hash of its own here.
+  const scriptBytes = resolved.path === null ? null : await store.readBytes(resolved.path);
+  const scriptHash = scriptBytes === null ? null : sha256(scriptBytes);
+
+  const outputHashes = await currentOutputHashes(store, figure);
+  if (!force && upToDate(figure, { inputHashes, scriptHash, outputHashes })) {
+    return {
+      figure,
+      built: false,
+      reason: 'up to date',
+      run: null,
+      outputs: figure.outputs.map((o) => ({ ...o, hash: outputHashes[o.path] })),
+    };
+  }
+
   const result = await runner.run({
     runtime,
     script,
@@ -194,6 +226,7 @@ export async function build(deps, id, { allowExec = false } = {}) {
     input_hashes: inputHashes,
     output_hashes: {},
   };
+  if (scriptHash !== null) failed.script_hash = scriptHash;
 
   if (result.timedOut) {
     await recordRun(deps, figure, failed, `figure timed out: ${figure.name}`);
@@ -249,13 +282,13 @@ export async function build(deps, id, { allowExec = false } = {}) {
     ...failed,
     output_hashes: Object.fromEntries(outputs.map((o) => [o.path, o.hash])),
   };
-  const built = await recordRun(
+  const recorded = await recordRun(
     deps,
     figure,
     run,
     `figure built: ${figure.name} (${outputs.map((o) => o.path).join(', ')})`,
   );
-  return { figure: built, run, outputs };
+  return { figure: recorded, built: true, reason: null, run, outputs };
 }
 
 /**

@@ -12,7 +12,8 @@ Run:
 phdude figure $ARGUMENTS --json
 ```
 
-(`add --json '<declaration>'`, or `list`, `show <FIG-id>`, `build <FIG-id>`, `check`.)
+(`add --json '<declaration>'`, or `list`, `show <FIG-id>`, `build <FIG-id> [--allow-exec]
+[--force]`, `check`.)
 
 A declaration is `{"name":"…","caption":"…","alt":"…","generator":{"runtime":"node","script":"phdude:bar-chart","args":[…]},"inputs":["RESULT-…"],"outputs":[{"path":"figures/out/….svg","format":"svg"}]}`.
 
@@ -24,6 +25,10 @@ than group a" is. Write it before running anything.
 `figures/`. Nothing else runs, and nothing runs at all unless the policy sets
 `execution.enabled: true` or the researcher passes `--allow-exec`. Never run a generator yourself
 — `phdude figure build` is what records the run.
+
+A build whose inputs, generator and output files are all exactly what the last successful run
+recorded reports `up to date` and runs nothing; `--force` builds anyway. Reach for `--force` only
+when the researcher asks.
 
 `check` reports missing alt text, outputs that are not on disk, and inputs that have changed
 since the build that used them. Read it before citing a figure in the manuscript.

@@ -640,6 +640,13 @@ test('run refuses an id that is not an analysis, and one that does not exist', a
     analyze.run(deps, { id: 'ANALYSIS-0123456789' }),
     (err) => err.code === 'USAGE' && /not found/.test(err.message),
   );
+
+  // The id is read before the policy, so a typo is a typo rather than "execution is disabled".
+  const closed = makeDeps(await newRoot({ execution: false }));
+  await assert.rejects(
+    analyze.run(closed, { id: 'ANALYSIS-0123456789' }),
+    (err) => err.code === 'USAGE' && /not found/.test(err.message),
+  );
 });
 
 test('run refuses a runtime the workspace policy does not name', async (t) => {

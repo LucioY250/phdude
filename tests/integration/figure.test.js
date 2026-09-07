@@ -244,6 +244,77 @@ test('build runs the shipped generator, verifies the output, hashes it and recor
   assert.equal((await events(deps.store, 'figure')).at(-1).ids[0], declared.id);
 });
 
+test('build is up to date when nothing moved, and --force rebuilds anyway', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  const result = await withResult(deps);
+  const { figure: declared } = await figure.add(deps, { ...FIELDS, inputs: [result.id] });
+
+  const first = await figure.build(deps, declared.id, {});
+  assert.equal(first.built, true);
+  assert.equal(first.reason, null);
+  const svg = await readFile(join(root, 'figures', 'out', 'mean-weight.svg'), 'utf8');
+
+  const again = await figure.build(deps, declared.id, {});
+  assert.equal(again.built, false);
+  assert.equal(again.reason, 'up to date');
+  assert.equal(again.run, null);
+  assert.deepEqual(
+    again.outputs.map((o) => o.hash),
+    [sha256(svg)],
+  );
+  assert.equal((await figure.show(deps, declared.id)).runs.length, 1, 'no run was recorded');
+  assert.equal((await events(deps.store, 'figure')).length, 2, 'no event was appended');
+
+  const forced = await figure.build(deps, declared.id, { force: true });
+  assert.equal(forced.built, true);
+  assert.equal((await figure.show(deps, declared.id)).runs.length, 2);
+  assert.equal((await events(deps.store, 'figure')).length, 3);
+});
+
+test('build runs again when an input moved, when an output went, and when the generator changed', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  const dataset = await withDataset(deps);
+  const script = join('figures', 'plot.mjs');
+  const body = (title) =>
+    [
+      "import { mkdir, writeFile } from 'node:fs/promises';",
+      "await mkdir('figures/out', { recursive: true });",
+      `await writeFile('figures/out/plain.svg', '<svg xmlns="http://www.w3.org/2000/svg"><title>${title}</title></svg>');`,
+      '',
+    ].join('\n');
+  await writeScript(root, script, body('one'));
+
+  const { figure: declared } = await figure.add(deps, {
+    name: 'plain',
+    caption: 'A plain figure.',
+    alt: 'A square.',
+    generator: { runtime: 'node', script, args: [] },
+    inputs: [dataset.id],
+    outputs: [{ path: 'figures/out/plain.svg', format: 'svg' }],
+  });
+
+  assert.equal((await figure.build(deps, declared.id, {})).built, true);
+  assert.equal((await figure.build(deps, declared.id, {})).built, false);
+
+  await writeFile(join(root, 'data', 'survey.csv'), SURVEY + '4,29,b\n');
+  assert.equal((await figure.build(deps, declared.id, {})).built, true, 'the input moved');
+  assert.equal((await figure.build(deps, declared.id, {})).built, false);
+
+  await rm(join(root, 'figures', 'out', 'plain.svg'));
+  assert.equal((await figure.build(deps, declared.id, {})).built, true, 'the output went');
+  assert.equal((await figure.build(deps, declared.id, {})).built, false);
+
+  await writeScript(root, script, body('two'));
+  assert.equal((await figure.build(deps, declared.id, {})).built, true, 'the generator changed');
+  const stored = await figure.show(deps, declared.id);
+  assert.match(stored.runs.at(-1).script_hash, /^[0-9a-f]{64}$/);
+  assert.equal((await figure.build(deps, declared.id, {})).built, false);
+});
+
 test('build refuses when the policy has execution closed, and runs with --allow-exec', async (t) => {
   const root = await newRoot({ execution: false });
   t.after(() => rm(root, { recursive: true, force: true }));

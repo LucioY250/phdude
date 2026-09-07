@@ -9,8 +9,10 @@ Arguments: `$ARGUMENTS`
 Run:
 
 ```
-phdude repro check $ARGUMENTS --json
+phdude repro $ARGUMENTS --json
 ```
+
+(`check`, or nothing at all — the report is the same.)
 
 Read every item that is not `up-to-date`. `stale` means an input moved since the run that
 produced it, so the fix is `phdude analyze run <id>`, `phdude table build <id>` or

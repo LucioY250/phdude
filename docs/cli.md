@@ -913,10 +913,12 @@ built from it stale, and nothing watches the file for that to happen.
 ### `phdude figure add --json '<declaration>' | list | show <id> | build <id> | check`
 
 ```
+phdude figure add --json '{"name":"mean-weight","caption":"…","alt":"…","generator":{…},"inputs":["RESULT-…"],"outputs":[{"path":"figures/out/mean-weight.svg","format":"svg"}]}'
 phdude figure add --file figure.json
 phdude figure list
 phdude figure show FIG-…
 phdude figure build FIG-… --allow-exec
+phdude figure build FIG-… --allow-exec --force
 phdude figure check
 ```
 
@@ -940,10 +942,17 @@ script the workspace holds under `figures/`, whose real path must stay inside th
 as its working directory and an environment holding `PATH`, `HOME`, `LANG`, `PHDUDE_WORKSPACE`
 and `PHDUDE_FIGURE` — nothing else of yours reaches it.
 
-`build` refuses with exit 3 unless `execution.enabled: true` or `--allow-exec`. After the
-generator exits it verifies that every declared output is on disk, hashes each one, and appends a
-run `{at, exit, duration_ms, input_hashes, output_hashes}`. Every build is recorded and every
-build is one `figure` event, including the ones that failed:
+`build` refuses with exit 3 unless `execution.enabled: true` or `--allow-exec`. A build whose
+inputs still hash to what the last successful run recorded, whose generator script has not
+changed, and whose declared files still hold exactly the bytes that run wrote, is reported as
+`up to date`: nothing is spawned, nothing is written, no run and no event are recorded, and
+`--json` says `"built": false`. `--force` builds anyway. A shipped generator has no `script_hash`
+on the run — it is PhDude's own code, versioned with the package, the way the table renderers are.
+
+After the generator exits, `build` verifies that every declared output is on disk, hashes each
+one, and appends a run `{at, exit, duration_ms, input_hashes, output_hashes}` plus `script_hash`
+for a workspace generator. Every build that ran is recorded and is one `figure` event, including
+the ones that failed:
 
 - A non-zero exit records the run with its exit code, hashes nothing, prints the generator's last
   lines of output, and exits 4.
