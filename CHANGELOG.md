@@ -30,10 +30,11 @@ for an AI-detector score, and nothing ever will** (PRD §30c). See
   or more digits warns. `gate-prose`: nine rules over the text, reporting in `full` mode and
   blocking in `ruthless`. `gate-voice`: the draft's statistics against the active profile.
   `gate-meaning`: on a revision only. `gate-profile`: the venue's sections and word limits.
-- **Meaning preservation.** `gate-meaning` extracts four multisets from the old and the new text
-  — claim ids, citation keys, numerals and negation cues — and blocks a revision that dropped any
-  of them. Cues rather than whole sentences, so a negated sentence can be reworded and cannot
-  quietly lose its "not". An added claim or citation blocks too, unless `--allow-additions`.
+- **Meaning preservation.** `gate-meaning` extracts three multisets from the old and the new text
+  — claim ids, citation keys, numerals — and counts the negations each carries, and blocks a
+  revision that dropped any of them. A count rather than the cues themselves, so a negated
+  sentence can be reworded, "did not" can become "failed to", and neither can quietly lose the
+  negation. An added claim or citation blocks too, unless `--allow-additions`.
 - **A blocked submit writes nothing.** Not the section file, not the manuscript entry, not the
   cache report, not an event. The findings reach the researcher through the error with their line
   numbers, and exit code 2.

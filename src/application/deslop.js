@@ -23,7 +23,7 @@ export const REVISION_CONTRACT = {
     'Every <!-- claim: CLAIM-… --> marker, on the paragraph that asserts it.',
     'Every [@key] citation, including the ones inside a bracketed group.',
     'Every number, exactly as written.',
-    'Every negation: dropping a "not" reverses the finding.',
+    'Every negation, though not the cue: "did not" may become "failed to", never nothing.',
     'The hedge each claim state requires: "may reduce" and "reduces" are different claims.',
   ],
 };

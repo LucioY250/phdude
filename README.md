@@ -422,7 +422,7 @@ findings with line numbers and exit code 2, and the workspace is exactly where i
 
 ```
   - gate-citations:6 [@nobody2020] does not resolve to a recorded source
-  - gate-meaning:1 the revision drops the negation not
+  - gate-meaning:1 the revision drops 1 negation(s) the section carried
 section blocked by gate-citations, gate-meaning: 3 finding(s)
 ```
 
@@ -439,9 +439,10 @@ phdude deslop introduction --file revised.md    # the revision, through every ga
 Without a file, `deslop` prints the section's prose observations and the revision contract: the
 sentences to rewrite, and the explicit list of what a rewrite may not touch. With a file, it
 runs the gates again with meaning preservation on. That last gate is the one that matters. It
-extracts from the old text and the new one the multiset of claim ids, citation keys, numerals
-and negation cues, and refuses a revision that lost any of them. Rewording a negated sentence is
-fine; dropping its "not" reverses the finding, and PhDude will not let a cleanup pass do that
+extracts from the old text and the new one the multiset of claim ids, citation keys and
+numerals, counts the negations each carries, and refuses a revision that lost any of them.
+Rewording a negated sentence is fine, and so is swapping "did not" for "failed to"; dropping the
+negation altogether reverses the finding, and PhDude will not let a cleanup pass do that
 quietly.
 
 ### The prose report

@@ -42,9 +42,10 @@ what it was before the attempt. A pipeline that half-writes on failure is a pipe
 nobody trusts.
 
 **A revision must preserve meaning, and the gate says what that means.** `gate-meaning` extracts
-from the old and new text four multisets — claim ids, citation keys, numerals, negation cues —
-and blocks a revision that lost any of them. Cues rather than whole sentences, so rewording a
-negated sentence is allowed and dropping its "not" is not. Adding a claim or a citation also
+from the old and new text three multisets — claim ids, citation keys, numerals — and one count,
+the negations the text carries, and blocks a revision that lost any of them. A count rather than
+the cues themselves, so rewording a negated sentence is allowed, "did not" may become "failed
+to", and dropping the negation is not. Adding a claim or a citation also
 blocks unless `--allow-additions`: new assertions belong to a draft, not to a cleanup pass.
 
 **Approval is a human act, enforced the same way `canonical` is.** A section reaches `approved`

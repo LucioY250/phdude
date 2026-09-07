@@ -13,7 +13,7 @@ function run(oldText, newText, options = {}) {
   return meaningGate.run(newText, { revisionOf: oldText, ...options });
 }
 
-test('a signature is the multiset of claims, citations, numerals and negation cues', () => {
+test('a signature is the multiset of claims, citations and numerals, and a negation count', () => {
   const sig = signature(ORIGINAL, 'en');
   assert.deepEqual([...sig.claims], [['CLAIM-1111111111', 1]]);
   assert.deepEqual([...sig.citations].sort(), [
@@ -21,7 +21,7 @@ test('a signature is the multiset of claims, citations, numerals and negation cu
     ['smith2020', 1],
   ]);
   assert.deepEqual([...sig.numerals], [['312', 1]]);
-  assert.deepEqual([...sig.negations], [['not', 1]]);
+  assert.equal(sig.negations, 1);
 });
 
 test('rewording a sentence changes nothing the gate measures', () => {
@@ -51,7 +51,7 @@ test('dropping a claim marker, a number or a negation each blocks', () => {
   const cases = [
     ['<!-- claim: CLAIM-1111111111 -->\n', /drops the claim CLAIM-1111111111/],
     ['312 ', /drops the number 312/],
-    ['not ', /drops the negation not/],
+    ['not ', /drops 1 negation\(s\)/],
   ];
   for (const [removed, message] of cases) {
     const findings = run(ORIGINAL, ORIGINAL.replace(removed, ''));
@@ -126,12 +126,37 @@ test('diff reports both directions', () => {
   assert.deepEqual(result.removed.citations, ['jones2019', 'smith2020']);
   assert.deepEqual(result.removed.claims, ['CLAIM-1111111111']);
   assert.deepEqual(result.removed.numerals, ['312']);
-  assert.deepEqual(result.removed.negations, ['not']);
+  assert.equal(result.removed.negations, 1);
   assert.deepEqual(result.added.citations, ['lopez2023']);
 });
 
 test('Spanish negation cues are counted with the Spanish table', () => {
   const before = 'La adopción no es uniforme [@smith2020].';
   const after = 'La adopción es uniforme [@smith2020].';
-  assert.match(run(before, after, { lang: 'es' })[0].message, /drops the negation no/);
+  assert.match(run(before, after, { lang: 'es' })[0].message, /drops 1 negation\(s\)/);
+});
+
+test('swapping one negation cue for another preserves the meaning the gate measures', () => {
+  const before = 'The trial did not recruit the same way in the second wave [@smith2020].';
+  const after = 'The trial failed to recruit the same way in the second wave [@smith2020].';
+  assert.deepEqual(run(before, after), []);
+  assert.deepEqual(
+    run(
+      'La adopción no es uniforme [@smith2020].',
+      'La adopción nunca es uniforme [@smith2020].',
+      { lang: 'es' },
+    ),
+    [],
+  );
+});
+
+test('a dropped negation still blocks, and the hint says a cue may be swapped', () => {
+  const before = 'The trial did not recruit the same way in the second wave [@smith2020].';
+  const after = 'The trial recruited the same way in the second wave [@smith2020].';
+  const findings = run(before, after);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].severity, 'block');
+  assert.match(findings[0].message, /drops 1 negation\(s\)/);
+  assert.match(findings[0].hint, /failed to/);
+  assert.match(findings[0].hint, /reopen the section/);
 });
