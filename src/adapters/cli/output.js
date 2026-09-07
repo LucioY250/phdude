@@ -60,7 +60,7 @@ export function renderStatus(report) {
   lines.push('Analysis:');
   lines.push(`  Datasets: ${analysis.datasets}`);
   lines.push(`  Analyses: ${analysis.analyses}`);
-  lines.push(`  Results: ${analysis.results}`);
+  lines.push(`  Results (from analyses): ${analysis.results}`);
   lines.push(`  Tables: ${analysis.tables}`);
   lines.push(`  Figures: ${analysis.figures}`);
   lines.push(`  Stale or unbuilt: ${analysis.stale} of ${analysis.reproducible}`);

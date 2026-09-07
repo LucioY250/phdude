@@ -60,7 +60,9 @@ Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude l
 `phdude manuscript submit`, `phdude manuscript approve`, `phdude manuscript reopen`, or
 `phdude deslop <section> --file <revised.md>`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
-cache — expected setup steps, not knowledge edits. `phdude research` and `phdude research-fresh`
+cache; `phdude bootstrap` runs that ingest, scores the packs and hands off to `[[bootstrap]]`, so
+it writes exactly what `ingest` writes — expected setup steps, not knowledge edits.
+`phdude research` and `phdude research-fresh`
 write candidates and search records, which are not knowledge until accepted. `phdude cite
 export` writes `references.bib` or `references.json` at the workspace root, a derived file that
 records no event and is never a substitute for the `SRC-` id itself.) Every other command —
@@ -147,7 +149,7 @@ take it from that record instead of restating it from memory.
 
 ## Migration is the researcher's command
 
-When a command reports `workspace needs migration (1 → 2)`, that message is for the researcher,
+When a command reports `workspace needs migration (1 → 3)`, that message is for the researcher,
 not a problem for you to clear. Reads keep working; every write is refused until it is done.
 Tell them what you saw and ask them to run `phdude migrate` themselves — do not run it, and do
 not pass `--force`. It rewrites files in place and git is the only undo, so whether the tree is

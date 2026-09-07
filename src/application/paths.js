@@ -1,4 +1,4 @@
-import { isAbsolute, relative, resolve } from 'node:path';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { PhdudeError } from '../domain/errors.js';
 
 /**
@@ -30,8 +30,10 @@ export async function assertRealPathInsideRoot(fs, root, requestedPath, absPath,
     if (err && err.code === 'ENOENT') return;
     throw err;
   }
+  // `..` and `../x` leave the root; `..hidden` is a legitimate directory name inside it.
   const back = relative(realRoot, realPath);
-  if (back.startsWith('..') || isAbsolute(back)) throw outsideWorkspace(requestedPath, hint);
+  const outside = back === '..' || back.startsWith(`..${sep}`) || isAbsolute(back);
+  if (outside) throw outsideWorkspace(requestedPath, hint);
 }
 
 /**

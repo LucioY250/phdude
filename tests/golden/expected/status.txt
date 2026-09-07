@@ -23,7 +23,7 @@ Knowledge:
 Analysis:
   Datasets: 1
   Analyses: 1
-  Results: 2
+  Results (from analyses): 2
   Tables: 1
   Figures: 1
   Stale or unbuilt: 0 of 3

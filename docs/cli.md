@@ -15,8 +15,16 @@ phdude <command> [sub-command] [arguments] [options]
 | `--json` | Print JSON instead of text. Every command supports it. |
 | `--workspace <dir>` | Run against another workspace instead of the current directory. |
 | `--actor researcher=<name>,agent=<host>` | Override the recorded actor. Defaults to `git config user.name` (then `$USER`, then `unknown`) and `$PHDUDE_AGENT` (then `cli`). |
+| `--file <path>` | Read a JSON payload from a file, where the command takes one. |
+| `--force` | Do the work anyway, where the command would otherwise skip or refuse it. |
+| `--dry-run` | Report what would happen and write nothing, where the command supports it. |
 | `--version`, `-v` | Print the version and exit. |
 | `--help`, `-h` | Print the usage summary and exit. |
+
+The last three parse everywhere, and each is acted on by the commands documented below as taking
+it: `--file` by `add`, `edit`, `data add`, `analyze add`, `table add`, `figure add`, `prose`,
+`deslop` and `manuscript submit`; `--force` by `ingest`, `analyze run`, `table build`,
+`figure build` and `migrate`; `--dry-run` by `migrate`.
 
 `PHDUDE_DEBUG=1` prints a stack trace for unexpected internal errors; without it, users see
 the message only.
@@ -178,9 +186,12 @@ and state, an Analysis block, a Literature block, open and resolved fact conflic
 claim pairs, pending decisions, and the last events. Every number is derived on read; nothing is
 cached.
 
-The **Analysis** block counts the datasets, analyses, results, tables and figures the workspace
-holds, and closes with `Stale or unbuilt: n of m` — the same items `phdude repro check` lists,
-where `m` is every analysis, table and figure and `n` is how many of them are not `up-to-date`.
+The **Analysis** block counts the datasets, analyses, tables and figures the workspace holds, and
+`Results (from analyses): n` — only the results an analysis produced. That is deliberately a
+different number from the Knowledge block's `result: total`, which also counts every finding a
+researcher recorded by hand. It closes with `Stale or unbuilt: n of m` — the same items
+`phdude repro check` lists, where `m` is every analysis, table and figure and `n` is how many of
+them are not `up-to-date`.
 
 The **Literature** block counts candidates by state, how many searches are recorded, and how
 many research questions have a stale or missing search — the same staleness rule

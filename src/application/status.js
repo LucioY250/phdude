@@ -48,11 +48,13 @@ export async function status({ store, clock }) {
 
   // What the workspace computes, as opposed to what it read: the data behind it, the analyses
   // over that data, and the tables and figures those analyses produced. `stale` counts every
-  // item `phdude repro check` would not call up to date.
+  // item `phdude repro check` would not call up to date. `results` counts only the ones an
+  // analysis produced, so it is a different number from `Knowledge`'s `result: total` - which
+  // also holds every finding a researcher recorded by hand.
   const analysis = {
     datasets: snapshot.datasets.length,
     analyses: snapshot.analyses.length,
-    results: snapshot.results.length,
+    results: snapshot.results.filter((r) => /^ANALYSIS-/.test(String(r.from ?? ''))).length,
     tables: snapshot.tables.length,
     figures: snapshot.figures.length,
     reproducible: snapshot.repro.length,
