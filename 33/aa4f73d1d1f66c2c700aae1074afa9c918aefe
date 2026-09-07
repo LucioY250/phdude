@@ -1,0 +1,21 @@
+tests/unit/domain/gates/meaning.test.js
+  s_946fc7502759d8::t_fd2bdfb8a85686 144-146
+tests/integration/write.test.js
+  s_946fc7502759d8::t_fd2bdfb8a85686 449
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "33aa4f73d1d1f66c2c700aae1074afa9c918aefe",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
