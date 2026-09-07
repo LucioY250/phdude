@@ -1,0 +1,21 @@
+docs/superpowers/plans/2026-09-07-phdude-v0.4.md
+  s_946fc7502759d8::t_71014eb9d56734 26
+docs/superpowers/specs/2026-09-07-phdude-v0.4-design.md
+  s_946fc7502759d8::t_c7583a141e344d 55,66,75,81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "d30b253804b6d053ce44dd4f1a693232256c7828",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
