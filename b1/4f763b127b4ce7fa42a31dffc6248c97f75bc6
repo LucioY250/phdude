@@ -1,0 +1,51 @@
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_99eaba76716585 4,71-86,155-167,245-272,282,332-335
+  s_946fc7502759d8::t_ef113608d0110a 336
+src/adapters/cli/commands/bootstrap.js
+  s_946fc7502759d8::t_6540d966018543 13-18
+  s_946fc7502759d8::t_7639703278bb8f 1
+README.md
+  s_946fc7502759d8::t_cc1cc1b4a05053 38-39,41-44,47-48,90-91,97-102,105-106,117,186
+  s_946fc7502759d8::t_0de089301d10cf 187
+skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_ec142be1c20f2b 25-27
+examples/generic-thesis/.phdude/skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_d866847d925ded 25-27
+src/application/decide.js
+  s_946fc7502759d8::t_212f9f7e5478e3 16-21,26-27,30-32,35-37,199,201-206
+  s_946fc7502759d8::t_31bb2bd9047058 28,33-34,82,123
+src/application/ingest.js
+  s_946fc7502759d8::t_e6d33296f07105 160-178,182,309
+docs/adr/0001-node-esm-harness.md
+  s_946fc7502759d8::t_b11493b863c179 35-36
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_94e13ce7302dda 114-129,138-140,147
+package.json
+  s_946fc7502759d8::t_9110e637a450cb 21
+src/application/knowledge.js
+  s_946fc7502759d8::t_212f9f7e5478e3 59
+.prettierignore
+  s_946fc7502759d8::t_9110e637a450cb 7
+src/adapters/cli/commands/ingest.js
+  s_946fc7502759d8::t_61f6d89fe2e279 4,7-8,10-16
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_9c0bffd04731e6 129
+docs/cli.md
+  s_946fc7502759d8::t_c496d3c0f7690b 72-84,124-126,143-148,173-181
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b14f763b127b4ce7fa42a31dffc6248c97f75bc6",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
