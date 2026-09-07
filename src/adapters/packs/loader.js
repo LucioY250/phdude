@@ -66,6 +66,44 @@ export async function loadPack(dir) {
   return { ...pack, dir, skillPaths };
 }
 
+/**
+ * A venue profile: the sections a venue expects and the word limit on each (spec §3.4, gate 6).
+ * It lives beside a venue pack rather than inside `pack.yaml` because a profile is validation
+ * data, not a skill bundle, and v0.6 will ship many of them against one loader.
+ * @param {string} name
+ * @param {string[]} [roots] - searched in order; a later root overrides an earlier one
+ * @returns {Promise<object|null>} the profile, or null when the venue ships none
+ */
+export async function loadProfile(name, roots = [DEFAULT_PACKS_DIR]) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(String(name ?? ''))) {
+    throw new PhdudeError(
+      'VALIDATION',
+      `invalid venue profile name: ${name}`,
+      'a profile name is lowercase words joined by "-"',
+    );
+  }
+
+  let found = null;
+  for (const root of roots) {
+    const path = join(root, 'venues', name, 'profile.yaml');
+    if (await exists(path)) found = path;
+  }
+  if (found === null) return null;
+
+  const profile = parse(await readFile(found, 'utf8'));
+  if (profile === null || typeof profile !== 'object' || Array.isArray(profile)) {
+    throw new PhdudeError('VALIDATION', `malformed venue profile: ${name}`, 'fix profile.yaml');
+  }
+  if (!Array.isArray(profile.sections)) {
+    throw new PhdudeError(
+      'VALIDATION',
+      `venue profile ${name} has no sections list`,
+      'a profile lists the sections the venue expects, in order',
+    );
+  }
+  return { ...profile, name: profile.name ?? name };
+}
+
 async function listPackDirs(root) {
   const dirs = [];
   for (const kindDir of KIND_DIRS) {

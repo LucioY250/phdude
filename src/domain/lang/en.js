@@ -197,6 +197,10 @@ export const empty = [
   'with regard to the fact that',
 ];
 
+// Empty phrases a careful academic writer does use: they are reported as `info`, never as a
+// warning, because deleting them is a preference and the report has to stay worth reading.
+export const softEmpty = ['in order to', 'in terms of'];
+
 // Claims about a body of work with nobody named. Each is a regular-expression source string,
 // matched case-insensitively against one sentence; the rule fires only when that sentence has
 // no `[@key]` citation.
@@ -228,6 +232,7 @@ export const abbreviations = [
   'eds.',
   'eq.',
   'et al.',
+  'etc.',
   'fig.',
   'figs.',
   'i.e.',
@@ -258,6 +263,7 @@ export const en = {
   firstPerson,
   banned,
   empty,
+  softEmpty,
   vagueLiterature,
   abbreviations,
 };

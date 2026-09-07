@@ -212,6 +212,47 @@ export class FsStore {
     return join(REPORTS_DIR, `${section}.yaml`);
   }
 
+  async listReports() {
+    let files;
+    try {
+      files = await readdir(join(this.root, REPORTS_DIR));
+    } catch (err) {
+      if (err.code === 'ENOENT') return [];
+      throw err;
+    }
+    const reports = await Promise.all(
+      files.filter((f) => f.endsWith('.yaml')).map((f) => this.readYaml(join(REPORTS_DIR, f))),
+    );
+    return reports
+      .filter((report) => report !== null && typeof report === 'object')
+      .sort((a, b) => (a.section < b.section ? -1 : a.section > b.section ? 1 : 0));
+  }
+
+  // Where `phdude write` leaves the assembled context and `submit` the full gate report. It is
+  // cache, not record: gitignored, rebuildable, and never what a decision rests on.
+  writingDir(section) {
+    if (!SECTION_ID_RE.test(String(section ?? ''))) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `invalid section id: ${section}`,
+        'section ids are lowercase words joined by "-"',
+      );
+    }
+    return join('.phdude', 'cache', 'writing', section);
+  }
+
+  async writeWritingContext(section, text) {
+    const rel = join(this.writingDir(section), 'context.md');
+    await this.writeTextAtomic(rel, text);
+    return join(this.root, rel);
+  }
+
+  async writeWritingReport(section, report) {
+    const rel = join(this.writingDir(section), 'report.json');
+    await this.writeTextAtomic(rel, JSON.stringify(report, null, 2) + '\n');
+    return join(this.root, rel);
+  }
+
   async writeReport(section, report) {
     const rel = this.reportPath(section);
     assertValid('section-report', report);

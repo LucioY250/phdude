@@ -54,18 +54,30 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude link CLAIM-a
 --contradicts CLAIM-b`), `phdude edit`, `phdude decide`, `phdude promote`,
 `phdude research accept`, `phdude research dismiss`, `phdude packs apply`, `phdude mode`,
-`phdude manuscript init`, `phdude manuscript submit`, `phdude manuscript approve`, or
-`phdude manuscript reopen`.
+`phdude manuscript init`, `phdude manuscript submit`, `phdude manuscript approve`,
+`phdude manuscript reopen`, or `phdude deslop <section> --file <revised.md>`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
 cache — expected setup steps, not knowledge edits. `phdude research` and `phdude research-fresh`
 write candidates and search records, which are not knowledge until accepted. `phdude cite
 export` writes `references.bib` or `references.json` at the workspace root, a derived file that
 records no event and is never a substitute for the `SRC-` id itself.) Every other command —
 `phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `freshness`,
-`packs list|detect`, `manuscript list|show|status`, `doctor`, `help` — only reads or derives from
-what is already recorded. Never write YAML files directly, even to "fix a typo", and never edit a
-file under `manuscript/` by hand: prose reaches a section through `phdude manuscript submit`,
-which runs the writing gates first.
+`packs list|detect`, `manuscript list|show|status`, `prose`, `doctor`, `help` — only reads or
+derives from what is already recorded. (`phdude write` and `phdude deslop <section>` without a
+file write only `.phdude/cache/`, and `phdude prose <section>` stores the section's scores in
+`manuscript/reports/`, a derived file.) Never write YAML files directly, even to "fix a typo",
+and never edit a file under `manuscript/` by hand: prose reaches a section through
+`phdude manuscript submit` or `phdude deslop --file`, which run the writing gates first.
+
+### Writing a section
+
+`phdude write <section>` assembles the bounded writing context (PRD §70) and prints the draft
+contract; `phdude manuscript submit <section> --file <draft.md>` runs the gates and records the
+draft; `phdude deslop <section>` reports what to revise and takes the revision back through the
+gates, meaning preservation included; `phdude prose <section>` is the quality report. Follow
+`[[write]]` and `[[academic-prose]]`. A blocking finding means nothing was written: fix the
+draft, never the gate. And PhDude has no AI-detector score and never will (PRD §30c) — if a
+researcher asks for one, say so plainly and offer the prose report instead.
 
 ### Correcting a record
 

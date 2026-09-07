@@ -94,6 +94,42 @@ test('runGates on clean text is not blocked', () => {
   assert.deepEqual(result, {
     findings: [],
     blocked: false,
+    scores: {},
     gates: [{ gate: 'gate-citations', findings: 0, blocked: false }],
   });
+});
+
+test('every key in a Pandoc bracket group is a citation', () => {
+  assert.deepEqual(citationsIn('Both agree [@smith2020; @jones2019].\n'), [
+    { key: 'smith2020', line: 1 },
+    { key: 'jones2019', line: 1 },
+  ]);
+  assert.deepEqual(citationsIn('A locator [@smith2020, p. 3].\n'), [{ key: 'smith2020', line: 1 }]);
+  assert.deepEqual(citationsIn('A prefix [see @smith2020].\n'), [{ key: 'smith2020', line: 1 }]);
+  assert.deepEqual(citationsIn('Both [see also @a, pp. 4-5; @b, ch. 2].\n'), [
+    { key: 'a', line: 1 },
+    { key: 'b', line: 1 },
+  ]);
+});
+
+test('a key keeps its internal punctuation and loses its trailing punctuation', () => {
+  assert.deepEqual(citationsIn('[@smith2020.]\n[@a.b-c_d]\n'), [
+    { key: 'smith2020', line: 1 },
+    { key: 'a.b-c_d', line: 2 },
+  ]);
+});
+
+test('an @ outside a bracket group is not a citation', () => {
+  assert.deepEqual(citationsIn('Write to a.researcher@example.org about it.\n'), []);
+  assert.deepEqual(citationsIn('A markdown [link](https://example.org) and text.\n'), []);
+});
+
+test('a group with several keys locates and audits each one', () => {
+  const findings = citationsGate.run(
+    'Both agree [@smith2020adoption; @ghost].\n',
+    ctx({ sources: ['SRC-0123456789'], bibkeys: { smith2020adoption: 'SRC-0123456789' } }),
+  );
+  assert.equal(findings.length, 1);
+  assert.match(findings[0].message, /\[@ghost\]/);
+  assert.equal(findings[0].line, 1);
 });

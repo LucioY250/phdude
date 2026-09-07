@@ -148,6 +148,9 @@ export const empty = [
   'una gran variedad de',
 ];
 
+// See `softEmpty` in en.js: reported as `info`, never as a warning.
+export const softEmpty = ['con el fin de', 'en términos de'];
+
 export const vagueLiterature = [
   'estudios (?:previos|anteriores)',
   'investigaciones recientes',
@@ -197,6 +200,7 @@ export const es = {
   firstPerson,
   banned,
   empty,
+  softEmpty,
   vagueLiterature,
   abbreviations,
 };

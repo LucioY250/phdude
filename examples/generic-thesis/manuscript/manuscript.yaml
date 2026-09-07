@@ -1,0 +1,55 @@
+schema: phdude.manuscript
+version: 1
+title: Generic Thesis Example
+language: en
+voice:
+  kind: consensus
+sections:
+  - id: abstract
+    title: Abstract
+    file: manuscript/abstract.md
+    order: 1
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: introduction
+    title: Introduction
+    file: manuscript/introduction.md
+    order: 2
+    status: draft
+    hash: 036123f10393fa6dcb16e59cf3bed201c142f6beb62e33a207bf7cf6d6884eb9
+    claims: []
+    questions: []
+  - id: methods
+    title: Methods
+    file: manuscript/methods.md
+    order: 3
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: results
+    title: Results
+    file: manuscript/results.md
+    order: 4
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: discussion
+    title: Discussion
+    file: manuscript/discussion.md
+    order: 5
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: conclusions
+    title: Conclusions
+    file: manuscript/conclusions.md
+    order: 6
+    status: planned
+    hash: null
+    claims: []
+    questions: []

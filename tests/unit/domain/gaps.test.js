@@ -475,3 +475,91 @@ test('findGaps: an open network policy leaves question-never-searched at medium'
   assert.equal(gap.severity, 'medium');
   assert.equal(gap.command, `phdude research "text RQ-1" --question RQ-1`);
 });
+
+// A manuscript planning one section, with whatever the case needs attached to it.
+function manuscript(section = {}) {
+  return {
+    schema: 'phdude.manuscript',
+    version: 1,
+    title: 'T',
+    language: 'en',
+    voice: { kind: 'consensus' },
+    sections: [
+      {
+        id: 'introduction',
+        title: 'Introduction',
+        file: 'manuscript/introduction.md',
+        order: 1,
+        status: 'planned',
+        hash: null,
+        claims: [],
+        questions: [],
+        ...section,
+      },
+    ],
+  };
+}
+
+test('findGaps: a canonical claim no section references is claim-unwritten, at low severity', () => {
+  const canonical = claim('CLAIM-1', { state: 'canonical', supported_by: ['EVID-1'] });
+  const gaps = findGaps(
+    snapshot({
+      claims: [canonical],
+      evidence: [evidence('EVID-1', 'SRC-1', 'strong')],
+      manuscript: manuscript(),
+    }),
+    [],
+  );
+
+  const gap = gaps.find((g) => g.kind === 'claim-unwritten');
+  assert.ok(gap);
+  assert.equal(gap.id, 'CLAIM-1');
+  assert.equal(gap.severity, 'low');
+  assert.equal(gap.command, 'phdude write introduction');
+});
+
+test('findGaps: a claim the plan lists, or a paragraph asserts, is written', () => {
+  const canonical = claim('CLAIM-1', { state: 'canonical', supported_by: ['EVID-1'] });
+  const base = {
+    claims: [canonical],
+    evidence: [evidence('EVID-1', 'SRC-1', 'strong')],
+  };
+
+  const planned = findGaps(
+    snapshot({ ...base, manuscript: manuscript({ claims: ['CLAIM-1'] }) }),
+    [],
+  );
+  assert.equal(planned.filter((g) => g.kind === 'claim-unwritten').length, 0);
+
+  const asserted = findGaps(
+    snapshot({
+      ...base,
+      manuscript: manuscript({ status: 'draft' }),
+      sectionBodies: { introduction: 'A paragraph.\n<!-- claim: CLAIM-1 -->\n' },
+    }),
+    [],
+  );
+  assert.equal(asserted.filter((g) => g.kind === 'claim-unwritten').length, 0);
+});
+
+test('findGaps: without a manuscript, nothing is unwritten', () => {
+  const canonical = claim('CLAIM-1', { state: 'canonical', supported_by: ['EVID-1'] });
+  const gaps = findGaps(
+    snapshot({ claims: [canonical], evidence: [evidence('EVID-1', 'SRC-1', 'strong')] }),
+    [],
+  );
+  assert.equal(gaps.filter((g) => g.kind === 'claim-unwritten').length, 0);
+});
+
+test('findGaps: a supported claim is not unwritten - only canonical knowledge is owed prose', () => {
+  const supported = claim('CLAIM-1', { state: 'supported', supported_by: ['EVID-1'] });
+  const gaps = findGaps(
+    snapshot({
+      claims: [supported],
+      evidence: [evidence('EVID-1', 'SRC-1', 'strong')],
+      manuscript: manuscript(),
+    }),
+    [],
+  );
+  assert.equal(gaps.filter((g) => g.kind === 'claim-unwritten').length, 0);
+});

@@ -1467,7 +1467,7 @@ test('e2e: prose reports on any text file, in either language, and refuses detec
   assert.equal(typeof report.formulas.specificity, 'string');
   for (const o of report.observations) {
     assert.ok(Number.isInteger(o.line) && o.line >= 1);
-    assert.equal(o.severity, 'warn');
+    assert.ok(['warn', 'info'].includes(o.severity), o.severity);
   }
 
   const text = await run(ws, ['prose', '--file', slop]);
@@ -1637,5 +1637,206 @@ test('e2e: manuscript init, a blocked submit, a clean one, approve and reopen', 
       `approved introduction (${decision.id})`,
       'reopened introduction (revised)',
     ],
+  );
+});
+
+test('e2e: write, submit, deslop and prose over one section', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-writing-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Writing thesis', '--no-git']);
+
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'Adoption of AI in Small Firms',
+      authors: ['Z. Zeta'],
+      year: 2020,
+      type: 'article',
+    }),
+  ]);
+  const question = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'How fast do small firms adopt AI?', objectives: ['Measure the lag'] }),
+  ]);
+  const evidence = await runJson(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({
+      source: source.id,
+      locator: 'p. 3',
+      excerpt: 'Adoption is slower among firms below fifty employees.',
+      strength: 'moderate',
+    }),
+  ]);
+  const claim = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({
+      statement: 'Small firms adopt AI more slowly than large ones.',
+      kind: 'empirical',
+      supported_by: [evidence.id],
+      questions: [question.id],
+      sections: ['Introduction'],
+    }),
+  ]);
+  await run(ws, ['promote', claim.id, '--to', 'supported']);
+  await run(ws, ['manuscript', 'init']);
+
+  // next recommends drafting the section whose evidence is already in.
+  const planned = await runJson(ws, ['next']);
+  const ready = planned.actions.find((a) => a.rule === 'sections-planned');
+  assert.ok(ready, 'sections-planned is recommended');
+  assert.equal(ready.command, 'phdude write introduction');
+
+  // write assembles the context and prints the contract; it writes no section file.
+  const context = await runJson(ws, ['write', 'introduction']);
+  assert.deepEqual(
+    context.included.map((item) => item.kind),
+    ['instruction', 'facts', 'claim', 'bibkeys', 'policy', 'voice', 'epistemic'],
+  );
+  const contextFile = await readFile(
+    join(ws, '.phdude', 'cache', 'writing', 'introduction', 'context.md'),
+    'utf8',
+  );
+  assert.match(contextFile, new RegExp(`<!-- claim: ${claim.id} -->`));
+  assert.equal(await exists(join(ws, 'manuscript', 'introduction.md')), false);
+
+  const text = await run(ws, ['write', 'introduction']);
+  assert.match(text.stdout, /Draft contract:/);
+  assert.match(text.stdout, /phdude manuscript submit introduction --file/);
+
+  // A verb the claim's state does not allow blocks: exit 2, the finding printed first, and no
+  // section file written.
+  const bad = join(ws, 'bad.md');
+  await writeFile(
+    bad,
+    `Adoption demonstrates a clear lag [@zeta2020adoption].\n<!-- claim: ${claim.id} -->\n`,
+  );
+  const blocked = await phdude(ws, [
+    'manuscript',
+    'submit',
+    'introduction',
+    '--file',
+    bad,
+    ...ACTOR,
+  ]);
+  assert.equal(blocked.code, 2);
+  assert.match(blocked.stderr, /^ {2}- gate-evidence:1 "demonstrates" claims more than/m);
+  assert.ok(
+    blocked.stderr.indexOf('gate-evidence:1') < blocked.stderr.indexOf('section blocked by'),
+    'the findings are printed before the error line',
+  );
+  assert.equal(await exists(join(ws, 'manuscript', 'introduction.md')), false);
+
+  // The clean draft passes every gate.
+  const draft = join(ws, 'draft.md');
+  const body = [
+    'Small firms move toward automated tooling at their own pace, and the surveyed population',
+    'shows the same lag in every recruitment channel we examined [@zeta2020adoption].',
+    `<!-- claim: ${claim.id} -->`,
+    '',
+    'The gap matters because the firms that lag have the least slack to recover it. This section',
+    'sets out the question the rest of the thesis answers.',
+  ].join('\n');
+  await writeFile(draft, body + '\n');
+
+  const submitted = await runJson(ws, ['manuscript', 'submit', 'introduction', '--file', draft]);
+  assert.equal(submitted.section.status, 'draft');
+  assert.deepEqual(
+    submitted.report.gates.map((row) => row.gate),
+    ['gate-citations', 'gate-evidence', 'gate-prose', 'gate-voice', 'gate-profile'],
+  );
+
+  // deslop without a file: the observations and the revision contract, and no event.
+  const contract = await run(ws, ['deslop', 'introduction']);
+  assert.match(contract.stdout, /Revision contract for introduction \(draft\)/);
+  assert.match(contract.stdout, /Preserve exactly/);
+  assert.match(contract.stdout, /Every number, exactly as written\./);
+
+  // A revision that drops the citation is refused, and the section stays a draft.
+  const dropped = join(ws, 'dropped.md');
+  await writeFile(dropped, body.replace(' [@zeta2020adoption]', '') + '\n');
+  const refused = await phdude(ws, ['deslop', 'introduction', '--file', dropped, ...ACTOR]);
+  assert.equal(refused.code, 2);
+  assert.match(refused.stderr, /gate-meaning:1 the revision drops the citation zeta2020adoption/);
+
+  const stillDraft = await runJson(ws, ['manuscript', 'show', 'introduction']);
+  assert.equal(stillDraft.status, 'draft');
+
+  // A revision that keeps every claim, citation, number and negation is recorded.
+  const revision = join(ws, 'revision.md');
+  await writeFile(
+    revision,
+    [
+      'Across every recruitment channel we examined, small firms move toward automated tooling at',
+      'their own pace [@zeta2020adoption].',
+      `<!-- claim: ${claim.id} -->`,
+      '',
+      'The firms that lag have the least slack to recover it, which is why the gap matters. This',
+      'section sets out the question the rest of the thesis answers.',
+    ].join('\n') + '\n',
+  );
+  const revised = await runJson(ws, ['deslop', 'introduction', '--file', revision]);
+  assert.equal(revised.revised, true);
+  assert.equal(revised.section.status, 'revised');
+
+  // The prose report scores the section against the evidence graph and stores the scores.
+  const report = await runJson(ws, ['prose', 'introduction']);
+  assert.equal(typeof report.scores.evidenceAlignment, 'number');
+  assert.equal(report.scores.authorVoice, null);
+  const stored = await readFile(join(ws, 'manuscript', 'reports', 'introduction.yaml'), 'utf8');
+  assert.match(stored, /evidenceAlignment: \d+/);
+
+  const proseText = await run(ws, ['prose', 'introduction']);
+  assert.match(proseText.stdout, /^introduction \(revised\) {2}Introduction/m);
+  assert.match(proseText.stdout, /Academic Prose Quality: \d+\/100/);
+
+  // The researcher approves it with a decision; next then has nothing pending.
+  const decision = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Approve the introduction',
+    '--rationale',
+    'It reads as intended and every claim resolves.',
+    '--affects',
+    'manuscript:introduction',
+  ]);
+  await run(ws, ['decide', 'approve', decision.id, '--by', 'the researcher']);
+
+  const pending = await runJson(ws, ['next']);
+  assert.ok(pending.actions.some((a) => a.rule === 'approval-pending'));
+
+  await run(ws, ['manuscript', 'approve', 'introduction', '--decision', decision.id]);
+  const approved = await runJson(ws, ['manuscript', 'show', 'introduction']);
+  assert.equal(approved.status, 'approved');
+
+  // An approved section is not deslopped in place.
+  const locked = await phdude(ws, ['deslop', 'introduction', ...ACTOR]);
+  assert.equal(locked.code, 3);
+  assert.match(locked.stderr, /reopen/);
+
+  const events = JSON.parse(
+    `[${(await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+      .trim()
+      .split('\n')
+      .join(',')}]`,
+  );
+  assert.deepEqual(
+    events.filter((e) => e.op === 'manuscript').map((e) => e.summary),
+    [
+      'manuscript initialized (6 sections)',
+      'submitted introduction (draft)',
+      'deslop introduction (revised)',
+      `approved introduction (${decision.id})`,
+    ],
+    'one event per mutation, and none for write, deslop --no-file or prose',
   );
 });

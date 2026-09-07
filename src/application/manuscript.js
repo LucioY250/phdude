@@ -1,6 +1,5 @@
 import { assignBibkeys } from '../domain/bibkey.js';
 import { PhdudeError } from '../domain/errors.js';
-import { citationsGate } from '../domain/gates/citations.js';
 import { runGates } from '../domain/gates/index.js';
 import {
   SECTION_ID_RE,
@@ -14,13 +13,15 @@ import {
 import { parseId } from '../domain/ids.js';
 import { assertUpToDate } from './guard.js';
 
-// The gates `submit` runs by default. v0.4 Task 4 adds evidence, prose, voice and meaning to
-// this list; the runner and the finding shape are already what they will produce.
-export const DEFAULT_GATES = [citationsGate];
-
 const NO_MANUSCRIPT_HINT = 'phdude manuscript init';
+const DEFAULT_MODE = 'full';
 
-async function loadManuscript(store) {
+/**
+ * @param {object} store
+ * @returns {Promise<object>} the manuscript
+ * @throws {PhdudeError} USAGE, when the workspace has none
+ */
+export async function loadManuscript(store) {
   const manuscript = await store.readManuscript();
   if (manuscript === null) {
     throw new PhdudeError('USAGE', 'this workspace has no manuscript', NO_MANUSCRIPT_HINT, null);
@@ -28,7 +29,13 @@ async function loadManuscript(store) {
   return manuscript;
 }
 
-function findSection(manuscript, section) {
+/**
+ * @param {object} manuscript
+ * @param {string} section
+ * @returns {object} the section entry
+ * @throws {PhdudeError} USAGE, when the manuscript has no such section
+ */
+export function findSection(manuscript, section) {
   const entry = manuscript.sections.find((s) => s.id === section);
   if (!entry) {
     throw new PhdudeError(
@@ -58,11 +65,22 @@ function withoutApproval(entry) {
   return rest;
 }
 
-// The context the citation gate reads: every source by id and by bibkey, plus the sources whose
-// accepting candidate the researcher has since dismissed.
-async function gateContext(store) {
+/**
+ * Everything the gates read, gathered once: the citation registry, the claims and evidence a
+ * marker resolves against, the manuscript's language and venue, and the review mode. The gates
+ * themselves are pure, so this is the only place that reaches the store on their behalf.
+ * @param {{store: object, loadProfile?: (name: string) => Promise<object|null>}} deps
+ * @param {{manuscript: object, entry: object}} input
+ * @returns {Promise<object>} the gate context
+ */
+export async function gateContext({ store, loadProfile }, { manuscript, entry } = {}) {
   const sources = await store.listEntities('source');
   const candidates = await store.listEntities('candidate');
+  const claims = await store.listEntities('claim');
+  const evidence = await store.listEntities('evidence');
+  const facts = await store.listEntities('fact');
+  const results = await store.listEntities('result');
+  const project = await store.readProject();
   const bibkeys = assignBibkeys(sources);
 
   const dismissed = new Set(
@@ -74,15 +92,36 @@ async function gateContext(store) {
     if (from && dismissed.has(from)) dismissedSources.set(source.id, from);
   }
 
+  const target = manuscript?.target_profile ?? null;
+  const venueProfile = target && loadProfile ? await loadProfile(target) : null;
+
   return {
     sourcesById: new Map(sources.map((source) => [source.id, source])),
     sourcesByBibkey: new Map(sources.map((source) => [bibkeys.get(source.id), source])),
     dismissedSources,
+    claimsById: new Map(claims.map((claim) => [claim.id, claim])),
+    evidenceById: new Map(evidence.map((item) => [item.id, item])),
+    factIds: new Set(facts.map((fact) => fact.id)),
+    resultIds: new Set(results.map((result) => result.id)),
+    lang: manuscript?.language ?? project?.language ?? 'en',
+    mode: project?.mode ?? DEFAULT_MODE,
+    venueProfile,
+    section: entry?.id ?? null,
+    sectionOrder: entry?.order ?? null,
   };
 }
 
 function formatFinding(finding) {
   return `${finding.gate}:${finding.line} ${finding.message}`;
+}
+
+// The canonical report records scores, not absences: a sub-score the run could not compute is
+// left out rather than written as null, so a number in `manuscript/reports/` is always a
+// measurement (spec §3.4).
+function numericScores(scores) {
+  return Object.fromEntries(
+    Object.entries(scores ?? {}).filter(([, value]) => typeof value === 'number'),
+  );
 }
 
 async function requireApprovingDecision(store, section, decision) {
@@ -220,17 +259,93 @@ export async function status({ store }) {
 }
 
 /**
- * Runs the deterministic gates over a draft and, only if nothing blocks, records it as the
- * section: the file with its front matter, the manuscript entry (status and hash), the report,
- * and one event. A block writes nothing at all (spec §3.4).
+ * The one path prose takes into `manuscript/`: run every gate, and only if nothing blocks write
+ * the section file, the manuscript entry, both reports and exactly one event. A block writes
+ * nothing at all (spec §3.4) and throws with every finding in `details`.
+ *
+ * `submit` and `deslop` both come through here, which is what makes them the same guarantee.
+ *
  * @param {{store: object, clock: () => string, actor: object,
- *   readText: (path: string) => Promise<string|null>}} deps
- * @param {{section: string, file: string, revision?: boolean, gates?: object[]}} input
+ *   loadProfile?: (name: string) => Promise<object|null>}} deps
+ * @param {{manuscript: object, entry: object, body: string, target: string, summary: string,
+ *   revisionOf?: string|null, allowAdditions?: boolean, gates?: object[]}} input
+ * @returns {Promise<{section: object, findings: object[], report: object, path: string,
+ *   scores: object}>}
+ */
+export async function recordSection(
+  { store, clock, actor, loadProfile },
+  { manuscript, entry, body, target, summary, revisionOf = null, allowAdditions = false, gates },
+) {
+  const ctx = await gateContext({ store, loadProfile }, { manuscript, entry });
+  const {
+    findings,
+    blocked,
+    scores,
+    gates: rows,
+  } = runGates(body, ctx, { revisionOf, mode: ctx.mode, allowAdditions, gates });
+
+  const at = clock();
+  const cacheReport = {
+    section: entry.id,
+    at,
+    mode: ctx.mode,
+    target,
+    blocked,
+    gates: rows,
+    scores,
+    findings,
+  };
+
+  if (blocked) {
+    // Nothing at all is written, the cache report included (spec §3.4): a blocked submit leaves
+    // the workspace exactly as it was, and the findings reach the researcher through the error.
+    const blocking = rows.filter((row) => row.blocked).map((row) => row.gate);
+    const blocks = findings.filter((finding) => finding.severity === 'block');
+    throw new PhdudeError(
+      'VALIDATION',
+      `section blocked by ${blocking.join(', ')}: ${blocks.length} finding(s)`,
+      'fix the findings above in the draft, then submit it again',
+      findings.map(formatFinding),
+    );
+  }
+
+  const hash = sectionHash(body);
+  const path = await store.writeSection(
+    entry.file,
+    renderSectionFile({ section: entry.id, status: target, hash, updated: at }, body),
+  );
+  await store.writeManuscript(withSection(manuscript, entry.id, { status: target, hash }));
+
+  const report = {
+    schema: 'phdude.section-report',
+    version: 1,
+    section: entry.id,
+    hash,
+    at,
+    gates: rows,
+    scores: numericScores(scores),
+    warnings: findings.filter((finding) => finding.severity === 'warn').length,
+    blocks: 0,
+  };
+  await store.writeReport(entry.id, report);
+  await store.writeWritingReport(entry.id, { ...cacheReport, hash });
+
+  await store.appendEvent({ ts: at, op: 'manuscript', actor, ids: [], summary });
+
+  return { section: { ...entry, status: target, hash }, findings, report, path, scores };
+}
+
+/**
+ * @param {{store: object, clock: () => string, actor: object,
+ *   readText: (path: string) => Promise<string|null>,
+ *   loadProfile?: (name: string) => Promise<object|null>}} deps
+ * @param {{section: string, file: string, revision?: boolean, allowAdditions?: boolean,
+ *   gates?: object[]}} input
  * @returns {Promise<{section: object, findings: object[], report: object, path: string}>}
  */
 export async function submit(
-  { store, clock, actor, readText },
-  { section, file, revision = false, gates = DEFAULT_GATES } = {},
+  { store, clock, actor, readText, loadProfile },
+  { section, file, revision = false, allowAdditions = false, gates } = {},
 ) {
   assertUpToDate(await store.readProject());
 
@@ -274,50 +389,24 @@ export async function submit(
     throw new PhdudeError('USAGE', `cannot read ${file}`, 'pass the path to the draft', null);
   }
 
-  const body = parseSectionFile(draft).body;
-  const { findings, blocked, gates: rows } = runGates(body, await gateContext(store), { gates });
+  // A revision is judged against what the section says today, which is what makes
+  // `gate-meaning` able to tell a rewording from a retraction.
+  const current =
+    revision && entry.status !== 'planned' ? await store.readSection(entry.file) : null;
 
-  if (blocked) {
-    const blocking = rows.filter((row) => row.blocked).map((row) => row.gate);
-    const blocks = findings.filter((finding) => finding.severity === 'block');
-    throw new PhdudeError(
-      'VALIDATION',
-      `section blocked by ${blocking.join(', ')}: ${blocks.length} finding(s)`,
-      'fix the findings above in the draft, then submit it again',
-      findings.map(formatFinding),
-    );
-  }
-
-  const at = clock();
-  const hash = sectionHash(body);
-  const path = await store.writeSection(
-    entry.file,
-    renderSectionFile({ section: entry.id, status: target, hash, updated: at }, body),
+  return recordSection(
+    { store, clock, actor, loadProfile },
+    {
+      manuscript,
+      entry,
+      body: parseSectionFile(draft).body,
+      target,
+      summary: `submitted ${entry.id} (${target})`,
+      revisionOf: current === null ? null : parseSectionFile(current).body,
+      allowAdditions,
+      gates,
+    },
   );
-  await store.writeManuscript(withSection(manuscript, entry.id, { status: target, hash }));
-
-  const report = {
-    schema: 'phdude.section-report',
-    version: 1,
-    section: entry.id,
-    hash,
-    at,
-    gates: rows,
-    scores: {},
-    warnings: findings.filter((finding) => finding.severity === 'warn').length,
-    blocks: 0,
-  };
-  await store.writeReport(entry.id, report);
-
-  await store.appendEvent({
-    ts: at,
-    op: 'manuscript',
-    actor,
-    ids: [],
-    summary: `submitted ${entry.id} (${target})`,
-  });
-
-  return { section: { ...entry, status: target, hash }, findings, report, path };
 }
 
 /**

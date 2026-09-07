@@ -331,6 +331,53 @@ export function renderProse(report) {
 }
 
 /**
+ * The writing context report of `phdude write`: where the context is, what went into it, what
+ * did not fit, and the contract the draft has to meet (spec §3.3).
+ * @param {object} result - see application/write.js
+ * @returns {string}
+ */
+export function renderWriteContext(result) {
+  const lines = [
+    `Writing context for ${result.section.id} (${result.section.status}): ${result.path}`,
+    '',
+    `Budget: ${result.budget} characters, ${result.included.reduce((sum, item) => sum + item.chars, 0)} used`,
+    `Voice: ${result.voice.id}${result.voice.found ? '' : ' (no profile recorded; writing plainly)'}`,
+    '',
+    `Included (${result.included.length}):`,
+  ];
+  for (const item of result.included) {
+    lines.push(`  ${item.kind.padEnd(12)} ${item.id.padEnd(18)} ${item.chars} chars`);
+  }
+  if (result.truncated.length > 0) {
+    lines.push('', `Left out for budget (${result.truncated.length}):`);
+    for (const item of result.truncated) lines.push(`  ${item.kind.padEnd(12)} ${item.id}`);
+  }
+  lines.push('', 'Draft contract:');
+  for (const rule of result.contract) lines.push(`  - ${rule}`);
+  return lines.join('\n') + '\n';
+}
+
+/**
+ * The revision contract of `phdude deslop <section>` with no file: what the prose is doing now,
+ * and what a revision may and may not change (spec §3.5).
+ * @param {object} result - see application/deslop.js
+ * @returns {string}
+ */
+export function renderDeslop(result) {
+  const lines = [`Revision contract for ${result.section.id} (${result.section.status})`, ''];
+  lines.push(renderProse({ ...result, observations: result.observations }).trimEnd(), '');
+  lines.push('Change:');
+  for (const rule of result.contract.change) lines.push(`  - ${rule}`);
+  lines.push('', 'Preserve exactly (the meaning gate blocks a revision that loses one):');
+  for (const rule of result.contract.preserve) lines.push(`  - ${rule}`);
+  lines.push(
+    '',
+    `Submit the revision with: phdude deslop ${result.section.id} --file <revised.md>`,
+  );
+  return lines.join('\n') + '\n';
+}
+
+/**
  * @param {object} obj
  * @returns {string}
  */

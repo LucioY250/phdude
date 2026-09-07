@@ -3,7 +3,14 @@
 // the researcher accepted. Both failures block: prose that cites what the registry cannot
 // name is prose that outran the evidence.
 
-const CITATION_RE = /\[@([A-Za-z0-9][A-Za-z0-9_:.-]*)\]/g;
+import { lineAt } from '../textstats.js';
+
+// Pandoc's citation syntax, which is what a researcher's Markdown already speaks: a bracketed
+// group may hold several keys (`[@a; @b]`), a locator (`[@a, p. 3]`) or a prefix (`[see @a]`).
+// Every `@key` inside a bracket group is a citation; a bare `@key` outside brackets is not (it
+// would swallow an email address and Pandoc's own in-text form needs no audit of its own).
+const GROUP_RE = /\[[^\]]*\]/g;
+const KEY_RE = /@([A-Za-z0-9][A-Za-z0-9_:.-]*)/g;
 
 /**
  * @param {string} text
@@ -12,9 +19,13 @@ const CITATION_RE = /\[@([A-Za-z0-9][A-Za-z0-9_:.-]*)\]/g;
 export function citationsIn(text) {
   const source = String(text ?? '');
   const found = [];
-  for (const match of source.matchAll(CITATION_RE)) {
-    const line = source.slice(0, match.index).split('\n').length;
-    found.push({ key: match[1], line });
+  for (const group of source.matchAll(GROUP_RE)) {
+    for (const match of group[0].matchAll(KEY_RE)) {
+      // Trailing punctuation belongs to the sentence, not to the key: `[@smith2020.]`.
+      const key = match[1].replace(/[.:_-]+$/, '');
+      if (key === '') continue;
+      found.push({ key, line: lineAt(source, group.index + match.index) });
+    }
   }
   return found;
 }

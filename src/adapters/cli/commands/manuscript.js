@@ -78,6 +78,7 @@ async function submit({ positionals, flags, deps }) {
     section,
     file: flags.file,
     revision: flags.revision,
+    allowAdditions: flags.allowAdditions,
   });
   const lines = [`Submitted ${result.section.id} (${result.section.status})`, `  ${result.path}`];
   for (const finding of result.findings) {
@@ -119,6 +120,7 @@ export default async function manuscriptCommand(ctx) {
       store: ctx.deps.store,
       clock: ctx.deps.clock,
       actor: ctx.deps.actor,
+      loadProfile: ctx.deps.loadProfile,
       // The draft is a file the agent just wrote next to its own working directory, not a
       // workspace object, so it is read relative to the shell's cwd rather than the store.
       readText: async (path) => {

@@ -4,14 +4,55 @@
 
 import { sha256 } from './hash.js';
 
+// `purpose` is what the writing context tells the agent the section is for (PRD §70, item 1).
+// It is not persisted: `manuscript.yaml` carries the id, the title and the plan, and a purpose
+// that lived in the file would drift from the one the pipeline uses.
 export const STANDARD_SECTIONS = [
-  { id: 'abstract', title: 'Abstract' },
-  { id: 'introduction', title: 'Introduction' },
-  { id: 'methods', title: 'Methods' },
-  { id: 'results', title: 'Results' },
-  { id: 'discussion', title: 'Discussion' },
-  { id: 'conclusions', title: 'Conclusions' },
+  {
+    id: 'abstract',
+    title: 'Abstract',
+    purpose:
+      'State the question, what was done, what was found and what it means, in one paragraph, with no citations.',
+  },
+  {
+    id: 'introduction',
+    title: 'Introduction',
+    purpose:
+      'Establish the problem, what is already known and where the gap is, and end on the research questions this work addresses.',
+  },
+  {
+    id: 'methods',
+    title: 'Methods',
+    purpose:
+      'Describe the design, the sample, the instruments and the analysis precisely enough for another researcher to repeat them.',
+  },
+  {
+    id: 'results',
+    title: 'Results',
+    purpose:
+      'Report what was found, in the order the questions were asked, without interpreting it.',
+  },
+  {
+    id: 'discussion',
+    title: 'Discussion',
+    purpose:
+      'Interpret the findings against the literature, name what the evidence cannot settle, and state the limitations.',
+  },
+  {
+    id: 'conclusions',
+    title: 'Conclusions',
+    purpose: 'Answer the research questions at the strength the evidence supports, and no more.',
+  },
 ];
+
+/**
+ * @param {string} id
+ * @returns {string|null} what a standard section is for, or null for a section PhDude does not
+ *   ship a purpose for (a researcher-added one)
+ */
+export function sectionPurpose(id) {
+  return STANDARD_SECTIONS.find((section) => section.id === id)?.purpose ?? null;
+}
 
 export const SECTION_STATUSES = ['planned', 'draft', 'revised', 'approved'];
 

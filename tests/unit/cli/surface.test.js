@@ -121,6 +121,7 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'manuscript submit',
     'manuscript approve',
     'manuscript reopen',
+    'deslop',
   ];
   const skill = read('skills', 'phdude-core', 'SKILL.md');
   const section = skill.slice(skill.indexOf('## The only way to write'));

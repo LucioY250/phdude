@@ -70,8 +70,26 @@ test('every observation is located, quotable and actionable', () => {
     assert.ok(o.excerpt.length > 0, `${o.rule}: no excerpt`);
     assert.ok(o.message.length > 0, `${o.rule}: no message`);
     assert.ok(o.hint.length > 0, `${o.rule}: no hint`);
-    assert.equal(o.severity, 'warn');
+    assert.ok(['warn', 'info'].includes(o.severity), `${o.rule}: ${o.severity}`);
   }
+});
+
+test('the empty phrases a careful writer uses are info, not warnings', () => {
+  const report = lint('We collected the data in order to compare the two cohorts.', { lang: 'en' });
+  assert.deepEqual(
+    report.observations.map((o) => [o.rule, o.severity]),
+    [['empty-phrase', 'info']],
+  );
+
+  // An info observation is a note about the prose, not a mark against it: the score stays 100.
+  assert.equal(report.scores.specificity, 100);
+
+  const hard = lint('At the end of the day the data was collected.', { lang: 'en' });
+  assert.deepEqual(
+    hard.observations.map((o) => [o.rule, o.severity]),
+    [['empty-phrase', 'warn']],
+  );
+  assert.ok(hard.scores.specificity < 100);
 });
 
 test('observations are sorted by line, then rule, then excerpt', () => {
@@ -127,7 +145,9 @@ test('transition-density needs three sentences before a share means anything', (
 test('ruthless mode turns every warning into a block, and leaves info alone', () => {
   const report = lint(fixture('en/slop.md'), { lang: 'en', mode: 'ruthless' });
   assert.ok(report.observations.length > 0);
-  for (const o of report.observations) assert.equal(o.severity, 'block');
+  for (const o of report.observations) {
+    assert.equal(o.severity, o.message.includes('in order to') ? 'info' : 'block');
+  }
 
   const unknown = lint('Das Ergebnis war klar.', { lang: 'de', mode: 'ruthless' });
   assert.deepEqual(

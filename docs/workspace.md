@@ -306,6 +306,13 @@ first and writes nothing when one blocks. A section that has been approved is on
 after `phdude manuscript reopen`, which is the approval being withdrawn on the record rather
 than quietly overwritten.
 
+Drafting a section starts one step earlier, with `phdude write <section>`. It assembles the
+writing context — the section's claims with their evidence, the citation keys, the policy, the
+voice profile and the verb table — into `.phdude/cache/writing/<section>/context.md` and prints
+the contract the draft has to meet. `phdude deslop <section>` is the revision half: it reports
+what to change, and takes the revision back through the gates with meaning preservation on.
+Neither writes prose; both leave that to `submit` and to `deslop --file`.
+
 ## Derived files
 
 Two things in the workspace are outputs rather than knowledge, and both can be deleted and
@@ -324,6 +331,11 @@ only how that source is printed. An export older than the sources it came from i
 `.phdude/cache/ART-<id>/` holds `manifest.json`, `text.md`, `sections/*.md` and
 `tables/*.csv` extracted from the source file. It is gitignored and disposable: delete it
 and `phdude ingest --force` rebuilds it.
+
+`.phdude/cache/writing/<section>/` holds `context.md`, the writing context `phdude write`
+assembled, and `report.json`, the full gate report behind the last accepted `submit` or
+`deslop` — every finding, warnings included, where `manuscript/reports/<section>.yaml` keeps
+only the canonical summary. A blocked run writes neither: it leaves the workspace as it was.
 
 Agents read the cache section by section rather than loading whole documents, which is how
 PhDude stays inside a context budget on projects with hundreds of sources (PRD §70).

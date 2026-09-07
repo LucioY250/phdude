@@ -2,7 +2,7 @@
 // Regenerates examples/generic-thesis/ by driving the real use cases (initWorkspace, ingest,
 // addEntity, decide.propose, promote) against a fixed clock, so the committed workspace is a
 // faithful, reproducible sample rather than hand-authored YAML.
-import { rm, utimes } from 'node:fs/promises';
+import { readFile, rm, utimes, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FsStore } from '../src/adapters/store/fs-store.js';
@@ -15,6 +15,7 @@ import { addEntity } from '../src/application/add.js';
 import { promote, propose } from '../src/application/decide.js';
 import { link } from '../src/application/link.js';
 import * as research from '../src/application/research.js';
+import * as manuscript from '../src/application/manuscript.js';
 import { buildProviders } from '../src/adapters/search/index.js';
 import { fakeFetch } from '../src/adapters/search/fake-fetch.js';
 
@@ -194,6 +195,36 @@ async function acceptOneCandidate(deps, candidateIds) {
   throw new Error('no article candidate to accept');
 }
 
+// The manuscript, so the example carries a section that went through the writing gates: a
+// planned six-section plan, and one introduction submitted as a draft. The prose asserts the
+// one supported claim in the workspace, with the marker and the citation key the writing
+// context would have handed an agent, so `phdude write introduction` and `phdude prose
+// introduction` both have something real to report on the committed example.
+async function writeIntroduction(deps, claim) {
+  await manuscript.init(deps, { language: 'en' });
+
+  const draft = [
+    'Undergraduates report using note-taking applications daily, and the pattern holds across',
+    'three independently recruited samples [@alpha2025survey].',
+    `<!-- claim: ${claim.id} -->`,
+    '',
+    'How far that generalises is the open question. The three surveys recruited through different',
+    'channels, and the sample sizes they report do not agree, so this thesis asks whether adoption',
+    'differs by recruitment channel and campus.',
+  ].join('\n');
+
+  const path = join(deps.store.root, 'draft-introduction.md');
+  await writeFile(path, draft + '\n');
+  await manuscript.submit(
+    { ...deps, readText: () => readFile(path, 'utf8') },
+    {
+      section: 'introduction',
+      file: path,
+    },
+  );
+  await rm(path);
+}
+
 export async function generate(root) {
   await rm(root, { recursive: true, force: true });
 
@@ -345,7 +376,9 @@ export async function generate(root) {
     // the latter, while source1's own citing evidence (above) is never attached to any claim.
     supported_by: [evidence1.id, evidence3.id],
     questions: [rq.id],
-    sections: ['Results'],
+    // Named for both sections: the introduction previews the finding, the results report it.
+    // `phdude write introduction` picks the claim up from here.
+    sections: ['Introduction', 'Results'],
   });
   await promote(deps, claim1.id, { to: 'supported' });
 
@@ -426,6 +459,8 @@ export async function generate(root) {
     affects: [fact1.id, fact2.id, fact3.id],
     change: { fact_key: 'sample_size', canonical_value: 312 },
   });
+
+  await writeIntroduction(deps, claim1);
 }
 
 async function main() {

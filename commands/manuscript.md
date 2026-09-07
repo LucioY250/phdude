@@ -13,10 +13,11 @@ phdude manuscript $ARGUMENTS --json
 ```
 
 (`init [--title "…"] [--language en] [--voice <author-id>|consensus]`, `list`, `show <section>`,
-`status`, `submit <section> --file <draft.md> [--revision]`, `approve <section> --decision
+`status`, `submit <section> --file <draft.md> [--revision] [--allow-additions]`, `approve <section> --decision
 <DEC-id>`, or `reopen <section>`.)
 
-`submit` is the only way prose reaches `manuscript/`. Never write or edit a section file
+Start with `phdude write <section>`: it assembles the context and the draft contract. `submit`
+and `phdude deslop` are the only ways prose reaches `manuscript/`. Never write or edit a section file
 directly: write your draft to a scratch file and submit that. The deterministic gates run over
 the draft first, and any blocking finding means nothing is written at all — fix the draft and
 submit it again rather than working around the gate.

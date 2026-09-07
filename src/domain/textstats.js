@@ -21,6 +21,9 @@ import { normalizeLang, tableFor } from './lang/index.js';
 //   are computed the same way for every language.
 
 const TERMINATORS = new Set(['.', '?', '!', '…']);
+// A sentence that cites a source, or marks a number with the object it came from, has already
+// declared where its emphasis comes from; `intensifierCount` leaves it alone.
+const CITED = /\[@[^\]]+\]|<!--\s*(?:fact|result)\s*:/i;
 const CLOSERS = new Set(['"', "'", '”', '’', ')', ']', '»', '›']);
 const OPENERS = new Set(['"', "'", '“', '‘', '(', '[', '«', '¿', '¡']);
 // A list item on its own line ends the sentence before it, even though `-` is not a capital.
@@ -109,6 +112,23 @@ export function paragraphs(text) {
   }
   flush();
   return out;
+}
+
+/**
+ * The 1-based line an offset falls on. Every located finding in the writing pipeline is built
+ * from this, so a gate never counts newlines its own way.
+ * @param {string} text
+ * @param {number} index - an offset into `text`
+ * @returns {number}
+ */
+export function lineAt(text, index) {
+  const source = String(text ?? '');
+  const upto = Math.max(0, Math.min(index, source.length));
+  let line = 1;
+  for (let i = 0; i < upto; i++) {
+    if (source[i] === '\n') line++;
+  }
+  return line;
 }
 
 function isDecimal(text, i) {
@@ -318,7 +338,9 @@ function round(value, digits) {
  * Descriptive statistics for a text. Structural fields are computed for any language; the
  * language-dependent ones (`transitionRate`, `firstPersonRate`, `hedgeRate`, `intensifierCount`)
  * are null when no table ships for `lang`, because a zero there would read as "this text uses no
- * transitions" rather than "PhDude cannot tell" (PRD §101).
+ * transitions" rather than "PhDude cannot tell" (PRD §101). `intensifierCount` skips sentences
+ * that carry a citation or a fact/result marker, the same sentences `unsupported-intensifier`
+ * spares: an adjective next to its evidence is not the density the conciseness score measures.
  *
  * @param {string} text
  * @param {string} [lang]
@@ -355,7 +377,7 @@ export function stats(text, lang) {
       if (startsWithTransition(sentence, table)) transitionSentences++;
       if (findPhrases(clean, table.firstPerson).length > 0) firstPersonSentences++;
       if (findPhrases(clean, table.hedges).length > 0) hedgeSentences++;
-      intensifierCount += findPhrases(clean, table.intensifiers).length;
+      if (!CITED.test(sentence)) intensifierCount += findPhrases(clean, table.intensifiers).length;
     }
   }
 

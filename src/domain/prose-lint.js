@@ -73,9 +73,9 @@ export const FORMULAS = {
   specificity:
     '100 - 15 x (vague-literature + banned-phrase + empty-phrase) per 100 words, clamped to 0-100',
   evidenceAlignment:
-    'computed against the evidence graph by the writing pipeline (gate-evidence); null without manuscript markers',
+    '100 - 25 x markers naming nothing in the workspace - 15 x asserted claims whose evidence is missing or all weak - 5 x numerals with neither a marker nor a citation, clamped to 0-100; null without manuscript markers',
   epistemicPrecision:
-    'computed against claim states and the epistemic-verb table by the writing pipeline (gate-evidence); null without manuscript markers',
+    '100 - 30 x asserted rejected claims - 20 x verbs stronger than the claim state allows - 10 x sentences with 3+ hedges, clamped to 0-100; null without manuscript markers',
   structuralVariation:
     '100 x (0.4 x min(1, sdLen/6) + 0.4 x openingDiversity + 0.2 x (1 - min(1, transitionRate/0.4))); without a language table the transition term is dropped and the other two weigh 0.5 each',
   authorVoice:
@@ -168,18 +168,18 @@ function repeatedOpenings(paragraph, spans, out) {
   }
 }
 
-function phraseRule(rule, phrases, message, hint, paragraph, spans, out) {
+function phraseRule(rule, phrases, message, hint, paragraph, spans, out, soft = []) {
   for (const hit of findPhrases(paragraph.text, phrases)) {
     const span = spanAt(spans, hit.index);
-    out.push(
-      observation(
-        rule,
-        lineAt(paragraph, hit.index),
-        excerptOf(span ? span.text : hit.phrase),
-        `${message}: "${hit.phrase}"`,
-        hint,
-      ),
+    const found = observation(
+      rule,
+      lineAt(paragraph, hit.index),
+      excerptOf(span ? span.text : hit.phrase),
+      `${message}: "${hit.phrase}"`,
+      hint,
     );
+    if (soft.includes(hit.phrase)) found.severity = 'info';
+    out.push(found);
   }
 }
 
@@ -279,15 +279,33 @@ function excessiveHedging(paragraph, spans, table, out) {
   }
 }
 
+// `info` observations never score against the text: they are the ones a careful writer may
+// keep (`in order to`), and the language note, which describes the run rather than the prose.
 function countByRule(observations) {
   const counts = Object.fromEntries(RULES.map((rule) => [rule, 0]));
   for (const item of observations) {
+    if (item.severity === 'info') continue;
     if (counts[item.rule] !== undefined) counts[item.rule]++;
   }
   return counts;
 }
 
-function computeScores(observations, measurements) {
+// The two sub-scores that read the evidence graph. `markers` is the count summary the writing
+// pipeline assembles (domain/gates/markers.js); without it - a bare text file - there is no
+// graph behind the prose and the honest answer is null, not a number invented from words alone.
+function evidenceScores(markers, counts) {
+  if (!markers) return { evidenceAlignment: null, epistemicPrecision: null };
+  return {
+    evidenceAlignment: clamp(
+      100 - 25 * markers.unresolved - 15 * markers.weaklySupported - 5 * markers.unmarkedNumerals,
+    ),
+    epistemicPrecision: clamp(
+      100 - 30 * markers.rejected - 20 * markers.overreach - 10 * counts['excessive-hedging'],
+    ),
+  };
+}
+
+function computeScores(observations, measurements, markers) {
   const counts = countByRule(observations);
   const perHundred = Math.max(1, measurements.words / 100);
   const intensifiers = measurements.intensifierCount ?? 0;
@@ -315,14 +333,12 @@ function computeScores(observations, measurements) {
       3 * Math.max(0, measurements.meanLen - 30),
   );
 
-  // Evidence alignment and epistemic precision are computed against the evidence graph and the
-  // claim states, and author voice against the active profile - none of which lives in a text
-  // file (PRD §39.1). The writing pipeline supplies them through gate-evidence and gate-voice;
-  // a text-only run reports null rather than a number invented from prose alone.
+  // Author voice is measured against the active profile, which no text file carries (PRD
+  // §39.1); the writing pipeline supplies it through gate-voice, and a run without a profile
+  // reports null rather than a number invented from prose alone.
   return {
     specificity,
-    evidenceAlignment: null,
-    epistemicPrecision: null,
+    ...evidenceScores(markers, counts),
     structuralVariation,
     authorVoice: null,
     conciseness,
@@ -350,9 +366,10 @@ function aggregateOf(scores) {
  *
  * @param {string} text
  * @param {{lang?: string, mode?: string, markers?: object|null, profile?: object|null}} [options]
- *   `markers` (claim/fact/result annotations resolved against the workspace) and `profile` (the
- *   active author voice profile) are the writing pipeline's inputs; without them the three
- *   scores that need the evidence graph or a voice profile are null.
+ *   `markers` (the count summary of domain/gates/markers.js: the claim, fact and result
+ *   annotations resolved against the workspace) and `profile` (the active author voice profile)
+ *   are the writing pipeline's inputs; without them the three scores that need the evidence
+ *   graph or a voice profile are null.
  * @returns {{observations: object[], scores: object, formulas: object, aggregate: number|null,
  *   lang: string|null, stats: object}}
  */
@@ -386,6 +403,7 @@ export function lint(text, { lang = 'en', mode = 'full', markers = null, profile
         paragraph,
         spans,
         observations,
+        table.softEmpty ?? [],
       );
     }
     unsupportedIntensifiers(paragraph, spans, table, observations);
@@ -394,7 +412,11 @@ export function lint(text, { lang = 'en', mode = 'full', markers = null, profile
   }
 
   if (mode === 'ruthless') {
-    for (const item of observations) item.severity = 'block';
+    // Only a warning escalates: an `info` observation is a note, and ruthless mode sharpens
+    // what PhDude is sure about rather than promoting what it is not.
+    for (const item of observations) {
+      if (item.severity === 'warn') item.severity = 'block';
+    }
   }
 
   if (!table) {
@@ -416,7 +438,7 @@ export function lint(text, { lang = 'en', mode = 'full', markers = null, profile
   );
 
   const measurements = stats(source, lang);
-  const scores = computeScores(observations, measurements);
+  const scores = computeScores(observations, measurements, markers);
 
   return {
     observations,

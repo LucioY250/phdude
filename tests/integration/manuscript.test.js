@@ -144,7 +144,13 @@ test('submit writes the section, its front matter, the hash, the report and one 
   assert.equal(report.section, 'introduction');
   assert.equal(report.hash, sectionHash(body));
   assert.equal(report.blocks, 0);
-  assert.deepEqual(report.gates, [{ gate: 'gate-citations', findings: 0, blocked: false }]);
+  assert.deepEqual(
+    report.gates.map((g) => g.gate),
+    ['gate-citations', 'gate-evidence', 'gate-prose', 'gate-voice', 'gate-profile'],
+    'every registered gate ran; gate-meaning only runs on a revision',
+  );
+  assert.ok(report.gates.every((g) => !g.blocked));
+  assert.equal(typeof report.scores.specificity, 'number');
 
   const events = await deps.store.readEvents();
   assert.equal(events.filter((e) => e.op === 'manuscript').length, 2, 'init, then one submit');

@@ -143,8 +143,16 @@ export const COMMAND_ROWS = [
     'Research gaps: questions, claims, sources, artifacts, and conflicts needing attention.',
   ],
   [
-    'prose --file <path>',
-    'Academic Prose Quality report over a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
+    'prose <section> | --file <path>',
+    'Academic Prose Quality report over a manuscript section or a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
+  ],
+  [
+    'write <section>',
+    'Assemble the bounded writing context for a section and print the draft contract. It writes cache, never prose.',
+  ],
+  [
+    'deslop <section>',
+    'The revision contract for a section, or a revision run through every gate; the meaning gate refuses a revision that loses a claim, a citation, a number or a negation.',
   ],
   [
     'manuscript init|list|show|status|submit|approve|reopen',

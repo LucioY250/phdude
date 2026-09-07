@@ -66,9 +66,11 @@ it.
 
 ## How to write a section
 
-1. Read the writing context the CLI assembled: it carries the section's claims with their
-   states, the strongest evidence behind each, the citation keys available, the writing policy
-   and the voice profile.
+Follow `[[write]]` for the drafting loop. In short:
+
+1. Run `phdude write <section>` and read the context it assembled: the section's claims with
+   their states, the strongest evidence behind each, the citation keys available, the writing
+   policy and the voice profile.
 2. Write Markdown for that section only.
 3. Cite as `[@bibkey]` or `[@SRC-<id>]`; never invent a key, and never cite a dismissed
    candidate.
@@ -81,6 +83,7 @@ it.
 ## Checking prose
 
 ```
+phdude prose introduction
 phdude prose --file draft.md
 phdude prose --file draft.md --lang es --json
 ```
@@ -92,22 +95,38 @@ one set of rules.
 
 Three sub-scores - Evidence Alignment, Epistemic Precision and Author Voice - print as
 `n/a (needs manuscript context)` for a bare text file. They are computed against the evidence
-graph and the active voice profile, which only a manuscript section has.
+graph and the active voice profile, which only a manuscript section has. On a section, Evidence
+Alignment and Epistemic Precision are real numbers and the section's report records them.
 
 Options that name a detector or a humanizer (`detector`, `humanize`, `humanize-to`,
 `detector-target`) are refused with a policy error, whatever command they are written for.
 
 ## Revising
 
+```
+phdude deslop introduction                          # what to change, and what not to
+phdude deslop introduction --file revised.md        # the revision, through every gate
+```
+
 Revise the sentence the observation names, not the paragraph around it, and not the section.
 A revision must preserve every claim, citation, number and negation - the meaning-preservation
 check blocks a revision that drops or flips one. Losing a hedge is losing a claim: "may reduce"
 and "reduces" are different findings.
 
+A clean revision is recorded as `revised`; a blocked one writes nothing. `--allow-additions` is
+the researcher's opt-in for a revision that genuinely adds a claim or a citation - never
+something to reach for to get past a block.
+
 ## References
 
 Load one only when the task needs it:
 
+- `references/academic-style.md` - what separates academic prose from prose that sounds
+  academic: one claim per sentence, specificity as a number or a name, connectives that mark
+  real turns.
 - `references/ai-writing-patterns.md` - the patterns the lint detects, per language, with what
   to write instead.
 - `references/epistemic-language.md` - which verb a claim's evidence strength allows.
+- `references/examples.md` - before-and-after pairs, including a revision that would be blocked
+  and the one that passes.
+- `references/voice-matching.md` - what an author profile measures, and what matching it means.
