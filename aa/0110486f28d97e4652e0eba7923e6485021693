@@ -1,0 +1,67 @@
+README.md
+  s_946fc7502759d8::t_90a427555208e4 173,625
+commands/data.md
+  s_946fc7502759d8::t_35506bc4b9b260 1-24
+docs/cli.md
+  s_946fc7502759d8::t_ff61b69197526e 663-714
+docs/workspace.md
+  s_946fc7502759d8::t_9fce7c2269d9e4 35-36
+schemas/common.json
+  s_946fc7502759d8::t_4c79559541b76b 7
+schemas/dataset.json
+  s_946fc7502759d8::t_ee1a6a80b50e0c 1-50
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_fd1ca8f55108e5 145-149
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_8258151b927151 93
+src/adapters/cli/commands/data.js
+  s_946fc7502759d8::t_3c94694a137fcb 1-143
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_5be1d34bfa79c5 32-34
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_959f5852770cf1 7,22,54,131-132
+src/adapters/documents/index.js
+  s_946fc7502759d8::t_c6e95d3be73efc 42-95
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_0fa485e49fc9c4 17
+src/application/data.js
+  s_946fc7502759d8::t_1732bcaedaa826 1-149
+src/domain/datasets.js
+  s_946fc7502759d8::t_b7a79e13f2e490 1-131
+src/domain/entities.js
+  s_946fc7502759d8::t_28c659e9011414 2,570-619
+src/domain/ids.js
+  s_946fc7502759d8::t_f2a9577b42fd1b 15,25-31
+src/schemas/index.js
+  s_946fc7502759d8::t_ab9d97052eb772 29
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_bcf4c2f97c558b 1923-2008
+tests/fixtures/objects/valid/dataset.1.json
+  s_946fc7502759d8::t_6fd4c11ef86c85 1-29
+tests/integration/data.test.js
+  s_946fc7502759d8::t_ead1039d89ff2c 1-294
+tests/unit/documents/parse-table.test.js
+  s_946fc7502759d8::t_3731a5470c0020 1-60
+tests/unit/domain/datasets.test.js
+  s_946fc7502759d8::t_2a3990bc93a5ef 1-183
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_f3ed94e324b0cb 13,441-490
+tests/unit/domain/ids.test.js
+  s_946fc7502759d8::t_c7f3a9621d2c1f 3,38,40-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "aa0110486f28d97e4652e0eba7923e6485021693",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
