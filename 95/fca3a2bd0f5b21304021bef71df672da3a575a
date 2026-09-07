@@ -1,0 +1,81 @@
+src/application/init.js
+  s_946fc7502759d8::t_f0f409f0c611e1 31
+tests/fixtures/objects/valid/section-report.1.json
+  s_946fc7502759d8::t_5e1282b15c0d5d 1-11
+src/domain/gates/index.js
+  s_946fc7502759d8::t_fa42415b8330db 1-28
+src/domain/manuscript.js
+  s_946fc7502759d8::t_457c2659fd2918 1-152
+tests/unit/domain/gates/citations.test.js
+  s_946fc7502759d8::t_e820ac80dbb049 1-99
+tests/integration/manuscript.test.js
+  s_946fc7502759d8::t_2b9aa441672e62 344-352,356-359,361-365,368-372
+  s_946fc7502759d8::t_35e18b36ef07c4 1-343,353-355,360,366-367,373-384
+  s_946fc7502759d8::t_c41cf0f2340999 385-407
+commands/manuscript.md
+  s_946fc7502759d8::t_68188567a48efc 1-32
+src/domain/gates/citations.js
+  s_946fc7502759d8::t_54effce28607a9 1-63
+tests/unit/domain/manuscript.test.js
+  s_946fc7502759d8::t_7b9df9818489bc 1-85,87-111
+  s_946fc7502759d8::t_26cab3bdb58326 86
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_c9d421007d2811 24-28
+  s_946fc7502759d8::t_a2dceb003156bb 2
+  s_946fc7502759d8::t_eaefb1b093b564 166-225
+schemas/section-report.json
+  s_946fc7502759d8::t_dfa85a221dafed 1-30
+  s_946fc7502759d8::t_68e7af79ad36d8 31-40
+schemas/manuscript.json
+  s_946fc7502759d8::t_588f6e29fb783c 1-51
+src/application/manuscript.js
+  s_946fc7502759d8::t_c30eb360269808 1-397
+src/adapters/cli/commands/manuscript.js
+  s_946fc7502759d8::t_06db9f63adae84 1-134
+src/schemas/index.js
+  s_946fc7502759d8::t_a8575bda81f28e 31-32
+tests/fixtures/objects/valid/manuscript.1.json
+  s_946fc7502759d8::t_3028ac2451f898 1-31
+README.md
+  s_946fc7502759d8::t_29c5d1b3ce4cd5 174,447
+docs/cli.md
+  s_946fc7502759d8::t_f72e1c0bffec9f 663-720
+docs/workspace.md
+  s_946fc7502759d8::t_53294753168575 260-308
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_2860acb6a5227d 56-58,65-68
+schemas/decision.json
+  s_946fc7502759d8::t_ea7385be8c0d9c 15-23
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_bd08b421d65c4c 56-58,65-68
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_fe6f4e47649b3b 145-148
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_9afa53a6507828 77-83,271-273
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_67e494596a79c5 32-37
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_e3e73121520238 31,57
+src/application/decide.js
+  s_946fc7502759d8::t_b25977ed3ce43d 4,8-10,12-24
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_be3ed04ddfdacf 1445-1569
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_b9875c74e8d782 121-123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "95fca3a2bd0f5b21304021bef71df672da3a575a",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
