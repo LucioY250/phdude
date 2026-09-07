@@ -1,0 +1,184 @@
+examples/generic-thesis/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_a667bd622f2270 26-42
+examples/generic-thesis/research/searches/SEARCH-59780ad3c4.yaml
+  s_946fc7502759d8::t_bf4a6dc285950a 1-26
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_63dbdb297a1d5a 445-519
+  s_946fc7502759d8::t_28d94b5e29ba4a 7,21-22,24-25,30-32,42-43,380,413
+  s_946fc7502759d8::t_59b4e05c384922 33-41
+src/application/research.js
+  s_946fc7502759d8::t_95999f95f4c237 187-191
+  s_946fc7502759d8::t_3f3795d39af890 231,244-246,249,251-257,259
+  s_946fc7502759d8::t_ddb69ee225b9d4 355-538,540-562
+  s_946fc7502759d8::t_59b4e05c384922 127-128,539
+  s_946fc7502759d8::t_7864d9416a62a7 2-10,12,14,22-43
+  s_946fc7502759d8::t_e3179bc5b63ee8 121-126,129-142,144-158
+  s_946fc7502759d8::t_7e0cacd81eaed6 143,250
+  s_946fc7502759d8::t_c8aab7ca6af20a 44
+src/adapters/cli/commands/freshness.js
+  s_946fc7502759d8::t_5d75647a2753ff 1-7
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_a667bd622f2270 55-74,120-132
+  s_946fc7502759d8::t_33a443d22a4e68 133
+docs/workspace.md
+  s_946fc7502759d8::t_a917e9dc206423 97,137-171,243-245
+  s_946fc7502759d8::t_857d2cc4655b3b 246
+src/domain/candidates.js
+  s_946fc7502759d8::t_581a6bb698d607 18-41,45-46
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_bf4a6dc285950a 31
+src/domain/gaps.js
+  s_946fc7502759d8::t_d2d0ef15af6627 6-7,58-91,248-250,258
+tests/golden/gaps.test.js
+  s_946fc7502759d8::t_3744ce363b1faf 12-14,19,35,44,48
+commands/freshness.md
+  s_946fc7502759d8::t_89be1105944757 1-21
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_8d3895f7194b80 1231-1278,1280-1296,1305-1337,1342-1353,1361-1371,1376-1378
+  s_946fc7502759d8::t_59b4e05c384922 1279,1297-1304,1338-1341,1372-1375
+  s_946fc7502759d8::t_3b2603f261cfcb 1354-1360
+src/adapters/cli/commands/research-fresh.js
+  s_946fc7502759d8::t_5d75647a2753ff 1-12,19-34
+  s_946fc7502759d8::t_b4c33f85854fc4 13-18
+commands/research-fresh.md
+  s_946fc7502759d8::t_89be1105944757 1-26
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_5cdf3f008e82ca 55-74,120-132
+  s_946fc7502759d8::t_f85a50d6356efe 133
+.prettierignore
+  s_946fc7502759d8::t_04036f3c3b315e 2-5
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_1ff7ba23877da0 20-21,23,25-27
+  s_946fc7502759d8::t_59b4e05c384922 28
+src/application/edit.js
+  s_946fc7502759d8::t_5e7a99302e09f7 1-24,26-117,119-134,136-156
+  s_946fc7502759d8::t_083ffee6ad476c 118,135
+  s_946fc7502759d8::t_8c3f10a78d844e 25
+src/application/freshness.js
+  s_946fc7502759d8::t_b9bba109f7e0fa 1-30
+src/adapters/cli/commands/gaps.js
+  s_946fc7502759d8::t_caa77c6c069765 5
+scripts/make-example.mjs
+  s_946fc7502759d8::t_bf4a6dc285950a 17-19,26-29,108-182,405
+  s_946fc7502759d8::t_b5bea042d93964 406
+tests/golden/freshness.test.js
+  s_946fc7502759d8::t_3744ce363b1faf 1-41
+tests/golden/next.test.js
+  s_946fc7502759d8::t_3744ce363b1faf 12-14,19,33
+schemas/source.json
+  s_946fc7502759d8::t_fadf7b5be5bfdf 43-44
+src/application/status.js
+  s_946fc7502759d8::t_5f3cd94e0adfd0 4,27-29,31-32,41-47,72-80
+commands/research.md
+  s_946fc7502759d8::t_1ad4d5b5e88bba 17-18,28-32
+src/adapters/cli/commands/edit.js
+  s_946fc7502759d8::t_5d75647a2753ff 1-40
+tests/unit/domain/freshness.test.js
+  s_946fc7502759d8::t_39f85ce86e848d 1-2,9-100,102-114,122-150,176
+  s_946fc7502759d8::t_5379565999e170 3-8,151-175
+  s_946fc7502759d8::t_59b4e05c384922 101,115-121
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_5cdf3f008e82ca 94-104
+tests/golden/expected/gaps.txt
+  s_946fc7502759d8::t_3744ce363b1faf 18,25-30,38,42-44
+src/application/gaps.js
+  s_946fc7502759d8::t_5f3cd94e0adfd0 6,9-10
+src/domain/freshness.js
+  s_946fc7502759d8::t_59b4e05c384922 35-38
+  s_946fc7502759d8::t_732d7441841b4e 54-71
+  s_946fc7502759d8::t_dbccbae64e80ab 1-34,39-53,72-113
+src/domain/next.js
+  s_946fc7502759d8::t_c5e87f9f68aa1a 335-336
+  s_946fc7502759d8::t_59b4e05c384922 232
+  s_946fc7502759d8::t_0f112a60bbd014 3,5,9
+  s_946fc7502759d8::t_43690324e20d1e 212-231,233-265
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_14171fc2de8dd5 23-24,38,49-50,63,69
+src/adapters/cli/commands/next.js
+  s_946fc7502759d8::t_caa77c6c069765 5
+skills/next/SKILL.md
+  s_946fc7502759d8::t_dbf7451de4bae1 26-42
+tests/golden/status.test.js
+  s_946fc7502759d8::t_3744ce363b1faf 12-14,19
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_1a4cbb61702568 64-71,74-75,248-249
+src/adapters/cli/commands/status.js
+  s_946fc7502759d8::t_caa77c6c069765 5
+README.md
+  s_946fc7502759d8::t_b1d7d07c651d1a 178,347-350
+  s_946fc7502759d8::t_72ff6cad807efb 57-60
+skills/literature/SKILL.md
+  s_946fc7502759d8::t_151a9bc6b9dd5c 99,101-125
+  s_946fc7502759d8::t_dbf7451de4bae1 126-132
+commands/edit.md
+  s_946fc7502759d8::t_89be1105944757 1-25
+tests/integration/edit.test.js
+  s_946fc7502759d8::t_59b4e05c384922 124-131,155-162,195-202
+  s_946fc7502759d8::t_4a130d05c377b5 1-123,132-154,163-194,203-211
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_3744ce363b1faf 23-27,41
+tests/golden/expected/next.txt
+  s_946fc7502759d8::t_3744ce363b1faf 18-21
+tests/golden/expected/freshness.txt
+  s_946fc7502759d8::t_3744ce363b1faf 1-12
+tests/unit/domain/gaps.test.js
+  s_946fc7502759d8::t_1431052fbe003f 8,135-146,157,159-160,385-451,456-457
+  s_946fc7502759d8::t_59b4e05c384922 452-455
+tests/integration/research.test.js
+  s_946fc7502759d8::t_e270c9e1d25983 422-423,663
+  s_946fc7502759d8::t_59b4e05c384922 495-502
+  s_946fc7502759d8::t_8bd36dbe664c9b 394-421,424-494,503-662,664-681
+tests/integration/freshness.test.js
+  s_946fc7502759d8::t_6ae8d273efabc7 1-85,87-171
+  s_946fc7502759d8::t_59b4e05c384922 86
+examples/generic-thesis/knowledge/candidates/CAND-25723d177d.yaml
+  s_946fc7502759d8::t_626d4959901eb8 13
+  s_946fc7502759d8::t_bf4a6dc285950a 1-12,14-34
+src/application/snapshot.js
+  s_946fc7502759d8::t_90ee81cb722313 1,3,6-7,18-19,25-26,29,63-64
+skills/research/SKILL.md
+  s_946fc7502759d8::t_dbf7451de4bae1 16-18
+  s_946fc7502759d8::t_151a9bc6b9dd5c 99-150
+examples/generic-thesis/knowledge/candidates/CAND-9574a4d19b.yaml
+  s_946fc7502759d8::t_bf4a6dc285950a 1-33
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_3b70ece726dabc 125,128-136,138-139
+  s_946fc7502759d8::t_59b4e05c384922 137
+docs/cli.md
+  s_946fc7502759d8::t_8c3f10a78d844e 550
+  s_946fc7502759d8::t_e161b4606328f9 129-136,149-154,614-617
+  s_946fc7502759d8::t_167b0098ccecd2 375,382-383,406-408,443-549,551-556,604-605
+  s_946fc7502759d8::t_730856599db1ec 706-707
+  s_946fc7502759d8::t_824dc1d484e864 618
+src/application/next.js
+  s_946fc7502759d8::t_5f3cd94e0adfd0 6,9-10
+examples/generic-thesis/.phdude/skills/literature/SKILL.md
+  s_946fc7502759d8::t_a667bd622f2270 99,101-132
+src/domain/entities.js
+  s_946fc7502759d8::t_10342ac1379d7a 260-261
+  s_946fc7502759d8::t_8ad0422f925b5b 213-214,233-234
+src/adapters/cli/commands/research.js
+  s_946fc7502759d8::t_60302e4f23ad5c 33-37,72-107
+  s_946fc7502759d8::t_58e28b8926e45b 108
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_59b4e05c384922 61-63,65-67
+  s_946fc7502759d8::t_50c03d333bfa8d 59-60,64,68-69,238-264,266-267,269-279,282
+  s_946fc7502759d8::t_b4c33f85854fc4 265,268
+  s_946fc7502759d8::t_1745fd1581dcbf 280-281,283
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "4aefe8f5c2ef2e119f95949d4bc92f6dae5192f9",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
