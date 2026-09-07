@@ -1,0 +1,39 @@
+examples/generic-thesis/.phdude/skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_5b57dedbbc5fb3 25-26
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_0c35ef989abe41 57-62,100-106
+  s_946fc7502759d8::t_37bcaa7b887f2a 107
+tests/unit/skills.test.js
+  s_946fc7502759d8::t_8ea02d514ef162 8,54-125
+  s_946fc7502759d8::t_5b57dedbbc5fb3 126-129
+  s_946fc7502759d8::t_cd2be71d2ba94e 130
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_5b57dedbbc5fb3 57-62,100-106
+  s_946fc7502759d8::t_fe2b8f6e5c01e3 107
+skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_f99cb2a223821f 107-120,128
+skills/next/SKILL.md
+  s_946fc7502759d8::t_f99cb2a223821f 26-31
+examples/generic-thesis/.phdude/skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_5b57dedbbc5fb3 107-120,128
+skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_8ea02d514ef162 25-26
+examples/generic-thesis/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_5b57dedbbc5fb3 26-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "d441c2aba3786b400100a8502ac78d48e0c8d3df",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
