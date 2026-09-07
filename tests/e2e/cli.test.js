@@ -1840,3 +1840,83 @@ test('e2e: write, submit, deslop and prose over one section', async (t) => {
     'one event per mutation, and none for write, deslop --no-file or prose',
   );
 });
+
+test('e2e: authors add, learn (paths relative to cwd), consensus', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-authors-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Author voice profiles', '--no-git']);
+
+  assert.deepEqual(await runJson(ws, ['authors', 'list']), []);
+
+  const addFields = {
+    id: 'researcher-a',
+    language: 'en',
+    tone: { academic: true, assertiveness: 'moderate', first_person: 'sparing' },
+    sentences: { length: 'varied', openings: 'varied' },
+    paragraphs: { density: 'medium' },
+    transitions: 'minimal',
+    terminology: { preserve: ['decision process'], avoid: ['leverage'] },
+  };
+  const added = await runJson(ws, ['authors', 'add', '--json', JSON.stringify(addFields)]);
+  assert.equal(added.id, 'researcher-a');
+  assert.ok(await exists(join(ws, 'authors', 'researcher-a.yaml')));
+
+  await run(ws, ['authors', 'add', '--json', JSON.stringify({ ...addFields, id: 'researcher-b' })]);
+
+  // `learn`'s paths are relative to the CLI's working directory, not the workspace, so a
+  // sample living entirely outside the workspace is still readable, and is recorded as an
+  // absolute path since it has no path relative to the workspace.
+  const outsideDir = await mkdtemp(join(tmpdir(), 'phdude-e2e-authors-sample-'));
+  t.after(() => rm(outsideDir, { recursive: true, force: true }));
+  const samplePath = join(outsideDir, 'sample-a.md');
+  await writeFile(
+    samplePath,
+    'We surveyed 312 undergraduate students. However, adoption varies across recruitment channels.',
+  );
+
+  const learned = await runJson(ws, [
+    'authors',
+    'learn',
+    'researcher-a',
+    '--from',
+    samplePath,
+    '--approved',
+  ]);
+  assert.equal(learned.learned.sample_count, 1);
+  assert.equal(learned.samples.length, 1);
+  assert.equal(learned.samples[0].path, samplePath);
+  assert.equal(learned.samples[0].approved, true);
+
+  const shown = await runJson(ws, ['authors', 'show', 'researcher-a']);
+  assert.deepEqual(shown, learned);
+
+  const list = await runJson(ws, ['authors', 'list']);
+  assert.deepEqual(
+    list.map((p) => p.id),
+    ['researcher-a', 'researcher-b'],
+  );
+
+  const consensusResult = await runJson(ws, ['authors', 'consensus']);
+  assert.equal(consensusResult.changed, true);
+  assert.equal(consensusResult.decision.title, 'Update project-consensus voice');
+  assert.ok(await exists(join(ws, 'authors', 'project-consensus.yaml')));
+
+  const again = await runJson(ws, ['authors', 'consensus']);
+  assert.equal(again.changed, false);
+  assert.equal(again.decision, null);
+
+  const missingFrom = await phdude(ws, ['authors', 'learn', 'researcher-a', '--json', ...ACTOR]);
+  assert.equal(missingFrom.code, 1);
+  assert.match(JSON.parse(missingFrom.stderr).error.message, /--from/);
+
+  const badId = await phdude(ws, [
+    'authors',
+    'add',
+    '--json',
+    JSON.stringify({ ...addFields, id: 'Not_Valid' }),
+    '--json',
+    ...ACTOR,
+  ]);
+  assert.equal(badId.code, 2);
+});

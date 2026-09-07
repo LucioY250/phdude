@@ -2,7 +2,7 @@
 section: introduction
 status: draft
 hash: 036123f10393fa6dcb16e59cf3bed201c142f6beb62e33a207bf7cf6d6884eb9
-updated: 2026-09-01T00:01:04.000Z
+updated: 2026-09-01T00:01:07.000Z
 ---
 
 Undergraduates report using note-taking applications daily, and the pattern holds across

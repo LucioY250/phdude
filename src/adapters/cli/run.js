@@ -16,6 +16,7 @@ import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
 import { printJson } from './output.js';
 import add from './commands/add.js';
+import authors from './commands/authors.js';
 import bootstrap from './commands/bootstrap.js';
 import cite from './commands/cite.js';
 import decide from './commands/decide.js';
@@ -46,6 +47,7 @@ const { version } = createRequire(import.meta.url)('../../../package.json');
 
 const COMMANDS = {
   add,
+  authors,
   bootstrap,
   cite,
   decide,

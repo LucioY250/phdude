@@ -1,0 +1,52 @@
+schema: phdude.author-profile
+version: 1
+id: researcher-a
+name: Researcher A
+language: en
+tone:
+  academic: true
+  assertiveness: moderate
+  first_person: sparing
+sentences:
+  length: varied
+  openings: varied
+paragraphs:
+  density: medium
+transitions: minimal
+terminology:
+  preserve:
+    - note-taking application
+    - recruitment channel
+  avoid:
+    - leverage
+    - robust
+    - cutting-edge
+samples:
+  - path: authors/samples/researcher-a/intro-approved.md
+    approved: true
+learned:
+  sentence_length_mean: 27.125
+  sentence_length_sd: 9.993
+  opening_diversity: 0.875
+  transition_rate: 0
+  first_person_rate: 0.005
+  hedge_rate: 0.009
+  paragraph_density: 2.667
+  preserved_terms:
+    - channel
+    - recruitment
+    - adoption
+    - rather
+    - recruited
+    - survey
+    - independently
+    - pattern
+    - reported
+    - samples
+    - sampling
+    - taking
+    - whether
+    - account
+    - additional
+  sample_count: 1
+  learned_at: 2026-09-01T00:01:02.000Z

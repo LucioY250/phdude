@@ -20,7 +20,10 @@ my-research/
 │   ├── skills/<name>/SKILL.md    # installed agent skills (PhDude-managed)
 │   ├── events.jsonl              # append-only audit log (committed)
 │   └── cache/                    # extracted text, gitignored and disposable
-├── authors/                      # per-researcher voice profiles (populated in v0.4)
+├── authors/                      # per-researcher voice profiles (phdude authors)
+│   ├── <id>.yaml                 # schema phdude.author-profile v1
+│   ├── project-consensus.yaml    # written by `phdude authors consensus`
+│   └── samples/<id>/*.md         # approved writing samples `learn` reads from
 ├── sources/                      # raw materials you drop in
 ├── knowledge/
 │   ├── artifacts/  ART-*.yaml    # one per distinct file hash
@@ -169,6 +172,32 @@ ext:
 from a provider, not from a document in `sources/`. The candidate moves to `accepted` and
 records `accepted_as`. If the workspace already records that Source — the same normalized title
 and year — the candidate is linked to it and the existing record is left exactly as it is.
+
+## Author voice profiles
+
+`authors/<id>.yaml` (`schema: phdude.author-profile`, PRD §30) is not a canonical object: its
+id is a researcher-chosen slug (`researcher-a`, `^[a-z0-9-]+$`), not content-derived, so
+`phdude authors add` refuses to overwrite an existing one rather than treating a repeat as a
+no-op. It records style preferences by hand (`tone`, `sentences`, `paragraphs`, `transitions`,
+`terminology.{preserve,avoid}`) and, once `phdude authors learn <id> --from <path…>` has run
+against approved writing samples, a `learned` block of explicit descriptive statistics —
+sentence-length mean and SD, opening diversity, transition rate, first-person rate, hedge rate,
+paragraph density, and the most frequent preserved terminology. Every `learned` field is a
+plain number or word list, never an opaque embedding: a researcher can read what PhDude
+inferred and correct it by editing the profile or running `learn` again. Each sample path
+`learn` reads is appended to `samples[]`, relative to the workspace when it lives inside it and
+absolute otherwise, with `approved: true` only when `--approved` was passed.
+
+`phdude authors consensus` merges every profile except `project-consensus` itself: categorical
+fields (tone, sentence style, transitions, language) by majority vote — a tie keeps whichever
+profile was read first — `terminology.preserve` by union, `terminology.avoid` by intersection,
+and every numeric `learned` field by median across the profiles that have actually run `learn`.
+It writes `authors/project-consensus.yaml` on every run, and proposes a Decision titled "Update
+project-consensus voice" only when the merged content changed, naming the participating author
+ids so the researcher can see whose profiles moved the result. A manuscript names its active
+voice with `writing.primary_voice: <id>` or `writing.voice: project-consensus` (PRD §30.2); the
+Author Voice Check gate (v0.4's writing pipeline) compares a draft's own statistics against
+that profile's `learned` fields and reports deviations rather than silently rewriting.
 
 ## Knowledge states
 

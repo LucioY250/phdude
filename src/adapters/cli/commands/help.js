@@ -41,6 +41,8 @@ const LINES = [
   '                                    run the writing gates over a draft and record it',
   '             approve <s> --decision DEC-id | reopen <s>',
   '                                    approve a section, or reopen an approved one',
+  '  authors list|show|add|learn|consensus',
+  '                                    per-researcher voice profiles, learned from samples',
   '  packs list|detect|apply <name>    field and method packs',
   '  mode lite|full|ruthless|off       set the review mode',
   '  migrate [--dry-run] [--force]     upgrade the workspace to the current schema version',

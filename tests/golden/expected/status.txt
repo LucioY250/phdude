@@ -35,8 +35,8 @@ Pending decisions (1):
   - DEC-7aa12a7b78: Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta
 
 Recent events:
-  search: openalex: "note-taking app adoption undergraduates" → 2 results
-  research: accepted CAND-25723d177d as SRC-70ee4dce27
+  authors: author profile researcher-a added
+  authors: author profile researcher-a learned from 1 sample(s)
   decide: decision proposed
   manuscript: manuscript initialized (6 sections)
   manuscript: submitted introduction (draft)

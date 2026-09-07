@@ -851,6 +851,47 @@ it (PRD §3.4 — approved manuscript text is the researcher's).
 
 Every mutation records exactly one event: `manuscript initialized (N sections)`,
 `submitted <section> (<status>)`, `approved <section> (<DEC-id>)`, `reopened <section> (revised)`.
+### `phdude authors list|show <id>|add --json|learn <id> --from <path…>|consensus`
+
+```
+phdude authors list
+phdude authors show researcher-a
+phdude authors add --json '{
+  "id": "researcher-a",
+  "language": "en",
+  "tone": { "academic": true, "assertiveness": "moderate", "first_person": "sparing" },
+  "sentences": { "length": "varied", "openings": "varied" },
+  "paragraphs": { "density": "medium" },
+  "transitions": "minimal",
+  "terminology": { "preserve": ["decision process"], "avoid": ["leverage", "robust"] }
+}'
+phdude authors learn researcher-a --from chapter-2.md chapter-3.md --approved
+phdude authors consensus
+```
+
+Author voice profiles (PRD §30) live at `authors/<id>.yaml`, one per researcher. `add` writes a
+new profile; the id must be `^[a-z0-9-]+$` and refuses to overwrite an existing file (`id` is a
+researcher-chosen name, not content-derived like a knowledge object's). `project-consensus` is
+reserved and cannot be created with `add`.
+
+`learn` reads each `--from` path (relative to the current directory, not the workspace) and
+recomputes the profile's `learned` block from exactly those texts: sentence-length mean and SD,
+opening diversity, transition rate, first-person rate, hedge rate, paragraph density, and the
+15 most frequent non-stopword terms of 6+ letters. Every field is an explicit, human-readable
+number - never an opaque embedding (PRD §30). Learning again with more samples recomputes
+`learned` from the new set; it does not average against the old one. Each path is appended to
+`samples[]`, recorded relative to the workspace when it lives inside it and as an absolute path
+otherwise; `approved: true` is set only when `--approved` is passed, so a sample can be tracked
+before the researcher has actually signed off on it.
+
+`consensus` merges every profile except `project-consensus` itself: categorical fields (tone,
+sentence style, transitions, language) by majority vote, ties won by whichever profile was
+read first; `terminology.preserve` by union; `terminology.avoid` by intersection (a word every
+participant wants avoided); every numeric `learned` field by median across the profiles that
+have run `learn`. It always rewrites `authors/project-consensus.yaml`, and proposes a Decision
+titled "Update project-consensus voice" only when the merged content actually changed - running
+it again with nothing new to learn from is a no-op that proposes nothing. Never approve that
+Decision on the researcher's behalf.
 
 ### `phdude packs list|detect|apply <name>`
 

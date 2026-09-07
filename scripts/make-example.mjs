@@ -3,7 +3,7 @@
 // addEntity, decide.propose, promote) against a fixed clock, so the committed workspace is a
 // faithful, reproducible sample rather than hand-authored YAML.
 import { readFile, rm, utimes, writeFile } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FsStore } from '../src/adapters/store/fs-store.js';
 import { walk, read, realpath } from '../src/adapters/store/fs-walk.js';
@@ -14,6 +14,7 @@ import { ingest } from '../src/application/ingest.js';
 import { addEntity } from '../src/application/add.js';
 import { promote, propose } from '../src/application/decide.js';
 import { link } from '../src/application/link.js';
+import * as authors from '../src/application/authors.js';
 import * as research from '../src/application/research.js';
 import * as manuscript from '../src/application/manuscript.js';
 import { buildProviders } from '../src/adapters/search/index.js';
@@ -88,6 +89,42 @@ Loose notes taken while reading the three surveys. Nothing here has been turned 
 a fact or an evidence item yet.
 `,
 };
+
+const RESEARCHER_A_PROFILE = {
+  id: 'researcher-a',
+  name: 'Researcher A',
+  language: 'en',
+  tone: { academic: true, assertiveness: 'moderate', first_person: 'sparing' },
+  sentences: { length: 'varied', openings: 'varied' },
+  paragraphs: { density: 'medium' },
+  transitions: 'minimal',
+  terminology: {
+    preserve: ['note-taking application', 'recruitment channel'],
+    avoid: ['leverage', 'robust', 'cutting-edge'],
+  },
+};
+
+// An approved writing sample in researcher-a's voice, about the example's own topic, so
+// `phdude authors learn` has real prose to compute descriptive statistics from.
+const RESEARCHER_A_SAMPLE = `Across three independently recruited undergraduate cohorts, adoption of mobile \
+note-taking applications is remarkably consistent once recruitment channel is taken into \
+account. Participants drawn from a general mailing list reported somewhat higher daily use \
+than those recruited through a narrower campus social media group, and this pattern recurs \
+whether the comparison is limited to two samples or extended across all three.
+
+Stratified sampling across additional campuses corroborates the original estimate rather than \
+undermining it. The third survey, recruited independently of the first two, reproduces a \
+similar adoption rate under a sampling design meant specifically to test whether the earlier \
+finding generalized beyond a single recruitment channel. Prior survey work has typically \
+treated recruitment channel as incidental to note-taking application adoption; the pattern \
+observed here suggests that channel deserves more explicit attention in future study designs, \
+particularly where samples are compared across institutions rather than within one.
+
+We report these figures descriptively rather than as evidence of a causal mechanism. A survey \
+conducted at three points in time, with three distinct recruitment channels, cannot on its own \
+distinguish a channel effect from an unmeasured cohort difference. The sample sizes involved \
+here are modest, and the claim that follows from them is correspondingly narrow: recruitment \
+channel is associated with the reported adoption rate, not that it determines it.`;
 
 // DOS/FAT timestamps aside, a plain fixed mtime keeps ingest's artifact.mtime field (and hence
 // the written YAML) stable across regenerations, independent of when this script happens to run.
@@ -223,6 +260,22 @@ async function writeIntroduction(deps, claim) {
     },
   );
   await rm(path);
+}
+
+// One author profile, learned from one approved sample - `phdude authors learn`'s paths are
+// resolved relative to the current directory, so this mirrors the CLI's own resolution rather
+// than `store.readText` (workspace-root-relative).
+async function addAuthorProfile(deps, root) {
+  await authors.add(deps, RESEARCHER_A_PROFILE);
+
+  const samplePath = join('authors', 'samples', 'researcher-a', 'intro-approved.md');
+  await deps.store.writeTextAtomic(samplePath, RESEARCHER_A_SAMPLE);
+
+  await authors.learn(
+    { ...deps, cwd: root, readText: (p) => readFile(resolve(root, p), 'utf8') },
+    RESEARCHER_A_PROFILE.id,
+    { paths: [samplePath], approved: true },
+  );
 }
 
 export async function generate(root) {
@@ -450,6 +503,8 @@ export async function generate(root) {
   });
 
   await acceptOneCandidate(deps, await recordStaleSearch(deps, rq.id));
+
+  await addAuthorProfile(deps, root);
 
   await propose(deps, {
     title: 'Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta',
