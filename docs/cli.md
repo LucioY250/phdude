@@ -682,7 +682,7 @@ why an analysis that ran on the old bytes still names the dataset it actually re
 
 | Field | Where it comes from |
 |---|---|
-| `path` | The argument, workspace-relative. It must resolve inside `data/`, or the command exits 2. |
+| `path` | The argument, workspace-relative. It must resolve inside `data/`, or the command exits 2, and its real path must stay inside the workspace, or it exits 1: a symlink is not a way in. |
 | `hash`, `bytes` | The file itself. |
 | `format` | The extension: `csv`, `tsv`, `json`, `xlsx`, anything else `other`. |
 | `profile` | The parsed table (see below). |

@@ -89,6 +89,7 @@ export default async function dataCommand(ctx) {
         clock: deps.clock,
         actor: deps.actor,
         readBytes: deps.readBytes,
+        realpath: deps.fs.realpath,
         parseTable: deps.parseTable,
       },
       path,
