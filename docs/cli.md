@@ -434,6 +434,11 @@ Reads keep working on an out-of-date workspace and report `workspace needs migra
 as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
 `packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
 
+A workspace written by a *newer* PhDude is the same problem from the other end, and this build
+cannot migrate its way out of it. Reads warn with
+`workspace version 3 is newer than this PhDude (2)`; the same writes exit 1 with that message
+and the hint `upgrade phdude`.
+
 `--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
 undo for an in-place rewrite, `migrate` exits 3 on a dirty git tree unless `--force` is given; a
 dry run is a read and stays available either way. Steps are idempotent, so running `migrate` on
@@ -443,7 +448,8 @@ an up-to-date workspace prints `Workspace is up to date (2)` and records no even
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
-that version needs migrating, the cache entry count, the discoverable packs and the schema
+that version is `(current)`, `(needs migration → 2)` or `(newer than this phdude)`, the cache
+entry count, the discoverable packs and the schema
 versions, plus warnings for anything missing. It is diagnostic only and never writes.
 
 It also lists every discoverable skill (core, applied packs, and the workspace's own

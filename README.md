@@ -66,7 +66,8 @@ opinion about the literature it holds.
   and which artifacts it came from. `phdude knowledge trace` prints it, so "an agent extracted
   this from one PDF" and "you told me this" stop looking the same.
 - **Migrations.** `phdude.yaml` carries a `workspace_version`, and `phdude migrate` upgrades a
-  workspace written by an older PhDude. Reads warn, writes stop until it is run.
+  workspace written by an older PhDude. Reads warn, writes stop until it is run. A workspace
+  written by a *newer* PhDude warns and stops writes too, pointing at the upgrade instead.
 - **Skill contracts.** Every `SKILL.md` declares what it reads, what it writes and what it is
   permitted to do; the contract is validated on load, network access is refused unless the
   workspace policy allows it, and `phdude doctor` lists the lot.

@@ -43,6 +43,7 @@ writes stop at `assertUpToDate` in `src/application/guard.js` with that message 
 
 - Adding a step is adding a file; nothing else changes.
 - v0.2 keeps every object schema at `version: 1`; new fields are optional and backfilled by 0001.
-- A workspace newer than the installed PhDude fails the chain with a `VALIDATION` error rather
-  than being silently downgraded.
+- A workspace newer than the installed PhDude is refused rather than silently downgraded: the
+  migration chain fails with a `VALIDATION` error, and every other write stops at the guard with
+  a `USAGE` error hinting `upgrade phdude`. Reads warn, as they do for an older workspace.
 - Migrations can only use the `Store` port, so they cannot reach past the workspace.

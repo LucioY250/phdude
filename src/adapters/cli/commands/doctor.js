@@ -21,9 +21,11 @@ function render(report) {
 
   if (report.workspaceVersion !== null) {
     const note =
-      report.workspaceVersion >= report.workspaceVersionCurrent
-        ? '(current)'
-        : `(needs migration → ${report.workspaceVersionCurrent})`;
+      report.workspaceVersion > report.workspaceVersionCurrent
+        ? '(newer than this phdude)'
+        : report.workspaceVersion === report.workspaceVersionCurrent
+          ? '(current)'
+          : `(needs migration → ${report.workspaceVersionCurrent})`;
     lines.push(`workspace version: ${report.workspaceVersion} ${note}`);
   }
 

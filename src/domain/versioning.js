@@ -23,6 +23,17 @@ export function needsMigration(project) {
 }
 
 /**
+ * A workspace written by a newer PhDude carries fields this build does not know about, so
+ * writing into it would mix shapes exactly the way an un-migrated workspace does - the other
+ * end of the same problem, and unfixable from here.
+ * @param {object|null} project
+ * @returns {boolean}
+ */
+export function isNewerThanRuntime(project) {
+  return workspaceVersionOf(project) > CURRENT_WORKSPACE_VERSION;
+}
+
+/**
  * @param {{from: number, to: number}[]} steps - the discovered migration modules, any order
  * @param {number} from
  * @param {number} to

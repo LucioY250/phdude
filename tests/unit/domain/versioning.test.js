@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   CURRENT_WORKSPACE_VERSION,
+  isNewerThanRuntime,
   needsMigration,
   planChain,
   workspaceVersionOf,
@@ -29,6 +30,14 @@ test('needsMigration is true below the current version and false at or above it'
   assert.equal(needsMigration({ workspace_version: 1 }), true);
   assert.equal(needsMigration({ workspace_version: 2 }), false);
   assert.equal(needsMigration({ workspace_version: 3 }), false);
+});
+
+test('isNewerThanRuntime is true only above the current version', () => {
+  assert.equal(isNewerThanRuntime({ workspace_version: 3 }), true);
+  assert.equal(isNewerThanRuntime({ workspace_version: 2 }), false);
+  assert.equal(isNewerThanRuntime({ workspace_version: 1 }), false);
+  assert.equal(isNewerThanRuntime({}), false);
+  assert.equal(isNewerThanRuntime(null), false);
 });
 
 test('planChain returns the steps between two versions in order', () => {

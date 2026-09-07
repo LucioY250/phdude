@@ -199,3 +199,30 @@ test('reads still work on an un-migrated workspace and carry the migration warni
   const after = await status({ store: new FsStore(root) });
   assert.deepEqual(after.warnings, []);
 });
+
+async function newerFixture(t) {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-newer-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  await cp(FIXTURE, root, { recursive: true });
+  const store = new FsStore(root);
+  await store.writeProject({ ...(await store.readProject()), workspace_version: 3 });
+  return root;
+}
+
+test('a mutating use case refuses a workspace newer than the runtime', async (t) => {
+  const root = await newerFixture(t);
+
+  await assert.rejects(() => addEntity(deps(root), 'claim', { statement: 'From an old build.' }), {
+    code: 'USAGE',
+    message: 'workspace version 3 is newer than this PhDude (2)',
+    hint: 'upgrade phdude',
+  });
+});
+
+test('reads still work on a workspace newer than the runtime and carry the warning', async (t) => {
+  const root = await newerFixture(t);
+
+  const report = await status({ store: new FsStore(root) });
+  assert.equal(report.knowledge.byType.claim.total, 1);
+  assert.ok(report.warnings.includes('workspace version 3 is newer than this PhDude (2)'));
+});

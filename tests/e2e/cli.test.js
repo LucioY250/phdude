@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { appendFile, cp, mkdtemp, rm, stat, unlink, writeFile } from 'node:fs/promises';
+import { appendFile, cp, mkdtemp, readFile, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -544,6 +544,44 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
 
   const second = await run(ws, ['migrate']);
   assert.match(second.stdout, /Workspace is up to date \(2\)/);
+});
+
+test('e2e: a workspace newer than this phdude refuses writes and doctor says so', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-newer-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await run(ws, ['init', '--title', 'From the future', '--no-git']);
+
+  const config = join(ws, 'phdude.yaml');
+  await writeFile(
+    config,
+    (await readFile(config, 'utf8')).replace('workspace_version: 2', 'workspace_version: 3'),
+  );
+
+  const message = 'workspace version 3 is newer than this PhDude (2)';
+
+  // Reads keep working and say what is wrong, the same way an older workspace does.
+  const read = await runJson(ws, ['status']);
+  assert.ok(read.warnings.includes(message));
+
+  const refused = await phdude(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'Written by a build that is behind.' }),
+    ...ACTOR,
+  ]);
+  assert.equal(refused.code, 1);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'USAGE');
+  assert.equal(refusal.message, message);
+  assert.equal(refusal.hint, 'upgrade phdude');
+
+  const report = await runJson(ws, ['doctor']);
+  assert.equal(report.workspaceVersion, 3);
+  assert.ok(report.warnings.includes(message));
+
+  const text = await run(ws, ['doctor']);
+  assert.match(text.stdout, /workspace version: 3 \(newer than this phdude\)/);
 });
 
 test('e2e: methods, provenance and the trace line that reports them', async (t) => {
