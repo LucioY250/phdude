@@ -31,7 +31,8 @@
     "docs/extending.md",
     "docs/adr",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
