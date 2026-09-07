@@ -1,0 +1,24 @@
+examples/generic-thesis/manuscript/introduction.md
+  s_946fc7502759d8::t_50a3a25436d18c 3
+tests/integration/manuscript.test.js
+  s_946fc7502759d8::t_d8e37bdd90bf9e 250-273
+src/application/manuscript.js
+  s_946fc7502759d8::t_6269277954d4a7 70
+  s_946fc7502759d8::t_c3053da0511ab0 71-76,458,494
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "1e2d0b9d26d5c7394ae267fd9c754760537e140d",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
