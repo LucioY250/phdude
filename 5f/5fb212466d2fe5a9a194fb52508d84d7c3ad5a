@@ -1,0 +1,50 @@
+src/domain/next.js
+  s_946fc7502759d8::t_c54131e4011488 237-240,246-248
+  s_946fc7502759d8::t_f5fa58034e0b9a 5
+tests/integration/edit.test.js
+  s_946fc7502759d8::t_5040e0c0794529 212-234
+src/domain/policy.js
+  s_946fc7502759d8::t_e85b24581dcb44 5-7
+src/domain/gaps.js
+  s_946fc7502759d8::t_a03bbdd7b3a848 7
+  s_946fc7502759d8::t_06b4ebf9dbe318 81
+  s_946fc7502759d8::t_315979b4a12a6a 67-71,76,82
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_92fd69b7d43e6a 520-522,526-548,552-554
+  s_946fc7502759d8::t_078d22b981003d 523-525,549-551
+src/application/snapshot.js
+  s_946fc7502759d8::t_a557b0341ab51c 3
+  s_946fc7502759d8::t_f591ac8f76ce02 56,65-68
+tests/integration/research.test.js
+  s_946fc7502759d8::t_d7199188ced956 4,682-705,707-715,717-720,726-767
+  s_946fc7502759d8::t_1be6d9d2101985 706,716
+  s_946fc7502759d8::t_078d22b981003d 721-725
+src/application/research.js
+  s_946fc7502759d8::t_b65a3ccbe67bda 548-565
+src/application/edit.js
+  s_946fc7502759d8::t_2dafbbac2f533d 94
+  s_946fc7502759d8::t_2a39d79ebf7d1c 45
+  s_946fc7502759d8::t_a44814f5d26f2c 14
+tests/unit/domain/gaps.test.js
+  s_946fc7502759d8::t_10405a9e45bf33 458-459,461-477
+  s_946fc7502759d8::t_078d22b981003d 460
+tests/golden/expected/gaps.txt
+  s_946fc7502759d8::t_d6f46e3782baf7 18,36-41
+  s_946fc7502759d8::t_38ad269e81d9e5 32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "5f5fb212466d2fe5a9a194fb52508d84d7c3ad5a",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
