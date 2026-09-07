@@ -1,0 +1,100 @@
+tests/fixtures/objects/valid/skill.2.json
+  s_946fc7502759d8::t_f9210c80b7d48e 1-10
+tests/fixtures/scripts/sleep.mjs
+  s_946fc7502759d8::t_a296a4b3ed1da0 1-2
+migrations/0002-workspace-v3.mjs
+  s_946fc7502759d8::t_ea20250d8deadf 1-101
+tests/fixtures/workspaces/v0.2-minimal/research/questions/RQ-1.yaml
+  s_946fc7502759d8::t_bbf65bd6b50a4a 1-12
+examples/generic-thesis/phdude.yaml
+  s_946fc7502759d8::t_5f7a2cb12d18a4 3
+tests/unit/domain/versioning.test.js
+  s_946fc7502759d8::t_fd89f27529a6f8 13-14,31,33,37-38
+tests/integration/ingest.test.js
+  s_946fc7502759d8::t_6753c075860bb4 24
+  s_946fc7502759d8::t_52fd3c8f324d5b 268,301
+tests/fixtures/workspaces/v0.2-minimal/.phdude/events.jsonl
+  s_946fc7502759d8::t_bbf65bd6b50a4a 1
+tests/fixtures/scripts/hello.R
+  s_946fc7502759d8::t_242a321613bc5a 1-2
+tests/unit/domain/policy.test.js
+  s_946fc7502759d8::t_1896cbf0f74807 134-239
+  s_946fc7502759d8::t_953a9b218568a5 5,7-8,12
+schemas/skill.json
+  s_946fc7502759d8::t_1072ba6438ddc9 19
+src/application/init.js
+  s_946fc7502759d8::t_d209b978d4a8af 5,120-121
+  s_946fc7502759d8::t_4b5f2d603eed40 21
+  s_946fc7502759d8::t_4d8312f01edec0 29,31,33,105
+tests/unit/application/skills.test.js
+  s_946fc7502759d8::t_516c0a52ee6a50 48-51
+  s_946fc7502759d8::t_47b61d11701f4e 43-47,52-85,143,154,242-268,270,273-277,280
+  s_946fc7502759d8::t_1c7cb96dc22662 269
+  s_946fc7502759d8::t_7851955d3d0e97 271-272,278-279
+src/application/skills.js
+  s_946fc7502759d8::t_4eb660b1f1ee9a 6-26,28-31,34,37-42,46-48,53-54
+  s_946fc7502759d8::t_65645deceea9f8 109
+tests/fixtures/workspaces/v0.2-minimal/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_bbf65bd6b50a4a 1-15
+tests/fixtures/workspaces/v0.2-minimal/.gitignore
+  s_946fc7502759d8::t_bbf65bd6b50a4a 1-5
+tests/fixtures/objects/invalid/skill.2.json
+  s_946fc7502759d8::t_f9210c80b7d48e 1-10
+src/adapters/execution/local.js
+  s_946fc7502759d8::t_e0220f74f9c012 51-67,70-71,73-75
+  s_946fc7502759d8::t_7b63c55441be37 1-50,68-69,72,76-81
+tests/fixtures/scripts/echo.mjs
+  s_946fc7502759d8::t_a296a4b3ed1da0 1-7
+src/ports/analysis-runner.js
+  s_946fc7502759d8::t_0913fa2676d756 1-138
+tests/fixtures/workspaces/v0.2-minimal/knowledge/claims/CLAIM-a032970371.yaml
+  s_946fc7502759d8::t_6b4183034e5c0a 1-21
+src/domain/versioning.js
+  s_946fc7502759d8::t_fd89f27529a6f8 4-6
+tests/fixtures/workspaces/v0.2-minimal/phdude.yaml
+  s_946fc7502759d8::t_bbf65bd6b50a4a 1-11
+tests/integration/write.test.js
+  s_946fc7502759d8::t_099f94bf6520af 155
+examples/generic-thesis/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_5f7a2cb12d18a4 40-47,50
+tests/fixtures/workspaces/v0.2-minimal/knowledge/sources/SRC-b09f2dc9bc.yaml
+  s_946fc7502759d8::t_6b4183034e5c0a 1-15
+tests/fixtures/scripts/fail.mjs
+  s_946fc7502759d8::t_a296a4b3ed1da0 1-2
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_0447cec1378513 551
+  s_946fc7502759d8::t_099f94bf6520af 564,573,578,585,596,628,631,651,655
+tests/integration/migrate.test.js
+  s_946fc7502759d8::t_42caee80699291 238-259,268-339
+  s_946fc7502759d8::t_f84d273b0f2644 13,17-19,33,36,83,85,96,101,113,128,130,142,145,172,176,191,205,218,227,237
+  s_946fc7502759d8::t_9b2b2483360bed 92-95,260-267
+docs/adr/0009-execution-policy-and-results-contract.md
+  s_946fc7502759d8::t_bc4803313b698f 1-83
+tests/fixtures/workspaces/v0.2-minimal/knowledge/evidence/EVID-fc70a8ef30.yaml
+  s_946fc7502759d8::t_6b4183034e5c0a 1-16
+defaults/research-policy.yaml
+  s_946fc7502759d8::t_01aa5eb6d22f31 40-47,50
+tests/contracts/analysis-runner.test.js
+  s_946fc7502759d8::t_9d203e8bb46f48 1-40
+src/domain/policy.js
+  s_946fc7502759d8::t_36775e681aa2b5 52-110
+  s_946fc7502759d8::t_90d9a0c4967109 9-19
+tests/fixtures/scripts/hello.py
+  s_946fc7502759d8::t_242a321613bc5a 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "119b5cb84681663036885ac4308ee60c6a3e83c0",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
