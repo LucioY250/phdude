@@ -66,20 +66,25 @@ not attempt to work around that failure by editing files.
 ## Resolving a contradiction
 
 `phdude link CLAIM-a --contradicts CLAIM-b` (see `[[phdude-core]]`) moves both claims to
-`disputed` automatically — that step needs no Decision. Getting either claim back out of
-`disputed` does:
+`disputed` automatically — that step needs no Decision. A single Decision must never
+rehabilitate both sides of a dispute, so resolving one names exactly one survivor:
 
-1. Propose a Decision whose `change.resolves_contradiction` names both claim ids, e.g.
-   `--change '{"resolves_contradiction":["CLAIM-a","CLAIM-b"]}'` with `--affects CLAIM-a
-   CLAIM-b`, and a rationale that states which claim the evidence favors and why.
+1. Propose a Decision whose `change` carries both `resolves_contradiction` (the ids in the
+   pair) and `survivor` (which one wins), e.g. `--change
+   '{"resolves_contradiction":["CLAIM-a","CLAIM-b"],"survivor":"CLAIM-a"}'` with `--affects
+   CLAIM-a CLAIM-b`, and a rationale that states which claim the evidence favors and why.
 2. The researcher approves it, exactly as any other Decision (see Approve, above).
-3. Promote the surviving claim: `phdude promote CLAIM-a --to supported --decision DEC-x` (or
-   `--to canonical`). This fails with POLICY unless the approved Decision's
-   `resolves_contradiction` names this claim and the partner it contradicts.
-4. Reject the losing claim explicitly: `phdude promote CLAIM-b --to rejected` — this needs no
-   Decision, same as any other `disputed → rejected` move.
+3. Reject the losing claim(s) first: `phdude promote CLAIM-b --to rejected` — this needs no
+   Decision, same as any other `disputed → rejected` move. The survivor cannot be promoted
+   while a claim the Decision names is still `disputed`.
+4. Promote the survivor: `phdude promote CLAIM-a --to supported --decision DEC-x` (or
+   `--to canonical`). This fails with POLICY unless the id being promoted is exactly the
+   Decision's `survivor`, is in `affects`, and every other claim the Decision names that this
+   claim still contradicts is already `rejected`. Promoting the loser with the same Decision
+   is refused, naming the survivor instead of it.
 
-Promoting the survivor does not touch the loser automatically, and the `contradicts` entry is
-never removed — it stays on the survivor as a record that the dispute existed and how it was
-resolved. Never silently pick a side by promoting one claim and leaving the other `disputed`
-with no explanation.
+Never reorder steps 3 and 4 to promote a claim while its contradicting partner is still
+`disputed` — that is exactly what this gate prevents. Promoting the survivor does not touch
+any other claim automatically, and the `contradicts` entry is never removed — it stays on the
+survivor as a record that the dispute existed and how it was resolved. Never silently pick a
+side by promoting one claim and leaving the other `disputed` with no explanation.

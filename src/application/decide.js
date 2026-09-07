@@ -243,10 +243,12 @@ export async function promote({ store, clock, actor }, id, { to = 'canonical', d
   }
 
   // Leaving `disputed` for `supported`/`canonical` is resolving a contradiction, not an
-  // ordinary promotion: it needs a decision that names both claims in the pair, not the
-  // generic `affects` check below. `disputed` -> `rejected` needs no decision (PRD §3.5).
+  // ordinary promotion. A single decision must not rehabilitate both sides of a dispute: it
+  // names one `survivor`, and every other claim it lists that still contradicts this one must
+  // already be `rejected` before the survivor can be promoted. `disputed` -> `rejected` needs
+  // no decision (PRD §3.5).
   if (obj.state === 'disputed' && (to === 'supported' || to === 'canonical')) {
-    const hint = 'propose a decision with change.resolves_contradiction: [a, b]';
+    const hint = 'propose a decision with change.resolves_contradiction and change.survivor';
     if (!decision) {
       throw new PhdudeError(
         'POLICY',
@@ -262,19 +264,48 @@ export async function promote({ store, clock, actor }, id, { to = 'canonical', d
     if (decisionObj.status !== 'approved') {
       throw new PhdudeError('POLICY', `decision ${decision} is not approved`, hint, null);
     }
+
     const resolves = decisionObj.change?.resolves_contradiction;
+    const survivor = decisionObj.change?.survivor;
     const contradicts = obj.contradicts ?? [];
-    const resolvesThisPair =
+    // The decision must actually name an opponent this claim currently contradicts - a
+    // resolution that lists only `id` itself would vacuously pass every check below without
+    // ever addressing the dispute it claims to resolve.
+    const namesAnOpponent =
       Array.isArray(resolves) &&
-      resolves.includes(id) &&
       resolves.some((other) => other !== id && contradicts.includes(other));
-    if (!resolvesThisPair) {
+    const namesThisClaim = Array.isArray(resolves) && resolves.includes(id);
+    if (!namesThisClaim || !namesAnOpponent || typeof survivor !== 'string') {
       throw new PhdudeError(
         'POLICY',
         `decision ${decision} does not resolve ${id}'s contradiction`,
         hint,
         null,
       );
+    }
+    if (survivor !== id) {
+      throw new PhdudeError(
+        'POLICY',
+        `${decision} names ${survivor} as the survivor`,
+        `promote ${survivor} instead`,
+        null,
+      );
+    }
+    if (!decisionObj.affects.includes(id)) {
+      throw new PhdudeError('POLICY', `decision ${decision} does not affect ${id}`, hint, null);
+    }
+
+    const stillContested = resolves.filter((other) => other !== id && contradicts.includes(other));
+    for (const other of stillContested) {
+      const otherObj = await store.readEntity(other);
+      if (otherObj?.state !== 'rejected') {
+        throw new PhdudeError(
+          'POLICY',
+          `promoting the survivor ${id} requires ${other} to be rejected first`,
+          `promote ${other} --to rejected first, then promote the survivor`,
+          null,
+        );
+      }
     }
   } else if (to === 'canonical') {
     const hint = `propose and approve a decision that affects ${id}`;

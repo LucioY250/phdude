@@ -63,7 +63,8 @@ export function renderStatus(report) {
   }
   lines.push('');
 
-  lines.push(`Disputed claims (${report.disputedPairs.length} pairs):`);
+  const pairWord = report.disputedPairs.length === 1 ? 'pair' : 'pairs';
+  lines.push(`Disputed claims (${report.disputedPairs.length} ${pairWord}):`);
   if (report.disputedPairs.length === 0) {
     lines.push('  (none)');
   } else {

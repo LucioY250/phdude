@@ -127,12 +127,15 @@ all do; `rejected` and already-`disputed` claims are left alone). A `canonical` 
 disputed this way with no Decision required: surfacing a contradiction is proactive by design
 (PRD §3.3), unlike changing what a canonical claim says.
 
-`phdude status` lists disputed pairs while at least one side is still `disputed`. Resolving one
-takes an approved Decision whose `change.resolves_contradiction` names both claims in the
-pair; `phdude promote CLAIM-a --to supported --decision DEC-x` then moves the surviving claim
-on. The losing claim is not touched automatically - reject it explicitly with
-`phdude promote CLAIM-b --to rejected` (no Decision needed for that step). The `contradicts`
-entry itself is never removed; once resolved it stays as history of the dispute.
+`phdude status` lists disputed pairs while at least one side is still `disputed`. A single
+Decision must not rehabilitate both sides of a dispute, so resolving one names a survivor: an
+approved Decision whose `change.resolves_contradiction` names both claims in the pair and
+`change.survivor` names which one wins. The survivor cannot be promoted until every other claim
+the Decision names that it still contradicts is `rejected` - reject the loser first with
+`phdude promote CLAIM-b --to rejected` (no Decision needed for that step), then
+`phdude promote CLAIM-a --to supported --decision DEC-x` moves the survivor on. Promoting the
+loser with the same Decision is refused, naming the survivor instead. The `contradicts` entry
+itself is never removed; once resolved it stays as history of the dispute.
 
 ## Provenance and the audit trail
 

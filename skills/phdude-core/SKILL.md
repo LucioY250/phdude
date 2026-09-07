@@ -63,10 +63,12 @@ a typo".
 When two claims cannot both be true, record the contradiction rather than picking one:
 `phdude link CLAIM-a --contradicts CLAIM-b`. This moves both to `disputed` (a `canonical`
 claim included, no Decision required — surfacing a contradiction is proactive by design, PRD
-§3.3) and needs no researcher approval. Getting a claim back out of `disputed` does need an
-approved Decision naming both claims in `change.resolves_contradiction`; see `[[decisions]]`.
-Never promote one side of a live contradiction without that Decision, and never present a
-`disputed` claim as settled in either direction.
+§3.3) and needs no researcher approval. A single Decision must never rehabilitate both sides:
+getting a claim back out of `disputed` needs an approved Decision naming a `survivor` in
+`change.survivor`, and the loser must be rejected (`promote … --to rejected`, no Decision
+needed) before the survivor can be promoted; see `[[decisions]]`. Never promote one side of a
+live contradiction without that Decision, and never present a `disputed` claim as settled in
+either direction.
 
 Ids are derived from content, so `phdude add` cannot correct an object that already exists:
 re-adding it returns the original record unchanged. To attach evidence, a research question

@@ -67,6 +67,28 @@ test('link --contradicts: idempotent - already recorded means no write, no event
   assert.equal(await eventCount(deps), after, 'a no-op records no event');
 });
 
+test('link --contradicts: heals an asymmetric pair left by a partial write', async () => {
+  const { deps, claimA, claimB } = await fixture();
+
+  // Simulate the first attempt dying after writing A but before writing B.
+  await deps.store.writeEntity({ ...claimA, contradicts: [claimB.id], state: 'disputed' });
+  assert.ok(!(await deps.store.readEntity(claimB.id)).contradicts?.includes(claimA.id));
+
+  const before = await eventCount(deps);
+  const result = await link(deps, claimA.id, { contradicts: claimB.id });
+
+  assert.equal(result.linked, true);
+  const onDiskA = await deps.store.readEntity(claimA.id);
+  const onDiskB = await deps.store.readEntity(claimB.id);
+  assert.deepEqual(onDiskA.contradicts, [claimB.id]);
+  assert.equal(onDiskA.state, 'disputed');
+  assert.deepEqual(onDiskB.contradicts, [claimA.id]);
+  assert.equal(onDiskB.state, 'disputed');
+
+  const events = await deps.store.readEvents();
+  assert.equal(events.length, before + 1, 'the heal is a single event, not zero and not two');
+});
+
 test('link --contradicts: a claim cannot contradict itself', async () => {
   const { deps, claimA } = await fixture();
   await assert.rejects(link(deps, claimA.id, { contradicts: claimA.id }), (err) => {
@@ -174,29 +196,98 @@ test('promote: moving a disputed claim to supported requires a resolving decisio
   });
 });
 
-test('promote: a decision naming both claims in resolves_contradiction unblocks the survivor', async () => {
+async function resolvingDecision(deps, { survivor, loser, resolves = [survivor, loser] } = {}) {
+  const { obj: decision } = await propose(deps, {
+    title: 'Resolve the effect-direction contradiction',
+    rationale: 'The negative-effect claim used a flawed measure.',
+    affects: [survivor, loser].filter(Boolean),
+    change: { resolves_contradiction: resolves, survivor },
+  });
+  await approve(deps, decision.id, { by: 'tester' });
+  return decision;
+}
+
+test('promote: blocked while the loser is still disputed, even with a valid resolving decision', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  const decision = await resolvingDecision(deps, { survivor: claimA.id, loser: claimB.id });
+
+  await assert.rejects(
+    promote(deps, claimA.id, { to: 'supported', decision: decision.id }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'POLICY');
+      assert.match(err.message, new RegExp(claimB.id));
+      assert.match(err.hint, /promote .* --to rejected first/);
+      return true;
+    },
+  );
+});
+
+test('promote: a decision naming the wrong claim as survivor blocks promoting the loser', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  const decision = await resolvingDecision(deps, { survivor: claimA.id, loser: claimB.id });
+
+  await assert.rejects(
+    promote(deps, claimB.id, { to: 'supported', decision: decision.id }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'POLICY');
+      assert.match(err.message, new RegExp(`names ${claimA.id} as the survivor`));
+      return true;
+    },
+  );
+});
+
+test('promote: a decision without change.survivor resolves nothing', async () => {
   const { deps, claimA, claimB } = await fixture();
   await link(deps, claimA.id, { contradicts: claimB.id });
 
   const { obj: decision } = await propose(deps, {
-    title: 'Resolve the effect-direction contradiction',
-    rationale: 'The negative-effect claim used a flawed measure.',
+    title: 'Missing survivor field',
+    rationale: 'Forgot to name a survivor.',
     affects: [claimA.id, claimB.id],
     change: { resolves_contradiction: [claimA.id, claimB.id] },
   });
   await approve(deps, decision.id, { by: 'tester' });
 
-  const promoted = await promote(deps, claimA.id, { to: 'supported', decision: decision.id });
-  assert.equal(promoted.state, 'supported');
+  await assert.rejects(
+    promote(deps, claimA.id, { to: 'supported', decision: decision.id }),
+    (err) => {
+      assert.equal(err.code, 'POLICY');
+      assert.match(err.message, /does not resolve/);
+      return true;
+    },
+  );
+});
 
-  // The loser is untouched until explicitly rejected; the survivor's contradicts entry stays.
-  const loser = await deps.store.readEntity(claimB.id);
-  assert.equal(loser.state, 'disputed');
-  const survivor = await deps.store.readEntity(claimA.id);
-  assert.deepEqual(survivor.contradicts, [claimB.id]);
+test('promote: happy path - reject the loser, then the survivor promotes to supported', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  const decision = await resolvingDecision(deps, { survivor: claimA.id, loser: claimB.id });
 
   const rejectedLoser = await promote(deps, claimB.id, { to: 'rejected' });
   assert.equal(rejectedLoser.state, 'rejected');
+
+  const promoted = await promote(deps, claimA.id, { to: 'supported', decision: decision.id });
+  assert.equal(promoted.state, 'supported');
+
+  // The survivor's contradicts entry is kept as history; the loser is untouched otherwise.
+  const survivor = await deps.store.readEntity(claimA.id);
+  assert.deepEqual(survivor.contradicts, [claimB.id]);
+  const loser = await deps.store.readEntity(claimB.id);
+  assert.equal(loser.state, 'rejected');
+});
+
+test('promote: happy path - the survivor may also resolve to canonical', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  const decision = await resolvingDecision(deps, { survivor: claimA.id, loser: claimB.id });
+
+  await promote(deps, claimB.id, { to: 'rejected' });
+  const promoted = await promote(deps, claimA.id, { to: 'canonical', decision: decision.id });
+  assert.equal(promoted.state, 'canonical');
 });
 
 test('promote: a decision that does not name the contradicting partner is rejected', async () => {
@@ -207,7 +298,7 @@ test('promote: a decision that does not name the contradicting partner is reject
     title: 'Unrelated decision',
     rationale: 'Does not resolve the dispute.',
     affects: [claimA.id],
-    change: { resolves_contradiction: [claimA.id] },
+    change: { resolves_contradiction: [claimA.id], survivor: claimA.id },
   });
   await approve(deps, decision.id, { by: 'tester' });
 
@@ -215,6 +306,29 @@ test('promote: a decision that does not name the contradicting partner is reject
     promote(deps, claimA.id, { to: 'supported', decision: decision.id }),
     (err) => {
       assert.equal(err.code, 'POLICY');
+      return true;
+    },
+  );
+});
+
+test('promote: the resolving decision must also affect the promoted claim', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  await promote(deps, claimB.id, { to: 'rejected' });
+
+  const { obj: decision } = await propose(deps, {
+    title: 'Resolution that forgot to list the survivor in affects',
+    rationale: 'r',
+    affects: [claimB.id],
+    change: { resolves_contradiction: [claimA.id, claimB.id], survivor: claimA.id },
+  });
+  await approve(deps, decision.id, { by: 'tester' });
+
+  await assert.rejects(
+    promote(deps, claimA.id, { to: 'supported', decision: decision.id }),
+    (err) => {
+      assert.equal(err.code, 'POLICY');
+      assert.match(err.message, /does not affect/);
       return true;
     },
   );

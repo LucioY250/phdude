@@ -752,7 +752,7 @@ test('e2e: link --contradicts disputes both claims and promote requires a resolv
   assert.deepEqual(status.disputedPairs, [pair]);
 
   const statusText = await run(ws, ['status']);
-  assert.match(statusText.stdout, /Disputed claims \(1 pairs\):/);
+  assert.match(statusText.stdout, /Disputed claims \(1 pair\):/);
   assert.match(statusText.stdout, new RegExp(`${pair[0]} ⟷ ${pair[1]}`));
 
   // `--to` and `--contradicts` are mutually exclusive.
@@ -793,9 +793,37 @@ test('e2e: link --contradicts disputes both claims and promote requires a resolv
     claimA.id,
     claimB.id,
     '--change',
-    JSON.stringify({ resolves_contradiction: [claimA.id, claimB.id] }),
+    JSON.stringify({ resolves_contradiction: [claimA.id, claimB.id], survivor: claimA.id }),
   ]);
   await run(ws, ['decide', 'approve', decision.id, '--by', 'Ada Lovelace']);
+
+  // A single decision does not rehabilitate both sides: the survivor cannot be promoted while
+  // the loser it names is still disputed, and the decision refuses to promote the loser at all.
+  const survivorBlocked = await phdude(ws, [
+    'promote',
+    claimA.id,
+    '--to',
+    'supported',
+    '--decision',
+    decision.id,
+    ...ACTOR,
+  ]);
+  assert.equal(survivorBlocked.code, 3);
+  assert.match(survivorBlocked.stderr, /rejected first/);
+
+  const loserBlocked = await phdude(ws, [
+    'promote',
+    claimB.id,
+    '--to',
+    'supported',
+    '--decision',
+    decision.id,
+    ...ACTOR,
+  ]);
+  assert.equal(loserBlocked.code, 3);
+  assert.match(loserBlocked.stderr, new RegExp(`names ${claimA.id} as the survivor`));
+
+  await run(ws, ['promote', claimB.id, '--to', 'rejected']);
 
   const promoted = await runJson(ws, [
     'promote',
@@ -807,7 +835,6 @@ test('e2e: link --contradicts disputes both claims and promote requires a resolv
   ]);
   assert.equal(promoted.state, 'supported');
 
-  await run(ws, ['promote', claimB.id, '--to', 'rejected']);
   const finalStatus = await runJson(ws, ['status']);
   assert.deepEqual(finalStatus.disputedPairs, []);
 });

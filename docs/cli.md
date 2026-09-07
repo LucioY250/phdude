@@ -286,13 +286,16 @@ requires a decision that is `approved` and lists the object in `affects`; anythi
 exits 3. This is where human authority over canonical knowledge is enforced.
 
 Promoting a `disputed` claim to `supported` or `canonical` is resolving a contradiction, not an
-ordinary promotion: it requires an approved decision whose `change.resolves_contradiction`
-array (see `phdude decide propose` below, payload key `resolves_contradiction`) names both the
-claim being promoted and (at least) one of its `contradicts` partners; anything else exits 3.
-Promoting the losing claim to `rejected` needs no decision, same as any other
-`disputed → rejected` move. Resolving the pair does not touch the other claim automatically -
-`contradicts` is kept on the survivor as history, and the loser is only rejected by a separate
-explicit promote to `rejected`.
+ordinary promotion, and a single decision must not rehabilitate both sides of a dispute. It
+requires an approved decision (see `phdude decide propose` below) whose `change` names, in
+`resolves_contradiction`, the claim being promoted and (at least) one of its `contradicts`
+partners, and in `survivor` which one of them wins; the promoted claim must be that `survivor`
+and must be in the decision's `affects`. Every other claim the decision lists that this claim
+still contradicts must already be `rejected` - promote each loser to `rejected` first (no
+decision needed for that step, same as any other `disputed → rejected` move), then promote the
+survivor. Promoting the losing claim with the same decision exits 3 naming the survivor
+instead. Resolving the pair does not touch the loser automatically beyond that manual
+rejection, and `contradicts` is kept on the survivor as history of the dispute.
 
 ### `phdude packs list|detect|apply <name>`
 

@@ -38,13 +38,18 @@ async function linkContradiction({ store, clock, actor }, id, contradictsId) {
   const a = await requireClaim(store, id);
   const b = await requireClaim(store, contradictsId);
 
-  if (a.contradicts?.includes(b.id)) {
+  const aHasB = a.contradicts?.includes(b.id) ?? false;
+  const bHasA = b.contradicts?.includes(a.id) ?? false;
+  if (aHasB && bHasA) {
     return { linked: false };
   }
 
   const { a: nextA, b: nextB } = markContradiction(a, b);
-  await store.writeEntity(nextA);
-  await store.writeEntity(nextB);
+  // The two writes are not atomic: a process that dies between them leaves an asymmetric pair
+  // on disk. Only the side(s) still missing the relation are (re)written, so a retry of the
+  // same `--contradicts` call heals it instead of just replaying a no-op.
+  if (!aHasB) await store.writeEntity(nextA);
+  if (!bHasA) await store.writeEntity(nextB);
   await store.appendEvent({
     ts: clock(),
     op: 'link',
