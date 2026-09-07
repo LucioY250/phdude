@@ -1,0 +1,168 @@
+src/application/decide.js
+  s_946fc7502759d8::t_10eb6d91649fc6 162,165,168-187,190,192,198,205-206
+tests/unit/cli/docs-flags.test.js
+  s_946fc7502759d8::t_433178d1dadb77 1-52
+src/domain/ids.js
+  s_946fc7502759d8::t_536ccc36937b07 13
+src/application/init.js
+  s_946fc7502759d8::t_ef263bb5404d34 22
+examples/generic-thesis/knowledge/facts/FACT-54af7fa906.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4
+examples/generic-thesis/.phdude/skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_647321de72743b 26-27,44,46,51-61
+  s_946fc7502759d8::t_90fb881db69496 62
+src/adapters/cli/commands/add.js
+  s_946fc7502759d8::t_2932ecece5eea0 33
+tests/integration/ingest.test.js
+  s_946fc7502759d8::t_ce15294775cda7 262-276,295-309
+  s_946fc7502759d8::t_39ebb3de66fcb6 393-394,397-398
+  s_946fc7502759d8::t_95d494124364b1 20,33,257,260-261,277-278,281,283-294,310-322,368-377,380-392,395-396,399
+src/application/add.js
+  s_946fc7502759d8::t_ef30f77c0c326f 5,12,20,34-35,37-47,86,91-112,160,194-199
+commands/add.md
+  s_946fc7502759d8::t_234bf991f6e726 2,15
+src/schemas/index.js
+  s_946fc7502759d8::t_536ccc36937b07 26
+tests/integration/link.test.js
+  s_946fc7502759d8::t_239c381d17d59e 181-211
+examples/generic-thesis/.phdude/skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_2932ecece5eea0 97-98
+  s_946fc7502759d8::t_647321de72743b 67-80,90-93
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_5731f81538eec0 361-366,375-378
+  s_946fc7502759d8::t_5ca05d42ba3bc0 12,323-360,367-374,379-439
+schemas/method.json
+  s_946fc7502759d8::t_536ccc36937b07 1-33
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_ef263bb5404d34 18
+README.md
+  s_946fc7502759d8::t_d78b33b909f1bb 282
+  s_946fc7502759d8::t_c6b3d54e47f235 301-302
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_d5f8111077dc94 12,75
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_ad19225b095677 21
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_60461f3fbf6203 3-9,133-134,137-139,149-170,204-245,248-249,254-255
+  s_946fc7502759d8::t_5731f81538eec0 140-148,250-253
+src/application/knowledge.js
+  s_946fc7502759d8::t_ef263bb5404d34 14,25,68,74-75
+scripts/make-example.mjs
+  s_946fc7502759d8::t_222b7b0606605c 136-146
+  s_946fc7502759d8::t_d5f8111077dc94 9,107
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_5620e903f0590e 6-16
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_d78b33b909f1bb 14
+examples/generic-thesis/knowledge/evidence/EVID-93cd3745fc.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4,14-17
+examples/generic-thesis/knowledge/facts/FACT-2bc4462edb.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_41fb42787c41e3 65-83
+src/adapters/cli/commands/decide.js
+  s_946fc7502759d8::t_9061dbf7f9e3aa 5-7,14,66
+src/application/snapshot.js
+  s_946fc7502759d8::t_ef263bb5404d34 13
+skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_c75d664d19bd4f 67-80,90-93
+  s_946fc7502759d8::t_2932ecece5eea0 97-98
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_2932ecece5eea0 99
+src/adapters/cli/commands/knowledge.js
+  s_946fc7502759d8::t_5731f81538eec0 36
+  s_946fc7502759d8::t_9061dbf7f9e3aa 15,31-35,37-39,42-43
+examples/generic-thesis/research/methods/METH-b137e5e2a3.yaml
+  s_946fc7502759d8::t_5620e903f0590e 1-22
+tests/fixtures/objects/invalid/method.1.json
+  s_946fc7502759d8::t_3aaa7eaf3f5fa1 1-12
+examples/generic-thesis/knowledge/claims/CLAIM-3d035aa05b.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4,15-17
+src/adapters/store/fs-walk.js
+  s_946fc7502759d8::t_d5f8111077dc94 1,49-55
+  s_946fc7502759d8::t_1774dc9c7cb929 56
+src/application/link.js
+  s_946fc7502759d8::t_7e4e228a123e14 10,15-16
+skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_c75d664d19bd4f 26-27
+  s_946fc7502759d8::t_41fb42787c41e3 44,46,51-61
+  s_946fc7502759d8::t_47f62a4b12d956 62
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_647321de72743b 65-83
+tests/fixtures/objects/valid/method.1.json
+  s_946fc7502759d8::t_3aaa7eaf3f5fa1 1-17
+examples/generic-thesis/knowledge/facts/FACT-270dc9059c.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4
+examples/generic-thesis/knowledge/claims/CLAIM-8ad284d305.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4,15-17
+tests/unit/domain/lineage.test.js
+  s_946fc7502759d8::t_3aaa7eaf3f5fa1 129-156
+schemas/common.json
+  s_946fc7502759d8::t_536ccc36937b07 7
+src/application/status.js
+  s_946fc7502759d8::t_ef263bb5404d34 12
+commands/decide.md
+  s_946fc7502759d8::t_234bf991f6e726 15-20
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_af579c34d8dc7d 67-74,187
+  s_946fc7502759d8::t_68fc777dd33119 4-7,11,17-65,166-185,193-199,201,204,227,248-255
+  s_946fc7502759d8::t_e83affb7c562e7 66
+examples/generic-thesis/knowledge/facts/FACT-f62e1a2f34.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4
+docs/workspace.md
+  s_946fc7502759d8::t_c6b3d54e47f235 34-35,82-83,88,122-136
+  s_946fc7502759d8::t_fcb62c6b90ef95 137
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_5731f81538eec0 615-618
+  s_946fc7502759d8::t_82138b523626c4 542-614,619-724
+examples/generic-thesis/decisions/DEC-7aa12a7b78.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4
+tests/unit/domain/ids.test.js
+  s_946fc7502759d8::t_1fef119dd3c962 23-27,35,37
+skills/decisions/SKILL.md
+  s_946fc7502759d8::t_c75d664d19bd4f 44-54
+tests/integration/add-knowledge.test.js
+  s_946fc7502759d8::t_239c381d17d59e 402-415
+  s_946fc7502759d8::t_f9529c684b1339 254-401
+commands/knowledge.md
+  s_946fc7502759d8::t_234bf991f6e726 17-18
+src/application/ingest.js
+  s_946fc7502759d8::t_880fbf94c02752 260-263
+  s_946fc7502759d8::t_20aef01ec4ab94 74-99,106-107,110-111,117-133,136
+  s_946fc7502759d8::t_168d4edde8f753 247
+examples/generic-thesis/.phdude/skills/decisions/SKILL.md
+  s_946fc7502759d8::t_647321de72743b 44-54
+commands/ingest.md
+  s_946fc7502759d8::t_234bf991f6e726 15-17
+src/domain/lineage.js
+  s_946fc7502759d8::t_ef263bb5404d34 10
+tests/integration/decide.test.js
+  s_946fc7502759d8::t_0647d6df1c687c 164,215-218,221-228,238-266,270-283,286-294
+  s_946fc7502759d8::t_5731f81538eec0 269
+examples/generic-thesis/knowledge/claims/CLAIM-ab73621987.yaml
+  s_946fc7502759d8::t_5620e903f0590e 4,18-21
+commands/link.md
+  s_946fc7502759d8::t_091ce30c08b07d 16-18
+src/domain/entities.js
+  s_946fc7502759d8::t_9b3a0d352a7fdb 28-38,371
+  s_946fc7502759d8::t_fad81aff818e66 85-86,98-99,117,128-129,140-141,158,322-370
+  s_946fc7502759d8::t_a826c1747df23e 372
+docs/cli.md
+  s_946fc7502759d8::t_d2b58ea12db922 24-30,93-102,137-149,158-160,171,182-192,221,238,247-253
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "5cda057e83a70460798e4d7fc7aa9068bc0abf45",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
