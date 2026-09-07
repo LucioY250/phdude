@@ -1,0 +1,32 @@
+src/adapters/documents/pdf.js
+  s_946fc7502759d8::t_5aededa60c14d8 29-30
+scripts/make-fixtures.mjs
+  s_946fc7502759d8::t_bd8604593f2e57 39-41
+  s_946fc7502759d8::t_31198f681193b1 135-142,161,163-165,172-174
+  s_946fc7502759d8::t_977d9cde44f3d5 27,29
+  s_946fc7502759d8::t_7e2b8767a9369c 21-24,28
+  s_946fc7502759d8::t_2b373829b73d69 64
+tests/unit/documents/fixtures-deterministic.test.js
+  s_946fc7502759d8::t_f002cbae00e46e 1-20
+src/adapters/documents/ooxml.js
+  s_946fc7502759d8::t_085c930bc5c34a 29-31,33-41
+  s_946fc7502759d8::t_da9edb0c1db743 106-112
+tests/contracts/document-parser.test.js
+  s_946fc7502759d8::t_b18d9519ca0f3b 32-39,44-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e5590bf2aaecc595ca2e35e14371e540b3566dc5",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
