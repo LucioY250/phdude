@@ -297,3 +297,42 @@ export function newHypothesis({ n, text, questions = [], tags = [], actor, creat
     state: 'candidate',
   };
 }
+
+/**
+ * @param {object} p
+ * @param {string} p.title
+ * @param {string} p.rationale
+ * @param {object} p.proposed_by
+ * @param {string[]} [p.affects]
+ * @param {object} [p.change]
+ * @param {string} p.created
+ * @param {string[]} [p.tags]
+ * @returns {object} a schema-valid `phdude.decision`
+ */
+export function newDecision({
+  title,
+  rationale,
+  proposed_by,
+  affects = [],
+  change = {},
+  created,
+  tags = [],
+}) {
+  const titleText = requireText('title', title);
+  const rationaleText = requireText('rationale', rationale);
+  return {
+    schema: 'phdude.decision',
+    version: 1,
+    id: makeId('decision', titleText),
+    created,
+    actor: proposed_by,
+    tags,
+    title: titleText,
+    rationale: rationaleText,
+    proposed_by,
+    approved_by: [],
+    status: 'proposed',
+    change,
+    affects,
+  };
+}

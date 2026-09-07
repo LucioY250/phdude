@@ -78,6 +78,14 @@ async function addArtifactRole({ store, clock, actor }, { id, role }) {
  * @returns {Promise<{obj: object, created: boolean}>}
  */
 export async function addEntity({ store, clock, actor }, type, input) {
+  if (type === 'decision') {
+    throw new PhdudeError(
+      'USAGE',
+      'decisions cannot be added directly',
+      'use phdude decide propose',
+    );
+  }
+
   if (type === 'artifact-role') {
     return addArtifactRole({ store, clock, actor }, input);
   }

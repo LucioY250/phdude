@@ -8,6 +8,7 @@ import {
   newResult,
   newQuestion,
   newHypothesis,
+  newDecision,
 } from '../../../src/domain/entities.js';
 import { assertValid } from '../../../src/schemas/index.js';
 import { PhdudeError } from '../../../src/domain/errors.js';
@@ -134,4 +135,49 @@ test('newHypothesis: schema-valid, sequential id', () => {
 
 test('newHypothesis: rejects empty text', () => {
   assert.throws(() => newHypothesis({ n: 1, text: '  ', actor, created }), PhdudeError);
+});
+
+test('newDecision: schema-valid output with defaults', () => {
+  const decision = newDecision({
+    title: 'Resolve conflicting sample-size reports',
+    rationale: 'Two artifacts disagreed; the methodology section confirms 312.',
+    proposed_by: actor,
+    affects: ['FACT-0000000000'],
+    created,
+  });
+  assertValid('decision', decision);
+  assert.equal(decision.status, 'proposed');
+  assert.deepEqual(decision.approved_by, []);
+  assert.deepEqual(decision.change, {});
+  assert.deepEqual(decision.proposed_by, actor);
+});
+
+test('newDecision: rejects empty title', () => {
+  assert.throws(
+    () =>
+      newDecision({
+        title: '   ',
+        rationale: 'some rationale',
+        proposed_by: actor,
+        created,
+      }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'VALIDATION');
+      return true;
+    },
+  );
+});
+
+test('newDecision: rejects empty rationale', () => {
+  assert.throws(
+    () =>
+      newDecision({
+        title: 'A title',
+        rationale: '   ',
+        proposed_by: actor,
+        created,
+      }),
+    PhdudeError,
+  );
 });
