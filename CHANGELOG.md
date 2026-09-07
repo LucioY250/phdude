@@ -27,7 +27,7 @@ First release: the deterministic harness. No model is involved in anything below
 - **Human authority.** `phdude decide propose|approve|reject|supersede` and
   `phdude promote <id> --decision <DEC-id>`: an object reaches `canonical` only through an
   approved decision that names it, and approvals are recorded against a named researcher.
-- **Next-action scoring.** `phdude next` ranks nine rules by impact, then by how many objects
+- **Next-action scoring.** `phdude next` ranks ten rules by impact, then by how many objects
   depend on the action, and always prints the reasoning and the exact command to run.
 - **Querying.** `phdude knowledge list|show|trace` filters the graph and walks lineage in
   both directions.
