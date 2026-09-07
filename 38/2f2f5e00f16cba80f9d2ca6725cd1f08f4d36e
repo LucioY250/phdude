@@ -1,0 +1,38 @@
+docs/adr/0006-workspace-versioning-and-migrations.md
+  s_946fc7502759d8::t_76910e474c3ca9 46-48
+src/application/guard.js
+  s_946fc7502759d8::t_57e7cbf55b90fc 4,14-18,24-27,32-34
+README.md
+  s_946fc7502759d8::t_76910e474c3ca9 69-70
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_136f8bf431881e 4,549-584
+  s_946fc7502759d8::t_60e8d3c876b4a9 585-586
+tests/integration/migrate.test.js
+  s_946fc7502759d8::t_7c6c21451a7c8c 202-228
+tests/unit/domain/versioning.test.js
+  s_946fc7502759d8::t_7c6c21451a7c8c 5,35-40
+  s_946fc7502759d8::t_71b95e1a774b1b 41-42
+src/domain/versioning.js
+  s_946fc7502759d8::t_57e7cbf55b90fc 26-35
+  s_946fc7502759d8::t_2f1be30c5c777c 25
+docs/cli.md
+  s_946fc7502759d8::t_76910e474c3ca9 437-441,451-452
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_57e7cbf55b90fc 24-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "382f2f5e00f16cba80f9d2ca6725cd1f08f4d36e",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
