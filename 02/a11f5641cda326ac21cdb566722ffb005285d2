@@ -1,0 +1,25 @@
+tests/integration/init.test.js
+  s_946fc7502759d8::t_ada3ad1ae87a60 3,7
+  s_946fc7502759d8::t_b4468d676f8b72 73-103
+src/application/init.js
+  s_946fc7502759d8::t_85cc02685ff427 92-94,100
+  s_946fc7502759d8::t_d2b86df37ff720 165
+  s_946fc7502759d8::t_6c261468d3da82 186
+  s_946fc7502759d8::t_0edfd799beac50 42-44,50,54-63,67-71,74,82,86
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "02a11f5641cda326ac21cdb566722ffb005285d2",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
