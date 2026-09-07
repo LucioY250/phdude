@@ -48,7 +48,12 @@ export class FsStore {
   }
 
   async writeYamlAtomic(relPath, obj) {
-    await writeFileAtomic(join(this.root, relPath), stringify(obj, { lineWidth: 0 }));
+    // aliasDuplicateObjects: false keeps `&a1` / `*a1` anchors out of persisted objects, so a
+    // researcher can read, diff and merge the YAML without knowing YAML's aliasing rules.
+    await writeFileAtomic(
+      join(this.root, relPath),
+      stringify(obj, { lineWidth: 0, aliasDuplicateObjects: false }),
+    );
   }
 
   async readText(relPath) {

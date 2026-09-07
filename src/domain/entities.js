@@ -126,7 +126,7 @@ export function newEvidence({
   return {
     schema: 'phdude.evidence',
     version: 1,
-    id: makeId('evidence', text),
+    id: makeId('evidence', `${source} ${locator ?? ''} ${text}`),
     created,
     actor,
     tags,
@@ -320,10 +320,18 @@ export function newDecision({
 }) {
   const titleText = requireText('title', title);
   const rationaleText = requireText('rationale', rationale);
+  // Sorted affects and sorted change keys keep the id independent of argument order, so the
+  // same proposal always lands on the same record while a different one never collides.
+  const material = [
+    titleText,
+    rationaleText,
+    [...affects].sort().join(','),
+    JSON.stringify(change, Object.keys(change).sort()),
+  ].join('\n');
   return {
     schema: 'phdude.decision',
     version: 1,
-    id: makeId('decision', titleText),
+    id: makeId('decision', material),
     created,
     actor: proposed_by,
     tags,

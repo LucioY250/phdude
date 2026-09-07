@@ -23,7 +23,7 @@ Conflicts (1 open of 1 total):
   - sample_size: 312 participants (FACT-2bc4462edb from ART-35146e2f6d) vs 312 participants (FACT-54af7fa906 from ART-0772a215de) vs 300 participants (FACT-f62e1a2f34 from ART-f7ced78004) [open]
 
 Pending decisions (1):
-  - DEC-da1a3616b6: Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta
+  - DEC-7aa12a7b78: Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta
 
 Recent events:
   add: fact added

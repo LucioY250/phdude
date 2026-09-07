@@ -105,6 +105,35 @@ test('question numbering: RQ-1, then RQ-2', async () => {
   assert.equal(q2.id, 'RQ-2');
 });
 
+test('question and hypothesis dedupe on normalized text', async () => {
+  const deps = makeDeps(await newRoot());
+
+  const { obj: q1, created: q1Created } = await addEntity(deps, 'question', {
+    text: 'Does thing X increase Y?',
+  });
+  assert.equal(q1Created, true);
+  assert.equal(q1.id, 'RQ-1');
+
+  const { obj: q2, created: q2Created } = await addEntity(deps, 'question', {
+    text: '  Does thing X   increase Y?  ',
+  });
+  assert.equal(q2Created, false, 're-adding the same question is a no-op');
+  assert.equal(q2.id, 'RQ-1');
+
+  const { obj: h1 } = await addEntity(deps, 'hypothesis', { text: 'X increases Y.' });
+  const { obj: h2, created: h2Created } = await addEntity(deps, 'hypothesis', {
+    text: 'x increases y.',
+  });
+  assert.equal(h2Created, false);
+  assert.equal(h2.id, h1.id);
+
+  assert.equal((await deps.store.listEntities('question')).length, 1);
+  assert.equal((await deps.store.listEntities('hypothesis')).length, 1);
+
+  const events = await deps.store.readEvents();
+  assert.equal(events.length, 2, 'only the two creations are recorded');
+});
+
 test('artifact-role updates the role of an existing artifact and appends one event', async () => {
   const deps = makeDeps(await newRoot());
   const artifact = newArtifact({

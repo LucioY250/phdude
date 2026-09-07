@@ -114,9 +114,24 @@ phdude add fact --file fact.json
 ```
 
 Types: `claim`, `evidence`, `fact`, `source`, `question`, `hypothesis`, `result`, and
-`artifact-role`. The object comes from `--json '<obj>'` or `--file <path>.json`. Ids are
-derived from content, so adding the same object twice is a no-op that returns the existing
-record. Objects are created in state `candidate`.
+`artifact-role`. The object comes from `--json '<obj>'` or `--file <path>.json`. Objects are
+created in state `candidate`.
+
+Ids are derived from content, so adding the same object twice is a no-op that returns the
+existing record and writes no event. What counts as "the same object" is the id material:
+
+| Type | Id material |
+|---|---|
+| `claim` | `statement` |
+| `evidence` | `source`, `locator`, `excerpt` |
+| `fact` | `key`, `value`, `from.artifact` |
+| `source` | `title`, `year` |
+| `result` | `summary` |
+| `question`, `hypothesis` | sequential `RQ-<n>` / `H-<n>`, deduplicated on normalized `text` |
+
+The same excerpt attributed to a different source or page is therefore different evidence,
+and the same value reported by two artifacts is deliberately two facts — that pair is the
+conflict `status` reports. See [ADR 3](adr/0003-content-derived-ids.md).
 
 `artifact-role` is the exception: it sets `role` on an existing artifact rather than
 creating a new object, and takes `{"id":"ART-…","role":"paper"}`.
@@ -141,6 +156,10 @@ phdude decide supersede DEC-old --by DEC-new
 ```
 
 `--affects` accepts several ids after one flag.
+
+A decision's id is derived from `title`, `rationale`, `affects` and `change` together, so
+re-proposing under an existing title with a new rationale creates a new proposal instead of
+silently returning the old one. Two identical proposals are still one record.
 
 **`--by` is required on `approve` and `reject`.** It records who made the call, and the
 runtime deliberately does not fall back to the resolved actor: a decision the researcher did

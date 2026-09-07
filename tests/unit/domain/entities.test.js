@@ -63,6 +63,31 @@ test('newEvidence: rejects empty excerpt', () => {
   );
 });
 
+test('newEvidence: identity includes source, locator and excerpt', () => {
+  const base = {
+    source: 'SRC-0000000000',
+    locator: 'p. 4, para 2',
+    excerpt: 'Participants numbered 142.',
+    actor,
+    created,
+  };
+  assert.equal(newEvidence(base).id, newEvidence({ ...base }).id, 'same content, same id');
+  assert.notEqual(
+    newEvidence(base).id,
+    newEvidence({ ...base, source: 'SRC-1111111111' }).id,
+    'a different source is different evidence',
+  );
+  assert.notEqual(
+    newEvidence(base).id,
+    newEvidence({ ...base, locator: 'p. 9' }).id,
+    'a different locator is different evidence',
+  );
+  assert.notEqual(
+    newEvidence(base).id,
+    newEvidence({ ...base, excerpt: 'Participants numbered 151.' }).id,
+  );
+});
+
 test('newFact: normalizes key and is schema-valid', () => {
   const fact = newFact({
     key: 'Sample Size',
@@ -192,6 +217,45 @@ test('newDecision: schema-valid output with defaults', () => {
   assert.deepEqual(decision.approved_by, []);
   assert.deepEqual(decision.change, {});
   assert.deepEqual(decision.proposed_by, actor);
+});
+
+test('newDecision: identity includes rationale, affects and change', () => {
+  const base = {
+    title: 'Adopt 151 as the canonical sample size',
+    rationale: 'The methodology section confirms 151.',
+    proposed_by: actor,
+    affects: ['FACT-0000000001', 'FACT-0000000002'],
+    change: { fact_key: 'sample_size', canonical_value: 151 },
+    created,
+  };
+  assert.equal(newDecision(base).id, newDecision({ ...base }).id, 'same content, same id');
+  assert.notEqual(
+    newDecision(base).id,
+    newDecision({ ...base, rationale: 'A completely different rationale.' }).id,
+    'a re-proposal under the same title must not return the old decision',
+  );
+  assert.notEqual(newDecision(base).id, newDecision({ ...base, affects: ['FACT-0000000001'] }).id);
+  assert.notEqual(
+    newDecision(base).id,
+    newDecision({ ...base, change: { fact_key: 'sample_size', canonical_value: 142 } }).id,
+  );
+});
+
+test('newDecision: id is stable under affects order and change key order', () => {
+  const base = {
+    title: 'Adopt 151 as the canonical sample size',
+    rationale: 'The methodology section confirms 151.',
+    proposed_by: actor,
+    created,
+  };
+  assert.equal(
+    newDecision({ ...base, affects: ['FACT-b', 'FACT-a'] }).id,
+    newDecision({ ...base, affects: ['FACT-a', 'FACT-b'] }).id,
+  );
+  assert.equal(
+    newDecision({ ...base, change: { canonical_value: 151, fact_key: 'sample_size' } }).id,
+    newDecision({ ...base, change: { fact_key: 'sample_size', canonical_value: 151 } }).id,
+  );
 });
 
 test('newDecision: rejects empty title', () => {

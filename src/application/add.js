@@ -8,6 +8,7 @@ import {
   newHypothesis,
 } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
+import { normalizeText } from '../domain/normalize.js';
 
 const FACTORIES = {
   claim: newClaim,
@@ -44,8 +45,7 @@ async function validateReferences(store, type, input) {
   }
 }
 
-async function nextSeq(store, type) {
-  const existing = await store.listEntities(type);
+function nextSeq(existing) {
   let max = 0;
   for (const obj of existing) {
     const m = /-(\d+)$/.exec(obj.id);
@@ -102,7 +102,15 @@ export async function addEntity({ store, clock, actor }, type, input) {
   await validateReferences(store, type, input);
 
   if (SEQ_FACTORIES[type]) {
-    const n = await nextSeq(store, type);
+    // Sequential ids cannot dedupe the way content-derived ones do, so re-running the
+    // bootstrap skill would mint a second RQ for a question already recorded. Match on the
+    // normalized text instead, and keep the documented "adding twice is a no-op" contract.
+    const existing = await store.listEntities(type);
+    const wanted = normalizeText(input.text ?? '');
+    const duplicate = existing.find((obj) => normalizeText(obj.text) === wanted);
+    if (duplicate) return { obj: duplicate, created: false };
+
+    const n = nextSeq(existing);
     const obj = factory({ ...input, n, actor, created: clock() });
     await store.writeEntity(obj);
     await store.appendEvent({

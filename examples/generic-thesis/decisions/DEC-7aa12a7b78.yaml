@@ -1,14 +1,16 @@
 schema: phdude.decision
 version: 1
-id: DEC-da1a3616b6
+id: DEC-7aa12a7b78
 created: 2026-09-01T00:00:29.000Z
-actor: &a1
+actor:
   researcher: example
   agent: script
 tags: []
 title: Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta
 rationale: Survey Alpha and Survey Gamma report 312 participants while Survey Beta reports 300; reconcile before citing a canonical sample size.
-proposed_by: *a1
+proposed_by:
+  researcher: example
+  agent: script
 approved_by: []
 status: proposed
 change:
