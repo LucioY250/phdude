@@ -36,12 +36,12 @@ answer. The global options above are accepted everywhere.
 | 1 | Usage | unknown command, missing argument, id not found |
 | 2 | Validation | an object that fails its JSON Schema, malformed `--json` |
 | 3 | Policy | `promote` to canonical without an approved decision |
-| 4 | External tool missing | reserved; no v0.1 command requires an external tool |
+| 4 | External tool missing | reserved; no command requires an external tool yet |
 
 Errors print the message on stderr, followed by a `Suggested action:` line when the error
 carries a hint. With `--json` they print `{"error":{"code","message","hint","details"}}` on
-stderr instead. Exit code 4 exists because degradation is the rule in v0.1: a missing
-`pdftotext` produces a warning and a partial extraction, not a failed command.
+stderr instead. Exit code 4 exists but nothing raises it yet, because degradation is the rule:
+a missing `pdftotext` produces a warning and a partial extraction, not a failed command.
 
 ## Commands
 

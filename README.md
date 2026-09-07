@@ -9,7 +9,7 @@
 Your AI can write. PhDude helps make the research worth publishing.
 
 [![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.2.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
@@ -37,13 +37,48 @@ It makes no assumptions about your field. A clinical trial, an archival history 
 empirical software-engineering paper get the same treatment; discipline-specific vocabulary
 and review questions arrive as packs.
 
-> **Where things stand.** This is v0.1. The deterministic core is done and tested: workspace,
-> ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`,
-> and the Claude Code and Codex adapters. Literature search, analysis execution and the
-> writing engine come next; see the [roadmap](#roadmap).
+> **Where things stand.** This is v0.2. The deterministic core is done and tested: workspace,
+> ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the
+> citation registry, the literature matrix and gap report, workspace migrations, and the Claude
+> Code and Codex adapters. Literature search, analysis execution and the writing engine come
+> next; see the [roadmap](#roadmap).
+
+## What's new in 0.2
+
+v0.2 is the Research Brain. The workspace stops being a filing cabinet and starts having an
+opinion about the literature it holds.
+
+- **Citations.** `phdude cite list|check|export` derives a stable bibkey for every source,
+  verifies the registry, and exports BibTeX or CSL-JSON. Offline, and derived rather than
+  canonical: `references.bib` is an output, the `SRC-` id is still the citation.
+- **The literature matrix.** `phdude matrix` prints one row per source — the research questions
+  and claims its evidence reaches, the strongest evidence citing it, the facts drawn from its
+  artifacts. A row with no questions is a source you have cited but never actually used.
+- **Research gaps.** `phdude gaps` reports ten kinds of gap by severity, each with the reason it
+  fired and a command that addresses it. `phdude next` recommends it once three accumulate.
+- **Contradictions.** `phdude link CLAIM-a --contradicts CLAIM-b` moves both claims to
+  `disputed` with no decision needed, because surfacing a contradiction should never wait for
+  approval. Getting one back out does: the decision has to name which claim survives.
+- **Methods.** `phdude add method` records design, paradigm, sampling, instruments, analysis and
+  limitations as an object, and `phdude link METH-… --to RQ-n` attaches it to the questions it
+  answers — so the methodology section is read from the record, not from memory.
+- **Provenance.** Every claim and evidence item records whether a human or an agent produced it
+  and which artifacts it came from. `phdude knowledge trace` prints it, so "an agent extracted
+  this from one PDF" and "you told me this" stop looking the same.
+- **Migrations.** `phdude.yaml` carries a `workspace_version`, and `phdude migrate` upgrades a
+  workspace written by an older PhDude. Reads warn, writes stop until it is run.
+- **Skill contracts.** Every `SKILL.md` declares what it reads, what it writes and what it is
+  permitted to do; the contract is validated on load, network access is refused unless the
+  workspace policy allows it, and `phdude doctor` lists the lot.
+
+One thing v0.2 deliberately does not add is editing. Ids are derived from content, so
+`phdude add` cannot correct an object that already exists — re-adding it returns the original
+record unchanged. `phdude link` attaches what was missing, and changing anything else means
+proposing a decision or adding a corrected object and retiring the old one.
 
 ## Contents
 
+- [What's new in 0.2](#whats-new-in-02)
 - [How it works](#how-it-works)
 - [Install](#install)
 - [Set up your agent](#set-up-your-agent) (Claude Code, Codex, anything else)
@@ -94,20 +129,20 @@ talk its way around it, and neither can a tired researcher at 2 a.m.
 
 ### How "what next?" is decided
 
-<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, ten rules, ranking, top action with reasons" width="900"></p>
+<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, eleven rules, ranking, top action with reasons" width="900"></p>
 
 Every rule is deterministic and every recommendation carries its reasons, its impact, and the
 command that does it. There is no hidden score.
 
 ## Install
 
-v0.1 is not on npm yet. Install it from the repository:
+v0.2 is not on npm yet. Install it from the repository:
 
 ```
 git clone https://github.com/LucioY250/phdude && cd phdude
 npm ci
 npm link
-phdude --version      # phdude 0.1.0
+phdude --version      # phdude 0.2.0
 ```
 
 Node 22 or newer. `pdftotext` (poppler-utils) is optional: without it PDFs are still
@@ -207,7 +242,7 @@ Resolve the conflicting value(s) for "sample_size"
 
 Why:
 - sample_size: 312 participants (ART-35146e2f6d, ART-0772a215de) vs 300 participants (ART-f7ced78004)
-- 1 claim(s) depend on the conflicting artifacts
+- 3 claim(s) depend on the conflicting artifacts
 
 Expected impact:
 HIGH
@@ -218,7 +253,8 @@ phdude decide propose --title "Resolve sample_size" --rationale "…" --affects 
 Other candidates:
 1. (medium) Classify artifacts with unknown role
 2. (medium) Approve or reject pending decisions
-3. (low) No further automatic recommendations; add new sources or refine claims
+3. (medium) Close the evidence gap for unaddressed research questions
+4. (low) No further automatic recommendations; add new sources or refine claims
 ```
 
 That block is the real output of `phdude next` on the [example workspace](examples/generic-thesis)
@@ -239,13 +275,14 @@ phdude promote CLAIM-… --decision DEC-…
 phdude/
 ├── bin/phdude.js          the CLI entry point
 ├── src/
-│   ├── domain/            pure logic: ids, hashing, lineage, conflicts, next-action rules
-│   ├── application/       use cases: init, ingest, add, link, decide, status, next, packs
+│   ├── domain/            pure logic: ids, hashing, lineage, conflicts, gaps, matrix, rules
+│   ├── application/       use cases: init, ingest, add, link, decide, cite, matrix, gaps, …
 │   ├── ports/             the contracts adapters implement (+ their contract test suites)
 │   ├── adapters/          filesystem store, document parsers, git, agent hosts, CLI
 │   └── schemas/           the JSON Schema validator
-├── schemas/               one JSON Schema per research object
-├── skills/                the six core skills, one SKILL.md directory each
+├── schemas/               one JSON Schema per research object, plus the skill contract
+├── migrations/            one module per workspace-version step
+├── skills/                the seven core skills, one SKILL.md directory each
 ├── commands/              the Claude Code slash-command templates
 ├── packs/                 seven starter packs: fields/ and methods/
 ├── defaults/              the research constitution and policies a new workspace gets
@@ -261,7 +298,7 @@ layer cannot import the filesystem, and a test makes sure it never does.
 
 ```
 my-research/
-├── phdude.yaml          # project: title, fields, methods, outputs, mode
+├── phdude.yaml          # project: title, fields, methods, outputs, mode, workspace_version
 ├── AGENTS.md            # shared agent instructions
 ├── CLAUDE.md            # Claude Code entry point
 ├── .claude/commands/    # slash commands (Claude Code)
@@ -281,6 +318,7 @@ my-research/
 │   └── results/         # RESULT-*.yaml
 ├── research/            # questions/ RQ-*.yaml · hypotheses/ H-*.yaml · methods/ METH-*.yaml
 ├── decisions/           # DEC-*.yaml
+├── references.bib       # written by `phdude cite export`; derived, not knowledge
 └── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
 ```
 
@@ -317,7 +355,7 @@ in [docs/cli.md](docs/cli.md).
 
 ## Packs
 
-Seven packs ship with v0.1: four fields (`computer-science`, `business`, `medicine`,
+Seven packs ship today: four fields (`computer-science`, `business`, `medicine`,
 `humanities`) and three methods (`quantitative`, `qualitative`, `systematic-review`). Each
 brings terminology, reviewers, recommended checks and a skill with concrete review questions
 and the epistemic norms of its discipline, so "demonstrates" and "suggests" are used the way
@@ -346,8 +384,8 @@ The reasoning behind the big calls is in [docs/adr/](docs/adr/).
 
 | Version | Theme | Highlights |
 |---|---|---|
-| **v0.1** | MVP | workspace, ingestion, knowledge graph, decisions, conflicts, status, next, packs, Claude Code and Codex adapters |
-| v0.2 | Research Brain | evidence graph, literature matrix, research gaps, citation registry, schema migrations, skill permission enforcement |
+| v0.1 | MVP | workspace, ingestion, knowledge graph, decisions, conflicts, status, next, packs, Claude Code and Codex adapters |
+| **v0.2** | Research Brain | citation registry, literature matrix, research gaps, contradictions, methods, provenance, workspace migrations, skill contracts |
 | v0.3 | Research Engine | fresh literature search, provider adapters, candidate review, freshness tracking |
 | v0.4 | Co-Author | author voice profiles, section writing, the `academic-prose` skill, `/phdude deslop`, writing gates |
 | v0.5 | Analysis & Visualization | analysis skills, tables, charts, figures, reproducibility lineage |

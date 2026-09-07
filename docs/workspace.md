@@ -34,6 +34,7 @@ my-research/
 │   ├── hypotheses/ H-*.yaml
 │   └── methods/    METH-*.yaml
 ├── decisions/      DEC-*.yaml
+├── references.bib                # written by `phdude cite export`; derived, and gitignored
 ├── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
 └── .gitignore
 ```
@@ -43,6 +44,7 @@ my-research/
 ```yaml
 schema: phdude.project
 version: 1
+workspace_version: 2
 title: Adaptive scheduling in edge clusters
 language: en
 fields: [computer-science]
@@ -55,6 +57,18 @@ packs_recommended: [quantitative]
 
 `fields` and `methods` are applied packs. `packs_recommended` is what `phdude packs detect`
 suggested; it is a recommendation until you run `phdude packs apply`.
+
+### `workspace_version`
+
+`version: 1` is the schema of this file. `workspace_version` is the shape of the whole
+directory, and it is what `phdude migrate` moves forward. A workspace without the field is
+version 1 (everything v0.1 wrote); the current version is 2. Versioning the workspace rather
+than each object keeps an additive field — `provenance`, `contradicts` — from turning into a
+breaking change for every reader; see [ADR 6](adr/0006-workspace-versioning-and-migrations.md).
+
+Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 2)`.
+Writes stop until you run `phdude migrate`, which is deliberately a command you run rather than
+something that happens to your files while you were asking for something else.
 
 ## What is yours and what PhDude manages
 
@@ -163,6 +177,19 @@ opening a file.
 
 It is committed, append-only, and independent of git history, so a rebase cannot erase who
 recorded what. Git history complements it with the full content of each change.
+
+## Derived files
+
+Two things in the workspace are outputs rather than knowledge, and both can be deleted and
+rebuilt: `.phdude/cache/` (below) and `references.bib` / `references.json`, written at the
+workspace root by `phdude cite export`.
+
+The default `.gitignore` covers both, since committing a file that is one command away from
+being regenerated only creates merge conflicts. The export covers every source, cited or not. It
+records no event, because nothing about the research changed when you wrote it, and it is never
+the thing you cite: a claim rests on an `EVID-` id which names a `SRC-` id, and the bibkey is
+only how that source is printed. An export older than the sources it came from is stale — re-run
+`phdude cite check`, then export again, rather than editing the `.bib` by hand.
 
 ## The cache
 

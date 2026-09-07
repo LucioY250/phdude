@@ -92,7 +92,7 @@ phdude:
 ---
 ```
 
-`writes` stays empty for every v0.1 skill, because a skill never edits the workspace
+`writes` stays empty for every skill that ships today, because a skill never edits the workspace
 directly: it runs `phdude add`, `phdude decide` and the other write commands, so the runtime
 validates, hashes, attributes and logs each change. See
 [ADR 4](adr/0004-agent-writes-through-cli.md).
@@ -149,6 +149,50 @@ that, so a broken skill costs one warning instead of the entire report.
 `.phdude/skills/`, `source` compares the copy against the shipped bytes: identical is still
 `core`, and only an edited copy is `workspace`. See [`phdude doctor`](cli.md#phdude-doctor).
 
+## Adding a migration
+
+A change to the shape of the workspace — a new required field, a renamed one, a file that moves
+— is a migration step, not a read-time default. Steps live in the package's `migrations/`
+directory, one module per step, named `NNNN-<slug>.mjs`:
+
+```js
+export default {
+  from: 2,
+  to: 3,
+  describe() {
+    return 'what this step does, in one line, for the CLI and the event log';
+  },
+  async preview(store) {
+    return ['knowledge/claims/CLAIM-….yaml']; // paths this step would rewrite
+  },
+  async apply(store) {
+    return { changed: ['knowledge/claims/CLAIM-….yaml'] };
+  },
+};
+```
+
+Four rules the runtime relies on:
+
+- **`from` and `to` chain.** `src/application/migrate.js` discovers every step, orders them, and
+  plans the run from the workspace's version to `CURRENT_WORKSPACE_VERSION` in
+  `src/domain/versioning.js`. Bump that constant in the same change, or the step never runs.
+- **`preview` and `apply` must agree.** Compute the change list once and use it for both, the
+  way `0001-workspace-v2.mjs` does; `--dry-run` is only trustworthy if it reports what `apply`
+  would actually touch.
+- **Idempotent.** Re-applying a step changes nothing, so a half-finished run is fixed by running
+  `phdude migrate` again rather than by hand.
+- **Store only.** A step gets the `Store` port and nothing else — no `node:fs`, no network — so
+  it cannot reach outside the workspace, and it is testable against a temporary directory.
+
+Do not interpret content. A migration backfills what the old shape implies (`provenance.method`
+is `imported` for records that predate the field, not a guess at who wrote them); anything that
+needs judgement is a research decision and belongs to the researcher.
+
+Cover the step in `tests/unit/application/migrate.test.js` and, if it rewrites entities, add a
+workspace at the old version under `tests/fixtures/workspaces/`. See
+[ADR 6](adr/0006-workspace-versioning-and-migrations.md) for why the workspace is versioned
+rather than each object.
+
 ## Ports and contract suites
 
 Adapters implement documented JavaScript interfaces in `src/ports/`, and each port ships a
@@ -203,8 +247,9 @@ Then register the host in `src/adapters/cli/commands/init.js` so `--agents` acce
 
 ### Store
 
-`src/ports/store.js` documents the storage interface used by every use case. Only
-`FsStore` implements it in v0.1; a use case must depend on the port, never on the class.
+`src/ports/store.js` documents the storage interface used by every use case. `FsStore` is the
+only implementation today; a use case, and every migration step, must depend on the port rather
+than on the class.
 
 ## Layering
 
