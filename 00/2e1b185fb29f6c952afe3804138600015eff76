@@ -1,0 +1,24 @@
+CHANGELOG.md
+  s_946fc7502759d8::t_03f610b192b9f8 39
+  s_946fc7502759d8::t_d28825b76e0731 1-38,40-55
+.github/workflows/ci.yml
+  s_946fc7502759d8::t_160ca076212cab 3-4,18
+package.json
+  s_946fc7502759d8::t_160ca076212cab 6-13,29-32
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "002e1b185fb29f6c952afe3804138600015eff76",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
