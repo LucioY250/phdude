@@ -9,7 +9,8 @@ tags: []
 statement: Note-taking app adoption may vary by recruitment channel.
 kind: empirical
 state: candidate
-supported_by: []
+supported_by:
+  - EVID-7b4227f9fe
 questions: []
 sections: []
 provenance:

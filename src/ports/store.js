@@ -6,6 +6,7 @@
  * @property {() => Promise<object>} readProject
  * @property {(cfg: object) => Promise<void>} writeProject
  * @property {(relPath: string) => Promise<object|null>} readYaml
+ * @property {(relPath: string) => Promise<Buffer|null>} readBytes
  * @property {(relPath: string, obj: object) => Promise<void>} writeYamlAtomic
  * @property {(relPath: string, text: string) => Promise<void>} writeTextAtomic
  * @property {(evt: object) => Promise<void>} appendEvent

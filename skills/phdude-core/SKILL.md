@@ -66,7 +66,8 @@ export` writes `references.bib` or `references.json` at the workspace root, a de
 records no event and is never a substitute for the `SRC-` id itself.) Every other command —
 `phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `freshness`,
 `packs list|detect`, `authors list|show`, `data list|show|profile`, `analyze list|show|runs`,
-`table list|show`, `figure list|show|check`, `manuscript list|show|status`, `prose`, `doctor`,
+`table list|show`, `figure list|show|check`, `repro check`,
+`manuscript list|show|status`, `prose`, `doctor`,
 `help` — only reads or derives from what is already recorded. (`phdude write` and
 `phdude deslop <section>` without a file write only `.phdude/cache/`, and
 `phdude prose <section>` stores the section's scores in `manuscript/reports/`, a derived file.)
@@ -92,6 +93,11 @@ the researcher passes `--allow-exec`. Never run an analysis script or a figure g
 — through Bash, through a runner, or by any other route. A run PhDude did not start records no
 hashes, and a figure or a table nobody can trace back to its inputs is not evidence. If execution
 is closed, say so and let the researcher open it; do not work around it.
+
+`phdude repro check` says which analyses, tables and figures no longer follow from what is
+recorded. Read it before citing a number and before submitting a section that quotes one. An item
+reported as `stale` is fixed by re-running or rebuilding it through the CLI, never by editing the
+output file so the report goes quiet.
 
 ### Correcting a record
 

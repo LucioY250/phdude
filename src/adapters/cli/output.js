@@ -56,6 +56,16 @@ export function renderStatus(report) {
   }
   lines.push('');
 
+  const analysis = report.analysis;
+  lines.push('Analysis:');
+  lines.push(`  Datasets: ${analysis.datasets}`);
+  lines.push(`  Analyses: ${analysis.analyses}`);
+  lines.push(`  Results: ${analysis.results}`);
+  lines.push(`  Tables: ${analysis.tables}`);
+  lines.push(`  Figures: ${analysis.figures}`);
+  lines.push(`  Stale or unbuilt: ${analysis.stale} of ${analysis.reproducible}`);
+  lines.push('');
+
   const lit = report.literature;
   lines.push('Literature:');
   lines.push(
@@ -232,6 +242,42 @@ export function renderGaps(report) {
   }
   lines.pop();
 
+  return lines.join('\n') + '\n';
+}
+
+// What each reason means, in the researcher's terms. The domain names the kind; the wording of
+// it is the CLI's, exactly as `figure check` renders its own findings.
+const REASON_TEXT = {
+  'missing-alt': () => 'no alt text; a figure without one cannot be published (PRD §100)',
+  'never-run': () => 'no successful run recorded',
+  'missing-output': (r) => `output missing: ${r.path}`,
+  'missing-input': (r) => `input gone: ${r.input}`,
+  'stale-input': (r) => `input ${r.input} changed since the last run`,
+  'unregistered-input': (r) => `input ${r.input} bytes changed on disk`,
+};
+
+const REPRO_STATUSES = ['up-to-date', 'stale', 'never-run', 'missing-output'];
+
+/**
+ * @param {{items: object[], counts: Record<string, number>, attention: number}} report
+ * @returns {string} plain-text rendering of `phdude repro check`
+ */
+export function renderRepro(report) {
+  const { items, counts } = report;
+  if (items.length === 0) return 'No analyses, tables or figures are declared.\n';
+
+  const idWidth = Math.max(...items.map((i) => i.id.length));
+  const nameWidth = Math.max(...items.map((i) => String(i.name ?? '').length));
+  const lines = [];
+  for (const item of items) {
+    lines.push(
+      `${item.id.padEnd(idWidth)}  ${String(item.name ?? '').padEnd(nameWidth)}  ${item.status}`,
+    );
+    for (const reason of item.reasons) lines.push(`  - ${REASON_TEXT[reason.kind](reason)}`);
+  }
+
+  const tally = REPRO_STATUSES.filter((s) => counts[s] > 0).map((s) => `${counts[s]} ${s}`);
+  lines.push('', `${items.length} item(s): ${tally.join(', ')}`);
   return lines.join('\n') + '\n';
 }
 

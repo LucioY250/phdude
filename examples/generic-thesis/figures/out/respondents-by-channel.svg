@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 420" width="720" height="420" role="img" aria-labelledby="figure-title figure-desc" font-family="system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<title id="figure-title">Respondents by recruitment channel</title>
+<desc id="figure-desc">Bar chart: the mailing list contributed 8 of the 20 respondents; the campus social media group and the stratified campus sample contributed 6 each.</desc>
+<rect width="720" height="420" fill="#ffffff"/>
+<text x="360" y="30" text-anchor="middle" font-size="18" font-weight="600" fill="#1a1a1a">Respondents by recruitment channel</text>
+<line x1="72" y1="332" x2="696" y2="332" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="332" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">0</text>
+<line x1="72" y1="263" x2="696" y2="263" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="263" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">2</text>
+<line x1="72" y1="194" x2="696" y2="194" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="194" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">4</text>
+<line x1="72" y1="125" x2="696" y2="125" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="125" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">6</text>
+<line x1="72" y1="56" x2="696" y2="56" stroke="#d9d9d9" stroke-width="1"/>
+<text x="62" y="56" text-anchor="end" dominant-baseline="middle" font-size="12" fill="#1a1a1a">8</text>
+<line x1="72" y1="332" x2="696" y2="332" stroke="#767676" stroke-width="1.5"/>
+<line x1="72" y1="56" x2="72" y2="332" stroke="#767676" stroke-width="1.5"/>
+<rect x="113.6" y="56" width="124.8" height="276" fill="#0072b2"/>
+<text x="176" y="49" text-anchor="middle" font-size="12" fill="#1a1a1a">8</text>
+<text x="176" y="348" text-anchor="end" font-size="12" fill="#1a1a1a" transform="rotate(-30 176 348)">mailing list</text>
+<rect x="321.6" y="125" width="124.8" height="207" fill="#0072b2"/>
+<text x="384" y="118" text-anchor="middle" font-size="12" fill="#1a1a1a">6</text>
+<text x="384" y="348" text-anchor="end" font-size="12" fill="#1a1a1a" transform="rotate(-30 384 348)">campus social media</text>
+<rect x="529.6" y="125" width="124.8" height="207" fill="#0072b2"/>
+<text x="592" y="118" text-anchor="middle" font-size="12" fill="#1a1a1a">6</text>
+<text x="592" y="348" text-anchor="end" font-size="12" fill="#1a1a1a" transform="rotate(-30 592 348)">stratified campuses</text>
+<text x="20" y="194" text-anchor="middle" font-size="13" fill="#1a1a1a" transform="rotate(-90 20 194)">respondents_by_channel (participants)</text>
+</svg>

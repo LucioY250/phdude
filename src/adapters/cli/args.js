@@ -94,6 +94,7 @@ export const COMMAND_OPTIONS = {
   analyze: { 'allow-exec': { type: 'boolean' } },
   table: { format: { type: 'string' } },
   figure: { 'allow-exec': { type: 'boolean' } },
+  repro: {},
   authors: {
     from: { type: 'string', multiple: true },
     approved: { type: 'boolean' },

@@ -93,6 +93,17 @@ export class FsStore {
     await writeFileAtomic(join(this.root, relPath), text);
   }
 
+  // The bytes, not the text: a dataset's identity is its file's bytes, and an xlsx decoded as
+  // utf8 would hash to something the workspace never recorded.
+  async readBytes(relPath) {
+    try {
+      return await readFile(join(this.root, relPath));
+    } catch (err) {
+      if (err.code === 'ENOENT') return null;
+      throw err;
+    }
+  }
+
   async readProject() {
     const cfg = await this.readYaml('phdude.yaml');
     if (cfg !== null) assertValid('project', cfg);

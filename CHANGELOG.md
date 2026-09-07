@@ -6,6 +6,101 @@ All notable changes to PhDude are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-09-07
+
+Analysis & Visualization. A number in a thesis now has a chain behind it that anyone can follow:
+the file it came from and the bytes that file had, the script that read it, the run that produced
+it, and the table and figure drawn from it. PhDude still does no statistics — the script is the
+researcher's — but it runs that script under an explicit policy and remembers exactly what went
+in and what came out. `phdude repro check` answers the question the whole release exists for:
+does any of this still hold? See
+[ADR 9](docs/adr/0009-execution-policy-and-results-contract.md).
+
+### Added
+
+- **An execution policy, closed by default.** `.phdude/research-policy.yaml` gains
+  `execution: {enabled: false, runtimes: {node, python3, Rscript}, timeout_seconds: 600}`. No
+  script runs without `execution.enabled: true` or `--allow-exec`, and the refusal names the
+  setting that would open it. `phdude doctor` reports the policy and the runtimes it resolves.
+- **The `AnalysisRunner` port and its local adapter.** `spawn` with an argument array, never a
+  shell; the workspace as the working directory; an environment holding `PATH`, `HOME`, `LANG`,
+  `PHDUDE_WORKSPACE` and one of `PHDUDE_ANALYSIS`/`PHDUDE_FIGURE`. A run is bounded by its
+  process group, so a script that traps `SIGTERM` or leaves a child behind still dies at the
+  timeout. A contract suite comes with the port.
+- **Datasets.** `phdude data add <path> [--json '{description, license, sensitive}']`,
+  `data list|show <id>|profile <id>`. A file under `data/` is hashed and its bytes are its
+  identity (`DATASET-<hash10>`), so re-adding the same file is a no-op and editing it makes a
+  new dataset linked to the old one through `versions_of`. The profile is deterministic: rows,
+  per-column inferred type, missing cells, distinct values capped at 50, up to five samples —
+  and `sensitive: true` drops the samples while keeping the counts.
+- **Analyses and results.** `phdude analyze add --json`, `analyze list|show <id>|runs <id>`,
+  `analyze run <id> [--allow-exec] [--force]`. An analysis declares a script under `analysis/`,
+  the datasets it reads, and where it leaves `results.json`. A run records `at`, `exit`,
+  `duration_ms`, the hash of every input and every output, and the results it wrote; a run whose
+  inputs have not changed since the last successful one is refused as "up to date". Each entry
+  in `results.json` becomes a citable `RESULT` with `from` pointing at the analysis, and a
+  re-run with different values marks the old result `rejected` with `superseded_by` rather than
+  overwriting it.
+- **Tables.** `phdude table add --json`, `table list|show <id>|build <id> [--format md,latex,csv]`.
+  A table renders a `RESULT`'s values or a `DATASET`'s columns as Markdown, LaTeX (`booktabs`,
+  with a caption and a label) and CSV under `tables/out/`, deterministically and with LaTeX
+  specials escaped. A build whose source has not moved and whose files already hold these bytes
+  writes nothing.
+- **Figures, with alt text that is not optional.** `phdude figure add --json`,
+  `figure list|show <id>|build <id> [--allow-exec]|check`. `alt` is required and non-empty: a
+  figure without a sentence saying what it shows never becomes a record. `build` runs the
+  generator through the runner, verifies every declared output exists, and hashes it; a
+  generator that exits 0 without writing what it declared is treated as a failure.
+- **A reference generator.** `generators/bar-chart.mjs` — plain Node, no dependencies — draws an
+  accessible SVG with a title, a description carrying the alt text, real axis labels, one
+  colourblind-safe hue and no timestamp, from a result's values or a dataset column. A figure
+  names it as `phdude:bar-chart` and never as a path, so no workspace records where PhDude is
+  installed.
+- **`phdude repro check [--json]`.** One line per analysis, table and figure:
+  `up-to-date | stale | never-run | missing-output`, each with the reasons behind it. It
+  distinguishes an input that moved since the run that read it from a file whose bytes no longer
+  match the `DATASET` record registered against them, because the fixes differ. It runs nothing,
+  writes nothing, and always exits 0.
+- **The reports read it too.** `phdude status` gains an `Analysis:` block (datasets, analyses,
+  results, tables, figures, and how many are stale or unbuilt). `phdude next` gains
+  `analysis-stale` — high once a supported or canonical claim rests on one of that analysis's
+  results, medium otherwise — plus `figure-missing-alt` and `never-run`. `phdude gaps` gains
+  `result-uncited`.
+- **Two skills and a section in the method packs.** `skills/analysis` (the only shipped skill
+  that declares `permissions.execution: allowed`, installed only when
+  `skills.allow_execution: true`) and `skills/figures` (dataviz rules, alt text, one message per
+  figure). The `quantitative` and `qualitative` packs gain an "Analysis" section: which scripts
+  a paradigm typically runs, and what a result from it owes a reader.
+- **Workspace version 3**, with migration `0002-workspace-v3`: it adds the `execution` and
+  `skills.allow_execution` policy keys when they are missing, creates `knowledge/datasets/`,
+  `analysis/out/`, `tables/out/` and `figures/out/`, and appends the matching `.gitignore` rules.
+  It never invents a policy file or a `.gitignore` that was not there, and never rewrites an
+  existing `RESULT` id.
+- **The example is now a finished workspace.** `examples/generic-thesis` carries
+  `data/survey.csv`, the Node analysis script that reads it, two results, a table in three
+  formats and a bar chart with alt text — and `phdude repro check` on it reports nothing to do.
+
+### Changed
+
+- `EXIT_CODES` gains `EXECUTION`, which shares exit code 4 with `TOOL_MISSING`: both mean PhDude
+  did its part and the thing it called did not come back.
+- The skill contract's `permissions` accepts an optional `execution: none|allowed`. Skills
+  written before v0.5 stay valid and default to `none`.
+- `RESULT` ids now include the analysis they came from, so two analyses can reach the same
+  finding and each keep its own record. Results recorded before v0.5 keep the ids they have;
+  migration 0002 rewrites none of them.
+- `analysis/out/`, `tables/out/` and `figures/out/` are gitignored in a new workspace, and
+  migration 0002 appends those rules to an existing `.gitignore` that has one.
+
+### Notes
+
+- Node remains the only runtime the test suite requires; the runner's contract suite skips
+  `python3` and `Rscript` honestly when they are not installed.
+- `phdude analyze run` compares the `DATASET` records an analysis names, not the files under
+  them. A file edited without `phdude data add` therefore leaves the analysis stale in
+  `repro check` while `analyze run` reports "up to date" — which is why `phdude next` recommends
+  registering the file rather than re-running.
+
 ## [0.4.0] — 2026-09-07
 
 The Co-Author. PhDude does not write prose — the agent still does that — but a draft now has to
@@ -362,7 +457,8 @@ First release: the deterministic harness. No model is involved in anything below
 - Requires Node 22 or newer. `pdftotext` (poppler-utils) is optional.
 - No network access and no shell interpolation anywhere in the runtime.
 
-[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/LucioY250/phdude/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/LucioY250/phdude/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/LucioY250/phdude/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/LucioY250/phdude/compare/v0.1.0...v0.2.0

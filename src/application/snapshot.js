@@ -1,6 +1,8 @@
 import { join } from 'node:path';
+import { sha256 } from '../domain/hash.js';
 import { buildGraph } from '../domain/lineage.js';
-import { networkAllowed, researchFilters } from '../domain/policy.js';
+import { executionAllowed, networkAllowed, researchFilters } from '../domain/policy.js';
+import { staleness } from '../domain/repro.js';
 import { migrationWarning } from './guard.js';
 
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
@@ -12,6 +14,10 @@ const TYPES = [
   ['evidence', 'evidence'],
   ['fact', 'facts'],
   ['result', 'results'],
+  ['dataset', 'datasets'],
+  ['analysis', 'analyses'],
+  ['table', 'tables'],
+  ['figure', 'figures'],
   ['question', 'questions'],
   ['hypothesis', 'hypotheses'],
   ['method', 'methods'],
@@ -19,6 +25,34 @@ const TYPES = [
   ['search', 'searches'],
   ['decision', 'decisions'],
 ];
+
+// What `domain/repro.js` cannot work out on its own: what each dataset's file hashes to right
+// now, and which declared output path is actually on disk. Everything else about staleness is a
+// comparison the domain does with the records it already has.
+async function reproState(store, { datasets, analyses, tables, figures }) {
+  const fileHashes = {};
+  for (const dataset of datasets) {
+    if (typeof dataset.path !== 'string') continue;
+    const bytes = await store.readBytes(dataset.path);
+    fileHashes[dataset.path] = bytes === null ? null : sha256(bytes);
+  }
+
+  const declared = new Set();
+  for (const analysis of analyses) {
+    if (analysis.outputs?.results) declared.add(analysis.outputs.results);
+    for (const file of analysis.outputs?.files ?? []) declared.add(file);
+  }
+  for (const table of tables)
+    for (const path of Object.values(table.outputs ?? {})) {
+      declared.add(path);
+    }
+  for (const figure of figures)
+    for (const output of figure.outputs ?? []) declared.add(output.path);
+
+  const present = {};
+  for (const path of [...declared].sort()) present[path] = await store.exists(path);
+  return { fileHashes, present };
+}
 
 /**
  * @param {import('../ports/store.js').Store} store
@@ -71,6 +105,9 @@ export async function loadSnapshot(store, clock = () => new Date().toISOString()
   return {
     project,
     ...collections,
+    // What is stale, and why. Computed here rather than in every report that asks, because the
+    // three reports that ask (`status`, `next`, `gaps`) would otherwise each hash every dataset.
+    repro: staleness({ ...collections, ...(await reproState(store, collections)) }),
     manuscript,
     sectionBodies,
     sectionReports: manuscript === null ? [] : await store.listReports(),
@@ -82,5 +119,8 @@ export async function loadSnapshot(store, clock = () => new Date().toISOString()
     // Whether a search is even runnable here. The reports that recommend one read this so they
     // recommend opening the policy first rather than a command that would refuse.
     networkEnabled: networkAllowed(policy, {}),
+    // Same question for the other switch: a report that recommends re-running an analysis has to
+    // know whether the run would be refused before it recommends it.
+    executionEnabled: executionAllowed(policy, {}),
   };
 }

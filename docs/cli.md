@@ -47,6 +47,47 @@ and so does an analysis whose script exited non-zero or was killed by a signal (
 or ran past `execution.timeout_seconds` (`TOOL_MISSING`) - PhDude did its part, and the thing it
 called did not come back.
 
+## Script execution
+
+`phdude analyze run` and `phdude figure build` are the only commands that run code. Both read
+the same block in `.phdude/research-policy.yaml`:
+
+```yaml
+execution:
+  enabled: false
+  runtimes:
+    node: node
+    python3: python3
+    Rscript: Rscript
+  timeout_seconds: 600
+skills:
+  allow_execution: false
+```
+
+`phdude analyze run` and `phdude figure build` refuse with exit 3 unless `enabled: true` or
+`--allow-exec` is passed:
+
+```
+script execution is disabled
+Suggested action: set execution.enabled: true in .phdude/research-policy.yaml or pass --allow-exec
+```
+
+`runtimes` maps the name an analysis or a figure declares to the executable that runs it, so a
+workspace can point `node` at a specific binary, or add one of its own, without rewriting a
+single record. A runtime the map does not name exits 2. `timeout_seconds` bounds every run; a
+script that outruns it is killed along with anything it started, the run is recorded with
+`exit: null` and `timed_out: true`, and the command exits 4.
+
+A run gets an argument array and no shell, ever. It starts with the workspace as its working
+directory and an environment holding `PATH`, `HOME`, `LANG`, `PHDUDE_WORKSPACE` and one of
+`PHDUDE_ANALYSIS` or `PHDUDE_FIGURE` — nothing else of yours reaches it. Its stdout is not the
+contract: what a script produces is the files it declares.
+
+`skills.allow_execution` is a different switch for a different thing. It gates whether a skill
+that declares `permissions.execution: allowed` is *installed* — `skills/analysis` is the one that
+does — and it has no effect on whether a run is permitted. A workspace can hold the analysis
+skill and still refuse every script, which is the useful default. `phdude doctor` prints both.
+
 ## Commands
 
 ### `phdude init [dir]`
@@ -132,8 +173,13 @@ text output prints one line per inventory entry, with `+` marking the ones writt
 ### `phdude status`
 
 Project settings, artifact inventory by kind and extraction status, knowledge counts by type
-and state, a Literature block, open and resolved fact conflicts, disputed claim pairs, pending
-decisions, and the last events. Every number is derived on read; nothing is cached.
+and state, an Analysis block, a Literature block, open and resolved fact conflicts, disputed
+claim pairs, pending decisions, and the last events. Every number is derived on read; nothing is
+cached.
+
+The **Analysis** block counts the datasets, analyses, results, tables and figures the workspace
+holds, and closes with `Stale or unbuilt: n of m` — the same items `phdude repro check` lists,
+where `m` is every analysis, table and figure and `n` is how many of them are not `up-to-date`.
 
 The **Literature** block counts candidates by state, how many searches are recorded, and how
 many research questions have a stale or missing search — the same staleness rule
@@ -157,6 +203,16 @@ every research question with no current literature behind it — never searched,
 longer ago than `research.freshness.stale_after_days` — and points at a first
 `phdude research` or at `phdude research-fresh`, whichever the first such question needs.
 `candidates-pending` (medium) fires at five or more candidates still awaiting a verdict.
+
+Three rules read the reproducibility report (`phdude repro check`). `analysis-stale` fires for
+every analysis whose inputs have moved since its last successful run; it is **high** when a
+supported or canonical claim rests on one of that analysis's results, because a stale number is
+already in the argument, and **medium** otherwise. Its command follows the reason: `phdude data
+add <path>` when the file no longer matches the `DATASET` record, since re-running would read
+bytes nobody registered, and `phdude analyze run <id>` otherwise. `figure-missing-alt` (medium)
+fires for a figure whose alt text was edited away — `figure add` refuses one without it, so the
+record was changed by hand. `never-run` (low) covers everything declared and never produced,
+including an output that has been deleted since.
 
 ### `phdude knowledge list|show|trace`
 
@@ -641,6 +697,7 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 | `claim-weak-evidence` | medium | Every evidence item supporting the claim has `strength: weak`. |
 | `hypothesis-untested` | medium | No claim addresses any of the hypothesis's questions. |
 | `uncited-source` | low | No evidence item's `source` is this SRC id directly - the same rule, and the same name, as `cite check`'s `uncited-source` finding. |
+| `result-uncited` | low | No evidence item cites this RESULT. A superseded result is skipped: a later run replaced it, and citing a number that is no longer current is not the fix. |
 | `artifact-unmined` | low | The artifact's role is classified (not `unknown`), but no source, fact, or evidence references it. |
 | `open-conflict` | high | An unresolved fact conflict (see `status` above), one gap per conflict key. |
 | `disputed-pair` | high | A pair of claims that contradict each other with neither side `rejected` (same rule as `status`'s disputed pairs). |
@@ -894,6 +951,54 @@ build is one `figure` event, including the ones that failed:
 last successful run, or is gone), `missing-output` (a declared file is not on disk) or
 `never-run`, plus `missing-alt` for a figure whose alt text was edited away. It runs nothing,
 writes nothing and always exits 0 — a stale figure is a state to fix, not a failure.
+
+### `phdude repro check [--json]`
+
+```
+phdude repro check
+phdude repro check --json
+```
+
+One line per analysis, table and figure, saying whether what is on disk still follows from what
+is recorded:
+
+| Status | What it means |
+|---|---|
+| `up-to-date` | Every input still hashes to what the last successful run recorded, and every declared output is on disk. |
+| `stale` | An input moved: its bytes or its values are not what the run read. |
+| `never-run` | Nothing has been produced yet — no run, or none that succeeded. |
+| `missing-output` | The record claims a file that is not there. |
+
+Each line that is not `up-to-date` carries its reasons:
+
+```
+ANALYSIS-9d0e26cb51  daily-use-by-channel    stale
+  - input DATASET-f4b21a0c3d bytes changed on disk
+TABLE-58c0f31a72     daily-use-by-channel    stale
+  - input RESULT-1b90ce4a77 changed since the last run
+FIG-2a1c7e5b90       respondents-by-channel  never-run
+  - no successful run recorded
+```
+
+The two stale reasons are different problems with different fixes:
+
+- **`bytes changed on disk`** — the file is not the one its `DATASET` record was registered
+  against. Someone edited `data/survey.csv` and the workspace was never told. Re-register it with
+  `phdude data add data/survey.csv`, point the analysis at the new `DATASET` id, then re-run.
+  Until you do, `phdude analyze run` will answer *up to date*: it compares the records the
+  analysis names, and those have not moved.
+- **`changed since the last run`** — the input itself moved: a re-run produced different values,
+  or the analysis was re-pointed at a dataset its last run never read. `phdude analyze run`,
+  `phdude table build` or `phdude figure build` is the fix.
+
+A dataset is hashed from its file's bytes, which is what makes an edit to `data/survey.csv`
+visible here without anything having to watch the file. A result is hashed from its `values`, so
+editing a result's summary does not ask for a rebuild.
+
+`repro check` runs nothing, writes nothing and **always exits 0**. It is a report: which stale
+item to deal with, and when, is the researcher's call. `phdude next` picks the same items up as
+its `analysis-stale`, `figure-missing-alt` and `never-run` recommendations, and `phdude status`
+counts them in its `Analysis:` block.
 
 ### `phdude prose <section> | --file <path>`
 
@@ -1165,22 +1270,22 @@ records no event.
 
 Upgrades a workspace written by an older PhDude to the current workspace version.
 `phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
-current version is 2. Migration steps ship with the package, one module per step, and run in
+current version is 3. Migration steps ship with the package, one module per step, and run in
 order through the store; each applied step appends one `migrate` event.
 
-Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 2)`
+Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 3)`
 as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
 `packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
 
 A workspace written by a *newer* PhDude is the same problem from the other end, and this build
 cannot migrate its way out of it. Reads warn with
-`workspace version 3 is newer than this PhDude (2)`; the same writes exit 1 with that message
+`workspace version 4 is newer than this PhDude (3)`; the same writes exit 1 with that message
 and the hint `upgrade phdude`.
 
 `--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
 undo for an in-place rewrite, `migrate` exits 3 on a dirty git tree unless `--force` is given; a
 dry run is a read and stays available either way. Steps are idempotent, so running `migrate` on
-an up-to-date workspace prints `Workspace is up to date (2)` and records no event.
+an up-to-date workspace prints `Workspace is up to date (3)` and records no event.
 
 ### `phdude doctor`
 

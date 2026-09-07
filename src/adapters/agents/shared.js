@@ -164,6 +164,11 @@ export const COMMAND_ROWS = [
       'execution policy, and report which figures are stale, unbuilt or missing alt text.',
   ],
   [
+    'repro check',
+    'What every analysis, table and figure would need re-run or rebuilt: which input moved, ' +
+      'which output is gone, and what has never been produced at all. It reports; it never fixes.',
+  ],
+  [
     'prose <section> | --file <path>',
     'Academic Prose Quality report over a manuscript section or a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
   ],

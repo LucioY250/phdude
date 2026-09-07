@@ -3,7 +3,7 @@ import { sectionClaims } from './context-budget.js';
 import { openConflicts } from './conflicts.js';
 import { questionFreshness } from './freshness.js';
 import { findGaps } from './gaps.js';
-import { DEFAULT_FILTERS, ENABLE_NETWORK } from './policy.js';
+import { DEFAULT_FILTERS, ENABLE_EXECUTION, ENABLE_NETWORK } from './policy.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
 // How long a review queue has to be before it is worth an afternoon. Candidate claims and
@@ -16,6 +16,10 @@ const COLLECTION_KEYS = [
   'evidence',
   'facts',
   'results',
+  'datasets',
+  'analyses',
+  'tables',
+  'figures',
   'questions',
   'hypotheses',
   'decisions',
@@ -350,6 +354,122 @@ function ruleApprovalPending(snapshot) {
   };
 }
 
+// Which RESULT ids a supported or canonical claim rests on, through the evidence citing them.
+// A stale analysis behind one of those is a number the thesis already states plainly; a stale
+// analysis nobody has cited yet is only work in progress, which is the whole difference in
+// impact between the two.
+function resultsBehindStatedClaims(snapshot) {
+  const stated = (snapshot.claims ?? []).filter((c) =>
+    ['supported', 'canonical'].includes(c.state),
+  );
+  const cited = new Set(stated.flatMap((c) => c.supported_by ?? []));
+  return new Set((snapshot.evidence ?? []).filter((e) => cited.has(e.id)).map((e) => e.source));
+}
+
+// A run only stays true as long as its inputs do. `repro check` reports the same items; this is
+// the one line of it that belongs in "what should I do next", ranked by whether the numbers it
+// produced are already in the argument.
+function ruleAnalysisStale(snapshot) {
+  const stale = (snapshot.repro ?? []).filter(
+    (item) => item.kind === 'analysis' && item.status === 'stale',
+  );
+  if (stale.length === 0) return null;
+
+  const stated = resultsBehindStatedClaims(snapshot);
+  const staleIds = new Set(stale.map((item) => item.id));
+  const load = (snapshot.results ?? []).filter(
+    (r) => staleIds.has(r.from) && stated.has(r.id) && r.state !== 'rejected',
+  );
+
+  const why = stale
+    .slice(0, 3)
+    .map((item) => `${item.id} (${item.name}) read inputs that have changed since its last run`);
+  if (stale.length > 3) why.push(`and ${stale.length - 3} more`);
+  if (load.length > 0) {
+    why.push(
+      `${load.length} result(s) behind a supported or canonical claim came from them: ` +
+        load
+          .map((r) => r.id)
+          .sort()
+          .join(', '),
+    );
+  }
+
+  // An input whose file no longer matches the DATASET record is a different fix from an input
+  // that merely moved: re-running would read bytes the workspace never registered, and
+  // `analyze run` would refuse anyway, because the record it compares against has not changed.
+  const drifted = stale[0].reasons.find((reason) => reason.kind === 'unregistered-input');
+  const path = (snapshot.datasets ?? []).find((d) => d.id === drifted?.input)?.path;
+  if (path !== undefined) {
+    why.push(`${path} is not the file ${drifted.input} was registered against`);
+  }
+  const command =
+    path === undefined ? `phdude analyze run ${stale[0].id}` : `phdude data add ${path}`;
+
+  return {
+    rule: 'analysis-stale',
+    action: 'Re-run the analyses whose data has changed',
+    why,
+    impact: load.length > 0 ? 'high' : 'medium',
+    command:
+      snapshot.executionEnabled === false && path === undefined
+        ? `${ENABLE_EXECUTION}, then ${command}`
+        : command,
+    dependents: stale.length,
+  };
+}
+
+// Alt text is the one field a figure cannot be published without (PRD S100), and `figure add`
+// refuses a figure that has none - so this fires only on a record that was edited afterwards.
+function ruleFigureMissingAlt(snapshot) {
+  const missing = (snapshot.figures ?? [])
+    .filter((figure) => String(figure.alt ?? '').trim() === '')
+    .sort((a, b) => a.id.localeCompare(b.id));
+  if (missing.length === 0) return null;
+
+  return {
+    rule: 'figure-missing-alt',
+    action: 'Restore the alt text on the figures that lost it',
+    why: [
+      `${missing.length} figure(s) have no alt text: ${missing.map((f) => `${f.id} (${f.name})`).join(', ')}`,
+    ],
+    impact: 'medium',
+    command: `phdude figure add --json '{"name":"${missing[0].name}","alt":"…"}'`,
+    dependents: missing.length,
+  };
+}
+
+// Declared and never produced. It is `low` because nothing is wrong with the record - the work
+// simply has not been done - which is the same reading `claim-unwritten` takes in the gap report.
+function ruleNeverRun(snapshot) {
+  const BUILD = { analysis: 'analyze run', table: 'table build', figure: 'figure build' };
+  const pending = (snapshot.repro ?? []).filter((item) =>
+    ['never-run', 'missing-output'].includes(item.status),
+  );
+  if (pending.length === 0) return null;
+
+  const never = pending.filter((item) => item.status === 'never-run');
+  const gone = pending.filter((item) => item.status === 'missing-output');
+  const why = [
+    `${pending.length} declared item(s) have no output on disk: ` +
+      pending
+        .slice(0, 3)
+        .map((item) => `${item.id} (${item.name})`)
+        .join(', '),
+  ];
+  if (never.length > 0) why.push(`${never.length} of them have never been run`);
+  if (gone.length > 0) why.push(`${gone.length} of them wrote an output that is no longer there`);
+
+  return {
+    rule: 'never-run',
+    action: 'Produce the analyses, tables and figures that were declared but never built',
+    why,
+    impact: 'low',
+    command: `phdude ${BUILD[pending[0].kind]} ${pending[0].id}`,
+    dependents: pending.length,
+  };
+}
+
 const GAPS_THRESHOLD = 3;
 
 function gapSummary(gaps) {
@@ -424,6 +544,9 @@ const RULES = [
   ruleDraftBlocked,
   ruleSectionsPlanned,
   ruleApprovalPending,
+  ruleAnalysisStale,
+  ruleFigureMissingAlt,
+  ruleNeverRun,
 ];
 
 /**
