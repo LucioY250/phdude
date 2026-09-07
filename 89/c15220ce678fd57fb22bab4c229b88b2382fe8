@@ -1,0 +1,88 @@
+src/schemas/index.js
+  s_946fc7502759d8::t_6f8e2c689759bf 31
+commands/authors.md
+  s_946fc7502759d8::t_473e6d147e3dec 1-26
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_e8254c8d602d61 145-149
+docs/workspace.md
+  s_946fc7502759d8::t_050c0f45b93984 23-26
+  s_946fc7502759d8::t_f5ceddb9c6888f 176-201
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_a25c9f5deefef3 19
+  s_946fc7502759d8::t_903819314928c2 46
+schemas/author-profile.json
+  s_946fc7502759d8::t_e1cb2ee14c84ad 1-103
+tests/unit/domain/voice.test.js
+  s_946fc7502759d8::t_a76388d5c7728d 1-85,89-281
+  s_946fc7502759d8::t_e333f07065a7e8 86-88
+  s_946fc7502759d8::t_7a0ea8a189f286 282-291
+src/application/authors.js
+  s_946fc7502759d8::t_ec40b698bce26f 1-224,228-291
+  s_946fc7502759d8::t_af835f96491e5e 225-227
+  s_946fc7502759d8::t_c2636b4eb40bb7 292-295
+tests/integration/authors.test.js
+  s_946fc7502759d8::t_b2ac3d697ff5f7 25-26
+  s_946fc7502759d8::t_781b69e2a05251 187-190
+  s_946fc7502759d8::t_a1cc2cdcdaf8a9 1-24,27-186,191-228
+  s_946fc7502759d8::t_3f110851b80204 229-235
+scripts/make-example.mjs
+  s_946fc7502759d8::t_1a38f4c1fe5fc1 474-475
+  s_946fc7502759d8::t_1ec2ea6bea1dd7 92-127
+  s_946fc7502759d8::t_2586d7dcc98cdd 234-249
+  s_946fc7502759d8::t_6e1e0e6c2d884d 5-6,17
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_1084528148922b 33
+  s_946fc7502759d8::t_3af79e03f45798 32
+src/domain/voice.js
+  s_946fc7502759d8::t_7b7c4615517857 1-418
+  s_946fc7502759d8::t_7148bd4839d976 419-420
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_bc616c6626c2a2 192-209,215
+  s_946fc7502759d8::t_e5cede455b7604 210-214,216-217
+docs/cli.md
+  s_946fc7502759d8::t_5ea1ca740e6533 663-704
+tests/fixtures/objects/invalid/author-profile.1.json
+  s_946fc7502759d8::t_7f2157a57feb0b 1-25
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_2fea792cc1ef7d 1469-1474,1490
+  s_946fc7502759d8::t_05bc717e0450a0 1445-1468,1475-1489,1491-1524
+README.md
+  s_946fc7502759d8::t_0f05ff9dd0aab4 447
+  s_946fc7502759d8::t_b84f61d6ed0574 174
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_11f1cb1d44905c 223-227,312
+  s_946fc7502759d8::t_c4e22b4b7a8d45 306-308
+  s_946fc7502759d8::t_9484d44d163ce7 112-115,119,136-141,152-153,159
+  s_946fc7502759d8::t_15179763726158 78-81
+  s_946fc7502759d8::t_5046fecbc2165b 228-230,241-244,267-268,305,313-317
+src/adapters/cli/commands/authors.js
+  s_946fc7502759d8::t_c2f7bf48086efd 1-114
+tests/fixtures/objects/valid/author-profile.1.json
+  s_946fc7502759d8::t_f2a06c2f062d43 1-38
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_2a2bf602a95735 33-35
+examples/generic-thesis/authors/researcher-a.yaml
+  s_946fc7502759d8::t_8fab63ca590c1e 1-52
+examples/generic-thesis/authors/samples/researcher-a/intro-approved.md
+  s_946fc7502759d8::t_ec64427a487a91 1-5
+examples/generic-thesis/decisions/DEC-7aa12a7b78.yaml
+  s_946fc7502759d8::t_dee576d09fc571 4
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_f4f2943c0728bf 40-41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "89c15220ce678fd57fb22bab4c229b88b2382fe8",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
