@@ -327,12 +327,15 @@ SMEs adopt AI slowly [@zeta2020study].
 
 The `hash` is the sha256 of the body with the front matter removed, line endings normalized and
 trailing whitespace dropped, so reformatting a file does not look like a rewrite. It is what
-tells a later version which sections still need their gates re-run.
+tells `phdude manuscript show`, `phdude prose <section>` and `phdude doctor` that a section file
+has been edited outside PhDude since its last submit; each of them says so plainly, naming the
+section, rather than presenting the new text under the old record.
 
 `manuscript/reports/<section>.yaml` records what the gates found on the submit that was
 accepted: the section, the hash it applies to, the timestamp, one row per gate with its finding
-count, the prose scores, and the warning and block counts. It carries counts, never prose, and
-it is rewritten by the next accepted submit.
+count, the prose scores, and the warning and block counts. It carries counts, never prose. The
+next accepted submit rewrites it, and so does `phdude prose <section>`, which recomputes every
+field together so the numbers always describe the body the hash names.
 
 Everything under `manuscript/` is yours, but it is not hand-edited: prose reaches a section
 through `phdude manuscript submit <section> --file <draft.md>`, which runs the writing gates

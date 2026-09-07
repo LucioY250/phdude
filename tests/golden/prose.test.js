@@ -10,6 +10,7 @@ import { renderProse } from '../../src/adapters/cli/output.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const WORKSPACE = join(here, '..', '..', 'examples', 'generic-thesis');
+const FIXED_NOW = () => '2026-09-07T12:00:00Z';
 const GOLDEN = join(here, 'expected', 'prose-introduction.txt');
 
 // `prose <section>` stores the scores it computed in `manuscript/reports/<section>.yaml`, so it
@@ -19,7 +20,10 @@ test('prose golden: `phdude prose introduction` renders exactly like tests/golde
   const root = await mkdtemp(join(tmpdir(), 'phdude-prose-golden-'));
   try {
     await cp(WORKSPACE, root, { recursive: true });
-    const result = await proseSection({ store: new FsStore(root) }, 'introduction');
+    const result = await proseSection(
+      { store: new FsStore(root), clock: FIXED_NOW },
+      'introduction',
+    );
     const text = `${result.section.id} (${result.section.status})  ${result.section.title}\n\n${renderProse(result)}`;
 
     if (process.env.UPDATE_GOLDEN) {
@@ -33,17 +37,20 @@ test('prose golden: `phdude prose introduction` renders exactly like tests/golde
   }
 });
 
-test('prose golden: the stored report matches the one the example already carries', async () => {
+test('prose golden: re-running the report over unchanged prose moves nothing but the clock', async () => {
   const root = await mkdtemp(join(tmpdir(), 'phdude-prose-golden-'));
   try {
     await cp(WORKSPACE, root, { recursive: true });
-    const before = await readFile(join(root, 'manuscript', 'reports', 'introduction.yaml'), 'utf8');
-    await proseSection({ store: new FsStore(root) }, 'introduction');
-    const after = await readFile(join(root, 'manuscript', 'reports', 'introduction.yaml'), 'utf8');
+    const store = new FsStore(root);
+    const before = await store.readReport('introduction');
+    await proseSection({ store, clock: FIXED_NOW }, 'introduction');
+    const after = await store.readReport('introduction');
 
-    // The scores `submit` recorded and the ones `prose` computes come from the same lint over
-    // the same body: re-running the report must not move a number.
-    assert.equal(after, before);
+    // `prose` recomputes the whole record rather than merging scores onto the last one, and the
+    // gates it runs are the ones `submit` ran over the same body: only the timestamp moves.
+    assert.equal(after.at, FIXED_NOW());
+    assert.notEqual(after.at, before.at);
+    assert.deepEqual({ ...after, at: null }, { ...before, at: null });
   } finally {
     await rm(root, { recursive: true, force: true });
   }
@@ -56,7 +63,7 @@ test('prose golden: the rendered report shows every voice finding the stored rep
     const store = new FsStore(root);
     const stored = await store.readReport('introduction');
     const counted = stored.gates.find((row) => row.gate === 'gate-voice').findings;
-    const result = await proseSection({ store }, 'introduction');
+    const result = await proseSection({ store, clock: FIXED_NOW }, 'introduction');
 
     // The screen and `manuscript/reports/introduction.yaml` report the same number of voice
     // findings: a warning the file counts is a warning the report prints.

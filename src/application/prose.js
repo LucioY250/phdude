@@ -1,9 +1,9 @@
 import { PhdudeError } from '../domain/errors.js';
+import { GATES, runGates } from '../domain/gates/index.js';
 import { markerCounts, markerInventory } from '../domain/gates/markers.js';
-import { voiceGate } from '../domain/gates/voice.js';
-import { parseSectionFile, sectionHash } from '../domain/manuscript.js';
+import { parseSectionFile, sectionDrift, sectionHash } from '../domain/manuscript.js';
 import { lint } from '../domain/prose-lint.js';
-import { findSection, gateContext, loadManuscript } from './manuscript.js';
+import { findSection, gateContext, loadManuscript, numericScores } from './manuscript.js';
 import { assertUpToDate } from './guard.js';
 
 // The Academic Prose Quality report of PRD §39.1, over a plain text file. `phdude prose
@@ -52,11 +52,19 @@ export async function proseFile({ fs }, path, { lang } = {}) {
  * Precision are real numbers rather than `n/a`. The scores are stored in the section's report -
  * a derived file, like `references.bib`, which is why this records no event.
  *
- * @param {{store: object, loadProfile?: (name: string) => Promise<object|null>}} deps
+ * The whole report is recomputed, never merged onto the last one: the hash, the timestamp, the
+ * gate rows and the counts describe the body this run measured, so a number in
+ * `manuscript/reports/` is never stamped with a hash that does not describe it. Every gate runs
+ * to fill those rows, and nothing is written to the section or the manuscript - `prose` reports
+ * on prose, it never records it.
+ *
+ * @param {{store: object, clock: () => string,
+ *   loadProfile?: (name: string) => Promise<object|null>}} deps
  * @param {string} section
- * @returns {Promise<object>} the lint report, the section it describes, and its stored report
+ * @returns {Promise<object>} the lint report, the section it describes, whether the section has
+ *   drifted from its record, and the report this run stored
  */
-export async function proseSection({ store, loadProfile }, section) {
+export async function proseSection({ store, clock, loadProfile }, section) {
   assertUpToDate(await store.readProject());
 
   const manuscript = await loadManuscript(store);
@@ -79,7 +87,7 @@ export async function proseSection({ store, loadProfile }, section) {
     );
   }
 
-  const { front, body } = parseSectionFile(text);
+  const { body } = parseSectionFile(text);
   const ctx = await gateContext({ store, loadProfile }, { manuscript, entry });
   const report = lint(body, {
     lang: ctx.lang,
@@ -87,25 +95,30 @@ export async function proseSection({ store, loadProfile }, section) {
     markers: markerCounts(markerInventory(body, ctx)),
     profile: ctx.voiceProfile,
   });
+  const run = runGates(body, ctx, { mode: ctx.mode, gates: Object.values(GATES) });
   // The Author Voice number is a comparison against the profile, so the report shows the
   // comparisons behind it rather than leaving the section's recorded warnings off the screen.
-  const voice = voiceGate.run(body, ctx).findings;
+  const voice = run.findings.filter((finding) => finding.gate === 'gate-voice');
 
-  const stored = (await store.readReport(entry.id)) ?? {
+  const stored = {
     schema: 'phdude.section-report',
     version: 1,
     section: entry.id,
     hash: sectionHash(body),
-    at: front.updated ?? new Date(0).toISOString(),
-    gates: [],
-    scores: {},
-    warnings: 0,
-    blocks: 0,
+    at: clock(),
+    gates: run.gates,
+    scores: numericScores(run.scores),
+    warnings: run.findings.filter((finding) => finding.severity === 'warn').length,
+    blocks: run.findings.filter((finding) => finding.severity === 'block').length,
   };
-  const scores = Object.fromEntries(
-    Object.entries(report.scores).filter(([, value]) => typeof value === 'number'),
-  );
-  await store.writeReport(entry.id, { ...stored, scores });
+  await store.writeReport(entry.id, stored);
 
-  return { section: entry, file: entry.file, ...report, voice, stored: { ...stored, scores } };
+  return {
+    section: entry,
+    file: entry.file,
+    ...report,
+    voice,
+    drift: sectionDrift(entry, body),
+    stored,
+  };
 }

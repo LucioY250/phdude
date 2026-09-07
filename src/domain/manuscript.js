@@ -121,6 +121,29 @@ export function sectionHash(body) {
 }
 
 /**
+ * Whether a section file has moved since PhDude last wrote it: the hash the manuscript recorded
+ * against the hash of the body on disk. This is what makes the recorded hash worth writing - a
+ * section a researcher edited in an editor is still `approved` in `manuscript.yaml`, and every
+ * surface that shows it says so rather than presenting the new text under the old record.
+ * @param {object|null} entry - the manuscript section entry
+ * @param {string|null} body - the section body on disk, front matter excluded
+ * @returns {{recorded: string|null, actual: string|null, drifted: boolean}}
+ */
+export function sectionDrift(entry, body) {
+  const recorded = entry?.hash ?? null;
+  const actual = typeof body === 'string' ? sectionHash(body) : null;
+  return { recorded, actual, drifted: recorded !== null && actual !== null && recorded !== actual };
+}
+
+/**
+ * @param {string} section
+ * @returns {string} the one sentence `show`, `prose` and `doctor` all say about a drifted section
+ */
+export function driftNote(section) {
+  return `section ${section} was edited outside PhDude since its last submit`;
+}
+
+/**
  * The author profile a manuscript writes in, as the id of the file under `authors/`. A
  * manuscript that names no author writes in the project consensus, which is where
  * `phdude authors consensus` puts it. `phdude write --voice` overrides both.

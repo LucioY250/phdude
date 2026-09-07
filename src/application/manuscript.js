@@ -9,6 +9,7 @@ import {
   newManuscript,
   parseSectionFile,
   renderSectionFile,
+  sectionDrift,
   sectionHash,
   voiceIdFor,
 } from '../domain/manuscript.js';
@@ -130,10 +131,14 @@ function formatFinding(finding) {
   return `${finding.gate}:${finding.line} ${finding.message}`;
 }
 
-// The canonical report records scores, not absences: a sub-score the run could not compute is
-// left out rather than written as null, so a number in `manuscript/reports/` is always a
-// measurement (spec §3.4).
-function numericScores(scores) {
+/**
+ * The canonical report records scores, not absences: a sub-score the run could not compute is
+ * left out rather than written as null, so a number in `manuscript/reports/` is always a
+ * measurement (spec §3.4).
+ * @param {object} scores
+ * @returns {object} the numeric sub-scores
+ */
+export function numericScores(scores) {
   return Object.fromEntries(
     Object.entries(scores ?? {}).filter(([, value]) => typeof value === 'number'),
   );
@@ -242,15 +247,18 @@ export async function list({ store }) {
 /**
  * @param {{store: object}} deps
  * @param {string} section
- * @returns {Promise<object>} the section entry plus its body and its last report
+ * @returns {Promise<object>} the section entry, its body, whether the file has drifted from the
+ *   hash the manuscript records, and its last report
  */
 export async function show({ store }, section) {
   const manuscript = await loadManuscript(store);
   const entry = findSection(manuscript, section);
   const text = entry.status === 'planned' ? null : await store.readSection(entry.file);
+  const body = text === null ? null : parseSectionFile(text).body;
   return {
     ...entry,
-    body: text === null ? null : parseSectionFile(text).body,
+    body,
+    drift: sectionDrift(entry, body),
     report: await store.readReport(entry.id),
   };
 }

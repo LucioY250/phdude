@@ -23,6 +23,13 @@ for an AI-detector score, and nothing ever will** (PRD §30c). See
   `planned`, and moves each one `planned → draft → revised → approved`. A section file carries a
   four-key front matter and the sha256 of its body with line endings normalized and trailing
   whitespace dropped, so reformatting a file does not read as a rewrite.
+- **The recorded hash is checked.** `manuscript show`, `phdude prose <section>` and
+  `phdude doctor` compare the hash in `manuscript.yaml` with the body on disk and say plainly
+  when they differ: `section introduction was edited outside PhDude since its last submit`. Only
+  a submit moves the recorded hash, so a hand-edit stays visible until the text goes back through
+  the gates.
+- **`phdude doctor` sees the manuscript.** A `Manuscript:` block reports the sections by status,
+  the sections that have a report on file, and the drifted ones, with a warning for each.
 - **Six writing gates**, each returning findings located to a line. `gate-citations`: every
   `[@key]` resolves to a recorded source, and a dismissed candidate may not be cited.
   `gate-evidence`: every marker names something real, a `rejected` claim may not be asserted, a
@@ -52,8 +59,9 @@ for an AI-detector score, and nothing ever will** (PRD §30c). See
   PRD §39.1: six sub-scores from documented formulas over counted observations, the aggregate as
   their weighted mean, and every observation with its line and what to do about it. With a section
   it reads the evidence graph, so Evidence Alignment and Epistemic Precision are real numbers, and
-  it stores the scores in `manuscript/reports/<section>.yaml`. With `--file` it needs no
-  workspace. It reports and never blocks; the exit code is always 0.
+  it rewrites `manuscript/reports/<section>.yaml` whole — hash, timestamp, gate rows, scores and
+  counts recomputed together, so no number is stamped with a hash that does not describe it. With
+  `--file` it needs no workspace. It reports and never blocks; the exit code is always 0.
 - **Author voice profiles.** `phdude authors list|show <id>|add --json|learn <id> --from <path…>
   [--approved]|consensus` writes `authors/<id>.yaml` (`phdude.author-profile` v1). `learn`
   computes descriptive statistics from approved samples — sentence-length mean and SD, opening

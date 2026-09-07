@@ -473,6 +473,11 @@ Six sub-scores, each one arithmetic over counts you can check, with the formula 
 [docs/cli.md](docs/cli.md) and the located observations behind it. `phdude prose --file <path>`
 runs the same report over any text file and needs no workspace at all.
 
+A section is hashed when it is submitted, and that hash is checked. Edit a section file in your
+editor and `phdude manuscript show`, `phdude prose` and `phdude doctor` all tell you the same
+thing — `section introduction was edited outside PhDude since its last submit` — until the text
+goes back through the gates.
+
 ### Approval is yours
 
 A section becomes `approved` the same way a claim becomes canonical: through a decision you
@@ -625,7 +630,7 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |
 | `phdude mode lite\|full\|ruthless\|off` | How hard the agent pushes back. |
 | `phdude migrate [--dry-run]` | Upgrade a workspace written by an older PhDude. |
-| `phdude doctor` | Adapters, cache, schema versions, skill permissions, git state. |
+| `phdude doctor` | Adapters, cache, schema versions, skill permissions, git state, and the manuscript: sections by status, reports on file, sections edited outside PhDude. |
 | `phdude help` | The command list, the global options, and what each exit code means. |
 
 Every command takes `--json`. Exit codes mean something: 0 ok, 1 usage, 2 validation,

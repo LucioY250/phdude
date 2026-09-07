@@ -12,7 +12,7 @@ import * as manuscript from '../../src/application/manuscript.js';
 import { proseSection } from '../../src/application/prose.js';
 import { write } from '../../src/application/write.js';
 import { PhdudeError } from '../../src/domain/errors.js';
-import { parseSectionFile } from '../../src/domain/manuscript.js';
+import { parseSectionFile, sectionHash } from '../../src/domain/manuscript.js';
 
 const actor = { researcher: 'test', agent: 'node' };
 
@@ -414,6 +414,80 @@ test('with a voice on file the pipeline scores authorVoice and warns without blo
     (await deps.store.readReport('introduction')).scores.authorVoice,
     result.report.scores.authorVoice,
   );
+});
+
+test('prose: a section edited by hand is reported as drifted, with a report that describes it', async () => {
+  const { deps, claim } = await workspace();
+  const path = await file(deps, 'draft.md', draftFor(claim.id, 'zeta2020adoption'));
+  await manuscript.submit(deps, { section: 'introduction', file: path });
+  const submitted = await deps.store.readReport('introduction');
+  const events = (await deps.store.readEvents()).length;
+
+  const clean = await proseSection(deps, 'introduction');
+  assert.equal(clean.drift.drifted, false);
+
+  // A hand-edit outside PhDude: the section file moves, `manuscript.yaml` does not.
+  const current = await deps.store.readSection('manuscript/introduction.md');
+  await deps.store.writeSection(
+    'manuscript/introduction.md',
+    `${current}\nIt is important to note that this is, in essence, a very important addition.\n`,
+  );
+
+  const report = await proseSection(deps, 'introduction');
+  assert.equal(report.drift.drifted, true);
+  assert.equal(report.drift.recorded, submitted.hash);
+
+  // The whole record describes the text this run measured: hash, timestamp, gate rows and
+  // counts move together, so no number is stamped with a hash that does not describe it.
+  const stored = await deps.store.readReport('introduction');
+  const body = parseSectionFile(await deps.store.readSection('manuscript/introduction.md')).body;
+  assert.equal(stored.hash, sectionHash(body));
+  assert.notEqual(stored.hash, submitted.hash);
+  assert.notEqual(stored.at, submitted.at);
+  assert.deepEqual(
+    stored.gates.map((row) => row.gate),
+    [
+      'gate-citations',
+      'gate-evidence',
+      'gate-prose',
+      'gate-voice',
+      'gate-meaning',
+      'gate-profile',
+    ],
+  );
+  assert.equal(
+    stored.warnings,
+    stored.gates.find((row) => row.gate === 'gate-prose').findings,
+    'the recorded warnings are the findings the recorded gate rows counted',
+  );
+  assert.ok(stored.warnings > 0, 'the added filler is a finding');
+  assert.equal(stored.scores.conciseness, report.scores.conciseness);
+  assert.equal((await deps.store.readEvents()).length, events, 'a report still records no event');
+
+  // The manuscript itself is untouched: only a submit moves the recorded hash.
+  const entry = (await deps.store.readManuscript()).sections.find((s) => s.id === 'introduction');
+  assert.equal(entry.hash, submitted.hash);
+});
+
+test('show: a section edited by hand is reported as drifted', async () => {
+  const { deps, claim } = await workspace();
+  const path = await file(deps, 'draft.md', draftFor(claim.id, 'zeta2020adoption'));
+  await manuscript.submit(deps, { section: 'introduction', file: path });
+
+  const before = await manuscript.show(deps, 'introduction');
+  assert.equal(before.drift.drifted, false);
+  assert.equal(before.drift.recorded, before.drift.actual);
+
+  const current = await deps.store.readSection('manuscript/introduction.md');
+  await deps.store.writeSection('manuscript/introduction.md', `${current}\nA hand-written line.\n`);
+
+  const after = await manuscript.show(deps, 'introduction');
+  assert.equal(after.drift.drifted, true);
+  assert.equal(after.drift.recorded, before.drift.recorded);
+  assert.notEqual(after.drift.actual, before.drift.actual);
+
+  // A planned section has nothing on disk and nothing recorded, so it cannot have drifted.
+  assert.equal((await manuscript.show(deps, 'methods')).drift.drifted, false);
 });
 
 test('prose refuses a planned section, and an approved section refuses deslop', async () => {

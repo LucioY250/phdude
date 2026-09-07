@@ -675,11 +675,16 @@ sentence it names, what is wrong and what to do about it. It reports; it never b
 always exits 0.
 
 With a section id it reports on that manuscript section with the evidence graph behind it, so
-Evidence Alignment and Epistemic Precision are real numbers, and it stores the six scores in
-`manuscript/reports/<section>.yaml`. That report is a derived file, like `references.bib`: it
-records no event, and the prose itself is never touched. A section written under a voice profile
-also lists, under `Voice`, the `gate-voice` comparisons its Author Voice score came from, so the
-screen shows the same findings the stored report counted.
+Evidence Alignment and Epistemic Precision are real numbers, and it rewrites
+`manuscript/reports/<section>.yaml`. The whole record is recomputed together — the hash of the
+body it measured, the timestamp, one row per gate from a run of all six, the scores and the
+warning and block counts — so no number is ever stamped with a hash that does not describe it.
+That report is a derived file, like `references.bib`: it records no event, and neither the prose
+nor `manuscript.yaml` is touched. A section written under a voice profile also lists, under
+`Voice`, the `gate-voice` comparisons its Author Voice score came from, so the screen shows the
+same findings the stored report counted. A section whose file no longer hashes to the record in
+`manuscript.yaml` is reported as drifted, on the line under the heading and as `drift` under
+`--json`.
 
 With `--file` it reports on any text file and needs no workspace at all. `--lang` picks the
 language resources (`en` and `es` ship). A language with no resources runs only the structural
@@ -805,7 +810,11 @@ default), which is the project voice of PRD §30.2. A workspace holds one manusc
 exits 3 rather than overwriting an existing one.
 
 `list` prints the sections in order; `status` adds the counts by status; `show <section>` prints
-the entry and the body of the section file.
+the entry and the body of the section file. When the body on disk no longer hashes to the
+`hash` in `manuscript.yaml`, `show` adds a `drift:` line saying the section was edited outside
+PhDude since its last submit; `--json` carries the same as `drift: { recorded, actual,
+drifted }`. Only a submit moves the recorded hash, so the notice stays until the text goes back
+through the gates.
 
 `submit` is the only way prose enters `manuscript/`. It reads the draft at `--file` (a path
 relative to your shell, not to the workspace), strips any front matter it carries, and runs the
@@ -961,6 +970,12 @@ A policy file that is not valid YAML replaces both lines with
 built-in defaults there would answer the question with a fiction. Every other command that
 reads the policy (`status`, `gaps`, `next`, `freshness`, `cite check`, `research`,
 `research-fresh`) exits 2 with that same message and the hint `fix the file`.
+
+A workspace with a manuscript also gets a `Manuscript:` block: the sections by status, the
+sections that have a report in `manuscript/reports/`, and the sections whose file has been
+edited outside PhDude since its last submit (`drift: none` when none has). Each drifted section
+is a warning too. `--json` carries the same as `manuscript: { counts, reports[], drifted[] }`,
+and `null` for a workspace with no manuscript.
 
 It also lists every discoverable skill (core, applied packs, and the workspace's own
 `.phdude/skills/`) with its source, declared network and workspace permissions, and any loader

@@ -48,6 +48,20 @@ function render(report) {
     `schema versions:   ${versions}`,
   );
 
+  if (report.manuscript) {
+    const counts = Object.entries(report.manuscript.counts)
+      .map(([name, n]) => `${name}=${n}`)
+      .join(', ');
+    const reports = report.manuscript.reports;
+    lines.push(
+      '',
+      'Manuscript:',
+      `  sections:        ${counts}`,
+      `  reports:         ${reports.length ? reports.join(', ') : '(none)'}`,
+      `  drift:           ${report.manuscript.drifted.length ? report.manuscript.drifted.join(', ') : 'none'}`,
+    );
+  }
+
   if (report.skills.length > 0) {
     lines.push('', 'Skills:');
     for (const skill of report.skills) {

@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { driftNote, parseSectionFile, sectionDrift } from '../domain/manuscript.js';
 import { networkAllowed, providerNames } from '../domain/policy.js';
 import { CURRENT_WORKSPACE_VERSION, workspaceVersionOf } from '../domain/versioning.js';
 import { migrationWarning } from './guard.js';
@@ -19,7 +20,7 @@ const SCHEMA_VERSION = 1;
  *   workspaceVersion: number|null, workspaceVersionCurrent: number, parsers: object,
  *   policyError: string|null, network: boolean|null, providers: string[],
  *   schemaVersions: object, cacheEntries: number, packsAvailable: string[],
- *   skills: object[], warnings: string[]}>}
+ *   skills: object[], manuscript: object|null, warnings: string[]}>}
  */
 export async function doctor({
   store,
@@ -84,6 +85,15 @@ export async function doctor({
     warnings.push(`packs could not be loaded: ${err.message}`);
   }
 
+  // The manuscript is the one v0.4 subsystem doctor could not see: what is written, what has a
+  // report, and which sections a researcher edited outside PhDude since the last submit.
+  let manuscript = null;
+  try {
+    manuscript = await manuscriptHealth(store, warnings);
+  } catch (err) {
+    warnings.push(`the manuscript could not be read: ${err.message}`);
+  }
+
   let skills = [];
   try {
     const listed = await listSkills({ store, loadPacks, discoverSkills, skillsDir });
@@ -110,6 +120,29 @@ export async function doctor({
     cacheEntries: (await store.listCacheEntries()).length,
     packsAvailable,
     skills,
+    manuscript,
     warnings,
+  };
+}
+
+async function manuscriptHealth(store, warnings) {
+  const doc = await store.readManuscript();
+  if (!doc) return null;
+
+  const counts = { planned: 0, draft: 0, revised: 0, approved: 0 };
+  const drifted = [];
+  for (const entry of doc.sections ?? []) {
+    counts[entry.status] = (counts[entry.status] ?? 0) + 1;
+    if (entry.status === 'planned') continue;
+    const text = await store.readSection(entry.file);
+    const body = text === null ? null : parseSectionFile(text).body;
+    if (sectionDrift(entry, body).drifted) drifted.push(entry.id);
+  }
+  for (const id of drifted) warnings.push(driftNote(id));
+
+  return {
+    counts,
+    reports: (await store.listReports()).map((report) => report.section),
+    drifted,
   };
 }

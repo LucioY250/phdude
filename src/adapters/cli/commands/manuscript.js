@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import * as manuscript from '../../../application/manuscript.js';
 import { PhdudeError } from '../../../domain/errors.js';
+import { driftNote } from '../../../domain/manuscript.js';
 
 function requireSection(positionals, sub) {
   const section = positionals[2];
@@ -54,6 +55,7 @@ async function show({ positionals, deps }) {
     `  hash: ${result.hash ?? '(none)'}`,
   ];
   if (result.approved_by) lines.push(`  approved by: ${result.approved_by}`);
+  if (result.drift.drifted) lines.push(`  drift: ${driftNote(result.id)}`);
   lines.push('', result.body ?? '(nothing written yet)');
   return { text: lines.join('\n') + '\n', json: result };
 }
