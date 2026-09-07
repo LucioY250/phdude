@@ -1,0 +1,32 @@
+src/adapters/search/arxiv.js
+  s_946fc7502759d8::t_673747dc4a503e 7
+tests/unit/adapters/search.test.js
+  s_946fc7502759d8::t_7a3be070337635 559-637
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_1439a4f8aee554 133
+  s_946fc7502759d8::t_c4e6b6138962ee 79-83,86
+tests/integration/research.test.js
+  s_946fc7502759d8::t_7ff7008dbd7f71 696-717
+  s_946fc7502759d8::t_3980f1a54c7360 667-695
+src/application/research.js
+  s_946fc7502759d8::t_4856a676ed10d3 56-58
+  s_946fc7502759d8::t_7212a6607a6177 75-76
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_d86bc1013d9d1b 1214-1234
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "871a08f01586bcd9c1bfde295006fbfd5c5ec8c1",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
