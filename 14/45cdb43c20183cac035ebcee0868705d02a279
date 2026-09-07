@@ -1,0 +1,61 @@
+packs/methods/qualitative/skills/qualitative/SKILL.md
+  s_946fc7502759d8::t_d929686cbda803 1-58
+src/domain/packs.js
+  s_946fc7502759d8::t_81d38a791c4bf1 1-49
+packs/fields/medicine/skills/medicine/SKILL.md
+  s_946fc7502759d8::t_ea6d91feaac083 1-57
+packs/methods/quantitative/pack.yaml
+  s_946fc7502759d8::t_47310ef0e2fa61 1-36
+packs/methods/qualitative/pack.yaml
+  s_946fc7502759d8::t_f81dbc0640830f 1-38
+src/adapters/packs/loader.js
+  s_946fc7502759d8::t_0bee26a7fe203c 1-78
+packs/methods/systematic-review/pack.yaml
+  s_946fc7502759d8::t_e27bc91cb29574 1-39
+packs/methods/quantitative/skills/quantitative/SKILL.md
+  s_946fc7502759d8::t_bade840a7f562f 1-59
+packs/fields/computer-science/skills/computer-science/SKILL.md
+  s_946fc7502759d8::t_f5ab7621cf0344 1-56
+packs/fields/computer-science/pack.yaml
+  s_946fc7502759d8::t_04f0304d9e6b92 1-39
+packs/fields/medicine/pack.yaml
+  s_946fc7502759d8::t_651e38a16bfb0c 1-40
+tests/unit/domain/packs.test.js
+  s_946fc7502759d8::t_c6a416f8788140 1-103
+src/application/packs.js
+  s_946fc7502759d8::t_8aaa9b890593d2 1-88
+packs/fields/business/pack.yaml
+  s_946fc7502759d8::t_68025442a78cd2 1-38
+packs/fields/humanities/pack.yaml
+  s_946fc7502759d8::t_6ceb7cfd80a887 1-38
+packs/fields/humanities/skills/humanities/SKILL.md
+  s_946fc7502759d8::t_cd6c2c58746737 1-57
+tests/contracts/packs.test.js
+  s_946fc7502759d8::t_5238c42a054312 1-147
+packs/methods/systematic-review/skills/systematic-review/SKILL.md
+  s_946fc7502759d8::t_61c3a9274087df 1-53
+tests/integration/packs.test.js
+  s_946fc7502759d8::t_27f1c31b85ca8f 45
+  s_946fc7502759d8::t_2b7557d18cfbc4 1-9,11-44,46-77,79-98,100-102,117-175
+  s_946fc7502759d8::t_7df17472371a07 10
+  s_946fc7502759d8::t_1e76afabd5fd26 99,103-116
+  s_946fc7502759d8::t_a34fa32160a963 78
+packs/fields/business/skills/business/SKILL.md
+  s_946fc7502759d8::t_70fe47aaf5db27 1-56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "1445cdb43c20183cac035ebcee0868705d02a279",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
