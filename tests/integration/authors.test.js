@@ -125,6 +125,61 @@ test('learn: reads samples relative to cwd, records learned and samples[]', asyn
   assert.match(events[1].summary, /learned from 2 sample\(s\)/);
 });
 
+test('learn: identical reruns merge the sample, rewrite nothing and do not move learned_at', async () => {
+  const root = await newWorkspace();
+  const deps = makeDeps(root);
+  const learnDeps = { ...deps, cwd: root, readText: readTextRelativeTo(root) };
+  const profilePath = join(root, 'authors', 'researcher-a.yaml');
+  await authors.add(deps, PROFILE_FIELDS);
+  await writeFile(join(root, 'sample.md'), 'A sample of plain prose about the study we ran.');
+
+  const first = await authors.learn(learnDeps, 'researcher-a', {
+    paths: ['sample.md'],
+    approved: true,
+  });
+  const afterFirst = await readFile(profilePath, 'utf8');
+
+  await authors.learn(learnDeps, 'researcher-a', { paths: ['sample.md'], approved: true });
+  // The third run does not pass --approved: an entry already on file keeps the flag it has.
+  const third = await authors.learn(learnDeps, 'researcher-a', { paths: ['sample.md'] });
+
+  assert.deepEqual(third.samples, [{ path: 'sample.md', approved: true }]);
+  assert.equal(third.learned.learned_at, first.learned.learned_at);
+  assert.equal(await readFile(profilePath, 'utf8'), afterFirst, 'byte for byte');
+
+  const events = (await deps.store.readEvents()).filter((e) => e.op === 'authors');
+  assert.deepEqual(
+    events.map((e) => e.summary.replace(/researcher-a/, 'X')),
+    [
+      'author profile X added',
+      'author profile X learned from 1 sample(s)',
+      'author profile X voice unchanged',
+      'author profile X voice unchanged',
+    ],
+  );
+});
+
+test('learn: a later --approved raises the recorded sample without duplicating it', async () => {
+  const root = await newWorkspace();
+  const deps = makeDeps(root);
+  const learnDeps = { ...deps, cwd: root, readText: readTextRelativeTo(root) };
+  await authors.add(deps, PROFILE_FIELDS);
+  await writeFile(join(root, 'sample.md'), 'A sample of plain prose about the study we ran.');
+
+  const unapproved = await authors.learn(learnDeps, 'researcher-a', { paths: ['sample.md'] });
+  assert.deepEqual(unapproved.samples, [{ path: 'sample.md', approved: false }]);
+
+  const raised = await authors.learn(learnDeps, 'researcher-a', {
+    paths: ['sample.md'],
+    approved: true,
+  });
+  assert.deepEqual(raised.samples, [{ path: 'sample.md', approved: true }]);
+  assert.deepEqual(
+    (await deps.store.readYaml(join('authors', 'researcher-a.yaml'))).samples,
+    raised.samples,
+  );
+});
+
 test('learn: --approved marks the new sample entries approved; a missing file is a usage error', async () => {
   const root = await newWorkspace();
   const deps = makeDeps(root);

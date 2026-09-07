@@ -162,12 +162,15 @@ export async function add({ store, clock, actor }, fields) {
 
 /**
  * Recomputes `learned` from exactly the samples passed in this call (not the profile's whole
- * history) and appends them to `samples[]`.
+ * history) and merges them into `samples[]` by path: one entry per file, and an entry already
+ * on record keeps `approved: true` unless this call raises it. Rerunning `learn` over samples
+ * that have not changed writes nothing at all, `learned_at` included - the same rule
+ * `consensus` follows, and the ordinary case for a researcher who reruns the command.
  * @param {{store: object, clock: () => string, actor: object, cwd: string,
  *   readText: (path: string) => Promise<string>}} deps
  * @param {string} id
  * @param {{paths: string[], approved?: boolean}} opts
- * @returns {Promise<object>} the updated profile
+ * @returns {Promise<object>} the profile, updated or exactly as it was
  */
 export async function learn(
   { store, clock, actor, cwd, readText },
@@ -206,11 +209,24 @@ export async function learn(
     newSamples.push({ path: sampleRecordPath(cwd, store.root, requested), approved });
   }
 
-  const updated = {
+  const merged = {
     ...profile,
-    learned: { ...learnFrom(texts, profile.language), learned_at: clock() },
-    samples: [...(profile.samples ?? []), ...newSamples],
+    learned: learnFrom(texts, profile.language),
+    samples: mergeSamples(profile.samples, newSamples),
   };
+
+  if (stableStringify(withoutLearnedAt(profile)) === stableStringify(merged)) {
+    await store.appendEvent({
+      ts: clock(),
+      op: 'authors',
+      actor,
+      ids: [],
+      summary: `author profile ${id} voice unchanged`,
+    });
+    return profile;
+  }
+
+  const updated = { ...merged, learned: { ...merged.learned, learned_at: clock() } };
   assertValid('author-profile', updated);
 
   await store.writeYamlAtomic(pathFor(id), updated);
@@ -222,6 +238,18 @@ export async function learn(
     summary: `author profile ${id} learned from ${newSamples.length} sample(s)`,
   });
   return updated;
+}
+
+// One entry per path, and an approval already on record survives a rerun that does not pass
+// `--approved`: the record of approved samples is what spec §3.2 says `samples[]` is.
+function mergeSamples(existing, added) {
+  const merged = (existing ?? []).map((sample) => ({ ...sample }));
+  for (const sample of added) {
+    const found = merged.find((entry) => entry.path === sample.path);
+    if (!found) merged.push(sample);
+    else if (sample.approved === true) found.approved = true;
+  }
+  return merged;
 }
 
 function withoutLearnedAt(profile) {

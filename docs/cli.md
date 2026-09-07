@@ -883,10 +883,13 @@ recomputes the profile's `learned` block from exactly those texts: sentence-leng
 opening diversity, transition rate, first-person rate, hedge rate, paragraph density, and the
 15 most frequent non-stopword terms of 6+ letters. Every field is an explicit, human-readable
 number - never an opaque embedding (PRD §30). Learning again with more samples recomputes
-`learned` from the new set; it does not average against the old one. Each path is appended to
-`samples[]`, recorded relative to the workspace when it lives inside it and as an absolute path
-otherwise; `approved: true` is set only when `--approved` is passed, so a sample can be tracked
-before the researcher has actually signed off on it.
+`learned` from the new set; it does not average against the old one. Each path is merged into
+`samples[]` by path - one entry per file, never a second copy on a rerun - recorded relative to
+the workspace when it lives inside it and as an absolute path otherwise; `approved: true` is set
+when `--approved` is passed and an entry already marked approved keeps it, so a sample can be
+tracked before the researcher has actually signed off on it. Learning again from samples that
+have not changed rewrites nothing at all, `learned_at` included, exactly as `consensus` does; it
+records one event saying the voice was unchanged.
 
 `consensus` merges every profile except `project-consensus` itself: categorical fields (tone,
 sentence style, transitions, language) by majority vote, ties won by whichever profile was

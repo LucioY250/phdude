@@ -59,8 +59,10 @@ for an AI-detector score, and nothing ever will** (PRD §30c). See
   computes descriptive statistics from approved samples — sentence-length mean and SD, opening
   diversity, paragraph density, transition rate, first-person rate, hedge rate, frequent
   terminology — as plain numbers and word lists a researcher can read and correct. Never an
-  embedding. `consensus` merges the profiles (median, union of `preserve`, intersection of
-  `avoid`) into `authors/project-consensus.yaml` and proposes a Decision when the merge changed.
+  embedding. `samples[]` holds one entry per path, and an approved sample stays approved.
+  Relearning from unchanged samples rewrites nothing, `learned_at` included. `consensus` merges
+  the profiles (median, union of `preserve`, intersection of `avoid`) into
+  `authors/project-consensus.yaml` and proposes a Decision when the merge changed.
 - **Human approval on sections.** `phdude manuscript approve <s> --decision DEC-id` requires a
   decision that is approved and lists `manuscript:<section>` in `affects`; anything less exits 3.
   An approved section is not overwritten — a later submit is refused until `manuscript reopen`,
