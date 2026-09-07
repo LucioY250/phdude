@@ -1,0 +1,40 @@
+CHANGELOG.md
+  s_946fc7502759d8::t_a63101f8484bd2 59-60
+skills/figures/SKILL.md
+  s_946fc7502759d8::t_a63101f8484bd2 91,93-100
+src/application/figure.js
+  s_946fc7502759d8::t_5d6051daea7402 4,10,314-320,323-325
+tests/integration/figure.test.js
+  s_946fc7502759d8::t_1f613e6921bd7f 648-649,654-655,676
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_aa12ce86f7d590 249-250,263-270,286
+tests/golden/repro.test.js
+  s_946fc7502759d8::t_386f2d79e28748 3-4,8,29-53
+  s_946fc7502759d8::t_768ecc53eab075 54-55
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_afda2f276531eb 2278-2279,2283-2284
+  s_946fc7502759d8::t_cf60c9bb868d46 2285,2287-2297
+  s_946fc7502759d8::t_a5a69a2e6fa40a 2286
+commands/figure.md
+  s_946fc7502759d8::t_7d410da1e41471 33-36
+docs/cli.md
+  s_946fc7502759d8::t_7d410da1e41471 985-992
+src/adapters/cli/commands/figure.js
+  s_946fc7502759d8::t_922a3ed85f1818 7,52,128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "3c684150c475b3bc8ba0c3aae778f9c9b1f6a2d7",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
