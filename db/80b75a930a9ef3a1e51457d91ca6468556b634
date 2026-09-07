@@ -1,0 +1,43 @@
+tests/unit/application/paths.test.js
+  s_946fc7502759d8::t_2513bb3113b2f2 1-35
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_5ba0c2b2b3dedd 63
+  s_946fc7502759d8::t_11be33f5636c51 64-65
+  s_946fc7502759d8::t_b373cbd37afbc2 152
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_6ea59d3ddeddcd 63,152
+  s_946fc7502759d8::t_11be33f5636c51 64-65
+src/application/paths.js
+  s_946fc7502759d8::t_92d336e4f4dfaa 1
+  s_946fc7502759d8::t_684a1bb07d01c3 33,35-36
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_d7b57cfd996930 63
+docs/cli.md
+  s_946fc7502759d8::t_5ba0c2b2b3dedd 18-20
+  s_946fc7502759d8::t_c6fa91ced11dc0 189-194
+  s_946fc7502759d8::t_beca64e20319fa 25-27
+  s_946fc7502759d8::t_806d25db1f44c5 24
+  s_946fc7502759d8::t_62682cb874f393 28
+src/application/status.js
+  s_946fc7502759d8::t_d7b57cfd996930 51-53,57
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_d72dc198ae7737 26
+tests/unit/layering.test.js
+  s_946fc7502759d8::t_92d336e4f4dfaa 6-7,10,14
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "db80b75a930a9ef3a1e51457d91ca6468556b634",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
