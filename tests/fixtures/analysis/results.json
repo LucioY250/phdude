@@ -1,0 +1,15 @@
+{
+  "results": [
+    {
+      "key": "mean_weight_by_group",
+      "summary": "Group b averages 4.1 kg more than group a.",
+      "values": { "a": 71.4, "b": 75.5, "c": 68.2 },
+      "unit": "kg"
+    },
+    {
+      "key": "share_returning",
+      "summary": "Just over half of the panel returned for round two.",
+      "values": { "returned": 0.5231, "lost": 0.4769 }
+    }
+  ]
+}

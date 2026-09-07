@@ -40,6 +40,10 @@ my-research/
 │   ├── methods/    METH-*.yaml
 │   └── searches/   SEARCH-*.yaml # what was asked, of whom, and when
 ├── decisions/      DEC-*.yaml
+├── tables/         TABLE-*.yaml  # table declarations
+│   └── out/                      # the rendered .md/.tex/.csv, generated
+├── figures/        FIG-*.yaml    # figure declarations, alt text included
+│   └── out/                      # what the generators wrote, generated
 ├── manuscript/
 │   ├── manuscript.yaml           # schema phdude.manuscript v1: the plan and every section
 │   ├── <section>.md              # the prose, front matter + Markdown body
@@ -47,7 +51,7 @@ my-research/
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
 ├── analysis/       ANALYSIS-*.yaml # declared analysis scripts and their runs
 │   └── out/                      # where a run's results.json and files land
-├── data/ figures/ tables/ templates/ outputs/
+├── data/ templates/ outputs/
 └── .gitignore
 ```
 

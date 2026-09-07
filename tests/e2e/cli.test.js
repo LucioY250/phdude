@@ -2143,3 +2143,133 @@ test('e2e: declare an analysis, refuse it under the closed policy, run it with -
     'declared, ran, redeclared, ran again, declared broken, failed - and nothing for the no-op run',
   );
 });
+
+test('e2e: table build and figure build through the CLI, with the execution policy in the way', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-figures-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await run(ws, ['init', '--title', 'Figures e2e', '--no-git']);
+
+  const survey = ['id,age,group', '1,31,a', '2,44,b', '3,52,a'].join('\n') + '\n';
+  await writeFile(join(ws, 'data', 'survey.csv'), survey);
+  const dataset = (await runJson(ws, ['data', 'add', 'data/survey.csv'])).dataset;
+
+  // A table over the dataset renders three files and records what it read.
+  const declared = await runJson(ws, [
+    'table',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'respondents',
+      caption: 'Every respondent, by group.',
+      source: { dataset: dataset.id, columns: ['group', 'age'] },
+      columns: [
+        { key: 'group', label: 'Group' },
+        { key: 'age', label: 'Age', format: 'number:0' },
+      ],
+    }),
+  ]);
+  assert.equal(declared.created, true);
+  assert.match(declared.table.id, /^TABLE-[0-9a-f]{10}$/);
+
+  const built = await runJson(ws, ['table', 'build', declared.table.id]);
+  assert.equal(built.built, true);
+  assert.equal(
+    await readFile(join(ws, 'tables', 'out', 'respondents.md'), 'utf8'),
+    [
+      '| Group | Age |',
+      '| --- | ---: |',
+      '| a | 31 |',
+      '| b | 44 |',
+      '| a | 52 |',
+      '',
+      'Table: Every respondent, by group.',
+      '',
+    ].join('\n'),
+  );
+  assert.match(
+    await readFile(join(ws, 'tables', 'out', 'respondents.tex'), 'utf8'),
+    /\\label\{tab:respondents\}/,
+  );
+
+  const again = await run(ws, ['table', 'build', declared.table.id]);
+  assert.match(again.stdout, /is up to date/);
+
+  // A figure needs alt text before it is a record at all.
+  const noAlt = await phdude(ws, [
+    'figure',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'groups',
+      caption: 'Respondents per group.',
+      alt: '',
+      generator: { runtime: 'node', script: 'phdude:bar-chart', args: [] },
+      inputs: [],
+      outputs: [{ path: 'figures/out/groups.svg', format: 'svg' }],
+    }),
+    ...ACTOR,
+  ]);
+  assert.equal(noAlt.code, 2);
+  assert.match(noAlt.stderr, /a figure needs alt text/);
+
+  const alt = 'Groups a and b hold two and one respondents; group a is the larger.';
+  const figure = await runJson(ws, [
+    'figure',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'groups',
+      caption: 'Respondents per group.',
+      alt,
+      generator: {
+        runtime: 'node',
+        script: 'phdude:bar-chart',
+        args: [
+          '--input',
+          'data/survey.csv',
+          '--key',
+          'group',
+          '--out',
+          'figures/out/groups.svg',
+          '--title',
+          'Respondents per group',
+          '--alt',
+          alt,
+        ],
+      },
+      inputs: [dataset.id],
+      outputs: [{ path: 'figures/out/groups.svg', format: 'svg' }],
+    }),
+  ]);
+  assert.match(figure.figure.id, /^FIG-[0-9a-f]{10}$/);
+
+  // The default policy leaves execution closed.
+  const refused = await phdude(ws, ['figure', 'build', figure.figure.id, ...ACTOR]);
+  assert.equal(refused.code, 3);
+  assert.match(refused.stderr, /script execution is disabled/);
+  assert.match(refused.stderr, /--allow-exec/);
+
+  const check = await runJson(ws, ['figure', 'check']);
+  assert.equal(check.figures[0].status, 'never-run');
+
+  const drawn = await runJson(ws, ['figure', 'build', figure.figure.id, '--allow-exec']);
+  assert.equal(drawn.run.exit, 0);
+  const svg = await readFile(join(ws, 'figures', 'out', 'groups.svg'), 'utf8');
+  assert.match(svg, new RegExp(`<desc id="figure-desc">${alt.replace(/[.]/g, '\\.')}</desc>`));
+  assert.equal(drawn.run.output_hashes['figures/out/groups.svg'].length, 64);
+
+  assert.equal((await runJson(ws, ['figure', 'check'])).figures[0].status, 'up-to-date');
+
+  // Editing the data under the figure makes it stale, without anything having watched the file.
+  await writeFile(join(ws, 'data', 'survey.csv'), survey + '4,29,c\n');
+  const stale = await run(ws, ['figure', 'check']);
+  assert.match(stale.stdout, /stale/);
+  assert.match(stale.stdout, /input changed since the last build/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.filter((e) => e.op === 'table').length, 2, 'one declaration, one build');
+  assert.equal(events.filter((e) => e.op === 'figure').length, 2, 'one declaration, one build');
+});

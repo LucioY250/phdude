@@ -1,0 +1,72 @@
+{
+  "$id": "phdude://table",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.table" },
+        "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "caption": { "type": "string" },
+        "source": {
+          "type": "object",
+          "properties": {
+            "result": { "$ref": "phdude://common#/$defs/id" },
+            "dataset": { "$ref": "phdude://common#/$defs/id" },
+            "columns": { "type": "array", "items": { "type": "string" } },
+            "limit": { "type": "integer", "minimum": 1 }
+          },
+          "oneOf": [{ "required": ["result"] }, { "required": ["dataset"] }],
+          "additionalProperties": false
+        },
+        "columns": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": { "type": "string" },
+              "label": { "type": "string" },
+              "format": { "type": "string", "pattern": "^(?:text|number:[0-9]|percent:[0-9])$" }
+            },
+            "required": ["key", "label"],
+            "additionalProperties": false
+          }
+        },
+        "formats": {
+          "type": "array",
+          "items": { "enum": ["md", "latex", "csv"] },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "md": { "type": "string" },
+            "latex": { "type": "string" },
+            "csv": { "type": "string" }
+          },
+          "additionalProperties": false
+        },
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "source_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+              "output_hashes": {
+                "type": "object",
+                "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+              }
+            },
+            "required": ["at", "source_hash", "output_hashes"],
+            "additionalProperties": false
+          }
+        },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": ["name", "caption", "source", "columns", "formats", "outputs", "runs", "state"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

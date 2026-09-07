@@ -28,6 +28,8 @@ export const SCHEMA_TYPES = [
   'candidate',
   'dataset',
   'analysis',
+  'table',
+  'figure',
   'search',
   'decision',
   'manuscript',

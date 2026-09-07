@@ -154,6 +154,16 @@ export const COMMAND_ROWS = [
       'Never run a script yourself.',
   ],
   [
+    'table add|list|show|build',
+    'Render a RESULT or a DATASET as a Markdown, LaTeX and CSV table under tables/out/; each ' +
+      'build records the hash of what it read and what it wrote.',
+  ],
+  [
+    'figure add|list|show|build|check',
+    'Declare a figure with required alt text, build it by running its generator through the ' +
+      'execution policy, and report which figures are stale, unbuilt or missing alt text.',
+  ],
+  [
     'prose <section> | --file <path>',
     'Academic Prose Quality report over a manuscript section or a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
   ],

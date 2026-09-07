@@ -14,6 +14,8 @@ export const ID_PREFIXES = {
   candidate: 'CAND',
   dataset: 'DATASET',
   analysis: 'ANALYSIS',
+  table: 'TABLE',
+  figure: 'FIG',
   search: 'SEARCH',
 };
 const BY_PREFIX = Object.fromEntries(Object.entries(ID_PREFIXES).map(([t, p]) => [p, t]));

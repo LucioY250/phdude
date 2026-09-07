@@ -37,6 +37,12 @@ const LINES = [
   '          list|show <id>|runs <id>  what is declared, and every run of one analysis',
   '          run <id> [--allow-exec]   run it and record the RESULTs; refuses when the inputs',
   '              [--force]             have not changed since the last successful run',
+  '  table add --json|list|show <id>|build <id>',
+  '                                    render a result or a dataset as Markdown, LaTeX and CSV',
+  '        [--format md,latex,csv]     under tables/out/, recording what it read',
+  '  figure add --json|list|show <id>|build <id>|check',
+  '                                    declare a figure with alt text, build it through its',
+  '         [--allow-exec]             generator, and report what has gone stale',
   '  prose <section> | --file <path>   academic prose quality report: six scores, located',
   '        [--lang c]                  observations, and what to do about each one',
   '  write <section> [--voice id]      assemble the writing context and the draft contract',
@@ -64,7 +70,7 @@ const LINES = [
   '                                    override the recorded actor',
   '  --version                         print the version',
   '',
-  'Exit codes: 0 ok, 1 usage, 2 validation, 3 policy, 4 tool missing or script failed.',
+  'Exit codes: 0 ok, 1 usage, 2 validation, 3 policy, 4 external tool missing or a script that failed.',
   'Full reference: docs/cli.md',
 ];
 

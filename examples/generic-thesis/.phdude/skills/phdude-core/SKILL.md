@@ -55,18 +55,19 @@ Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude l
 --contradicts CLAIM-b`), `phdude edit`, `phdude decide`, `phdude promote`,
 `phdude research accept`, `phdude research dismiss`, `phdude packs apply`, `phdude mode`,
 `phdude authors add`, `phdude authors learn`, `phdude authors consensus`,
-`phdude manuscript init`, `phdude manuscript submit`, `phdude manuscript approve`,
-`phdude manuscript reopen`, `phdude data add`, `phdude analyze add`, `phdude analyze run`,
-or `phdude deslop <section> --file <revised.md>`.
+`phdude data add`, `phdude analyze add`, `phdude analyze run`, `phdude table add`,
+`phdude table build`, `phdude figure add`, `phdude figure build`, `phdude manuscript init`,
+`phdude manuscript submit`, `phdude manuscript approve`, `phdude manuscript reopen`, or
+`phdude deslop <section> --file <revised.md>`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
 cache — expected setup steps, not knowledge edits. `phdude research` and `phdude research-fresh`
 write candidates and search records, which are not knowledge until accepted. `phdude cite
 export` writes `references.bib` or `references.json` at the workspace root, a derived file that
 records no event and is never a substitute for the `SRC-` id itself.) Every other command —
 `phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `freshness`,
-`packs list|detect`, `authors list|show`, `manuscript list|show|status`,
-`data list|show|profile`, `analyze list|show|runs`, `prose`, `doctor`, `help` — only reads
-or derives from what is already recorded. (`phdude write` and
+`packs list|detect`, `authors list|show`, `data list|show|profile`, `analyze list|show|runs`,
+`table list|show`, `figure list|show|check`, `manuscript list|show|status`, `prose`, `doctor`,
+`help` — only reads or derives from what is already recorded. (`phdude write` and
 `phdude deslop <section>` without a file write only `.phdude/cache/`, and
 `phdude prose <section>` stores the section's scores in `manuscript/reports/`, a derived file.)
 Never write YAML files directly, even to "fix a typo", and never edit a file under
@@ -82,6 +83,15 @@ gates, meaning preservation included; `phdude prose <section>` is the quality re
 `[[write]]` and `[[academic-prose]]`. A blocking finding means nothing was written: fix the
 draft, never the gate. And PhDude has no AI-detector score and never will (PRD §30c) — if a
 researcher asks for one, say so plainly and offer the prose report instead.
+
+### Running a script
+
+`phdude analyze run` and `phdude figure build` are the only ways a script in this workspace runs,
+and neither runs at all unless `.phdude/research-policy.yaml` sets `execution.enabled: true` or
+the researcher passes `--allow-exec`. Never run an analysis script or a figure generator yourself
+— through Bash, through a runner, or by any other route. A run PhDude did not start records no
+hashes, and a figure or a table nobody can trace back to its inputs is not evidence. If execution
+is closed, say so and let the researcher open it; do not work around it.
 
 ### Correcting a record
 

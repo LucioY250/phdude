@@ -1,0 +1,32 @@
+{
+  "schema": "phdude.figure",
+  "version": 1,
+  "id": "FIG-0123456789",
+  "created": "2026-09-07T00:00:00Z",
+  "actor": { "researcher": "ada", "agent": "cli" },
+  "tags": [],
+  "name": "mean-weight",
+  "caption": "Mean weight by group.",
+  "alt": "Bar chart: group b averages 75.5 kg against group a's 71.4 kg.",
+  "generator": {
+    "runtime": "node",
+    "script": "phdude:bar-chart",
+    "args": ["--input", "analysis/out/weights/results.json"]
+  },
+  "inputs": ["RESULT-0123456789"],
+  "outputs": [{ "path": "figures/out/mean-weight.svg", "format": "svg" }],
+  "runs": [
+    {
+      "at": "2026-09-07T10:00:00Z",
+      "exit": 0,
+      "duration_ms": 42,
+      "input_hashes": {
+        "RESULT-0123456789": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      },
+      "output_hashes": {
+        "figures/out/mean-weight.svg": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+      }
+    }
+  ],
+  "state": "candidate"
+}

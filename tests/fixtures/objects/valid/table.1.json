@@ -1,0 +1,31 @@
+{
+  "schema": "phdude.table",
+  "version": 1,
+  "id": "TABLE-0123456789",
+  "created": "2026-09-07T00:00:00Z",
+  "actor": { "researcher": "ada", "agent": "cli" },
+  "tags": [],
+  "name": "mean-weight",
+  "caption": "Mean weight by group.",
+  "source": { "result": "RESULT-0123456789" },
+  "columns": [
+    { "key": "key", "label": "Group" },
+    { "key": "value", "label": "Mean", "format": "number:2" }
+  ],
+  "formats": ["md", "latex", "csv"],
+  "outputs": {
+    "md": "tables/out/mean-weight.md",
+    "latex": "tables/out/mean-weight.tex",
+    "csv": "tables/out/mean-weight.csv"
+  },
+  "runs": [
+    {
+      "at": "2026-09-07T10:00:00Z",
+      "source_hash": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "output_hashes": {
+        "tables/out/mean-weight.md": "abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789"
+      }
+    }
+  ],
+  "state": "candidate"
+}

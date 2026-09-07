@@ -8,7 +8,7 @@ import { parse } from 'yaml';
 import { localRunner } from '../../src/adapters/execution/local.js';
 import { parseTable } from '../../src/adapters/documents/index.js';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
-import { read } from '../../src/adapters/store/fs-walk.js';
+import { read, realpath } from '../../src/adapters/store/fs-walk.js';
 import * as analyze from '../../src/application/analyze.js';
 import * as data from '../../src/application/data.js';
 import { PhdudeError } from '../../src/domain/errors.js';
@@ -37,6 +37,7 @@ function makeDeps(root, startTick = 0) {
     actor,
     runner: localRunner,
     readBytes: (rel) => read(join(root, rel)),
+    realpath,
     parseTable,
   };
 }
