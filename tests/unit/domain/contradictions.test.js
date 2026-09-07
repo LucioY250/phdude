@@ -1,6 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { markContradiction, disputedPairs } from '../../../src/domain/contradictions.js';
+import {
+  markContradiction,
+  disputedPairs,
+  liveContradictions,
+} from '../../../src/domain/contradictions.js';
 import { PhdudeError } from '../../../src/domain/errors.js';
 
 const created = '2026-09-07T00:00:00Z';
@@ -121,14 +125,6 @@ test('disputedPairs: one pair reported once regardless of iteration order', () =
   assert.deepEqual(disputedPairs(claims), [['CLAIM-a', 'CLAIM-b']]);
 });
 
-test('disputedPairs: a pair still counts when only one side remains disputed', () => {
-  const claims = [
-    claim('CLAIM-a', 'rejected', 'a', ['CLAIM-b']),
-    claim('CLAIM-b', 'disputed', 'b', ['CLAIM-a']),
-  ];
-  assert.deepEqual(disputedPairs(claims), [['CLAIM-a', 'CLAIM-b']]);
-});
-
 test('disputedPairs: resolved pairs (neither side disputed) are excluded', () => {
   const claims = [
     claim('CLAIM-a', 'supported', 'a', ['CLAIM-b']),
@@ -147,4 +143,49 @@ test('disputedPairs: multiple pairs are sorted deterministically', () => {
     ['CLAIM-a', 'CLAIM-b'],
     ['CLAIM-a', 'CLAIM-c'],
   ]);
+});
+
+test('liveContradictions: lists contradicted ids whose claim is not rejected', () => {
+  const a = claim('CLAIM-a', 'supported', 'a', ['CLAIM-b', 'CLAIM-c']);
+  const byId = new Map([
+    ['CLAIM-b', claim('CLAIM-b', 'disputed', 'b', ['CLAIM-a'])],
+    ['CLAIM-c', claim('CLAIM-c', 'candidate', 'c', ['CLAIM-a'])],
+  ]);
+  assert.deepEqual(liveContradictions(a, byId), ['CLAIM-b', 'CLAIM-c']);
+});
+
+test('liveContradictions: a rejected opponent is not live', () => {
+  const a = claim('CLAIM-a', 'disputed', 'a', ['CLAIM-b']);
+  const byId = new Map([['CLAIM-b', claim('CLAIM-b', 'rejected', 'b', ['CLAIM-a'])]]);
+  assert.deepEqual(liveContradictions(a, byId), []);
+});
+
+test('liveContradictions: an id with no claim behind it is not live', () => {
+  const a = claim('CLAIM-a', 'disputed', 'a', ['CLAIM-gone']);
+  assert.deepEqual(liveContradictions(a, new Map()), []);
+});
+
+test('liveContradictions: a claim with no contradicts has none', () => {
+  assert.deepEqual(liveContradictions(claim('CLAIM-a', 'candidate'), new Map()), []);
+});
+
+test('disputedPairs: a pair is live whatever the two states, as long as neither is rejected', () => {
+  const claims = [
+    claim('CLAIM-a', 'supported', 'a', ['CLAIM-b']),
+    claim('CLAIM-b', 'supported', 'b', ['CLAIM-a']),
+  ];
+  assert.deepEqual(disputedPairs(claims), [['CLAIM-a', 'CLAIM-b']]);
+});
+
+test('disputedPairs: a pair drops out once one side is rejected', () => {
+  const claims = [
+    claim('CLAIM-a', 'rejected', 'a', ['CLAIM-b']),
+    claim('CLAIM-b', 'disputed', 'b', ['CLAIM-a']),
+  ];
+  assert.deepEqual(disputedPairs(claims), []);
+});
+
+test('disputedPairs: a one-sided reference is not a pair', () => {
+  const claims = [claim('CLAIM-a', 'disputed', 'a', ['CLAIM-b']), claim('CLAIM-b', 'disputed')];
+  assert.deepEqual(disputedPairs(claims), []);
 });

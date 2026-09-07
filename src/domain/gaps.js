@@ -191,7 +191,7 @@ function gapsForDisputed(snapshot) {
   return disputedPairs(claims).map(([a, b]) => ({
     kind: 'disputed-pair',
     id: `${a}/${b}`,
-    why: `${a} and ${b} contradict each other and at least one is still disputed`,
+    why: `${a} and ${b} contradict each other and neither has been rejected`,
     command:
       `phdude decide propose --title "Resolve contradiction between ${a} and ${b}" --rationale "…" ` +
       `--affects ${a} ${b} --change '{"resolves_contradiction":["${a}","${b}"],"survivor":"${a}"}'`,

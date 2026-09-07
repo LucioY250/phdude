@@ -1,3 +1,4 @@
+import { liveContradictions } from '../domain/contradictions.js';
 import { newDecision } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
 import { KNOWLEDGE_STATES, canTransition } from '../domain/states.js';
@@ -22,6 +23,15 @@ async function getDecision(store, id) {
     );
   }
   return obj;
+}
+
+async function liveContradictionsOf(store, claim) {
+  const byId = new Map();
+  for (const id of claim.contradicts ?? []) {
+    const other = await store.readEntity(id);
+    if (other) byId.set(id, other);
+  }
+  return liveContradictions(claim, byId);
 }
 
 // Approvals and rejections are recorded against a named human, never against the agent's
@@ -242,12 +252,29 @@ export async function promote({ store, clock, actor }, id, { to = 'canonical', d
     throw new PhdudeError('POLICY', `cannot move ${id} from ${obj.state} to ${to}`, null, null);
   }
 
-  // Leaving `disputed` for `supported`/`canonical` is resolving a contradiction, not an
-  // ordinary promotion. A single decision must not rehabilitate both sides of a dispute: it
-  // names one `survivor`, and every other claim it lists that still contradicts this one must
-  // already be `rejected` before the survivor can be promoted. `disputed` -> `rejected` needs
-  // no decision (PRD §3.5).
-  if (obj.state === 'disputed' && (to === 'supported' || to === 'canonical')) {
+  const contradicts = obj.contradicts ?? [];
+  const live = contradicts.length > 0 ? await liveContradictionsOf(store, obj) : [];
+  const unresolvedHint = 'propose a decision naming a survivor, reject the others, then promote';
+
+  // The gate keys on the `contradicts` relation, not on the state the claim happens to sit in:
+  // `disputed -> candidate -> supported` would otherwise settle a live contradiction with no
+  // decision at all, and the same two hops would rehabilitate a rejected loser. While an
+  // opponent is still live the only way out is `rejected`, or `supported`/`canonical` with the
+  // resolving decision below; `disputed -> rejected` needs no decision (PRD §3.5).
+  if (live.length > 0 && !['rejected', 'supported', 'canonical'].includes(to)) {
+    throw new PhdudeError(
+      'POLICY',
+      `${id} has unresolved contradiction(s) with ${live.join(', ')}`,
+      unresolvedHint,
+      null,
+    );
+  }
+
+  // Reaching `supported`/`canonical` while contradicting anything is resolving a contradiction,
+  // not an ordinary promotion. A single decision must not rehabilitate both sides of a dispute:
+  // it names one `survivor`, covers every live opponent, and each claim it lists that still
+  // contradicts this one must already be `rejected` before the survivor can be promoted.
+  if (contradicts.length > 0 && (to === 'supported' || to === 'canonical')) {
     const hint = 'propose a decision with change.resolves_contradiction and change.survivor';
     if (!decision) {
       throw new PhdudeError(
@@ -267,7 +294,6 @@ export async function promote({ store, clock, actor }, id, { to = 'canonical', d
 
     const resolves = decisionObj.change?.resolves_contradiction;
     const survivor = decisionObj.change?.survivor;
-    const contradicts = obj.contradicts ?? [];
     // The decision must actually name an opponent this claim currently contradicts - a
     // resolution that lists only `id` itself would vacuously pass every check below without
     // ever addressing the dispute it claims to resolve.
@@ -293,6 +319,16 @@ export async function promote({ store, clock, actor }, id, { to = 'canonical', d
     }
     if (!decisionObj.affects.includes(id)) {
       throw new PhdudeError('POLICY', `decision ${decision} does not affect ${id}`, hint, null);
+    }
+
+    const uncovered = live.filter((other) => !resolves.includes(other));
+    if (uncovered.length > 0) {
+      throw new PhdudeError(
+        'POLICY',
+        `${id} has unresolved contradiction(s) with ${uncovered.join(', ')}`,
+        unresolvedHint,
+        null,
+      );
     }
 
     const stillContested = resolves.filter((other) => other !== id && contradicts.includes(other));

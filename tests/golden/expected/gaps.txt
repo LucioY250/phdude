@@ -6,7 +6,7 @@ HIGH (5):
     Why: CLAIM-8ad284d305 has no evidence
     Command: phdude link CLAIM-8ad284d305 --to <EVID-id>
   - [disputed-pair] CLAIM-84dc3cdd04/CLAIM-9f7abf99e9
-    Why: CLAIM-84dc3cdd04 and CLAIM-9f7abf99e9 contradict each other and at least one is still disputed
+    Why: CLAIM-84dc3cdd04 and CLAIM-9f7abf99e9 contradict each other and neither has been rejected
     Command: phdude decide propose --title "Resolve contradiction between CLAIM-84dc3cdd04 and CLAIM-9f7abf99e9" --rationale "…" --affects CLAIM-84dc3cdd04 CLAIM-9f7abf99e9 --change '{"resolves_contradiction":["CLAIM-84dc3cdd04","CLAIM-9f7abf99e9"],"survivor":"CLAIM-84dc3cdd04"}'
   - [open-conflict] sample_size
     Why: sample_size has an open conflict: 312 participants (ART-35146e2f6d, ART-0772a215de) vs 300 participants (ART-f7ced78004)

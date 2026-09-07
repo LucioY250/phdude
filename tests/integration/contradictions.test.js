@@ -9,6 +9,7 @@ import { link } from '../../src/application/link.js';
 import { promote, propose, approve } from '../../src/application/decide.js';
 import { buildGraph, trace } from '../../src/domain/lineage.js';
 import { status } from '../../src/application/status.js';
+import { gaps } from '../../src/application/gaps.js';
 import { PhdudeError } from '../../src/domain/errors.js';
 
 const actor = { researcher: 'test', agent: 'node' };
@@ -340,4 +341,83 @@ test('promote: disputed -> rejected needs no resolving decision', async () => {
 
   const rejected = await promote(deps, claimA.id, { to: 'rejected' });
   assert.equal(rejected.state, 'rejected');
+});
+
+test('promote: the two-hop bypass is refused at the first hop', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+
+  await assert.rejects(promote(deps, claimA.id, { to: 'candidate' }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'POLICY');
+    assert.equal(err.message, `${claimA.id} has unresolved contradiction(s) with ${claimB.id}`);
+    assert.equal(err.hint, 'propose a decision naming a survivor, reject the others, then promote');
+    return true;
+  });
+
+  assert.equal((await deps.store.readEntity(claimA.id)).state, 'disputed');
+});
+
+test('promote: a claim parked in candidate cannot reach supported without the decision', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  // Reach `candidate` the only way left - by rejecting the opponent first - and confirm the
+  // gate follows the relation rather than the state the claim now sits in.
+  await promote(deps, claimB.id, { to: 'rejected' });
+  await promote(deps, claimA.id, { to: 'candidate' });
+
+  await assert.rejects(promote(deps, claimA.id, { to: 'supported' }), (err) => {
+    assert.equal(err.code, 'POLICY');
+    assert.match(err.hint, /resolves_contradiction/);
+    return true;
+  });
+});
+
+test('promote: a rejected loser cannot be rehabilitated while the survivor stands', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  const decision = await resolvingDecision(deps, { survivor: claimA.id, loser: claimB.id });
+  await promote(deps, claimB.id, { to: 'rejected' });
+  await promote(deps, claimA.id, { to: 'supported', decision: decision.id });
+
+  await assert.rejects(promote(deps, claimB.id, { to: 'candidate' }), (err) => {
+    assert.equal(err.code, 'POLICY');
+    assert.equal(err.message, `${claimB.id} has unresolved contradiction(s) with ${claimA.id}`);
+    return true;
+  });
+
+  assert.equal((await deps.store.readEntity(claimB.id)).state, 'rejected');
+});
+
+test('promote: the resolving decision must cover every live contradiction, not just one', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  const { obj: claimC } = await addEntity(deps, 'claim', { statement: 'The effect is null.' });
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  await link(deps, claimA.id, { contradicts: claimC.id });
+  await promote(deps, claimB.id, { to: 'rejected' });
+
+  const decision = await resolvingDecision(deps, { survivor: claimA.id, loser: claimB.id });
+
+  await assert.rejects(
+    promote(deps, claimA.id, { to: 'supported', decision: decision.id }),
+    (err) => {
+      assert.equal(err.code, 'POLICY');
+      assert.equal(err.message, `${claimA.id} has unresolved contradiction(s) with ${claimC.id}`);
+      return true;
+    },
+  );
+});
+
+test('status and gaps still report the pair after a refused bypass', async () => {
+  const { deps, claimA, claimB } = await fixture();
+  await link(deps, claimA.id, { contradicts: claimB.id });
+  await assert.rejects(promote(deps, claimA.id, { to: 'candidate' }));
+
+  const report = await status({ store: deps.store });
+  assert.deepEqual(report.disputedPairs, [[claimA.id, claimB.id].sort()]);
+
+  const gapReport = await gaps({ store: deps.store });
+  const pair = gapReport.gaps.find((g) => g.kind === 'disputed-pair');
+  assert.ok(pair, 'the disputed pair is still reported as a gap');
+  assert.equal(pair.severity, 'high');
 });

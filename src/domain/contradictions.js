@@ -38,10 +38,25 @@ export function markContradiction(a, b) {
 }
 
 /**
- * Pure. Pairs of claims currently in an open contradiction, derived from the `contradicts`
- * field. A pair is reported once, ids sorted within the pair, pairs sorted by first then
- * second id. A pair whose claims have both moved on (resolved via a decision, PRD §3.5) drops
- * out once neither side is `disputed` any more - `contradicts` itself is left as history.
+ * Pure. The ids this claim contradicts that are still live: the claim behind the id exists and
+ * is not `rejected`. Rejecting a claim is how a contradiction is settled (PRD §3.5), so a
+ * rejected opponent is history rather than an open dispute.
+ * @param {object} claim
+ * @param {Map<string, object>} claimsById
+ * @returns {string[]}
+ */
+export function liveContradictions(claim, claimsById) {
+  return (claim.contradicts ?? []).filter((id) => {
+    const other = claimsById.get(id);
+    return other !== undefined && other.state !== 'rejected';
+  });
+}
+
+/**
+ * Pure. Pairs of claims in a live contradiction, derived from the `contradicts` field: both
+ * sides reference each other and neither has been `rejected`, whatever states they are in. A
+ * pair is reported once, ids sorted within the pair, pairs sorted by first then second id. A
+ * pair drops out once one side is rejected - `contradicts` itself is left as history.
  * @param {object[]} claims
  * @returns {[string, string][]}
  */
@@ -51,10 +66,10 @@ export function disputedPairs(claims) {
   const pairs = [];
 
   for (const claim of claims) {
-    for (const otherId of claim.contradicts ?? []) {
+    if (claim.state === 'rejected') continue;
+    for (const otherId of liveContradictions(claim, byId)) {
       const other = byId.get(otherId);
-      if (!other) continue;
-      if (claim.state !== 'disputed' && other.state !== 'disputed') continue;
+      if (!(other.contradicts ?? []).includes(claim.id)) continue;
 
       const [lo, hi] = claim.id < otherId ? [claim.id, otherId] : [otherId, claim.id];
       const key = `${lo} ${hi}`;

@@ -76,15 +76,18 @@ rehabilitate both sides of a dispute, so resolving one names exactly one survivo
 2. The researcher approves it, exactly as any other Decision (see Approve, above).
 3. Reject the losing claim(s) first: `phdude promote CLAIM-b --to rejected` — this needs no
    Decision, same as any other `disputed → rejected` move. The survivor cannot be promoted
-   while a claim the Decision names is still `disputed`.
+   while a claim it contradicts is anything but `rejected`.
 4. Promote the survivor: `phdude promote CLAIM-a --to supported --decision DEC-x` (or
    `--to canonical`). This fails with POLICY unless the id being promoted is exactly the
    Decision's `survivor`, is in `affects`, and every other claim the Decision names that this
    claim still contradicts is already `rejected`. Promoting the loser with the same Decision
    is refused, naming the survivor instead of it.
 
-Never reorder steps 3 and 4 to promote a claim while its contradicting partner is still
-`disputed` — that is exactly what this gate prevents. Promoting the survivor does not touch
+Never reorder steps 3 and 4 to promote a claim while its contradicting partner is not yet
+`rejected` — that is exactly what this gate prevents. There is no way around it: while the
+partner is live, the claim's only other move is `--to rejected`, and `--to candidate` is
+refused with `has unresolved contradiction(s) with …` rather than opening a back door out of
+`disputed`. Promoting the survivor does not touch
 any other claim automatically, and the `contradicts` entry is never removed — it stays on the
 survivor as a record that the dispute existed and how it was resolved. Never silently pick a
 side by promoting one claim and leaving the other `disputed` with no explanation.

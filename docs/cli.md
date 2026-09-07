@@ -128,10 +128,10 @@ and state, open and resolved fact conflicts, disputed claim pairs, pending decis
 last events. Every number is derived on read; nothing is cached.
 
 Disputed claim pairs come from marking claims as contradicting each other (see `phdude link`
-below, PRD §3.5): a pair is listed while at least one of the two claims is still `disputed`,
-and drops out once both have moved on (one promoted out via a resolving decision, the other
-rejected). `--json` reports them as `disputedPairs: [[a, b], …]`; the text renderer also shows
-each claim's statement, truncated to 60 characters.
+below, PRD §3.5): a pair is listed while neither of the two claims has been `rejected`,
+whatever states they are in, and drops out once one side is rejected. `--json` reports them as
+`disputedPairs: [[a, b], …]`; the text renderer also shows each claim's statement, truncated to
+60 characters.
 
 ### `phdude next`
 
@@ -292,12 +292,20 @@ Moves an object to `canonical` (or to another state with `--to`). Promotion to c
 requires a decision that is `approved` and lists the object in `affects`; anything else
 exits 3. This is where human authority over canonical knowledge is enforced.
 
-Promoting a `disputed` claim to `supported` or `canonical` is resolving a contradiction, not an
-ordinary promotion, and a single decision must not rehabilitate both sides of a dispute. It
+A claim that contradicts a claim which is not `rejected` has a live contradiction, and the gate
+keys on that relation rather than on the state the claim currently sits in: its only moves are
+`--to rejected`, or `--to supported`/`--to canonical` with the resolving decision below. Any
+other target, `candidate` included, exits 3 with `has unresolved contradiction(s) with …`, so
+neither `disputed → candidate → supported` nor rehabilitating a rejected loser can settle a
+contradiction without a decision.
+
+Promoting a contradicting claim to `supported` or `canonical` is resolving a contradiction, not
+an ordinary promotion, and a single decision must not rehabilitate both sides of a dispute. It
 requires an approved decision (see `phdude decide propose` below) whose `change` names, in
 `resolves_contradiction`, the claim being promoted and (at least) one of its `contradicts`
-partners, and in `survivor` which one of them wins; the promoted claim must be that `survivor`
-and must be in the decision's `affects`. Every other claim the decision lists that this claim
+partners, and in `survivor` which one of them wins; the promoted claim must be that `survivor`,
+must be in the decision's `affects`, and its `resolves_contradiction` must cover every live
+contradiction the claim has. Every other claim the decision lists that this claim
 still contradicts must already be `rejected` - promote each loser to `rejected` first (no
 decision needed for that step, same as any other `disputed → rejected` move), then promote the
 survivor. Promoting the losing claim with the same decision exits 3 naming the survivor
@@ -396,7 +404,7 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 | `source-uncited` | low | No evidence item's `source` is this SRC id directly (same rule as `cite check`'s `uncited-source`). |
 | `artifact-unmined` | low | The artifact's role is classified (not `unknown`), but no source, fact, or evidence references it. |
 | `open-conflict` | high | An unresolved fact conflict (see `status` above), one gap per conflict key. |
-| `disputed-pair` | high | A pair of claims that contradict each other with at least one side still `disputed` (same rule as `status`'s disputed pairs). |
+| `disputed-pair` | high | A pair of claims that contradict each other with neither side `rejected` (same rule as `status`'s disputed pairs). |
 
 `gaps` is read-only; it writes no event. `next` recommends running it (rule `gaps`, medium)
 once 3 or more gaps exist and no higher-impact rule has already fired.
