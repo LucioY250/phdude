@@ -1,0 +1,43 @@
+docs/workspace.md
+  s_946fc7502759d8::t_83f8c477214e44 130-138
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_a9c05a0d276ff4 755
+  s_946fc7502759d8::t_a2de0c5f369758 796,800-827
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_b2b00c2c02515f 66-71
+docs/cli.md
+  s_946fc7502759d8::t_11d36bdefc1c23 289-298
+tests/integration/contradictions.test.js
+  s_946fc7502759d8::t_57eafc0e2e3cd1 199-243,248-249,255-272,276,279-281,283-290,301-323,331
+  s_946fc7502759d8::t_ebf8493653fdf0 75
+  s_946fc7502759d8::t_2737507addf273 70-74,76-91
+src/application/decide.js
+  s_946fc7502759d8::t_67931b7b614bf5 271-274,278
+  s_946fc7502759d8::t_2e6562839fa6ce 246-249,251,267,269,277,286-309
+src/application/link.js
+  s_946fc7502759d8::t_1bc2a1ae7c6767 41-43,48-52
+skills/decisions/SKILL.md
+  s_946fc7502759d8::t_b7442f0c30f5e5 69-70,72-75,77-90
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_a250012a445cf7 66-67
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_83b990026840d8 66-71
+examples/generic-thesis/.phdude/skills/decisions/SKILL.md
+  s_946fc7502759d8::t_83b990026840d8 69-70,72-75,77-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "877a45ee41209a38589eabd477ad9babef624b8a",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
