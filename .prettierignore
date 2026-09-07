@@ -1,0 +1,6 @@
+node_modules
+examples/**/sources
+tests/fixtures
+*.md
+.superpowers/
+docs/
