@@ -1,0 +1,22 @@
+src/application/write.js
+  s_946fc7502759d8::t_b06441c82228fe 6,55
+tests/integration/write.test.js
+  s_946fc7502759d8::t_ab65a576c3e3b8 141-151
+  s_946fc7502759d8::t_4cddf12fd92e3b 139-140,152-166
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b4c06fb72c2df49630fff0f31f5da8d242fe50a4",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
