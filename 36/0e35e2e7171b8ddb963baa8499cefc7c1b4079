@@ -1,0 +1,36 @@
+src/adapters/skills/loader.js
+  s_946fc7502759d8::t_4796f78fb59bfb 27-28,31,63,88-92,94,97,101-108
+src/application/doctor.js
+  s_946fc7502759d8::t_5264d598cc4fe0 71-75
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_6a5eb5e6463f06 4
+  s_946fc7502759d8::t_ade3246ffb5415 232-234,238-240
+  s_946fc7502759d8::t_56781d546c7643 241
+docs/cli.md
+  s_946fc7502759d8::t_1351f1b6a94d4b 95-103
+  s_946fc7502759d8::t_21c8fb5cf4ce46 447-456
+docs/extending.md
+  s_946fc7502759d8::t_21c8fb5cf4ce46 143-150
+tests/unit/application/skills.test.js
+  s_946fc7502759d8::t_ea3852d694721c 43-44,46-47,52,63-64
+  s_946fc7502759d8::t_cb1ffa1abee82b 3-6,73-145,150-166,171-190
+  s_946fc7502759d8::t_e7f2df28267254 146-149,167-170
+src/application/skills.js
+  s_946fc7502759d8::t_bb3180049ab2dd 4-19,28-29,32-33,38-41,43,45-46,49-58,70-93
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "360e35e2e7171b8ddb963baa8499cefc7c1b4079",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
