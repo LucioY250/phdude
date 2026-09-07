@@ -112,6 +112,25 @@ test('every key in a Pandoc bracket group is a citation', () => {
   ]);
 });
 
+test('a suppressed-author citation is audited like any other', () => {
+  assert.deepEqual(citationsIn('Reported in [-@smith2020] and again [-@a; @b].\n'), [
+    { key: 'smith2020', line: 1 },
+    { key: 'a', line: 1 },
+    { key: 'b', line: 1 },
+  ]);
+
+  const registry = ctx({
+    sources: ['SRC-0123456789'],
+    bibkeys: { smith2020adoption: 'SRC-0123456789' },
+  });
+  assert.deepEqual(citationsGate.run('Smith [-@smith2020adoption] reports it.\n', registry), []);
+
+  const findings = citationsGate.run('Nobody [-@ghost] reports it.\n', registry);
+  assert.equal(findings.length, 1);
+  assert.equal(findings[0].severity, 'block');
+  assert.match(findings[0].message, /\[@ghost\]/);
+});
+
 test('a key keeps its internal punctuation and loses its trailing punctuation', () => {
   assert.deepEqual(citationsIn('[@smith2020.]\n[@a.b-c_d]\n'), [
     { key: 'smith2020', line: 1 },
