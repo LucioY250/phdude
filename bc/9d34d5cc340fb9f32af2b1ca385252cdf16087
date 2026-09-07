@@ -1,0 +1,38 @@
+src/domain/contradictions.js
+  s_946fc7502759d8::t_0f1472709f01b5 41-59,69-70,72
+src/application/decide.js
+  s_946fc7502759d8::t_b1b6de384af9ce 1,28-36,255-277,324-331
+  s_946fc7502759d8::t_d1baebac161331 332-333
+tests/golden/expected/gaps.txt
+  s_946fc7502759d8::t_ad93dc01f6f4e6 9
+docs/cli.md
+  s_946fc7502759d8::t_4fa23550943dc9 131-134,295-303,306-308,407
+docs/workspace.md
+  s_946fc7502759d8::t_4fa23550943dc9 144
+tests/unit/domain/contradictions.test.js
+  s_946fc7502759d8::t_8f8c09c10e3367 3-7,147-191
+src/domain/gaps.js
+  s_946fc7502759d8::t_4fa23550943dc9 194
+tests/integration/contradictions.test.js
+  s_946fc7502759d8::t_5628e2666a8861 12,345-423
+skills/decisions/SKILL.md
+  s_946fc7502759d8::t_4fa23550943dc9 79,86-90
+examples/generic-thesis/.phdude/skills/decisions/SKILL.md
+  s_946fc7502759d8::t_ad93dc01f6f4e6 79,86-90
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "bc9d34d5cc340fb9f32af2b1ca385252cdf16087",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
