@@ -19,6 +19,8 @@ function renderClaudeMd() {
     '`/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-packs`,',
     '`/phdude-add`, `/phdude-decide`, `/phdude-doctor`, `/phdude-mode`). Each wraps the CLI: run',
     'it with `--json` and follow the matching skill under `.phdude/skills/<name>/SKILL.md`.',
+    'AGENTS.md below lists skills by name and description only; load a skill file itself only',
+    'when its command or task is actually active, not up front.',
     '',
   ].join('\n');
 }
@@ -42,7 +44,7 @@ export const claudeCodeHost = {
     const skipped = [];
     const record = ({ rel, status }) => (status === 'written' ? written : skipped).push(rel);
 
-    const agentsMd = await renderAgentsMd({ project, skillsDir });
+    const agentsMd = await renderAgentsMd({ project, skillsDir, inlineSkills: false });
     record(await writeManagedFile(root, 'AGENTS.md', agentsMd));
     record(await writeManagedFile(root, 'CLAUDE.md', renderClaudeMd()));
 

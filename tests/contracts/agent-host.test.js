@@ -41,3 +41,46 @@ test('codex writes no slash commands', async () => {
   const { written } = await codexHost.install(root, { project: { title: 'T' } });
   assert.deepEqual(written, ['AGENTS.md']);
 });
+
+test('claude-code AGENTS.md is a skills index, not full inlining', async () => {
+  const root = await mkroot();
+  await claudeCodeHost.install(root, { project: { title: 'T' } });
+  const text = await readFile(join(root, 'AGENTS.md'), 'utf8');
+  assert.match(text, /<!-- phdude:skills-index -->/);
+  assert.doesNotMatch(text, /## Skill: bootstrap/);
+});
+
+test('codex alone still inlines every skill in full', async () => {
+  const root = await mkroot();
+  await codexHost.install(root, { project: { title: 'T' } });
+  const text = await readFile(join(root, 'AGENTS.md'), 'utf8');
+  assert.match(text, /## Skill: bootstrap/);
+  assert.doesNotMatch(text, /<!-- phdude:skills-index -->/);
+});
+
+test('when both hosts install, the claude-code index variant wins and codex leaves it alone', async () => {
+  const root = await mkroot();
+  await claudeCodeHost.install(root, { project: { title: 'T' } });
+  const { written, skipped } = await codexHost.install(root, { project: { title: 'T' } });
+  assert.deepEqual(written, []);
+  assert.deepEqual(skipped, ['AGENTS.md']);
+  const text = await readFile(join(root, 'AGENTS.md'), 'utf8');
+  assert.match(text, /<!-- phdude:skills-index -->/);
+  assert.doesNotMatch(text, /## Skill: bootstrap/);
+});
+
+test('a pre-existing AGENTS.md with malformed front matter is left alone, not thrown on', async () => {
+  const root = await mkroot();
+  const malformed = '---\n: bad: [\n---\nmy notes\n';
+  await writeFile(join(root, 'AGENTS.md'), malformed);
+
+  const r1 = await claudeCodeHost.install(root, { project: { title: 'T' } });
+  assert.ok(r1.skipped.includes('AGENTS.md'));
+  assert.ok(!r1.written.includes('AGENTS.md'));
+
+  const r2 = await codexHost.install(root, { project: { title: 'T' } });
+  assert.deepEqual(r2.skipped, ['AGENTS.md']);
+  assert.deepEqual(r2.written, []);
+
+  assert.equal(await readFile(join(root, 'AGENTS.md'), 'utf8'), malformed);
+});

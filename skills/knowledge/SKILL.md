@@ -44,7 +44,8 @@ phdude knowledge trace <id> --json
 Returns `{ id, up, down }`:
 
 - `up` — what this object depends on (e.g. a claim's evidence, and that evidence's source).
-- `down` — what depends on this object (e.g. a fact's conflicts, a claim's manuscript sections).
+- `down` — what depends on this object (e.g. a source's evidence items, an evidence item's
+  claims, or a Decision that lists it in `affects`).
 
 Use `trace` to answer "where did this come from?" or "what breaks if this changes?". When a
 researcher asks why a sentence is hedged a certain way, trace the claim to its evidence and read
@@ -52,6 +53,6 @@ the evidence's `strength` — that is the answer.
 
 ## Describing state to the researcher
 
-Always name the state when you present an object: "CLAIM-3f2a1 (candidate, one moderate
+Always name the state when you present an object: "CLAIM-3f2a1b9c8d (candidate, one moderate
 evidence item)" rather than presenting it as settled. If `trace` shows a claim with no upstream
 evidence, say so explicitly — it is a gap, not a fact.

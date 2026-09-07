@@ -39,24 +39,25 @@ const POLICY_FILES = [
   'author-profile.yaml',
 ];
 
-// Recursively lists every file already present under `root`, relative to it. Used to tell
-// whether a path an AgentHost reports as `written` is a brand-new file (created) or an existing
-// one it rewrote (updated).
-async function listRelFiles(root, relDir = '') {
-  let entries;
+// Paths AgentHost implementations (claude-code, codex) may write. Snapshotting only these -
+// never the whole workspace, and never `.git` or `.phdude/cache` - lets initWorkspace tell
+// whether a path a host reports as `written` is a brand-new file (created) or one it rewrote
+// (updated), without walking the tree.
+const AGENT_HOST_COMMANDS_DIR = join('.claude', 'commands');
+
+async function snapshotAgentHostFiles(store) {
+  const paths = new Set();
+  for (const rel of ['AGENTS.md', 'CLAUDE.md']) {
+    if (await store.exists(rel)) paths.add(rel);
+  }
+  let entries = [];
   try {
-    entries = await readdir(join(root, relDir), { withFileTypes: true });
+    entries = await readdir(join(store.root, AGENT_HOST_COMMANDS_DIR));
   } catch (err) {
-    if (err.code === 'ENOENT') return new Set();
-    throw err;
+    if (err.code !== 'ENOENT') throw err;
   }
-  const out = [];
-  for (const entry of entries) {
-    const rel = relDir ? join(relDir, entry.name) : entry.name;
-    if (entry.isDirectory()) out.push(...(await listRelFiles(root, rel)));
-    else out.push(rel);
-  }
-  return new Set(out);
+  for (const name of entries) paths.add(join(AGENT_HOST_COMMANDS_DIR, name));
+  return paths;
 }
 
 // Classifies each copied file as created (new), updated (existed with different
@@ -184,11 +185,21 @@ export async function initWorkspace(
 
   await copySkills(store, SKILLS_DIR, created, updated, skipped);
 
-  for (const host of agentHosts) {
-    const preExisting = await listRelFiles(store.root);
-    const { written, skipped: hostSkipped } = await host.install(store.root, { project });
-    for (const rel of written) (preExisting.has(rel) ? updated : created).push(rel);
-    skipped.push(...hostSkipped);
+  if (agentHosts.length > 0) {
+    const preExisting = await snapshotAgentHostFiles(store);
+    // One status per path across every host: a `written` report from any host wins over a
+    // `skipped` report for the same path from another host (e.g. codex deliberately leaving the
+    // AGENTS.md claude-code just wrote in place), so a path is never reported twice.
+    const status = new Map();
+    for (const host of agentHosts) {
+      const { written, skipped: hostSkipped } = await host.install(store.root, { project });
+      for (const rel of written) status.set(rel, 'written');
+      for (const rel of hostSkipped) if (!status.has(rel)) status.set(rel, 'skipped');
+    }
+    for (const [rel, st] of status) {
+      if (st === 'written') (preExisting.has(rel) ? updated : created).push(rel);
+      else skipped.push(rel);
+    }
   }
 
   let gitInitialized = false;

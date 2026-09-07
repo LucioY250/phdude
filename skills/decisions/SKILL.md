@@ -19,7 +19,7 @@ approve one yourself.
 
 ```
 phdude decide propose --title "Adopt 312 as canonical sample size" \
-  --rationale "..." --affects FACT-xxxxxxxxxx --change '{"fact_key":"sample_size","canonical_value":312}' --json
+  --rationale "..." --affects FACT-0123456789 --change '{"fact_key":"sample_size","canonical_value":312}' --json
 ```
 
 A good rationale states: what evidence motivates the change, what alternatives were considered
@@ -30,7 +30,7 @@ fact conflict, or the field being promoted for a claim).
 ## Approve — the researcher's step, not yours
 
 ```
-phdude decide approve DEC-xxxxxxxxxx --by <researcher name>
+phdude decide approve DEC-0123456789 --by <researcher name>
 ```
 
 Never run `decide approve` on the researcher's behalf unless they explicitly said so in this
@@ -46,7 +46,7 @@ the same way: only on the researcher's explicit word.
 Once a Decision is `approved`, promote the object it affects:
 
 ```
-phdude promote CLAIM-xxxxxxxxxx --decision DEC-xxxxxxxxxx --json
+phdude promote CLAIM-0123456789 --decision DEC-0123456789 --json
 ```
 
 This fails (exit code 3) unless the Decision is approved and lists the object in `affects`. Do

@@ -52,8 +52,10 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 ## The only way to write
 
 Write to the workspace ONLY via `phdude add`, `phdude decide`, `phdude promote`,
-`phdude packs apply`, or `phdude mode`. Every other command is read-only. Never write YAML
-files directly, even to "fix a typo".
+`phdude packs apply`, or `phdude mode`. (`phdude init` creates the workspace and `phdude ingest`
+writes the artifact inventory and its cache — expected setup steps, not knowledge edits.) Every
+other command only reads or derives from what is already recorded. Never write YAML files
+directly, even to "fix a typo".
 
 ## Never fabricate
 

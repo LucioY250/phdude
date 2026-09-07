@@ -28,37 +28,47 @@ This inventories `sources/`, hashes and extracts text, and caches it under
 ## 2. Classify unknown artifacts
 
 For every artifact with `role: unknown`, read the first ~60 lines of
-`.phdude/cache/<ART-id>/text.md` and decide its role (`paper`, `thesis-draft`, `presentation`,
+`.phdude/cache/ART-<id>/text.md` and decide its role (`paper`, `thesis-draft`, `presentation`,
 `dataset`, `questionnaire`, `notes`, `report`). Then:
 
 ```
-phdude add artifact-role --json '{"id":"ART-xxxxxxxxxx","role":"paper"}'
+phdude add artifact-role --json '{"id":"ART-0123456789","role":"paper"}'
 ```
 
 ## 3. Extract from papers, theses, and reports
 
 For each artifact with role `paper`, `thesis-draft`, or `report`, read
-`.phdude/cache/<ART-id>/sections/*.md` one section at a time (never the whole `text.md` unless
+`.phdude/cache/ART-<id>/sections/*.md` one section at a time (never the whole `text.md` unless
 it is short) and extract:
 
 **Sources** — the bibliographic record for the artifact itself, or works it cites:
 
 ```
-phdude add source --json '{"title":"...","authors":["..."],"year":2023,"venue":"...","doi":"","url":"","type":"article","artifacts":["ART-xxxxxxxxxx"]}'
+phdude add source --json '{"title":"...","authors":["..."],"year":2023,"venue":"...","doi":"","url":"","type":"article","artifacts":["ART-0123456789"]}'
 ```
 
 **Facts** — sample size, study period, country, instruments, tools, number of interviews, and
 similar project facts, each with a locator:
 
 ```
-phdude add fact --json '{"key":"sample_size","value":142,"from":{"artifact":"ART-xxxxxxxxxx","locator":"p. 12"}}'
+phdude add fact --json '{"key":"sample_size","value":142,"from":{"artifact":"ART-0123456789","locator":"p. 12"}}'
 ```
 
-**Evidence, then claims that cite it** — never add a claim without evidence:
+**Research questions** — a fresh workspace has none, and claims may reference them, so propose
+1-3 to the researcher based on what you have read. Once they confirm, record each one:
 
 ```
-phdude add evidence --json '{"source":"SRC-xxxxxxxxxx","locator":"p. 4, para 2","excerpt":"...","strength":"moderate"}'
-phdude add claim --json '{"statement":"...","kind":"empirical","supported_by":["EVID-xxxxxxxxxx"],"questions":["RQ-1"]}'
+phdude add question --json '{"text":"...","objectives":["..."]}'
+```
+
+This returns an id such as `RQ-1`; only use ids `add question` actually returned, never a guess.
+
+**Evidence, then claims that cite it** — never add a claim without evidence. `questions` is
+optional on a claim: omit it, or reference the ids `add question` returned above.
+
+```
+phdude add evidence --json '{"source":"SRC-0123456789","locator":"p. 4, para 2","excerpt":"...","strength":"moderate"}'
+phdude add claim --json '{"statement":"...","kind":"empirical","supported_by":["EVID-0123456789"]}'
 ```
 
 `kind` is one of `literature | empirical | theoretical | methodological`. Re-adding the same

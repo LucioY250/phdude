@@ -9,20 +9,27 @@ export const DEFAULT_SKILLS_DIR = join(PACKAGE_ROOT, 'skills');
 export const DEFAULT_COMMANDS_DIR = join(PACKAGE_ROOT, 'commands');
 
 export const MANAGED_MARKER = '<!-- phdude:managed -->';
+export const SKILLS_INDEX_MARKER = '<!-- phdude:skills-index -->';
 
 const FRONT_MATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 
 // Splits `SKILL.md` / command-template content into its YAML front matter (parsed) and body.
-// Files without a front matter block are returned with an empty meta object.
+// Files without a front matter block, or whose front matter fails to parse (e.g. a hand-edited
+// pre-existing file), are returned with `meta: null` and the untouched original text as body —
+// callers must treat that the same as "no phdude metadata", never throw.
 export function parseFrontMatter(text) {
   const m = FRONT_MATTER_RE.exec(text);
   if (!m) return { meta: {}, body: text };
-  return { meta: parse(m[1]) ?? {}, body: text.slice(m[0].length) };
+  try {
+    return { meta: parse(m[1]) ?? {}, body: text.slice(m[0].length) };
+  } catch {
+    return { meta: null, body: text };
+  }
 }
 
 function parseSkill(text) {
   const { meta, body } = parseFrontMatter(text);
-  return { meta, body: body.trim() };
+  return { meta: meta ?? {}, body: body.trim() };
 }
 
 // A file is PhDude-managed (safe to overwrite when its content has changed) when either its
@@ -35,7 +42,7 @@ export function isPhdudeManaged(text) {
   return parseFrontMatter(text).meta?.['phdude-managed'] === true;
 }
 
-async function readTextOrNull(path) {
+export async function readFileOrNull(path) {
   try {
     return await readFile(path, 'utf8');
   } catch (err) {
@@ -49,7 +56,7 @@ async function readTextOrNull(path) {
 // classify the result into `written` / `skipped`.
 export async function writeManagedFile(root, rel, content) {
   const abs = join(root, rel);
-  const existing = await readTextOrNull(abs);
+  const existing = await readFileOrNull(abs);
   if (existing === null) {
     await writeFileAtomic(abs, content);
     return { rel, status: 'written' };
@@ -75,9 +82,9 @@ async function listSkillNames(skillsDir) {
     .sort();
 }
 
-async function readSkillBody(skillsDir, name) {
+async function readSkill(skillsDir, name) {
   const text = await readFile(join(skillsDir, name, 'SKILL.md'), 'utf8');
-  return parseSkill(text).body;
+  return parseSkill(text);
 }
 
 const COMMAND_ROWS = [
@@ -105,32 +112,50 @@ function renderCommandTable() {
 }
 
 // Renders the shared AGENTS.md content: header, project title, phdude-core's operating rules
-// inlined, the v0.1 command reference, then every other skill under `## Skill: <name>`, sorted
-// for deterministic output.
-export async function renderAgentsMd({ project, skillsDir = DEFAULT_SKILLS_DIR }) {
+// inlined, the v0.1 command reference, then every other skill, sorted for deterministic output.
+// `inlineSkills: true` (codex, which has no on-demand skill loading) inlines each skill's full
+// body under `## Skill: <name>`. `inlineSkills: false` (Claude Code, which loads
+// `.phdude/skills/<name>/SKILL.md` progressively) instead emits a one-line index per skill, so
+// the file Claude Code auto-loads every session stays small (PRD S41b, S70).
+export async function renderAgentsMd({
+  project,
+  skillsDir = DEFAULT_SKILLS_DIR,
+  inlineSkills = true,
+}) {
   const names = await listSkillNames(skillsDir);
-  const coreBody = names.includes('phdude-core')
-    ? await readSkillBody(skillsDir, 'phdude-core')
-    : '';
+  const core = names.includes('phdude-core')
+    ? await readSkill(skillsDir, 'phdude-core')
+    : { meta: {}, body: '' };
   const others = names.filter((n) => n !== 'phdude-core');
 
   const lines = [
     MANAGED_MARKER,
+    ...(inlineSkills ? [] : [SKILLS_INDEX_MARKER]),
     '# PhDude research workspace',
     '',
     `Project: ${project?.title ?? '(untitled)'}`,
     '',
     '## Operating rules',
     '',
-    coreBody,
+    core.body,
     '',
     '## Commands',
     '',
     renderCommandTable(),
   ];
 
-  for (const name of others) {
-    lines.push('', `## Skill: ${name}`, '', await readSkillBody(skillsDir, name));
+  if (inlineSkills) {
+    for (const name of others) {
+      const skill = await readSkill(skillsDir, name);
+      lines.push('', `## Skill: ${name}`, '', skill.body);
+    }
+  } else {
+    lines.push('', '## Skills', '', 'Load a skill only when its command or task is active:', '');
+    for (const name of others) {
+      const skill = await readSkill(skillsDir, name);
+      const description = skill.meta.description ?? '';
+      lines.push(`- **${name}** - ${description} -> .phdude/skills/${name}/SKILL.md`);
+    }
   }
 
   return lines.join('\n').trimEnd() + '\n';

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
 import { copySkills, initWorkspace } from '../../src/application/init.js';
 import { codexHost } from '../../src/adapters/agents/codex.js';
+import { claudeCodeHost } from '../../src/adapters/agents/claude-code.js';
 
 const deps = (root) => ({
   store: new FsStore(root),
@@ -85,6 +86,25 @@ test('agents: [codex] installs codexHost and produces AGENTS.md', async () => {
   assert.ok(!r2.created.includes('AGENTS.md'));
   assert.ok(!r2.updated.includes('AGENTS.md'));
   assert.ok(r2.skipped.includes('AGENTS.md'));
+});
+
+test('agents: [claude-code, codex] reports AGENTS.md exactly once, never in two lists', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const d = deps(root);
+  d.agentHosts = [claudeCodeHost, codexHost];
+  const count = (r, rel) =>
+    [r.created, r.updated, r.skipped].filter((list) => list.includes(rel)).length;
+
+  const r1 = await initWorkspace(d, { title: 'My thesis', agents: ['claude-code', 'codex'] });
+  assert.equal(count(r1, 'AGENTS.md'), 1);
+  assert.ok(r1.created.includes('AGENTS.md'));
+  assert.match(await readFile(join(root, 'AGENTS.md'), 'utf8'), /<!-- phdude:skills-index -->/);
+
+  const r2 = await initWorkspace(d, { title: 'My thesis', agents: ['claude-code', 'codex'] });
+  assert.equal(count(r2, 'AGENTS.md'), 1);
+  assert.ok(r2.skipped.includes('AGENTS.md'));
+  assert.ok(!r2.created.includes('AGENTS.md'));
+  assert.ok(!r2.updated.includes('AGENTS.md'));
 });
 
 test('copySkills classifies created, then skipped, then updated on content change', async () => {
