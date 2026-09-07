@@ -1,0 +1,34 @@
+src/domain/next.js
+  s_946fc7502759d8::t_134c1191c48548 211,214-223,228,235-247,292-293,296
+CHANGELOG.md
+  s_946fc7502759d8::t_24ed36ee6df06a 26-27
+README.md
+  s_946fc7502759d8::t_24ed36ee6df06a 58-60
+examples/generic-thesis/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_24ed36ee6df06a 26-31
+docs/cli.md
+  s_946fc7502759d8::t_24ed36ee6df06a 410-413
+skills/next/SKILL.md
+  s_946fc7502759d8::t_24ed36ee6df06a 26-31
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_8e82186a09957b 384-387
+  s_946fc7502759d8::t_595ec0e788639f 189,379,388-414
+tests/golden/expected/next.txt
+  s_946fc7502759d8::t_ab86faa661e5a6 16-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "2da9f62f378df061d4216682f5f10e483d999574",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
