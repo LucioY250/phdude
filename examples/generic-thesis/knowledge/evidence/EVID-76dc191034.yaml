@@ -1,0 +1,17 @@
+schema: phdude.evidence
+version: 1
+id: EVID-76dc191034
+created: 2026-09-01T00:00:26.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: SRC-04b75ed54a
+locator: Limitations
+excerpt: The authors note this cross-campus replication is preliminary and has not yet been independently verified.
+strength: weak
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-0772a215de

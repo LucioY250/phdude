@@ -12,11 +12,11 @@ Inventory:
 
 Knowledge:
   source: total=4 (candidate=4)
-  claim: total=3 (candidate=2, supported=1)
-  evidence: total=3 (candidate=3)
+  claim: total=4 (candidate=3, supported=1)
+  evidence: total=4 (candidate=4)
   fact: total=4 (candidate=4)
   result: total=0 ((none))
-  question: total=1 (candidate=1)
+  question: total=2 (candidate=2)
   hypothesis: total=0 ((none))
   method: total=1 (candidate=1)
 

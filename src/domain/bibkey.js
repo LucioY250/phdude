@@ -9,12 +9,19 @@ function stripDiacritics(s) {
   return s.normalize('NFKD').replace(/[\u0300-\u036f]/g, '');
 }
 
+// "Family, Given" is recognized by its comma: everything before it is the family name, taken
+// as-is (not re-split on whitespace, so a multi-word family name like "de la Cruz" survives
+// intact). Natural order ("Given Family") is unchanged: the last whitespace-separated token.
 function surnameOf(authors) {
   const first = authors?.[0];
   if (!first) return 'anon';
-  const tokens = String(first).trim().split(/\s+/).filter(Boolean);
-  const last = tokens[tokens.length - 1] ?? '';
-  const cleaned = stripDiacritics(last)
+  const raw = String(first).trim();
+  const commaIndex = raw.indexOf(',');
+  const family =
+    commaIndex !== -1
+      ? raw.slice(0, commaIndex).trim()
+      : (raw.split(/\s+/).filter(Boolean).pop() ?? '');
+  const cleaned = stripDiacritics(family)
     .toLowerCase()
     .replace(/[^a-z0-9]/g, '');
   return cleaned || 'anon';
@@ -25,6 +32,8 @@ function yearOf(year) {
   return digits || 'nd';
 }
 
+// A word of 3 letters or fewer (e.g. "the", "AI") is skipped even when it is not itself a
+// listed stopword - short words rarely make a bibkey recognizable.
 function firstTitleWord(title) {
   const tokens = stripDiacritics(String(title ?? ''))
     .toLowerCase()

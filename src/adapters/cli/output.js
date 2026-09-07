@@ -1,3 +1,5 @@
+import { toCsv } from '../../application/ingest.js';
+
 const IMPACT_LABEL = { high: 'HIGH', medium: 'MEDIUM', low: 'LOW' };
 
 function renderCounts(counts) {
@@ -128,6 +130,96 @@ export function renderNext(result) {
   } else {
     rest.forEach((a, i) => lines.push(`${i + 1}. (${a.impact}) ${a.action}`));
   }
+
+  return lines.join('\n') + '\n';
+}
+
+const MATRIX_HEADER = [
+  'Bibkey',
+  'Year',
+  'Type',
+  'Questions',
+  'Claims',
+  'Strongest evidence',
+  'Facts',
+  'Methods',
+];
+
+function matrixCell(value) {
+  if (value === null || value === undefined) return '-';
+  if (Array.isArray(value)) return value.length ? value.join(', ') : '-';
+  return String(value);
+}
+
+function matrixRowValues(row) {
+  return [
+    row.bibkey,
+    row.year,
+    row.type,
+    row.questions,
+    row.claims,
+    row.strongestEvidence,
+    row.facts,
+    row.methods,
+  ].map(matrixCell);
+}
+
+function mdEscapeCell(value) {
+  return value.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ');
+}
+
+function renderMatrixMd(rows) {
+  const lines = [
+    `| ${MATRIX_HEADER.join(' | ')} |`,
+    `| ${MATRIX_HEADER.map(() => '---').join(' | ')} |`,
+  ];
+  for (const row of rows) {
+    lines.push(`| ${matrixRowValues(row).map(mdEscapeCell).join(' | ')} |`);
+  }
+  return lines.join('\n') + '\n';
+}
+
+function renderMatrixCsv(rows) {
+  return toCsv([MATRIX_HEADER, ...rows.map(matrixRowValues)]);
+}
+
+/**
+ * @param {object[]} rows - matrix rows, see application/matrix.js
+ * @param {'md'|'csv'} format
+ * @returns {string}
+ */
+export function renderMatrix(rows, format) {
+  if (format === 'csv') return renderMatrixCsv(rows);
+  return renderMatrixMd(rows);
+}
+
+const GAP_SEVERITIES = ['high', 'medium', 'low'];
+
+/**
+ * @param {{gaps: object[], counts: {high: number, medium: number, low: number}}} report - see
+ *   application/gaps.js
+ * @returns {string}
+ */
+export function renderGaps(report) {
+  const { gaps, counts } = report;
+  if (gaps.length === 0) return 'No gaps found.\n';
+
+  const lines = [];
+  for (const severity of GAP_SEVERITIES) {
+    const group = gaps.filter((g) => g.severity === severity);
+    lines.push(`${severity.toUpperCase()} (${counts[severity] ?? 0}):`);
+    if (group.length === 0) {
+      lines.push('  (none)');
+    } else {
+      for (const g of group) {
+        lines.push(`  - [${g.kind}] ${g.id}`);
+        lines.push(`    Why: ${g.why}`);
+        lines.push(`    Command: ${g.command}`);
+      }
+    }
+    lines.push('');
+  }
+  lines.pop();
 
   return lines.join('\n') + '\n';
 }

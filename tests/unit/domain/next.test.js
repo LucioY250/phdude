@@ -324,3 +324,85 @@ test('recommendNext: every action has non-empty why, valid impact, string comman
     assert.equal(typeof a.dependents, 'number');
   }
 });
+
+// A fully-addressed, fully-methoded RQ (so no other rule, question-gaps included, fires) plus
+// `count` never-cited sources - each an isolated low-severity `source-uncited` gap and nothing
+// else, so the gaps rule's threshold and its "no high rule fired" guard can be tested in
+// isolation.
+function uncitedSourcesSnapshot(count) {
+  const rq = question('RQ-1');
+  const addressingClaim = claim('CLAIM-0000000001', {
+    state: 'supported',
+    supported_by: ['EVID-0000000001'],
+    questions: [rq.id],
+  });
+  const ev = evidence('EVID-0000000001', 'ART-a');
+  const art = artifact('ART-a', 'ok');
+  art.role = 'paper';
+  const meth = {
+    id: 'METH-0000000001',
+    schema: 'phdude.method',
+    version: 1,
+    created,
+    actor,
+    name: 'A method',
+    design: 'design',
+    paradigm: 'quantitative',
+    questions: [rq.id],
+    state: 'candidate',
+  };
+
+  const sources = Array.from({ length: count }, (_, i) => ({
+    id: `SRC-000000000${i}`,
+    schema: 'phdude.source',
+    version: 1,
+    created,
+    actor,
+    title: `Source ${i}`,
+    authors: ['A. One'],
+    year: 2020,
+    type: 'article',
+    artifacts: [],
+    state: 'candidate',
+  }));
+
+  return emptySnapshot({
+    questions: [rq],
+    claims: [addressingClaim],
+    evidence: [ev],
+    artifacts: [art],
+    sources,
+    methods: [meth],
+  });
+}
+
+test('recommendNext: gaps fires at >= 3 gaps when no high-impact rule fired', () => {
+  const actions = recommendNext(uncitedSourcesSnapshot(3), []);
+  const gapsAction = actions.find((a) => a.rule === 'gaps');
+  assert.ok(gapsAction, '3 source-uncited gaps and no high rule should fire the gaps rule');
+  assert.equal(gapsAction.impact, 'medium');
+  assert.equal(gapsAction.command, 'phdude gaps');
+  assert.equal(gapsAction.dependents, 3);
+  assert.ok(gapsAction.why.some((w) => /low=3/.test(w)));
+});
+
+test('recommendNext: gaps does not fire below the 3-gap threshold', () => {
+  const actions = recommendNext(uncitedSourcesSnapshot(2), []);
+  assert.ok(!actions.some((a) => a.rule === 'gaps'));
+});
+
+test('recommendNext: gaps does not fire once a high-impact rule has already fired, even at >= 3 gaps', () => {
+  const snapshot = uncitedSourcesSnapshot(3);
+  snapshot.artifacts.push(artifact('ART-bad', 'failed', ['boom']));
+  const actions = recommendNext(snapshot, []);
+  assert.ok(actions.some((a) => a.rule === 'extraction-unavailable' && a.impact === 'high'));
+  assert.ok(!actions.some((a) => a.rule === 'gaps'));
+});
+
+test('recommendNext: gaps is ordered after question-gaps and before consistent', () => {
+  const actions = recommendNext(uncitedSourcesSnapshot(3), []);
+  const gapsIndex = actions.findIndex((a) => a.rule === 'gaps');
+  const consistentIndex = actions.findIndex((a) => a.rule === 'consistent');
+  assert.ok(gapsIndex !== -1 && consistentIndex !== -1);
+  assert.ok(gapsIndex < consistentIndex);
+});

@@ -17,11 +17,13 @@ import bootstrap from './commands/bootstrap.js';
 import cite from './commands/cite.js';
 import decide from './commands/decide.js';
 import doctor from './commands/doctor.js';
+import gaps from './commands/gaps.js';
 import help, { usage } from './commands/help.js';
 import ingest from './commands/ingest.js';
 import init from './commands/init.js';
 import knowledge from './commands/knowledge.js';
 import link from './commands/link.js';
+import matrix from './commands/matrix.js';
 import migrate from './commands/migrate.js';
 import mode from './commands/mode.js';
 import next from './commands/next.js';
@@ -37,10 +39,12 @@ const COMMANDS = {
   cite,
   decide,
   doctor,
+  gaps,
   ingest,
   init,
   knowledge,
   link,
+  matrix,
   migrate,
   mode,
   next,

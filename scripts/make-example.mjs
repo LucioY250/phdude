@@ -120,7 +120,7 @@ export async function generate(root) {
     type: 'report',
     artifacts: [artAlpha, artBeta],
   });
-  await addEntity(deps, 'source', {
+  const { obj: source2 } = await addEntity(deps, 'source', {
     title: 'Survey Gamma: Cross-Campus Replication',
     authors: ['C. Gamma'],
     year: 2025,
@@ -152,6 +152,12 @@ export async function generate(root) {
     text: 'Does mobile note-taking app adoption differ across recruitment channels and campuses?',
     objectives: ['Compare adoption rates across independently recruited student surveys.'],
   });
+  // No claim addresses this question and no method covers it - `phdude gaps` reports both
+  // `question-without-claims` and `question-without-method` for it.
+  await addEntity(deps, 'question', {
+    text: 'Does note-taking app adoption correlate with academic performance?',
+    objectives: ['Assess correlation between reported app usage and course outcomes.'],
+  });
 
   await addEntity(deps, 'method', {
     name: 'Cross-sectional survey',
@@ -181,19 +187,33 @@ export async function generate(root) {
       'The combined report synthesizes note-taking app adoption findings across two independently recruited undergraduate samples.',
     strength: 'weak',
   });
-  await addEntity(deps, 'evidence', {
+  const { obj: evidence3 } = await addEntity(deps, 'evidence', {
     source: source3.id,
     locator: 'Abstract',
     excerpt:
       'A cross-institutional meta-analysis corroborates high daily adoption of note-taking applications among undergraduates.',
     strength: 'moderate',
   });
+  // Weak-strength evidence citing source2 directly, for a claim addressing RQ-1 -
+  // `phdude gaps`' `claim-weak-evidence` gap fires once every evidence item supporting a claim
+  // is `weak`, and the matrix (`phdude matrix`) shows source2 reaching RQ-1 through evidence
+  // that is itself weak.
+  const { obj: evidenceWeak } = await addEntity(deps, 'evidence', {
+    source: source2.id,
+    locator: 'Limitations',
+    excerpt:
+      'The authors note this cross-campus replication is preliminary and has not yet been independently verified.',
+    strength: 'weak',
+  });
 
   const { obj: claim1 } = await addEntity(deps, 'claim', {
     statement:
       'Daily use of mobile note-taking apps is common among surveyed undergraduate students.',
     kind: 'empirical',
-    supported_by: [evidence1.id],
+    // Supported by evidence citing an artifact directly and evidence citing a formal source
+    // directly - the matrix (`phdude matrix`) attributes this claim's question to source3 via
+    // the latter, while source1's own citing evidence (above) is never attached to any claim.
+    supported_by: [evidence1.id, evidence3.id],
     questions: [rq.id],
     sections: ['Results'],
   });
@@ -206,6 +226,13 @@ export async function generate(root) {
   await addEntity(deps, 'claim', {
     statement: 'Stratified sampling across campuses corroborates the observed adoption rate.',
     kind: 'methodological',
+  });
+  await addEntity(deps, 'claim', {
+    statement: 'Cross-campus replication weakly corroborates the observed adoption rate.',
+    kind: 'methodological',
+    supported_by: [evidenceWeak.id],
+    questions: [rq.id],
+    sections: ['Discussion'],
   });
 
   // Fact ids are content-derived from `key + value + from.artifact` (see domain/ids.js), so

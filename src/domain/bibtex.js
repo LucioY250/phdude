@@ -85,8 +85,18 @@ export function toBibtex(sources, keys) {
   return entries.map(({ source, key }) => bibtexEntry(source, key)).join('\n\n') + '\n';
 }
 
+// "Family, Given" is recognized by its comma: everything before it is the family name, taken
+// as-is. Natural order ("Given Family") is unchanged: every token but the last is the given
+// name, the last token is the family name.
 function splitName(name) {
-  const tokens = String(name).trim().split(/\s+/).filter(Boolean);
+  const raw = String(name).trim();
+  const commaIndex = raw.indexOf(',');
+  if (commaIndex !== -1) {
+    const family = raw.slice(0, commaIndex).trim();
+    const given = raw.slice(commaIndex + 1).trim();
+    return given ? { given, family } : { family };
+  }
+  const tokens = raw.split(/\s+/).filter(Boolean);
   if (tokens.length <= 1) return { family: tokens[0] ?? '' };
   return { given: tokens.slice(0, -1).join(' '), family: tokens[tokens.length - 1] };
 }

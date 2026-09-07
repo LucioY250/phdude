@@ -1,7 +1,7 @@
 schema: phdude.method
 version: 1
 id: METH-b137e5e2a3
-created: 2026-09-01T00:00:16.000Z
+created: 2026-09-01T00:00:18.000Z
 actor:
   researcher: example
   agent: script

@@ -339,6 +339,61 @@ A source may carry `bibkey` (`^[a-z0-9-]+$`, wins over the derived key), `abstra
 (a string array), and `identifiers: { doi?, isbn?, arxiv?, pmid?, url? }`. The top-level `doi`
 and `url` fields from v0.1 still work; `identifiers.doi` takes precedence when both are set.
 
+### `phdude matrix [--format md|csv] [--question RQ-n]`
+
+```
+phdude matrix
+phdude matrix --format csv
+phdude matrix --question RQ-1
+```
+
+The literature matrix (PRD §112, spec §3.4): one row per source. Deterministic order — year
+descending, sources without a year last, then bibkey. `--format` (default `md`) chooses a
+GitHub-flavored Markdown table or CSV; `--json` returns the full row objects regardless of
+`--format`.
+
+| Column | Meaning |
+|---|---|
+| Bibkey | The source's derived or explicit bibkey (see `cite` above). |
+| Year | `-` when the source has no year. |
+| Type | The source's `type` (`article`, `book`, …). |
+| Questions | Research question ids reached via evidence → claim → question — only evidence whose `source` is this SRC id directly. `-` if none. |
+| Claims | Ids of the claims that reach the source that way. `-` if none. |
+| Strongest evidence | The strongest `strength` among evidence citing the source directly (`strong` > `moderate` > `weak` > `unknown`), or `-` if nothing cites it. |
+| Facts | Ids of facts extracted `from.artifact` any artifact in the source's own `artifacts` list. `-` if none. |
+| Methods | Pack-declared method tags from `ext.<pack>.methods`, if a pack has recorded any. `-` if none. |
+
+A row with an empty Questions column means the source is recorded, and may even be cited by
+evidence, but that evidence is not yet attached to any claim — it has not been used to support
+an argument yet. `--question RQ-n` filters to rows whose Questions column includes that id.
+
+### `phdude gaps`
+
+```
+phdude gaps
+phdude gaps --json
+```
+
+An explainable gap report (PRD §112, spec §3.4), grouped by severity (`high`, `medium`, `low`)
+and sorted by severity, then kind, then id. Text mode prints each gap's kind and id with a
+concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, counts }`.
+
+| Kind | Severity | Meaning |
+|---|---|---|
+| `question-without-claims` | high | No claim addresses this research question. |
+| `question-only-candidates` | medium | Every claim addressing this question is still `candidate`. |
+| `question-without-method` | medium | No method's `questions` includes this research question. |
+| `claim-without-evidence` | high | A non-`rejected` claim's `supported_by` is empty. |
+| `claim-weak-evidence` | medium | Every evidence item supporting the claim has `strength: weak`. |
+| `hypothesis-untested` | medium | No claim addresses any of the hypothesis's questions. |
+| `source-uncited` | low | No evidence item's `source` is this SRC id directly (same rule as `cite check`'s `uncited-source`). |
+| `artifact-unmined` | low | The artifact's role is classified (not `unknown`), but no source, fact, or evidence references it. |
+| `open-conflict` | high | An unresolved fact conflict (see `status` above), one gap per conflict key. |
+| `disputed-pair` | high | A pair of claims that contradict each other with at least one side still `disputed` (same rule as `status`'s disputed pairs). |
+
+`gaps` is read-only; it writes no event. `next` recommends running it (rule `gaps`, medium)
+once 3 or more gaps exist and no higher-impact rule has already fired.
+
 ### `phdude packs list|detect|apply <name>`
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's

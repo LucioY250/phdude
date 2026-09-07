@@ -57,6 +57,20 @@ test('bibkeyFor: only the last token of the first author counts as the surname',
   );
 });
 
+test('bibkeyFor: a comma-form "Family, Given" author takes everything before the comma as the surname', () => {
+  assert.equal(
+    bibkeyFor({ authors: ['de la Cruz, Maria'], year: 2020, title: 'Field Study' }),
+    'delacruz2020field',
+  );
+});
+
+test('bibkeyFor: a comma-form single-word family name works the same as natural order', () => {
+  assert.equal(
+    bibkeyFor({ authors: ['Lovelace, Ada'], year: 2020, title: 'A Survey of Machines' }),
+    'lovelace2020survey',
+  );
+});
+
 test('assignBibkeys: derives a key per source, stable order by id', () => {
   const sources = [
     { id: 'SRC-b', authors: ['B. Two'], year: 2020, title: 'Second Study' },

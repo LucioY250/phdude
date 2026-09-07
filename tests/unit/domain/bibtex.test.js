@@ -167,6 +167,44 @@ test('toCslJson: a single-token author name gets family only', () => {
   assert.deepEqual(csl[0].author, [{ family: 'Cher' }]);
 });
 
+test('toCslJson: a comma-form "Family, Given" author splits on the comma, not whitespace', () => {
+  const sources = [
+    {
+      id: 'SRC-a',
+      bibkey: 'k',
+      title: 'T',
+      authors: ['de la Cruz, Maria Elena'],
+      year: 2020,
+      type: 'other',
+    },
+  ];
+  const csl = toCslJson(sources, keysFor(sources));
+  assert.deepEqual(csl[0].author, [{ given: 'Maria Elena', family: 'de la Cruz' }]);
+});
+
+test('toCslJson: a comma-form author with no given name after the comma gets family only', () => {
+  const sources = [
+    { id: 'SRC-a', bibkey: 'k', title: 'T', authors: ['Cher,'], year: 2020, type: 'other' },
+  ];
+  const csl = toCslJson(sources, keysFor(sources));
+  assert.deepEqual(csl[0].author, [{ family: 'Cher' }]);
+});
+
+test('toCslJson: natural-order "Given Family" authors are unaffected', () => {
+  const sources = [
+    {
+      id: 'SRC-a',
+      bibkey: 'k',
+      title: 'T',
+      authors: ['Maria Elena de la Cruz'],
+      year: 2020,
+      type: 'other',
+    },
+  ];
+  const csl = toCslJson(sources, keysFor(sources));
+  assert.deepEqual(csl[0].author, [{ given: 'Maria Elena de la', family: 'Cruz' }]);
+});
+
 test('toCslJson: omits issued when the source has no year', () => {
   const sources = [{ id: 'SRC-a', bibkey: 'k', title: 'T', authors: [], type: 'other' }];
   const csl = toCslJson(sources, keysFor(sources));

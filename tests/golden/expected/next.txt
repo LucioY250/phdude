@@ -15,4 +15,5 @@ phdude decide propose --title "Resolve sample_size" --rationale "…" --affects 
 Other candidates:
 1. (medium) Classify artifacts with unknown role
 2. (medium) Approve or reject pending decisions
-3. (low) No further automatic recommendations; add new sources or refine claims
+3. (medium) Close the evidence gap for unaddressed research questions
+4. (low) No further automatic recommendations; add new sources or refine claims

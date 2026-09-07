@@ -1,5 +1,6 @@
 import { buildGraph } from './lineage.js';
 import { openConflicts } from './conflicts.js';
+import { findGaps } from './gaps.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
 const CANDIDATE_BACKLOG_THRESHOLD = 5;
@@ -205,6 +206,32 @@ function ruleQuestionGaps(snapshot) {
   };
 }
 
+const GAPS_THRESHOLD = 3;
+
+// Not a plain RULES member: it needs to know whether a high-impact rule already fired this run
+// (so `phdude gaps` is not recommended on top of a higher-priority action already pointing at
+// the same underlying problem), which recommendNext computes only after running RULES.
+function ruleGaps(snapshot, conflicts, anyHighFired) {
+  if (anyHighFired) return null;
+
+  const gaps = findGaps(snapshot, conflicts);
+  if (gaps.length < GAPS_THRESHOLD) return null;
+
+  const counts = { high: 0, medium: 0, low: 0 };
+  for (const g of gaps) counts[g.severity]++;
+
+  return {
+    rule: 'gaps',
+    action: 'Review the research gaps report',
+    why: [
+      `${gaps.length} gap(s) found: high=${counts.high}, medium=${counts.medium}, low=${counts.low}`,
+    ],
+    impact: 'medium',
+    command: 'phdude gaps',
+    dependents: gaps.length,
+  };
+}
+
 function ruleConsistent(hasOtherActions) {
   if (hasOtherActions) {
     return {
@@ -249,7 +276,12 @@ export function recommendNext(snapshot, conflicts) {
     const action = rule(snapshot, conflicts);
     if (action) scored.push({ action, order });
   });
-  scored.push({ action: ruleConsistent(scored.length > 0), order: RULES.length });
+
+  const anyHighFired = scored.some((s) => s.action.impact === 'high');
+  const gapsAction = ruleGaps(snapshot, conflicts, anyHighFired);
+  if (gapsAction) scored.push({ action: gapsAction, order: RULES.length });
+
+  scored.push({ action: ruleConsistent(scored.length > 0), order: RULES.length + 1 });
 
   scored.sort(
     (a, b) =>

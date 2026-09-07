@@ -911,3 +911,101 @@ test('e2e: cite check exits 2 while a source is broken, then 0 once it is fixed'
   const afterEvents = (await runJson(ws, ['status'])).recentEvents.length;
   assert.equal(afterEvents, beforeEvents, 'export is derived, not knowledge');
 });
+
+test('e2e: matrix (md/csv/--question) and gaps (text/--json) shapes', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-matrix-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Matrix thesis', '--no-git']);
+
+  const rq = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'Does X affect Y?', objectives: ['Assess X on Y.'] }),
+  ]);
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'A Foundational Study',
+      authors: ['A. One'],
+      year: 2022,
+      type: 'article',
+    }),
+  ]);
+  const evidence = await runJson(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({ source: source.id, excerpt: 'X strongly predicts Y.', strength: 'strong' }),
+  ]);
+  const claim = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({
+      statement: 'X affects Y.',
+      kind: 'empirical',
+      supported_by: [evidence.id],
+      questions: [rq.id],
+    }),
+  ]);
+
+  const md = await phdude(ws, ['matrix', ...ACTOR]);
+  assert.equal(md.code, 0);
+  assert.match(
+    md.stdout,
+    /\| Bibkey \| Year \| Type \| Questions \| Claims \| Strongest evidence \| Facts \| Methods \|/,
+  );
+  assert.match(md.stdout, new RegExp(rq.id));
+  assert.match(md.stdout, new RegExp(claim.id));
+
+  const csv = await runJson(ws, ['matrix', '--format', 'csv']);
+  assert.equal(csv.format, 'csv');
+  assert.equal(csv.rows.length, 1);
+  assert.equal(csv.rows[0].id, source.id);
+  assert.deepEqual(csv.rows[0].questions, [rq.id]);
+  assert.deepEqual(csv.rows[0].claims, [claim.id]);
+  assert.equal(csv.rows[0].claimCount, 1);
+  assert.equal(csv.rows[0].strongestEvidence, 'strong');
+  assert.equal(csv.rows[0].cited, true);
+
+  const csvText = await phdude(ws, ['matrix', '--format', 'csv', ...ACTOR]);
+  assert.equal(csvText.code, 0);
+  assert.match(
+    csvText.stdout,
+    /^Bibkey,Year,Type,Questions,Claims,Strongest evidence,Facts,Methods/,
+  );
+
+  const filtered = await runJson(ws, ['matrix', '--question', rq.id]);
+  assert.equal(filtered.rows.length, 1);
+  const filteredOut = await runJson(ws, ['matrix', '--question', 'RQ-999']);
+  assert.equal(filteredOut.rows.length, 0);
+
+  const badFormat = await phdude(ws, ['matrix', '--format', 'xml', ...ACTOR]);
+  assert.equal(badFormat.code, 1);
+  assert.match(badFormat.stderr, /unknown matrix format/);
+
+  const gapsReport = await runJson(ws, ['gaps']);
+  assert.ok(Array.isArray(gapsReport.gaps));
+  assert.equal(typeof gapsReport.counts.high, 'number');
+  assert.equal(typeof gapsReport.counts.medium, 'number');
+  assert.equal(typeof gapsReport.counts.low, 'number');
+  assert.ok(
+    gapsReport.gaps.some((g) => g.kind === 'question-without-method' && g.id === rq.id),
+    'no method addresses rq, so question-without-method should fire',
+  );
+  for (const g of gapsReport.gaps) {
+    assert.ok(['high', 'medium', 'low'].includes(g.severity));
+    assert.equal(typeof g.why, 'string');
+    assert.equal(typeof g.command, 'string');
+  }
+
+  const gapsText = await phdude(ws, ['gaps', ...ACTOR]);
+  assert.equal(gapsText.code, 0);
+  assert.match(gapsText.stdout, /HIGH \(\d+\):/);
+  assert.match(gapsText.stdout, /MEDIUM \(\d+\):/);
+  assert.match(gapsText.stdout, /LOW \(\d+\):/);
+});

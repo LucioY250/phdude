@@ -303,6 +303,8 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude decide propose\|approve\|reject\|supersede` | Research decisions. The agent proposes; the researcher decides. |
 | `phdude promote <id> --decision <DEC-id>` | Make an object canonical, with an approved decision behind it. |
 | `phdude cite list\|check\|export` | Citation registry: list sources, verify them, export BibTeX/CSL-JSON. |
+| `phdude matrix [--format md\|csv] [--question RQ-n]` | Literature matrix: one row per source, which questions and claims it reaches. |
+| `phdude gaps` | Research gaps: questions, claims, sources, artifacts and conflicts that need attention. |
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |
 | `phdude mode lite\|full\|ruthless\|off` | How hard the agent pushes back. |
 | `phdude migrate [--dry-run]` | Upgrade a workspace written by an older PhDude. |
