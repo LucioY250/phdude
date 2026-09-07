@@ -1,0 +1,23 @@
+tests/golden/expected/write-context.md
+  s_946fc7502759d8::t_f2382d8e55726b 50-51,53-54,56-57
+examples/generic-thesis/manuscript/reports/introduction.yaml
+  s_946fc7502759d8::t_6c94020eb4b8a8 17,30,32
+tests/golden/expected/prose-introduction.txt
+  s_946fc7502759d8::t_f2382d8e55726b 3,9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "613f6ecef7090b578ca066e245c5cbdca3a5abe7",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
