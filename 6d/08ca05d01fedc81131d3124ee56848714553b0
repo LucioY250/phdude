@@ -1,0 +1,24 @@
+docs/workspace.md
+  s_946fc7502759d8::t_f256a0d47d48d8 20,64-65,67
+  s_946fc7502759d8::t_ad576b8e6c14e4 58-63,66,68-72
+docs/cli.md
+  s_946fc7502759d8::t_f256a0d47d48d8 57-60,62-66
+  s_946fc7502759d8::t_ad576b8e6c14e4 43-45,61
+  s_946fc7502759d8::t_3481389767f4f5 67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "6d08ca05d01fedc81131d3124ee56848714553b0",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
