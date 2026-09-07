@@ -1,0 +1,44 @@
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_683c93401813d9 2,83-104,108,136
+tests/unit/skills.test.js
+  s_946fc7502759d8::t_8aefda811dd930 7,9-11,27-52
+tests/integration/fs-store.test.js
+  s_946fc7502759d8::t_6c7d8facbcec3f 3,65-99
+docs/cli.md
+  s_946fc7502759d8::t_c66fd5818d82b2 72-75,150-153,211-212
+src/application/packs.js
+  s_946fc7502759d8::t_8efe87b17843f6 6-13,28
+  s_946fc7502759d8::t_62b8313eb2eccc 42,75
+tests/integration/add-knowledge.test.js
+  s_946fc7502759d8::t_6c7d8facbcec3f 193-236
+tests/integration/ingest.test.js
+  s_946fc7502759d8::t_a1d8227769ea84 236-262
+src/application/add.js
+  s_946fc7502759d8::t_847aa48d3a5cfa 26-53,117,124-128,130
+tests/integration/packs.test.js
+  s_946fc7502759d8::t_a1d8227769ea84 197-216
+src/application/ingest.js
+  s_946fc7502759d8::t_3e6e46d8902ab3 77
+  s_946fc7502759d8::t_940aa91c8ccf08 1
+  s_946fc7502759d8::t_1dc10991ad3f00 73,76,78-88,90
+  s_946fc7502759d8::t_3fb7c30bac7ed0 74-75
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_6dbd4d22df4e15 351-367,373-415
+  s_946fc7502759d8::t_bdc9ef2204fd24 368-372
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "aa85f677c34686e7e9e91194946fd89fd7c9e0bd",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
