@@ -1,0 +1,1 @@
+PhDude is a field-agnostic research co-author harness for AI coding agents.
