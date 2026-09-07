@@ -1,0 +1,79 @@
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_edfa3843ffa55c 149
+  s_946fc7502759d8::t_fe6f4e47649b3b 150-151
+  s_946fc7502759d8::t_1587c27cb7dc8f 152
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_be3ed04ddfdacf 1518-1640
+  s_946fc7502759d8::t_0e271c5c21f268 1641
+  s_946fc7502759d8::t_bd964c92c73bc0 1517
+README.md
+  s_946fc7502759d8::t_51735b46945ae5 174,448
+commands/manuscript.md
+  s_946fc7502759d8::t_dd3fd3ec147c9e 1-32
+docs/cli.md
+  s_946fc7502759d8::t_21b5650be88fd8 711-767
+docs/workspace.md
+  s_946fc7502759d8::t_fa1c0c646f1b4f 260-308
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_3fba5681ae86be 56-58,65-68
+schemas/decision.json
+  s_946fc7502759d8::t_337d9529a20873 15-23
+schemas/manuscript.json
+  s_946fc7502759d8::t_b96cab7dcf616e 1-51
+schemas/section-report.json
+  s_946fc7502759d8::t_80c98e758a9119 1-40
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_1448c152fb826f 56-58,65-68
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_96ab52e34c8e8f 77-83,300-302
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_28dc8be97e8811 34-39
+src/adapters/cli/commands/manuscript.js
+  s_946fc7502759d8::t_a08a9fa6659a3f 1-134
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_2a86079885b13c 31,58
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_11980329349427 2,24-28,166-225
+src/application/decide.js
+  s_946fc7502759d8::t_e7de3a1d29a17f 4,8-10,12-24
+src/application/init.js
+  s_946fc7502759d8::t_bebf2b777a6cfa 31
+src/application/manuscript.js
+  s_946fc7502759d8::t_fb961d09d58073 1-397
+src/domain/gates/citations.js
+  s_946fc7502759d8::t_709f51b5315618 1-63
+src/domain/gates/index.js
+  s_946fc7502759d8::t_0bfb19f5a8cd34 1-28
+src/domain/manuscript.js
+  s_946fc7502759d8::t_fb72e2beaa6988 1-152
+src/schemas/index.js
+  s_946fc7502759d8::t_04ac01a195975a 31-32
+tests/fixtures/objects/valid/manuscript.1.json
+  s_946fc7502759d8::t_71fe7f135c2e04 1-31
+tests/fixtures/objects/valid/section-report.1.json
+  s_946fc7502759d8::t_0ec1970a441924 1-11
+tests/integration/manuscript.test.js
+  s_946fc7502759d8::t_0778f80ead5048 1-407
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_0aa5616c43a192 121-123
+tests/unit/domain/gates/citations.test.js
+  s_946fc7502759d8::t_55aeb35ee7fa68 1-99
+tests/unit/domain/manuscript.test.js
+  s_946fc7502759d8::t_2d5396e4d59454 1-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "13f7684090e5ea747c866c6d52731fae8b761668",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": null
+    }
+  }
+}
