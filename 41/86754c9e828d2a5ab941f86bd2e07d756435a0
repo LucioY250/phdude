@@ -1,0 +1,26 @@
+CHANGELOG.md
+  s_946fc7502759d8::t_2a294631fbad77 62-65
+tests/integration/authors.test.js
+  s_946fc7502759d8::t_9cd51d81d50fff 128-182
+src/application/authors.js
+  s_946fc7502759d8::t_b2240bec80d7bd 165-168,173,212,214-215,217-229,243-252
+  s_946fc7502759d8::t_74a8af3f688091 253-254
+docs/cli.md
+  s_946fc7502759d8::t_2a294631fbad77 886-892
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "4186754c9e828d2a5ab941f86bd2e07d756435a0",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
