@@ -40,8 +40,9 @@ stderr instead. Exit code 4 exists because degradation is the rule in v0.1: a mi
 
 ### `phdude init [dir]`
 
-Creates a workspace in `dir` (default: the current directory) and is safe to re-run:
-existing files are never overwritten, missing ones are added and reported.
+Creates a workspace in `dir` (default: the current directory) and is safe to re-run: your
+own files are never overwritten, missing ones are added, and the result reports every path
+as `created`, `updated` or `skipped`.
 
 ```
 phdude init --title "Adaptive scheduling in edge clusters" --agents claude-code,codex
@@ -52,6 +53,17 @@ phdude init --title "Adaptive scheduling in edge clusters" --agents claude-code,
 | `--title <text>` | Project title. Defaults to the directory name. |
 | `--agents <list>` | Comma-separated agent hosts to install. Default `claude-code,codex`. |
 | `--no-git` | Skip `git init` even when the directory is not already in a repository. |
+
+`phdude.yaml` and the policy files under `.phdude/` are yours: once they exist, `init` leaves
+them alone. An existing `.gitignore` only gains the default lines it is missing.
+`AGENTS.md`, `CLAUDE.md` and `.claude/commands/*` are rewritten only while they still carry
+the `phdude:managed` marker; delete the marker to take ownership of the file.
+
+**The installed skills are PhDude-managed.** Every file under `.phdude/skills/` is refreshed
+on each `init`: one whose content differs from the shipped version is overwritten and reported
+under `updated`, so a local edit to a skill does not survive an upgrade. Project-specific
+guidance belongs in the policy files under `.phdude/`, or in a workspace pack under
+`.phdude/packs/` (see [docs/extending.md](extending.md)).
 
 ### `phdude bootstrap`
 

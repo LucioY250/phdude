@@ -17,7 +17,7 @@ my-research/
 │   ├── methodology-policy.yaml
 │   ├── publication-policy.yaml
 │   ├── author-profile.yaml
-│   ├── skills/<name>/SKILL.md    # the installed agent skills
+│   ├── skills/<name>/SKILL.md    # installed agent skills (PhDude-managed)
 │   ├── events.jsonl              # append-only audit log (committed)
 │   └── cache/                    # extracted text, gitignored and disposable
 ├── authors/                      # per-researcher voice profiles (populated in v0.4)
@@ -54,6 +54,21 @@ packs_recommended: [quantitative]
 
 `fields` and `methods` are applied packs. `packs_recommended` is what `phdude packs detect`
 suggested; it is a recommendation until you run `phdude packs apply`.
+
+## What is yours and what PhDude manages
+
+`phdude init` is re-runnable, and it treats three groups of files differently.
+
+| Path | On re-run |
+|---|---|
+| `phdude.yaml`, `.phdude/*.yaml`, and everything under `knowledge/`, `research/`, `decisions/`, `sources/` | yours; never overwritten |
+| `.gitignore` | yours; only the missing default lines are appended |
+| `AGENTS.md`, `CLAUDE.md`, `.claude/commands/*` | rewritten only while they carry the `phdude:managed` marker on the first line or in their front matter |
+| the installed skills under `.phdude/skills/` | PhDude-managed; refreshed every time, and a changed file is reported under `updated` |
+
+So a local edit to a shipped skill is overwritten by the next `init` or upgrade. Project
+guidance that has to survive belongs in the policy files under `.phdude/`, or in a workspace
+pack under `.phdude/packs/<kind>/<name>/`. See [docs/extending.md](extending.md).
 
 ## Canonical objects
 
