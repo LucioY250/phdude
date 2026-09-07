@@ -29,6 +29,7 @@ export default async function init({ flags, deps, workspace }) {
       agentHosts,
       clock: deps.clock,
       actor: deps.actor,
+      discoverSkills: deps.discoverSkills,
     },
     { title, agents, noGit: flags.noGit },
   );

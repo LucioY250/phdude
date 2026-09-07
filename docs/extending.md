@@ -98,7 +98,50 @@ validates, hashes, attributes and logs each change. See
 [ADR 4](adr/0004-agent-writes-through-cli.md).
 
 Skills in `skills/` are copied into `.phdude/skills/` by `phdude init`. `tests/unit/skills.test.js`
-checks that every shipped skill has valid front matter and declares no writes.
+checks that every shipped skill has valid front matter and declares no writes;
+`tests/contracts/skills.test.js` checks that every shipped skill (core and packs) loads and
+validates against the skill contract schema below.
+
+### Skill contract
+
+The `phdude:` block is validated against `schemas/skill.json` (`$id: phdude://skill`). Only the
+block itself is checked, not the rest of the front matter.
+
+| Field | Required | Type | Notes |
+| --- | --- | --- | --- |
+| `version` | yes | `1` | The only supported contract version. |
+| `reads` | yes | `string[]` | Workspace globs the skill reads. |
+| `writes` | yes | `string[]` | Workspace globs the skill writes directly. Empty for every core and pack skill (see above); non-empty is reserved for a future manuscript-writing skill. |
+| `permissions` | yes | object | `{ network: 'none'\|'allowed', workspace: string[] }`. `workspace` is one or more of `read`, `write:manuscript`, `write:knowledge`, `write:sources`, at least one entry. |
+| `objects` | no | `string[]` | Research object types the skill works with. |
+| `artifacts` | no | `string[]` | Artifact kinds the skill produces. |
+| `evidence_requirements` | no | `string` | Free text: what evidence the skill demands before writing. |
+| `provenance` | no | `string` | Free text: how the skill records provenance. |
+| `approval_gates` | no | `string[]` | Approval gates the skill's output must pass. |
+| `quality_gates` | no | `string[]` | Quality gates the skill's output must pass. |
+| `dependencies` | no | `string[]` | Other skills this one depends on. |
+| `tests` | no | `string` | Path to the skill's own fixture tests. |
+
+`additionalProperties: false` applies to the block and to `permissions`, so an unknown field is
+a validation error, not a silently ignored typo.
+
+**Least privilege by default.** A skill with no `phdude:` block still loads (the open Agent
+Skills convention does not require one) but gets the default contract
+`{ version: 1, reads: [], writes: [], permissions: { network: 'none', workspace: ['read'] } }`
+plus a warning: `skill <name>: no phdude contract, least privilege assumed`. A skill whose block
+is present but invalid fails to load with a `VALIDATION` error naming the offending fields.
+
+**Network permission.** `.phdude/research-policy.yaml` carries `skills.allow_network` (default
+`false`). A skill that declares `permissions.network: allowed` is refused with a `POLICY` error
+unless that policy is `true` — enforced by `phdude init` (before any core skill is copied) and by
+`phdude packs apply` (before a pack's skills are adopted). Nothing is copied or applied when one
+skill in the batch is invalid or over-privileged.
+
+**Discovery order.** `discoverSkills` (`src/adapters/skills/loader.js`) walks a list of roots in
+order — the package's own `skills/`, each applied pack's skill directories, then
+`<workspace>/.phdude/skills/` — and a later root's skill overrides an earlier one with the same
+name. `phdude doctor` reports the resulting set with each skill's `source` (`core`, `pack:<name>`,
+or `workspace`) and declared permissions; see [`phdude doctor`](cli.md#phdude-doctor).
 
 ## Ports and contract suites
 

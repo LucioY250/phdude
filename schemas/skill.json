@@ -1,0 +1,33 @@
+{
+  "$id": "phdude://skill",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": { "const": 1 },
+    "reads": { "type": "array", "items": { "type": "string" } },
+    "writes": { "type": "array", "items": { "type": "string" } },
+    "objects": { "type": "array", "items": { "type": "string" } },
+    "artifacts": { "type": "array", "items": { "type": "string" } },
+    "evidence_requirements": { "type": "string" },
+    "provenance": { "type": "string" },
+    "approval_gates": { "type": "array", "items": { "type": "string" } },
+    "quality_gates": { "type": "array", "items": { "type": "string" } },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "network": { "enum": ["none", "allowed"] },
+        "workspace": {
+          "type": "array",
+          "items": { "enum": ["read", "write:manuscript", "write:knowledge", "write:sources"] },
+          "minItems": 1
+        }
+      },
+      "required": ["network", "workspace"],
+      "additionalProperties": false
+    },
+    "dependencies": { "type": "array", "items": { "type": "string" } },
+    "tests": { "type": "string" }
+  },
+  "required": ["version", "reads", "writes", "permissions"],
+  "additionalProperties": false
+}

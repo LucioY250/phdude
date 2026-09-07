@@ -6,6 +6,8 @@ import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
 import { detectKind, parserFor, PARSERS } from '../documents/index.js';
 import { DEFAULT_PACKS_DIR, discoverPacks } from '../packs/loader.js';
+import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
+import { discoverSkills, loadSkill } from '../skills/loader.js';
 import { FsStore } from '../store/fs-store.js';
 import { read, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
@@ -74,6 +76,9 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     parsers: { detectKind, parserFor },
     parserAdapters: PARSERS,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
+    discoverSkills,
+    loadSkill,
+    skillsDir: DEFAULT_SKILLS_DIR,
     clock: () => new Date().toISOString(),
     actor,
     schemaTypes: SCHEMA_TYPES,

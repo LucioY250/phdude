@@ -2,6 +2,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CURRENT_WORKSPACE_VERSION } from '../domain/versioning.js';
+import { assertSkillPolicyOk } from './skills.js';
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEFAULTS_DIR = join(PACKAGE_ROOT, 'defaults');
@@ -90,7 +91,22 @@ async function copyDirInto(srcDir, destRel, store, created, updated, skipped) {
 // skills are PhDude-owned so existing files are overwritten when their content changed
 // (see copyDirInto for the created/updated/skipped classification) and this silently
 // does nothing when srcDir doesn't exist.
-export async function copySkills(store, srcDir, created, updated, skipped) {
+//
+// Every skill under srcDir is validated (contract, and network permission against `policy`)
+// before anything is copied - a corrupt or over-privileged skill in the source tree must not
+// leave a half-populated `.phdude/skills/`. `discoverSkills` is injected (see
+// adapters/skills/loader.js) so this application module never imports an adapter directly.
+export async function copySkills(
+  store,
+  srcDir,
+  created,
+  updated,
+  skipped,
+  { policy, discoverSkills } = {},
+) {
+  const skills = await discoverSkills([{ dir: srcDir, source: 'core' }]);
+  for (const skill of skills) assertSkillPolicyOk(skill, policy);
+
   let entries;
   try {
     entries = await readdir(srcDir, { withFileTypes: true });
@@ -115,7 +131,7 @@ export async function copySkills(store, srcDir, created, updated, skipped) {
  * @returns {Promise<{ created: string[], updated: string[], skipped: string[], gitInitialized: boolean }>}
  */
 export async function initWorkspace(
-  { store, git, agentHosts = [], clock, actor },
+  { store, git, agentHosts = [], clock, actor, discoverSkills },
   { title, agents = [], noGit = false } = {},
 ) {
   const created = [];
@@ -185,7 +201,8 @@ export async function initWorkspace(
     }
   }
 
-  await copySkills(store, SKILLS_DIR, created, updated, skipped);
+  const policy = await store.readYaml(join('.phdude', 'research-policy.yaml'));
+  await copySkills(store, SKILLS_DIR, created, updated, skipped, { policy, discoverSkills });
 
   if (agentHosts.length > 0) {
     const preExisting = await snapshotAgentHostFiles(store);

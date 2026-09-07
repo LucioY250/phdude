@@ -222,8 +222,10 @@ exits 3. This is where human authority over canonical knowledge is enforced.
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's
 keywords against the cached text and records the recommendation in `phdude.yaml` without
-applying anything. `apply` adds the pack to `fields` or `methods` and writes an event. All
-three need a workspace: outside one they exit 1 and point at `phdude init`.
+applying anything. `apply` adds the pack to `fields` or `methods` and writes an event; it first
+checks each of the pack's skills against the [skill contract](extending.md#skill-contract) and
+exits 3 with a `POLICY` error if one requests network access the workspace policy has not
+allowed. All three need a workspace: outside one they exit 1 and point at `phdude init`.
 
 ### `phdude mode lite|full|ruthless|off`
 
@@ -252,6 +254,12 @@ Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
 that version needs migrating, the cache entry count, the discoverable packs and the schema
 versions, plus warnings for anything missing. It is diagnostic only and never writes.
+
+It also lists every discoverable skill (core, applied packs, and the workspace's own
+`.phdude/skills/`) with its source, declared network and workspace permissions, and any loader
+warnings — one line each: `<name> (<source>) network=<none|allowed> workspace=<read,...>`. See
+[Skill contract](extending.md#skill-contract). `--json` includes the same data as a `skills`
+array of `{ name, source, permissions, reads, writes, warnings }`.
 
 ### `phdude help`
 

@@ -25,7 +25,23 @@ export async function loadMigrations(dir = MIGRATIONS_DIR) {
   const steps = [];
   for (const file of files.filter((f) => f.endsWith('.mjs')).sort()) {
     const module = await import(pathToFileURL(join(dir, file)).href);
-    steps.push(module.default);
+    const step = module.default;
+    if (
+      step === undefined ||
+      step === null ||
+      !Number.isInteger(step.from) ||
+      !Number.isInteger(step.to) ||
+      typeof step.describe !== 'function' ||
+      typeof step.preview !== 'function' ||
+      typeof step.apply !== 'function'
+    ) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `malformed migration module ${file}`,
+        'reinstall phdude; its migrations directory is corrupt',
+      );
+    }
+    steps.push(step);
   }
   return steps;
 }

@@ -1,5 +1,7 @@
+import { dirname, join } from 'node:path';
 import { PhdudeError } from '../domain/errors.js';
 import { scorePackDetection, recommendPacks } from '../domain/packs.js';
+import { assertSkillPolicyOk } from './skills.js';
 import { assertUpToDate } from './guard.js';
 
 const FIELD_BY_KIND = { field: 'fields', method: 'methods' };
@@ -69,11 +71,14 @@ export async function detect({ store, loadPacks, clock, actor }) {
 }
 
 /**
- * @param {{store: object, loadPacks: () => Promise<object[]>, clock: () => string, actor: object}} deps
+ * `loadSkill` is injected (see adapters/skills/loader.js) so this application module never
+ * imports an adapter directly.
+ * @param {{store: object, loadPacks: () => Promise<object[]>, clock: () => string, actor: object,
+ *   loadSkill: (dir: string) => Promise<object>}} deps
  * @param {string} name
  * @returns {Promise<{applied: boolean, project?: object}>}
  */
-export async function apply({ store, loadPacks, clock, actor }, name) {
+export async function apply({ store, loadPacks, clock, actor, loadSkill }, name) {
   const project = await requireProject(store);
   assertUpToDate(project);
   const packs = await loadPacks();
@@ -93,6 +98,12 @@ export async function apply({ store, loadPacks, clock, actor }, name) {
     );
   }
   if (project[field].includes(name)) return { applied: false };
+
+  const policy = await store.readYaml(join('.phdude', 'research-policy.yaml'));
+  for (const skillPath of pack.skillPaths) {
+    const skill = await loadSkill(dirname(skillPath));
+    assertSkillPolicyOk(skill, policy);
+  }
 
   const updated = { ...project, [field]: [...project[field], name] };
   await store.writeProject(updated);

@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "reads": ["knowledge/claims/**"],
+  "writes": [],
+  "permissions": {
+    "network": "none",
+    "workspace": ["read"]
+  }
+}

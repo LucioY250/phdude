@@ -1,5 +1,6 @@
 import { CURRENT_WORKSPACE_VERSION, workspaceVersionOf } from '../domain/versioning.js';
 import { migrationWarning } from './guard.js';
+import { listSkills } from './skills.js';
 
 // v0.1 stamps every canonical object at schema version 1 (design spec S5); the migration
 // system that makes this per-type is v0.2 (PRD S112).
@@ -8,13 +9,23 @@ const SCHEMA_VERSION = 1;
 /**
  * Reports what the runtime can and cannot do here. Diagnostic only: never writes.
  * @param {{store: object, git: object, parsers: object[], loadPacks: () => Promise<object[]>,
- *   schemaTypes: string[], node: string}} deps
+ *   schemaTypes: string[], node: string, discoverSkills: (roots: object[]) => Promise<object[]>,
+ *   skillsDir: string}} deps
  * @returns {Promise<{node: string, pdftotext: boolean, git: boolean, workspace: boolean,
  *   workspaceVersion: number|null, workspaceVersionCurrent: number, parsers: object,
  *   schemaVersions: object, cacheEntries: number, packsAvailable: string[],
- *   warnings: string[]}>}
+ *   skills: object[], warnings: string[]}>}
  */
-export async function doctor({ store, git, parsers, loadPacks, schemaTypes, node }) {
+export async function doctor({
+  store,
+  git,
+  parsers,
+  loadPacks,
+  schemaTypes,
+  node,
+  discoverSkills,
+  skillsDir,
+}) {
   const warnings = [];
 
   const workspace = await store.exists('phdude.yaml');
@@ -55,6 +66,13 @@ export async function doctor({ store, git, parsers, loadPacks, schemaTypes, node
     warnings.push(`packs could not be loaded: ${err.message}`);
   }
 
+  let skills = [];
+  try {
+    skills = await listSkills({ store, loadPacks, discoverSkills, skillsDir });
+  } catch (err) {
+    warnings.push(`skills could not be loaded: ${err.message}`);
+  }
+
   return {
     node,
     pdftotext,
@@ -66,6 +84,7 @@ export async function doctor({ store, git, parsers, loadPacks, schemaTypes, node
     schemaVersions: Object.fromEntries(schemaTypes.map((t) => [t, SCHEMA_VERSION])),
     cacheEntries: (await store.listCacheEntries()).length,
     packsAvailable,
+    skills,
     warnings,
   };
 }

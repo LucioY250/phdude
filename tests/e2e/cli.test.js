@@ -227,6 +227,11 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
   assert.equal(doctor.schemaVersions.claim, 1);
   assert.ok(doctor.cacheEntries >= 1);
   assert.ok(doctor.packsAvailable.includes('quantitative'));
+  const bootstrapSkill = doctor.skills.find((s) => s.name === 'bootstrap');
+  assert.ok(bootstrapSkill, 'doctor lists the bootstrap skill');
+  assert.equal(bootstrapSkill.source, 'workspace');
+  assert.deepEqual(bootstrapSkill.permissions, { network: 'none', workspace: ['read'] });
+  assert.deepEqual(bootstrapSkill.warnings, []);
 
   // mode persists to phdude.yaml
   await run(ws, ['mode', 'ruthless']);

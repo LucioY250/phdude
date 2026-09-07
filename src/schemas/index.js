@@ -26,6 +26,7 @@ export const SCHEMA_TYPES = [
   'result',
   'decision',
   'pack',
+  'skill',
   'event',
 ];
 export const schemaName = (type) => `phdude.${type}`;

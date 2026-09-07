@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { FsStore } from '../src/adapters/store/fs-store.js';
 import { walk, read } from '../src/adapters/store/fs-walk.js';
 import { detectKind, parserFor } from '../src/adapters/documents/index.js';
+import { discoverSkills } from '../src/adapters/skills/loader.js';
 import { initWorkspace } from '../src/application/init.js';
 import { ingest } from '../src/application/ingest.js';
 import { addEntity } from '../src/application/add.js';
@@ -96,7 +97,7 @@ export async function generate(root) {
   const deps = { store: new FsStore(root), clock, actor: ACTOR };
 
   await initWorkspace(
-    { ...deps, git: fakeGit, agentHosts: [] },
+    { ...deps, git: fakeGit, agentHosts: [], discoverSkills },
     { title: 'Generic Thesis Example', agents: [], noGit: false },
   );
 

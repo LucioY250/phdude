@@ -34,6 +34,16 @@ function render(report) {
     `schema versions:   ${versions}`,
   );
 
+  if (report.skills.length > 0) {
+    lines.push('', 'Skills:');
+    for (const skill of report.skills) {
+      lines.push(
+        `  ${skill.name} (${skill.source}) network=${skill.permissions.network} workspace=${skill.permissions.workspace.join(',')}`,
+      );
+      for (const w of skill.warnings) lines.push(`    - ${w}`);
+    }
+  }
+
   if (report.warnings.length > 0) {
     lines.push('', 'Warnings:');
     for (const w of report.warnings) lines.push(`  - ${w}`);
@@ -50,6 +60,8 @@ export default async function doctorCommand({ deps }) {
     loadPacks: deps.loadPacks,
     schemaTypes: deps.schemaTypes,
     node: deps.node,
+    discoverSkills: deps.discoverSkills,
+    skillsDir: deps.skillsDir,
   });
   return { text: render(report), json: report };
 }

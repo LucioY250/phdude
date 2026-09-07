@@ -25,3 +25,6 @@ research:
 
   preprints:
     require_approval: true
+
+skills:
+  allow_network: false
