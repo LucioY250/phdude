@@ -13,9 +13,9 @@ phdude:
 # Research
 
 Follow `[[phdude-core]]`. This skill is the only one that touches the network, and it does so
-through one command: `phdude research`. **Never fetch a paper, an abstract, a DOI or a citation
-yourself** — not with a browser tool, not with `curl`, not from memory. If `phdude research` did
-not return it, it is not a candidate.
+through two commands: `phdude research` and `phdude research-fresh`. **Never fetch a paper, an
+abstract, a DOI or a citation yourself** — not with a browser tool, not with `curl`, not from
+memory. If a recorded search did not return it, it is not a candidate.
 
 This skill is installed only when `.phdude/research-policy.yaml` sets `skills.allow_network:
 true`. Searching itself is gated separately, by `network.enabled` (see below).
@@ -95,6 +95,58 @@ A candidate with `needs_approval: true` is a preprint, and the policy says prepr
 researcher's explicit approval (`preprints.require_approval`). Flag it as a preprint every time
 you report it. Never present one as peer-reviewed, and never let it pass in a batch of
 "looks fine".
+
+## Accepting and dismissing
+
+Every candidate ends in one of two places, and **the researcher decides which**. Your job is to
+report and then to execute what they said, one candidate at a time.
+
+```
+phdude research accept CAND-… --json
+phdude research dismiss CAND-… --reason "measures a different construct" --json
+```
+
+`accept` creates the `SRC-` record: the candidate's title, authors, year, venue, abstract and
+type, plus whatever identifiers the providers reported (`doi`, `url`, `arxiv`, `pmid`). It
+records where it came from in `ext.research` and links the candidate to it with `accepted_as`.
+It never invents a missing field — run `phdude cite check` afterwards and report what is still
+missing rather than filling it in from memory.
+
+`--type` overrides the type the provider reported; use it only when the researcher corrects it
+(a "report" a provider called an "article", say), never on a hunch.
+
+`dismiss` needs a real reason, and "not relevant" is not one. Say what about the paper does not
+fit: the population, the construct, the design, the date range. A dismissed candidate comes back
+in every future search, and the reason is what tells the next reader it was read, not missed.
+
+Both refuse a candidate that was already accepted or dismissed. That is not an obstacle to work
+around: it means the verdict is already recorded, so read it (`phdude research show CAND-…`) and
+report it instead of overwriting it.
+
+### `--approve-preprint`
+
+A candidate flagged `needs_approval` is a preprint, and `accept` refuses it without
+`--approve-preprint`. Pass that flag **only after the researcher has said yes to that specific
+preprint**, in this conversation, having been told it is a preprint. Never pass it to clear an
+error, never pass it for a batch, and never pass it because the paper looks good to you. The
+flag is the researcher's answer, not your workaround.
+
+## Keeping the literature current
+
+```
+phdude freshness --json
+phdude research-fresh --question RQ-1 --allow-network
+```
+
+`freshness` is read-only and never touches the network: it reports the last search per question,
+how long ago it ran, and whether the policy calls that stale (`research.freshness
+.stale_after_days`). A question nobody has searched is stale by definition.
+
+`research-fresh` re-runs the stale searches exactly as they ran the first time and reports
+**only new candidates**. Nothing new is a real answer — say "nothing has changed since the
+search in March" rather than re-listing the same papers. Review whatever is new the same way as
+any other candidate. `--all` re-runs everything regardless of age; use it only when the
+researcher asks, since it spends provider calls on searches that are not due.
 
 ## Reporting to the researcher
 

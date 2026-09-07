@@ -14,7 +14,8 @@ phdude research $ARGUMENTS --json
 
 (A quoted query with optional `--question RQ-n`, `--provider a,b`, `--from YYYY`, `--limit N`
 and `--allow-network`; or `list [--state candidate|accepted|dismissed] [--question RQ-n]`; or
-`show <CAND-id>`.)
+`show <CAND-id>`; or `accept <CAND-id> [--type article] [--approve-preprint]`; or
+`dismiss <CAND-id> --reason "…"`.)
 
 This is the only command allowed to reach the network, and it refuses unless
 `.phdude/research-policy.yaml` sets `network.enabled: true` or the call carries
@@ -24,3 +25,8 @@ Follow `.phdude/skills/research/SKILL.md` to write the query and to review what 
 skill is installed only when `skills.allow_network: true`; without it, still report every
 candidate to the researcher by title, venue, year and abstract before anything is accepted.
 Candidates are not sources: nothing enters the citation registry until the researcher says so.
+
+`accept` and `dismiss` record the researcher's verdict, one candidate at a time. Never run
+either on your own initiative, and never pass `--approve-preprint` until the researcher has
+said yes to that specific preprint. A dismissal needs a real reason: it is what tells the next
+reader the paper was looked at rather than missed.

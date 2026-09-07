@@ -1228,3 +1228,151 @@ test('e2e: research refuses without network, then searches, records and lists ca
   assert.equal(open.candidates.created.length, 0, 'the same works are already recorded');
   assert.equal(open.candidates.existing.length, 4);
 });
+
+test('e2e: research, accept, dismiss, cite check, edit, freshness and research-fresh', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-accept-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Accepting candidates', '--no-git']);
+  const routes = join(REPO_ROOT, 'tests', 'fixtures', 'search', 'e2e-routes.json');
+  const env = { PHDUDE_FAKE_FETCH: routes };
+
+  const question = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'How do open science practices spread?' }),
+  ]);
+
+  const searched = await runJson(
+    ws,
+    ['research', 'open science', '--question', question.id, '--allow-network'],
+    env,
+  );
+  assert.equal(searched.candidates.created.length, 4);
+
+  const listed = await runJson(ws, ['research', 'list', '--state', 'candidate']);
+  const preprint = listed.find((c) => c.needs_approval);
+  const article = listed.find((c) => !c.needs_approval && c.doi);
+  const spare = listed.find((c) => c.id !== preprint.id && c.id !== article.id);
+
+  // A preprint the policy flagged is refused until the researcher has said yes to that one.
+  const refused = await phdude(ws, ['research', 'accept', preprint.id, '--json', ...ACTOR], env);
+  assert.equal(refused.code, 1);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'USAGE');
+  assert.match(refusal.hint, /--approve-preprint/);
+  assert.equal((await runJson(ws, ['research', 'show', preprint.id])).state, 'candidate');
+
+  const accepted = await runJson(ws, ['research', 'accept', article.id, '--type', 'article']);
+  assert.equal(accepted.created, true);
+  assert.equal(accepted.candidate.state, 'accepted');
+  assert.equal(accepted.candidate.accepted_as, accepted.source.id);
+  assert.equal(accepted.source.identifiers.doi, article.doi);
+  assert.deepEqual(accepted.source.provenance, { method: 'imported', derived_from: [] });
+  assert.equal(accepted.source.ext.research.candidate, article.id);
+  assert.ok(
+    await exists(join(ws, 'knowledge', 'sources', `${accepted.source.id}.yaml`)),
+    'the source is written to knowledge/sources',
+  );
+
+  const approved = await runJson(ws, ['research', 'accept', preprint.id, '--approve-preprint']);
+  assert.equal(approved.source.type, 'preprint');
+
+  const dismissed = await runJson(ws, [
+    'research',
+    'dismiss',
+    spare.id,
+    '--reason',
+    'measures a different construct',
+  ]);
+  assert.equal(dismissed.state, 'dismissed');
+  assert.equal(dismissed.reason, 'measures a different construct');
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'research');
+  assert.deepEqual(
+    events.map((e) => e.summary),
+    [
+      `accepted ${article.id} as ${accepted.source.id}`,
+      `accepted ${preprint.id} as ${approved.source.id}`,
+      `dismissed ${spare.id}: measures a different construct`,
+    ],
+  );
+
+  // Accepted sources are recorded but not yet cited, which `cite check` reports without failing.
+  const checked = await runJson(ws, ['cite', 'check']);
+  assert.equal(checked.ok, true);
+  const uncited = checked.findings.filter((f) => f.kind === 'uncited-source').map((f) => f.id);
+  assert.deepEqual(uncited.sort(), [accepted.source.id, approved.source.id].sort());
+  const registry = await runJson(ws, ['cite', 'list']);
+  assert.equal(registry.length, 2);
+  assert.ok(registry.every((row) => row.bibkey));
+
+  // A field the provider did not fill is corrected in place; the identity fields are not.
+  const edited = await runJson(ws, [
+    'edit',
+    accepted.source.id,
+    '--json',
+    JSON.stringify({ venue: 'Journal of Research Practice', tags: ['read'] }),
+  ]);
+  assert.equal(edited.id, accepted.source.id);
+  assert.equal(edited.venue, 'Journal of Research Practice');
+
+  const rejectedEdit = await phdude(
+    ws,
+    ['edit', accepted.source.id, '--json', JSON.stringify({ title: 'Something else' }), '--json'],
+    env,
+  );
+  assert.equal(rejectedEdit.code, 2);
+  assert.match(JSON.parse(rejectedEdit.stderr).error.message, /identity field/);
+
+  const editEvents = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'edit');
+  assert.deepEqual(
+    editEvents.map((e) => e.summary),
+    [`edited ${accepted.source.id}: tags, venue`],
+  );
+
+  // Freshness: the question was searched a moment ago, so nothing is stale and nothing re-runs.
+  const fresh = await runJson(ws, ['freshness']);
+  assert.equal(fresh.questions.length, 1);
+  assert.equal(fresh.questions[0].question, question.id);
+  assert.equal(fresh.questions[0].stale, false);
+  assert.equal(fresh.summary.searches, 1);
+  assert.equal(fresh.summary.sources, 2);
+
+  const freshText = await run(ws, ['freshness']);
+  assert.match(freshText.stdout, /Questions \(1\): 0 stale, 0 never searched/);
+
+  // research-fresh reaches the network, so it refuses on a closed policy exactly like research.
+  const closed = await phdude(ws, ['research-fresh', '--json', ...ACTOR], env);
+  assert.equal(closed.code, 3);
+  assert.equal(JSON.parse(closed.stderr).error.code, 'POLICY');
+
+  const nothingDue = await runJson(ws, ['research-fresh', '--allow-network'], env);
+  assert.deepEqual(nothingDue.reran, [], 'a search run a moment ago is not stale');
+  assert.deepEqual(nothingDue.newCandidates, []);
+
+  const all = await runJson(ws, ['research-fresh', '--all', '--allow-network'], env);
+  assert.deepEqual(all.reran, [searched.search.id]);
+  assert.deepEqual(all.newCandidates, [], 'the same literature again is not news');
+  const text = await run(ws, ['research-fresh', '--all', '--allow-network'], env);
+  assert.match(text.stdout, /1 search\(es\) re-run, 0 new candidate\(s\)/);
+
+  // Re-running never resets a review the researcher already made.
+  const after = await runJson(ws, ['research', 'list']);
+  assert.deepEqual(
+    after
+      .filter((c) => c.state !== 'candidate')
+      .map((c) => c.state)
+      .sort(),
+    ['accepted', 'accepted', 'dismissed'],
+  );
+});

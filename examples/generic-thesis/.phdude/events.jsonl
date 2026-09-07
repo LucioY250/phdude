@@ -28,4 +28,5 @@
 {"ts":"2026-09-01T00:00:55.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-f62e1a2f34"],"summary":"fact added"}
 {"ts":"2026-09-01T00:00:57.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-54af7fa906"],"summary":"fact added"}
 {"ts":"2026-09-01T00:00:59.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-270dc9059c"],"summary":"fact added"}
+{"ts":"2025-06-01T00:00:00Z","op":"search","actor":{"researcher":"example","agent":"script"},"ids":["SEARCH-59780ad3c4"],"summary":"openalex: \"note-taking app adoption undergraduates\" → 2 results"}
 {"ts":"2026-09-01T00:01:01.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-7aa12a7b78"],"summary":"decision proposed"}

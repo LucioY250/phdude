@@ -1,6 +1,7 @@
 import { loadSnapshot } from './snapshot.js';
 import { detectFactConflicts } from '../domain/conflicts.js';
 import { disputedPairs } from '../domain/contradictions.js';
+import { questionFreshness } from '../domain/freshness.js';
 
 const KNOWLEDGE_TYPES = [
   ['source', 'sources'],
@@ -23,12 +24,12 @@ function countBy(objs, keyFn) {
 }
 
 /**
- * @param {{store: object}} deps
- * @returns {Promise<object>} a StatusReport: project, inventory, knowledge, conflicts,
- *   pendingDecisions, recentEvents, warnings - all derived on read, nothing cached.
+ * @param {{store: object, clock?: () => string}} deps
+ * @returns {Promise<object>} a StatusReport: project, inventory, knowledge, literature,
+ *   conflicts, pendingDecisions, recentEvents, warnings - all derived on read, nothing cached.
  */
-export async function status({ store }) {
-  const snapshot = await loadSnapshot(store);
+export async function status({ store, clock }) {
+  const snapshot = await loadSnapshot(store, clock);
   const { project, artifacts, decisions, facts, claims } = snapshot;
 
   const byType = {};
@@ -36,6 +37,13 @@ export async function status({ store }) {
     const objs = snapshot[key];
     byType[type] = { total: objs.length, byState: countBy(objs, (o) => o.state) };
   }
+
+  const freshness = questionFreshness(
+    snapshot.questions,
+    snapshot.searches,
+    snapshot.now,
+    snapshot.staleAfterDays,
+  );
 
   const pairs = disputedPairs(claims);
   const claimsById = new Map(claims.map((c) => [c.id, c]));
@@ -61,6 +69,15 @@ export async function status({ store }) {
       unknownRole: artifacts.filter((a) => a.role === 'unknown').length,
     },
     knowledge: { byType },
+    literature: {
+      candidates: {
+        total: snapshot.candidates.length,
+        byState: countBy(snapshot.candidates, (c) => c.state),
+      },
+      searches: snapshot.searches.length,
+      questions: freshness.length,
+      staleQuestions: freshness.filter((row) => row.stale).length,
+    },
     conflicts: detectFactConflicts(facts, decisions),
     disputedPairs: pairs,
     disputedClaims,

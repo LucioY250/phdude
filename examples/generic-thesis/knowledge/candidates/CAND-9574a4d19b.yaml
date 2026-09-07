@@ -1,0 +1,33 @@
+schema: phdude.candidate
+version: 1
+id: CAND-9574a4d19b
+created: 2025-06-01T00:00:00Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+provider: openalex
+providers:
+  - openalex
+external_id: W4312884501
+title: Self-Reported Versus Logged Use of Note-Taking Applications
+authors:
+  - H. Theta
+year: 2023
+venue: Open Education Preprints
+doi: null
+url: https://example.org/preprints/self-reported-versus-logged
+abstract: null
+type: preprint
+open_access: true
+cited_by: 4
+query: note-taking app adoption undergraduates
+question: RQ-1
+search: SEARCH-59780ad3c4
+score: 1.475
+score_parts:
+  rank: 0.5
+  citations: 0.175
+  recency: 0.8
+needs_approval: true
+state: candidate

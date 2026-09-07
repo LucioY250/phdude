@@ -20,6 +20,8 @@ import bootstrap from './commands/bootstrap.js';
 import cite from './commands/cite.js';
 import decide from './commands/decide.js';
 import doctor from './commands/doctor.js';
+import edit from './commands/edit.js';
+import freshness from './commands/freshness.js';
 import gaps from './commands/gaps.js';
 import help, { usage } from './commands/help.js';
 import ingest from './commands/ingest.js';
@@ -33,6 +35,7 @@ import next from './commands/next.js';
 import packs from './commands/packs.js';
 import promote from './commands/promote.js';
 import research from './commands/research.js';
+import researchFresh from './commands/research-fresh.js';
 import status from './commands/status.js';
 
 const { version } = createRequire(import.meta.url)('../../../package.json');
@@ -43,6 +46,8 @@ const COMMANDS = {
   cite,
   decide,
   doctor,
+  edit,
+  freshness,
   gaps,
   ingest,
   init,
@@ -55,12 +60,13 @@ const COMMANDS = {
   packs,
   promote,
   research,
+  'research-fresh': researchFresh,
   status,
 };
 
 // The commands allowed to reach a search provider. Only these pay for reading the research
 // policy and building the provider list, and only these can ever hold a `fetch`.
-const NETWORK_COMMANDS = new Set(['research']);
+const NETWORK_COMMANDS = new Set(['research', 'research-fresh']);
 
 // Test-only hook: with PHDUDE_FAKE_FETCH set to a JSON routes file, every provider talks to
 // that file instead of the network. Documented under "Testing" in docs/cli.md; nothing in a

@@ -1,0 +1,12 @@
+Questions (3): 3 stale, 2 never searched
+  RQ-1     last searched 2025-06-01 (463 day(s) ago)  [stale]
+  RQ-2     never searched  [stale]
+  RQ-3     never searched  [stale]
+
+Sources (4): median age 1.5 year(s), oldest 3 year(s)
+  SRC-04b75ed54a   2025 (1 year(s) old)
+  SRC-077426a939   2024 (2 year(s) old)
+  SRC-8295946d20   2023 (3 year(s) old)
+  SRC-c2221faf93   2025 (1 year(s) old)
+
+Searches recorded: 1; a search is stale after 180 day(s).

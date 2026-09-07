@@ -30,7 +30,11 @@ function renderRow(candidate) {
   ].join(' ');
 }
 
-function renderRows(candidates) {
+/**
+ * @param {object[]} candidates
+ * @returns {string} one line per candidate: id, score, year, state and truncated title
+ */
+export function renderRows(candidates) {
   if (candidates.length === 0) return '(no candidates)\n';
   const lines = candidates.map(renderRow);
   lines.push('', `${candidates.length} candidate(s)`);
@@ -63,6 +67,43 @@ export default async function researchCommand({ sub, positionals, flags, deps })
       question: flags.question,
     });
     return { text: renderRows(rows), json: rows };
+  }
+
+  if (sub === 'accept') {
+    const id = positionals[2];
+    if (!id) {
+      throw new PhdudeError(
+        'USAGE',
+        'research accept needs a candidate id',
+        'phdude research accept <CAND-id> [--type article] [--approve-preprint]',
+      );
+    }
+    const result = await research.accept(
+      { store: deps.store, clock: deps.clock, actor: deps.actor },
+      id,
+      { type: flags.type, approvePreprint: flags.approvePreprint },
+    );
+    const text = result.created
+      ? `Accepted ${result.candidate.id} as ${result.source.id}\n`
+      : `Accepted ${result.candidate.id}; ${result.source.id} was already recorded\n`;
+    return { text, json: result };
+  }
+
+  if (sub === 'dismiss') {
+    const id = positionals[2];
+    if (!id) {
+      throw new PhdudeError(
+        'USAGE',
+        'research dismiss needs a candidate id',
+        'phdude research dismiss <CAND-id> --reason "…"',
+      );
+    }
+    const dismissed = await research.dismiss(
+      { store: deps.store, clock: deps.clock, actor: deps.actor },
+      id,
+      { reason: flags.reason },
+    );
+    return { text: `Dismissed ${dismissed.id}: ${dismissed.reason}\n`, json: dismissed };
   }
 
   if (sub === 'show') {

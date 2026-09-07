@@ -3,11 +3,11 @@ import { findGaps } from '../domain/gaps.js';
 import { loadSnapshot } from './snapshot.js';
 
 /**
- * @param {{store: object}} deps
+ * @param {{store: object, clock?: () => string}} deps
  * @returns {Promise<{gaps: object[], counts: {high: number, medium: number, low: number}}>}
  */
-export async function gaps({ store }) {
-  const snapshot = await loadSnapshot(store);
+export async function gaps({ store, clock }) {
+  const snapshot = await loadSnapshot(store, clock);
   const conflicts = detectFactConflicts(snapshot.facts, snapshot.decisions);
   const gapsList = findGaps(snapshot, conflicts);
 

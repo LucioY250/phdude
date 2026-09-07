@@ -4,6 +4,7 @@ import { recommendNext } from '../../../src/domain/next.js';
 import { detectFactConflicts } from '../../../src/domain/conflicts.js';
 
 const created = '2026-09-07T00:00:00Z';
+const NOW = '2026-09-07T12:00:00Z';
 const actor = { researcher: 'test' };
 
 function emptySnapshot(overrides = {}) {
@@ -17,8 +18,26 @@ function emptySnapshot(overrides = {}) {
     results: [],
     questions: [],
     hypotheses: [],
+    candidates: [],
+    searches: [],
     decisions: [],
+    now: NOW,
+    staleAfterDays: 180,
     ...overrides,
+  };
+}
+
+// A search run six days ago: recent enough that the freshness rules stay out of the way of
+// whatever the test around it is actually about.
+function search(id, questionId, lastRun = '2026-09-01T00:00:00Z') {
+  return {
+    id,
+    schema: 'phdude.search',
+    version: 1,
+    created,
+    actor,
+    question: questionId,
+    last_run: lastRun,
   };
 }
 
@@ -358,6 +377,7 @@ function uncitedSourcesSnapshot(count) {
     artifacts: [art],
     sources,
     methods: [meth],
+    searches: [search('SEARCH-0000000001', rq.id)],
   });
 }
 
@@ -390,6 +410,7 @@ test('recommendNext: gaps still fires when a high-impact rule has already fired'
 test('recommendNext: gaps fires on a single high-severity gap, below the 3-gap threshold', () => {
   const snapshot = uncitedSourcesSnapshot(0);
   snapshot.questions.push(question('RQ-2'));
+  snapshot.searches.push(search('SEARCH-0000000002', 'RQ-2'));
   const actions = recommendNext(snapshot, []);
   const gapsAction = actions.find((a) => a.rule === 'gaps');
   assert.ok(gapsAction, 'an unaddressed question is a high gap and outranks the count');
@@ -420,4 +441,79 @@ test('recommendNext: gaps is ordered after question-gaps and before consistent',
   const consistentIndex = actions.findIndex((a) => a.rule === 'consistent');
   assert.ok(gapsIndex !== -1 && consistentIndex !== -1);
   assert.ok(gapsIndex < consistentIndex);
+});
+
+test('recommendNext: stale-search fires for a question whose search has aged past the policy', () => {
+  const rq = question('RQ-1');
+  const snapshot = emptySnapshot({
+    questions: [rq],
+    claims: [claim('CLAIM-0000000001', { questions: [rq.id] })],
+    searches: [search('SEARCH-0000000001', rq.id, '2026-01-01T12:00:00Z')],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'stale-search');
+
+  assert.ok(action);
+  assert.equal(action.impact, 'medium');
+  assert.equal(action.dependents, 1);
+  assert.equal(action.command, 'phdude research-fresh --question RQ-1');
+  assert.ok(action.why.some((w) => /249 day\(s\) ago \(stale after 180\)/.test(w)));
+});
+
+test('recommendNext: stale-search points at a first search when the question has never had one', () => {
+  const rq = question('RQ-1');
+  const snapshot = emptySnapshot({ questions: [rq] });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'stale-search');
+
+  assert.ok(action);
+  assert.equal(action.command, `phdude research "text RQ-1" --question RQ-1`);
+  assert.ok(action.why.some((w) => /never been searched/.test(w)));
+});
+
+test('recommendNext: stale-search does not fire while every question has a current search', () => {
+  const rq = question('RQ-1');
+  const snapshot = emptySnapshot({
+    questions: [rq],
+    searches: [search('SEARCH-0000000001', rq.id)],
+  });
+
+  assert.ok(!recommendNext(snapshot, []).some((a) => a.rule === 'stale-search'));
+});
+
+test('recommendNext: stale-search does not fire in a workspace with no questions', () => {
+  assert.ok(!recommendNext(emptySnapshot(), []).some((a) => a.rule === 'stale-search'));
+});
+
+function candidate(id, state = 'candidate') {
+  return { id, schema: 'phdude.candidate', version: 1, created, actor, state };
+}
+
+test('recommendNext: candidates-pending fires at 5 unreviewed candidates', () => {
+  const candidates = Array.from({ length: 5 }, (_, i) => candidate(`CAND-000000000${i}`));
+  const action = recommendNext(emptySnapshot({ candidates }), []).find(
+    (a) => a.rule === 'candidates-pending',
+  );
+
+  assert.ok(action);
+  assert.equal(action.impact, 'medium');
+  assert.equal(action.dependents, 5);
+  assert.equal(action.command, 'phdude research list --state candidate');
+});
+
+test('recommendNext: candidates-pending does not fire below 5, and counts only unreviewed ones', () => {
+  const four = Array.from({ length: 4 }, (_, i) => candidate(`CAND-000000000${i}`));
+  assert.ok(
+    !recommendNext(emptySnapshot({ candidates: four }), []).some(
+      (a) => a.rule === 'candidates-pending',
+    ),
+  );
+
+  const mixed = [...four, candidate('CAND-0000000009', 'accepted')];
+  assert.ok(
+    !recommendNext(emptySnapshot({ candidates: mixed }), []).some(
+      (a) => a.rule === 'candidates-pending',
+    ),
+    'an accepted candidate is not waiting for a verdict',
+  );
 });

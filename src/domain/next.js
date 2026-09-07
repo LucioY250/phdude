@@ -1,9 +1,12 @@
 import { buildGraph } from './lineage.js';
 import { openConflicts } from './conflicts.js';
+import { questionFreshness } from './freshness.js';
 import { findGaps } from './gaps.js';
+import { DEFAULT_FILTERS } from './policy.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
 const CANDIDATE_BACKLOG_THRESHOLD = 5;
+const CANDIDATES_PENDING_THRESHOLD = 5;
 const COLLECTION_KEYS = [
   'artifacts',
   'sources',
@@ -206,6 +209,60 @@ function ruleQuestionGaps(snapshot) {
   };
 }
 
+// Literature ages whether or not anyone looks at it, so this rule fires on the calendar rather
+// than on anything the researcher did: a question nobody has searched, and a question whose
+// search has passed the policy's threshold, are the same problem at different stages.
+function ruleStaleSearch(snapshot) {
+  const questions = snapshot.questions ?? [];
+  if (questions.length === 0) return null;
+
+  const staleAfterDays = snapshot.staleAfterDays ?? DEFAULT_FILTERS.staleAfterDays;
+  const rows = questionFreshness(questions, snapshot.searches ?? [], snapshot.now, staleAfterDays);
+  const stale = rows.filter((row) => row.stale);
+  if (stale.length === 0) return null;
+
+  const never = stale.filter((row) => row.lastSearch === null);
+  const aged = stale.filter((row) => row.lastSearch !== null);
+  const why = [
+    `${stale.length} research question(s) have no current literature search: ${stale.map((r) => r.question).join(', ')}`,
+  ];
+  if (never.length > 0) why.push(`${never.length} of them have never been searched`);
+  if (aged.length > 0) {
+    const oldest = aged.reduce((worst, row) => (row.daysAgo > worst.daysAgo ? row : worst));
+    why.push(`the oldest search ran ${oldest.daysAgo} day(s) ago (stale after ${staleAfterDays})`);
+  }
+
+  const first = stale[0];
+  const text = questions.find((q) => q.id === first.question)?.text ?? '…';
+  return {
+    rule: 'stale-search',
+    action: 'Refresh the literature behind the research questions',
+    why,
+    impact: 'medium',
+    command:
+      first.lastSearch === null
+        ? `phdude research "${text}" --question ${first.question}`
+        : `phdude research-fresh --question ${first.question}`,
+    dependents: stale.length,
+  };
+}
+
+// Candidates pile up because searching is cheap and reviewing is not. A backlog is not an
+// error - it is the queue the researcher owns - so it is reported once the queue is long
+// enough to be worth an afternoon, never per candidate.
+function ruleCandidatesPending(snapshot) {
+  const pending = (snapshot.candidates ?? []).filter((c) => c.state === 'candidate');
+  if (pending.length < CANDIDATES_PENDING_THRESHOLD) return null;
+  return {
+    rule: 'candidates-pending',
+    action: 'Review the literature candidates waiting for a verdict',
+    why: [`${pending.length} candidate(s) from literature searches are still unreviewed`],
+    impact: 'medium',
+    command: 'phdude research list --state candidate',
+    dependents: pending.length,
+  };
+}
+
 const GAPS_THRESHOLD = 3;
 
 function gapSummary(gaps) {
@@ -275,6 +332,8 @@ const RULES = [
   rulePacksRecommended,
   rulePendingDecisions,
   ruleQuestionGaps,
+  ruleStaleSearch,
+  ruleCandidatesPending,
 ];
 
 /**

@@ -56,6 +56,17 @@ export function renderStatus(report) {
   }
   lines.push('');
 
+  const lit = report.literature;
+  lines.push('Literature:');
+  lines.push(
+    `  Candidates: total=${lit.candidates.total} (${renderCounts(lit.candidates.byState)})`,
+  );
+  lines.push(`  Searches: ${lit.searches}`);
+  lines.push(
+    `  Questions with a stale or missing search: ${lit.staleQuestions} of ${lit.questions}`,
+  );
+  lines.push('');
+
   const openCount = report.conflicts.filter((c) => c.resolved === null).length;
   lines.push(`Conflicts (${openCount} open of ${report.conflicts.length} total):`);
   if (report.conflicts.length === 0) {
@@ -220,6 +231,52 @@ export function renderGaps(report) {
     lines.push('');
   }
   lines.pop();
+
+  return lines.join('\n') + '\n';
+}
+
+function renderQuestionRow(row) {
+  const age =
+    row.lastSearch === null
+      ? 'never searched'
+      : `last searched ${row.lastSearch.slice(0, 10)} (${row.daysAgo} day(s) ago)`;
+  return `  ${row.question.padEnd(8)} ${age}${row.stale ? '  [stale]' : ''}`;
+}
+
+function renderSourceRow(row) {
+  const age = row.age === null ? 'no year recorded' : `${row.year} (${row.age} year(s) old)`;
+  return `  ${row.id.padEnd(16)} ${age}`;
+}
+
+/**
+ * @param {object} report - a freshness report, see application/freshness.js
+ * @returns {string}
+ */
+export function renderFreshness(report) {
+  const { questions, sources, summary } = report;
+  const lines = [
+    `Questions (${summary.questions}): ${summary.stale} stale, ${summary.neverSearched} never searched`,
+  ];
+  if (questions.length === 0) lines.push('  (none)');
+  else lines.push(...questions.map(renderQuestionRow));
+
+  const ages =
+    summary.medianAge === null
+      ? 'no source records a year'
+      : `median age ${summary.medianAge} year(s), oldest ${summary.oldest} year(s)`;
+  lines.push('', `Sources (${summary.sources}): ${ages}`);
+  if (sources.length === 0) lines.push('  (none recorded)');
+  else lines.push(...sources.map(renderSourceRow));
+
+  lines.push(
+    '',
+    `Searches recorded: ${summary.searches}; a search is stale after ${report.staleAfterDays} day(s).`,
+  );
+
+  if (report.warnings.length > 0) {
+    lines.push('', 'Warnings:');
+    for (const w of report.warnings) lines.push(`  - ${w}`);
+  }
 
   return lines.join('\n') + '\n';
 }

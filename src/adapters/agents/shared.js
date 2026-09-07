@@ -122,8 +122,20 @@ export const COMMAND_ROWS = [
     'Citation registry: list sources, verify them, export BibTeX/CSL-JSON.',
   ],
   [
-    'research "<query>"|list|show',
+    'research "<query>"|list|show|accept|dismiss',
     'Search the literature through the configured providers and record the candidates; the researcher accepts them, never you.',
+  ],
+  [
+    'research-fresh',
+    'Re-run the recorded searches that have gone stale, and report only what is new.',
+  ],
+  [
+    'freshness',
+    'Report the last search per research question, the age of every source, and what is stale.',
+  ],
+  [
+    "edit <id> --json '<fields>'",
+    'Correct the non-identity fields of a non-canonical object; identity fields are never editable.',
   ],
   ['matrix', 'Literature matrix: one row per source, with the questions and claims it reaches.'],
   [

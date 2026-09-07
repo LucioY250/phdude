@@ -54,10 +54,10 @@ opinion about the literature it holds.
 - **The literature matrix.** `phdude matrix` prints one row per source — the research questions
   and claims its evidence reaches, the strongest evidence citing it, the facts drawn from its
   artifacts. A row with no questions is a source you have cited but never actually used.
-- **Research gaps.** `phdude gaps` reports ten kinds of gap by severity, each with the reason it
-  fired and a command that addresses it. `phdude next` recommends it on the first high-severity
-  gap, or once three of any severity accumulate, and never calls a workspace with open gaps
-  consistent.
+- **Research gaps.** `phdude gaps` reports twelve kinds of gap by severity, each with the reason
+  it fired and a command that addresses it. `phdude next` recommends it on the first
+  high-severity gap, or once three of any severity accumulate, and never calls a workspace with
+  open gaps consistent.
 - **Contradictions.** `phdude link CLAIM-a --contradicts CLAIM-b` moves both claims to
   `disputed` with no decision needed, because surfacing a contradiction should never wait for
   approval. Getting one back out does: the decision has to name which claim survives.
@@ -175,7 +175,7 @@ This writes:
 |---|---|
 | `CLAUDE.md` | Entry point. Imports `AGENTS.md` and adds Claude-specific notes. |
 | `AGENTS.md` | Operating rules, the command reference, and an *index* of skills. Skills are loaded on demand, not up front, to keep your context small. |
-| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-packs`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
+| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-packs`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
 | `.phdude/skills/*/SKILL.md` | The skills themselves, in the open `SKILL.md` convention. |
 
 Open Claude Code in the directory and start with:
@@ -344,7 +344,10 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude decide propose\|approve\|reject\|supersede` | Research decisions. The agent proposes; the researcher decides. |
 | `phdude promote <id> --decision <DEC-id>` | Make an object canonical, with an approved decision behind it. |
 | `phdude cite list\|check\|export` | Citation registry: list sources, verify them, export BibTeX/CSL-JSON. |
-| `phdude research "<query>"\|list\|show` | Search the literature through the configured providers and record what came back as candidates to review. Refuses unless the network policy allows it. |
+| `phdude research "<query>"\|list\|show\|accept\|dismiss` | Search the literature through the configured providers and record what came back as candidates to review. Refuses unless the network policy allows it. `accept` turns a reviewed candidate into a source; `dismiss` records why one is not going in. |
+| `phdude research-fresh [--question RQ-n] [--all]` | Re-run the recorded searches that have gone stale, and report only what is new. |
+| `phdude freshness` | Last search per research question, age per source, and what the policy calls stale. |
+| `phdude edit <id> --json '<fields>'` | Correct the non-identity fields of a non-canonical object. Identity fields are never editable. |
 | `phdude matrix [--format md\|csv] [--question RQ-n]` | Literature matrix: one row per source, which questions and claims it reaches. |
 | `phdude gaps` | Research gaps: questions, claims, sources, artifacts and conflicts that need attention. |
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |

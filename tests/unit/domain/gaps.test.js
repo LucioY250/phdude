@@ -5,6 +5,7 @@ import { detectFactConflicts } from '../../../src/domain/conflicts.js';
 import { markContradiction } from '../../../src/domain/contradictions.js';
 
 const created = '2026-09-07T00:00:00Z';
+const NOW = '2026-09-07T12:00:00Z';
 const actor = { researcher: 'test' };
 
 function question(id, overrides = {}) {
@@ -131,6 +132,18 @@ function fact(id, artifactId) {
   };
 }
 
+function search(id, questionId, lastRun = '2026-09-01T00:00:00Z') {
+  return {
+    id,
+    schema: 'phdude.search',
+    version: 1,
+    created,
+    actor,
+    question: questionId,
+    last_run: lastRun,
+  };
+}
+
 function snapshot(overrides = {}) {
   return {
     questions: [],
@@ -141,7 +154,10 @@ function snapshot(overrides = {}) {
     sources: [],
     artifacts: [],
     facts: [],
+    searches: [],
     decisions: [],
+    now: NOW,
+    staleAfterDays: 180,
     ...overrides,
   };
 }
@@ -365,4 +381,77 @@ test('findGaps: is pure - does not mutate its inputs', () => {
   const before = JSON.stringify(rq);
   findGaps(snapshot({ questions: [rq] }), []);
   assert.equal(JSON.stringify(rq), before);
+});
+
+test('findGaps: question-never-searched fires for a question no search is tied to (medium)', () => {
+  const gaps = findGaps(snapshot({ questions: [question('RQ-1')] }), []);
+  const gap = gaps.find((g) => g.kind === 'question-never-searched');
+
+  assert.ok(gap);
+  assert.equal(gap.id, 'RQ-1');
+  assert.equal(gap.severity, 'medium');
+  assert.match(gap.why, /never been searched/);
+  assert.equal(gap.command, `phdude research "text RQ-1" --question RQ-1`);
+});
+
+test('findGaps: question-never-searched does not fire once a search is tied to the question', () => {
+  const gaps = findGaps(
+    snapshot({ questions: [question('RQ-1')], searches: [search('SEARCH-1', 'RQ-1')] }),
+    [],
+  );
+  assert.ok(!gaps.some((g) => g.kind === 'question-never-searched'));
+});
+
+test('findGaps: a search tied to no question leaves the question never-searched', () => {
+  const gaps = findGaps(
+    snapshot({ questions: [question('RQ-1')], searches: [search('SEARCH-1', null)] }),
+    [],
+  );
+  assert.ok(gaps.some((g) => g.kind === 'question-never-searched'));
+});
+
+test('findGaps: stale-search fires once the newest search has aged past the policy (low)', () => {
+  const gaps = findGaps(
+    snapshot({
+      questions: [question('RQ-1')],
+      searches: [search('SEARCH-1', 'RQ-1', '2026-01-01T12:00:00Z')],
+    }),
+    [],
+  );
+  const gap = gaps.find((g) => g.kind === 'stale-search');
+
+  assert.ok(gap);
+  assert.equal(gap.id, 'RQ-1');
+  assert.equal(gap.severity, 'low');
+  assert.match(gap.why, /249 day\(s\) ago \(stale after 180\)/);
+  assert.equal(gap.command, 'phdude research-fresh --question RQ-1');
+});
+
+test('findGaps: stale-search and question-never-searched never fire for the same question', () => {
+  const gaps = findGaps(
+    snapshot({
+      questions: [question('RQ-1')],
+      searches: [search('SEARCH-1', 'RQ-1', '2026-01-01T12:00:00Z')],
+    }),
+    [],
+  );
+  assert.ok(!gaps.some((g) => g.kind === 'question-never-searched'));
+});
+
+test('findGaps: the staleness threshold comes from the snapshot, not a constant', () => {
+  const searches = [search('SEARCH-1', 'RQ-1', '2026-08-01T12:00:00Z')];
+  const strict = findGaps(
+    snapshot({ questions: [question('RQ-1')], searches, staleAfterDays: 30 }),
+    [],
+  );
+  const lenient = findGaps(
+    snapshot({ questions: [question('RQ-1')], searches, staleAfterDays: 90 }),
+    [],
+  );
+
+  assert.ok(
+    strict.some((g) => g.kind === 'stale-search'),
+    '37 days is stale after 30',
+  );
+  assert.ok(!lenient.some((g) => g.kind === 'stale-search'), '37 days is fresh after 90');
 });

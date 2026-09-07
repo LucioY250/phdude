@@ -40,7 +40,8 @@
             "url": { "type": "string" }
           },
           "additionalProperties": false
-        }
+        },
+        "provenance": { "$ref": "phdude://common#/$defs/provenance" }
       },
       "required": ["title", "authors", "type", "artifacts", "state"]
     }

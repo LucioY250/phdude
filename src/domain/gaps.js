@@ -3,6 +3,8 @@
 // `command` is copy-pasteable.
 import { openConflicts } from './conflicts.js';
 import { disputedPairs } from './contradictions.js';
+import { questionFreshness } from './freshness.js';
+import { DEFAULT_FILTERS } from './policy.js';
 
 const SEVERITY_RANK = { high: 0, medium: 1, low: 2 };
 
@@ -46,6 +48,40 @@ function gapsForQuestions(snapshot) {
         why: `${q.id} has no method addressing it`,
         command: `phdude add method --json '{"name":"…","design":"…","paradigm":"quantitative","questions":["${q.id}"]}'`,
         severity: 'medium',
+      });
+    }
+  }
+
+  return gaps;
+}
+
+// Literature the workspace has not gone looking for is a gap in the same sense an unaddressed
+// question is: nothing is wrong with what is recorded, something is missing from it. A question
+// nobody ever searched outranks one whose search has merely aged - the second at least has
+// literature behind it.
+function gapsForSearches(snapshot) {
+  const questions = snapshot.questions ?? [];
+  const staleAfterDays = snapshot.staleAfterDays ?? DEFAULT_FILTERS.staleAfterDays;
+  const rows = questionFreshness(questions, snapshot.searches ?? [], snapshot.now, staleAfterDays);
+  const textById = new Map(questions.map((q) => [q.id, q.text]));
+  const gaps = [];
+
+  for (const row of rows) {
+    if (row.lastSearch === null) {
+      gaps.push({
+        kind: 'question-never-searched',
+        id: row.question,
+        why: `${row.question} has never been searched for literature`,
+        command: `phdude research "${textById.get(row.question) ?? '…'}" --question ${row.question}`,
+        severity: 'medium',
+      });
+    } else if (row.stale) {
+      gaps.push({
+        kind: 'stale-search',
+        id: row.question,
+        why: `${row.question}'s last search ran ${row.daysAgo} day(s) ago (stale after ${staleAfterDays})`,
+        command: `phdude research-fresh --question ${row.question}`,
+        severity: 'low',
       });
     }
   }
@@ -209,8 +245,9 @@ function byseverityThenKindThenId(a, b) {
 
 /**
  * Pure. Explainable gap report (spec S3.4): questions without claims/method or only-candidate
- * claims, claims with no or only-weak evidence, untested hypotheses, uncited sources, unmined
- * artifacts, open conflicts, and disputed claim pairs.
+ * claims, questions never searched or whose search has gone stale, claims with no or only-weak
+ * evidence, untested hypotheses, uncited sources, unmined artifacts, open conflicts, and
+ * disputed claim pairs.
  * @param {object} snapshot
  * @param {object[]} conflicts - all fact conflicts (open and resolved), from domain/conflicts.js
  * @returns {{kind: string, id: string, why: string, command: string, severity: 'high'|'medium'|'low'}[]}
@@ -218,6 +255,7 @@ function byseverityThenKindThenId(a, b) {
 export function findGaps(snapshot, conflicts) {
   const gaps = [
     ...gapsForQuestions(snapshot),
+    ...gapsForSearches(snapshot),
     ...gapsForClaims(snapshot),
     ...gapsForHypotheses(snapshot),
     ...gapsForSources(snapshot),

@@ -91,7 +91,17 @@ test('the README slash-command list names every installed template', () => {
 test('the phdude-core skill lists every write command as CLI-only', () => {
   // Only these commands mutate recorded research state; the skill's "the only way to write"
   // section has to name each of them, or an agent will reach for a file edit instead.
-  const writeCommands = ['add', 'link', 'decide', 'promote', 'packs apply', 'mode'];
+  const writeCommands = [
+    'add',
+    'link',
+    'edit',
+    'decide',
+    'promote',
+    'research accept',
+    'research dismiss',
+    'packs apply',
+    'mode',
+  ];
   const skill = read('skills', 'phdude-core', 'SKILL.md');
   const section = skill.slice(skill.indexOf('## The only way to write'));
   for (const command of writeCommands) {

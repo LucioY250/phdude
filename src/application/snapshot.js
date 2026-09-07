@@ -1,5 +1,9 @@
+import { join } from 'node:path';
 import { buildGraph } from '../domain/lineage.js';
+import { researchFilters } from '../domain/policy.js';
 import { migrationWarning } from './guard.js';
+
+const POLICY_PATH = join('.phdude', 'research-policy.yaml');
 
 const TYPES = [
   ['artifact', 'artifacts'],
@@ -11,14 +15,18 @@ const TYPES = [
   ['question', 'questions'],
   ['hypothesis', 'hypotheses'],
   ['method', 'methods'],
+  ['candidate', 'candidates'],
+  ['search', 'searches'],
   ['decision', 'decisions'],
 ];
 
 /**
  * @param {import('../ports/store.js').Store} store
+ * @param {() => string} [clock] - the present, carried on the snapshot so the freshness rules
+ *   in `domain/` can read it as data instead of reaching for a clock of their own
  * @returns {Promise<object>}
  */
-export async function loadSnapshot(store) {
+export async function loadSnapshot(store, clock = () => new Date().toISOString()) {
   const warnings = [];
 
   const project = await store.readProject();
@@ -52,5 +60,7 @@ export async function loadSnapshot(store) {
     events,
     graph,
     warnings,
+    now: clock(),
+    staleAfterDays: researchFilters(await store.readYaml(POLICY_PATH)).staleAfterDays,
   };
 }

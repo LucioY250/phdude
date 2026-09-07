@@ -96,10 +96,37 @@ high → medium → low. Work it in that order:
 4. An `uncited-source` or `artifact-unmined` gap is often fine to leave open for a while (low
    severity) — note it, do not treat it as urgent.
 
-### Reporting to the researcher
+## Freshness
 
-Report the matrix and the gaps together, in 10 lines or fewer: how many sources are recorded and
-how many are actually used in a claim, the top 1-2 high-severity gaps with their `why`, and the
-one action you recommend next (usually the top gap's `command`, or `phdude next` if something
-else outranks it). Skip anything the researcher did not ask about — this is a status update, not
-the full report.
+```
+phdude freshness --json
+```
+
+Read-only, and it never touches the network. Returns `{ questions, sources, summary }`: per
+research question the last search, `daysAgo`, whether the policy calls that `stale`, and how
+many searches it has; per source its `year` and `age` in years; then the counts.
+
+Read it as two different problems, not one number:
+
+1. **`lastSearch: null` — never searched.** There is no literature behind that question at all.
+   This is the more urgent case, not the exempt one. The fix is a first search
+   (`phdude research "…" --question RQ-n`), which needs the network policy open — report that
+   and ask, do not pass `--allow-network` yourself (`[[phdude-core]]`).
+2. **`stale: true` with a date — the search has aged out.** The fix is
+   `phdude research-fresh --question RQ-n`, which re-runs it exactly as it ran before and
+   reports only what is new. See `[[research]]`.
+
+The same two show up in `phdude gaps` as `question-never-searched` (medium) and `stale-search`
+(low), and in `phdude next` as the `stale-search` rule.
+
+Source `age` is context, not a verdict: a 2019 paper is not stale because it is old, it is the
+foundational reference for half the field. Report the median and the oldest so the researcher
+can see the shape of the bibliography, and never recommend dropping a source on age alone.
+
+## Reporting to the researcher
+
+Report the matrix, the gaps and the freshness together, in 10 lines or fewer: how many sources
+are recorded and how many are actually used in a claim, the top 1-2 high-severity gaps with
+their `why`, any question with no literature behind it at all, and the one action you recommend
+next (usually the top gap's `command`, or `phdude next` if something else outranks it). Skip
+anything the researcher did not ask about — this is a status update, not the full report.

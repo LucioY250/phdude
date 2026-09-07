@@ -20,6 +20,11 @@ Knowledge:
   hypothesis: total=1 (candidate=1)
   method: total=1 (candidate=1)
 
+Literature:
+  Candidates: total=2 (candidate=2)
+  Searches: 1
+  Questions with a stale or missing search: 3 of 3
+
 Conflicts (1 open of 1 total):
   - sample_size: 312 participants (FACT-2bc4462edb from ART-35146e2f6d) vs 312 participants (FACT-54af7fa906 from ART-0772a215de) vs 300 participants (FACT-f62e1a2f34 from ART-f7ced78004) [open]
 
@@ -33,5 +38,5 @@ Recent events:
   add: fact added
   add: fact added
   add: fact added
-  add: fact added
+  search: openalex: "note-taking app adoption undergraduates" → 2 results
   decide: decision proposed

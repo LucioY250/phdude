@@ -210,6 +210,8 @@ export function newFact({ key, value, unit, from, tags = [], actor, created }) {
  * @param {string} [p.abstract]
  * @param {string[]} [p.keywords]
  * @param {{doi?: string, isbn?: string, arxiv?: string, pmid?: string, url?: string}} [p.identifiers]
+ * @param {object} [p.provenance]
+ * @param {object} [p.ext]
  * @param {object} p.actor
  * @param {string} p.created
  * @returns {object} a schema-valid `phdude.source`
@@ -228,6 +230,8 @@ export function newSource({
   abstract,
   keywords,
   identifiers,
+  provenance,
+  ext,
   actor,
   created,
 }) {
@@ -253,6 +257,8 @@ export function newSource({
   if (abstract !== undefined) source.abstract = abstract;
   if (keywords !== undefined) source.keywords = keywords;
   if (identifiers !== undefined) source.identifiers = identifiers;
+  if (provenance !== undefined) source.provenance = provenance;
+  if (ext !== undefined) source.ext = ext;
   return source;
 }
 

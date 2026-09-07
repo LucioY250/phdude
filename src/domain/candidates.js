@@ -15,19 +15,35 @@ export function identityKey(candidate) {
   return `title:${normalizeText(candidate.title ?? '')}|${candidate.year ?? ''}`;
 }
 
-// Two providers describing the same work have to collapse into one candidate, or the
-// researcher reviews the same paper once per provider. Spec §3.3 makes that an either/or: the
-// same DOI, *or* the same normalized title and year. Both keys are registered for every
-// candidate while grouping, so a work one provider has a DOI for and another does not still
-// merges - which is the common case for preprints, and for a preprint and its published
-// version. The group's own identity is `identityKey` of the merged record, computed once the
-// merge has filled in what the first provider did not know.
-function identityKeys(candidate) {
+/**
+ * The weaker of the two identities: normalized title and year. It is what a work is filed
+ * under until some provider reports a DOI for it, which is why a stored candidate has to stay
+ * findable by it afterwards.
+ * @param {object} candidate
+ * @returns {string|null} null when there is no title to key on
+ */
+export function titleKey(candidate) {
+  const title = normalizeText(candidate.title ?? '');
+  return title ? `title:${title}|${candidate.year ?? ''}` : null;
+}
+
+/**
+ * Two providers describing the same work have to collapse into one candidate, or the
+ * researcher reviews the same paper once per provider. Spec §3.3 makes that an either/or: the
+ * same DOI, *or* the same normalized title and year. Both keys are registered for every
+ * candidate while grouping, so a work one provider has a DOI for and another does not still
+ * merges - which is the common case for preprints, and for a preprint and its published
+ * version. The group's own identity is `identityKey` of the merged record, computed once the
+ * merge has filled in what the first provider did not know.
+ * @param {object} candidate
+ * @returns {string[]}
+ */
+export function identityKeys(candidate) {
   const keys = [];
   const doi = normalizeDoi(candidate.doi);
   if (doi) keys.push(`doi:${doi}`);
-  const title = normalizeText(candidate.title ?? '');
-  if (title) keys.push(`title:${title}|${candidate.year ?? ''}`);
+  const title = titleKey(candidate);
+  if (title) keys.push(title);
   return keys;
 }
 

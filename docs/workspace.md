@@ -94,7 +94,7 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Object | Id | Key fields |
 |---|---|---|
 | Artifact | `ART-<hash10>` | `path`, `paths[]`, `hash`, `bytes`, `mime`, `kind`, `extracted`, `role` |
-| Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]`, `bibkey?`, `abstract?`, `keywords[]?`, `identifiers?{doi,isbn,arxiv,pmid,url}` |
+| Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]`, `bibkey?`, `abstract?`, `keywords[]?`, `identifiers?{doi,isbn,arxiv,pmid,url}`, `provenance?` |
 | Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]`, `provenance` |
 | Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength`, `provenance` |
 | Fact | `FACT-<hash10>` | `key`, `value`, `unit`, `from {artifact, locator}` |
@@ -134,7 +134,41 @@ rank, citation count, recency) so the order is auditable rather than mysterious.
 A **Search** is the record of asking. `runs[]` appends one entry per provider call — `at`,
 `provider`, `count` and how many of those results were `new` — so a query re-run months later
 extends one history instead of minting a second record. `filters` snapshots what the run
-applied, and `last_run` is what freshness is measured against.
+applied, and `last_run` is what freshness is measured against — by `phdude freshness`, by the
+`stale-search` gap and `next` rule, and by `phdude research-fresh`, which re-runs a stale search
+from exactly that snapshot.
+
+A stored candidate is never rewritten by a later run, with one exception: a work recorded
+without a DOI, because the provider that returned it did not report one, takes the DOI a later
+run learns. Its identity moves from the title key to the DOI key, so `doi`, `url`, `ext.ids`
+and `providers[]` are filled in and the record keeps the id it already has. It still counts as
+already known, not as a new candidate, and its `state` and `reason` are untouched.
+
+## Accepting a candidate
+
+`phdude research accept CAND-…` is the only path from a candidate into the citation registry.
+The Source it writes carries what the providers actually reported — `title`, `authors`, `year`,
+`venue`, `abstract`, `type`, and `identifiers` holding only the ids some provider returned
+(`doi`, `url`, `arxiv`, `pmid`) — plus two records of where it came from:
+
+```yaml
+provenance:
+  method: imported
+  derived_from: []
+ext:
+  research:
+    candidate: CAND-9574a4d19b
+    provider: openalex
+    external_id: W4390110022
+    accepted_by:
+      researcher: ada
+      agent: cli
+```
+
+`derived_from` is empty because nothing was read out of an ingested artifact: the record came
+from a provider, not from a document in `sources/`. The candidate moves to `accepted` and
+records `accepted_as`. If the workspace already records that Source — the same normalized title
+and year — the candidate is linked to it and the existing record is left exactly as it is.
 
 ## Knowledge states
 
@@ -205,6 +239,10 @@ opening a file.
 ```json
 {"ts":"2026-09-07T09:12:44.101Z","op":"add","actor":{"researcher":"ada","agent":"claude-code"},"ids":["CLAIM-3d035aa05b"],"summary":"claim added"}
 ```
+
+Accepting or dismissing a candidate writes one `research` event
+(`accepted CAND-… as SRC-…`, or `dismissed CAND-…: <reason>`), and `phdude edit` writes one
+`edit` event naming the fields that changed.
 
 A network call is audited the same way, one `search` event per provider call:
 

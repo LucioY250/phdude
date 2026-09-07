@@ -126,8 +126,14 @@ text output prints one line per inventory entry, with `+` marking the ones writt
 ### `phdude status`
 
 Project settings, artifact inventory by kind and extraction status, knowledge counts by type
-and state, open and resolved fact conflicts, disputed claim pairs, pending decisions, and the
-last events. Every number is derived on read; nothing is cached.
+and state, a Literature block, open and resolved fact conflicts, disputed claim pairs, pending
+decisions, and the last events. Every number is derived on read; nothing is cached.
+
+The **Literature** block counts candidates by state, how many searches are recorded, and how
+many research questions have a stale or missing search — the same staleness rule
+`phdude freshness` reports in full. Candidates and searches are counted here and nowhere else:
+they are not knowledge, so they stay out of the Knowledge block and out of
+`phdude knowledge list`.
 
 Disputed claim pairs come from marking claims as contradicting each other (see `phdude link`
 below, PRD §3.5): a pair is listed while neither of the two claims has been `rejected`,
@@ -139,6 +145,12 @@ whatever states they are in, and drops out once one side is rejected. `--json` r
 
 The highest-impact next action, always with the reasons behind it, the expected impact, and
 the exact command to run. Other candidates follow. See PRD §45.
+
+Two rules read the calendar rather than the knowledge graph. `stale-search` (medium) fires for
+every research question with no current literature behind it — never searched, or searched
+longer ago than `research.freshness.stale_after_days` — and points at a first
+`phdude research` or at `phdude research-fresh`, whichever the first such question needs.
+`candidates-pending` (medium) fires at five or more candidates still awaiting a verdict.
 
 ### `phdude knowledge list|show|trace`
 
@@ -360,13 +372,15 @@ A source may carry `bibkey` (`^[a-z0-9-]+$`, wins over the derived key), `abstra
 (a string array), and `identifiers: { doi?, isbn?, arxiv?, pmid?, url? }`. The top-level `doi`
 and `url` fields from v0.1 still work; `identifiers.doi` takes precedence when both are set.
 
-### `phdude research "<query>" | list | show`
+### `phdude research "<query>" | list | show | accept | dismiss`
 
 ```
 phdude research "open science practices adoption" --question RQ-1
 phdude research "…" --provider openalex,crossref --from 2022 --limit 10 --allow-network
 phdude research list --state candidate --question RQ-1
 phdude research show CAND-…
+phdude research accept CAND-… --type article
+phdude research dismiss CAND-… --reason "measures a different construct"
 ```
 
 Fresh literature search (PRD §22, §71–§77, spec §3.3–§3.4). **This is the only command that
@@ -389,6 +403,9 @@ carrying the provider, the query and a result count — never a result payload.
 | `--limit N` | Override `research.limit` for this run. It is per provider, not a total. |
 | `--allow-network` | Allow this one run through a closed `network.enabled`. |
 | `--state`, `--question` | Filters for `research list`. |
+| `--type <t>` | The source type `research accept` records. Defaults to the candidate's own type. One of `article`, `book`, `chapter`, `thesis`, `report`, `preprint`, `web`, `dataset`, `other`. |
+| `--approve-preprint` | Required by `research accept` for a candidate flagged `needs_approval`. |
+| `--reason "…"` | Required by `research dismiss`. |
 
 What a run does, in order: check the policy, check the question, call each configured provider
 in turn, deduplicate across providers, apply the policy filters, score, then write. A provider
@@ -423,8 +440,120 @@ candidate, or the search record behind it, as YAML.
 Re-running the same query for the same question appends a run to the same `SEARCH-…` record
 instead of creating a second one, and a candidate already on disk is reported under
 `existing` rather than rewritten — the state and reason a researcher gave it are never reset by
-a re-run. Nothing a later run learned is merged into a stored candidate either: what is on disk
-is what the run that first recorded it saw.
+a re-run. Nothing a later run learned is merged into a stored candidate either, with one
+exception: a work an earlier run recorded with no DOI, because the provider that returned it
+did not report one, takes the DOI a later run learns. Its identity moves from the title key to
+the DOI key, so it is filled in and keeps the id it already has (`doi`, `url`, `ext.ids` and
+`providers`) instead of the same paper being filed twice. It still counts as `existing`.
+
+#### Accepting and dismissing
+
+`research accept <CAND-id>` is the only path from a search result into the citation registry.
+It creates a `SRC-…` with the candidate's `title`, `authors`, `year`, `venue`, `abstract` and
+`type` (or `--type`), its identifiers under `identifiers` (`doi`, `url`, `arxiv`, `pmid` — only
+the ones a provider actually reported), `provenance: { method: imported, derived_from: [] }`,
+and `ext.research` recording which candidate, provider and external id it came from and who
+accepted it. Nothing is invented: a field no provider returned stays empty, and `cite check`
+reports it afterwards. The candidate moves to `accepted` and records `accepted_as`.
+
+If the workspace already records that source — the same normalized title and year — the
+candidate is linked to it and the existing record is left exactly as it is.
+
+A candidate flagged `needs_approval` (a preprint, under `research.preprints.require_approval`)
+exits 1 unless the call carries `--approve-preprint`. That flag is the researcher's answer to
+that particular preprint, not a default.
+
+`research dismiss <CAND-id> --reason "…"` records that the candidate is not going in, and why.
+The reason is required: a dismissed candidate keeps coming back in every future search, and the
+next reader needs to know it was read rather than missed.
+
+Both refuse a candidate that is not still in state `candidate` (exit 3) — re-deciding an
+accepted one would orphan the source it created. Each writes exactly one `research` event:
+`accepted CAND-… as SRC-…`, or `dismissed CAND-…: <reason>`.
+
+### `phdude research-fresh [--question RQ-n] [--all] [--allow-network]`
+
+```
+phdude research-fresh
+phdude research-fresh --question RQ-1
+phdude research-fresh --all --allow-network
+```
+
+Re-runs recorded searches that have gone stale — `last_run` at least
+`research.freshness.stale_after_days` days ago — exactly as they ran the first time: the same
+query, question, providers and filters, read back off the `SEARCH-…` record. `--question RQ-n`
+narrows it to one question's searches; `--all` re-runs every recorded search regardless of age.
+
+It reaches the network on the same terms as `research`, and refuses the same way when the
+policy is closed. Each re-run appends its runs to the search it came from and its own `search`
+events, so the audit trail is identical to running the query by hand.
+
+It reports **only new candidates**: `{ reran, newCandidates, warnings }`. A re-run that finds
+the same literature again is the answer "nothing has changed", and listing the same twenty
+papers a second time would bury it.
+
+### `phdude freshness [--json]`
+
+```
+phdude freshness
+phdude freshness --json
+```
+
+How current the workspace's literature is (spec §3.4). Per research question: the last search,
+how many days ago that was, whether the policy calls that stale, and how many searches it has.
+Per source: its year and age in years, or that no year was recorded. Then a summary — how many
+questions are stale, how many were never searched, how many searches and sources exist, and the
+median and oldest source age.
+
+A question nobody has ever searched is stale by definition: there is no literature behind it at
+all, which is the more urgent case, not the exempt one. A search whose `last_run` cannot be
+read does not count as a search — an unusable timestamp must not be able to present a question
+as freshly searched.
+
+Read-only: no network, no event, nothing written.
+
+### `phdude edit <id> --json '<fields>'`
+
+```
+phdude edit CLAIM-… --json '{"tags":["method"],"sections":["methods"]}'
+phdude edit SRC-… --json '{"venue":"Journal of Reproducibility"}'
+phdude edit ART-… --file role.json
+```
+
+Corrects the non-identity fields of a recorded object in place, and writes one `edit` event
+naming the fields that changed. Fields come from `--json '<object>'` or `--file <path>.json`,
+the same two carriers `phdude add` takes.
+
+Three refusals, and they are the point of the command:
+
+| Refusal | Exit | Why |
+|---|---|---|
+| The object is `canonical` | 3 | Canonical knowledge belongs to the researcher. Propose a Decision instead. |
+| The field is an identity field | 2 | Ids are derived from these (ADR 0003), so changing one would mean a different object wearing the old object's id. Record the correction with `phdude add`; the original stays as the history of what was believed. |
+| The field is not editable | 2 | A field the schema does not know is a typo, and the fields other commands own are left to them. |
+
+| Type | Identity fields (never editable) | Editable |
+|---|---|---|
+| `claim` | `statement` | `kind`, `supported_by`, `questions`, `sections`, `provenance`, `tags` |
+| `evidence` | `source`, `locator`, `excerpt` | `strength`, `provenance`, `tags` |
+| `fact` | `key`, `value`, `from` | `unit`, `tags` |
+| `source` | `title`, `year` | `authors`, `venue`, `doi`, `url`, `type`, `artifacts`, `bibkey`, `abstract`, `keywords`, `identifiers`, `provenance`, `tags` |
+| `result` | `summary`, `from` | `values`, `tags` |
+| `decision` | `title`, `rationale`, `affects`, `change` | `tags` |
+| `method` | `name` | `design`, `paradigm`, `sampling`, `instruments`, `analysis`, `limitations`, `questions`, `tags` |
+| `question` | `text` | `objectives`, `tags` |
+| `hypothesis` | `text` | `questions`, `tags` |
+| `artifact` | (none) | `role`, `tags` |
+
+`state` is deliberately absent from every "editable" column: moving an object between states is
+`phdude promote`, which is where the state machine and the approved-Decision requirement live.
+So are the fields other commands own — a claim's `contradicts` (recorded by `phdude link`), a
+decision's `status` and `approved_by` (`phdude decide`), and an artifact's inventory fields
+(`phdude ingest`). A candidate is not editable at all: it is reviewed with
+`phdude research accept|dismiss`.
+
+The result is validated against the object's schema before anything is written, so a value of
+the wrong shape exits 2 naming the field rather than leaving a broken file on disk.
 
 ### `phdude matrix [--format md|csv] [--question RQ-n]`
 
@@ -472,6 +601,8 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 | `question-without-claims` | high | No claim addresses this research question. |
 | `question-only-candidates` | medium | Every claim addressing this question is still `candidate`. |
 | `question-without-method` | medium | No method's `questions` includes this research question. |
+| `question-never-searched` | medium | No recorded search is tied to this research question. |
+| `stale-search` | low | The question's newest search ran at least `research.freshness.stale_after_days` days ago. |
 | `claim-without-evidence` | high | A non-`rejected` claim's `supported_by` is empty. |
 | `claim-weak-evidence` | medium | Every evidence item supporting the claim has `strength: weak`. |
 | `hypothesis-untested` | medium | No claim addresses any of the hypothesis's questions. |
@@ -479,6 +610,11 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 | `artifact-unmined` | low | The artifact's role is classified (not `unknown`), but no source, fact, or evidence references it. |
 | `open-conflict` | high | An unresolved fact conflict (see `status` above), one gap per conflict key. |
 | `disputed-pair` | high | A pair of claims that contradict each other with neither side `rejected` (same rule as `status`'s disputed pairs). |
+
+`question-never-searched` and `stale-search` are the gap report's view of the same staleness
+`phdude freshness` reports in full and `next` raises as its `stale-search` rule. The
+never-searched case outranks the aged one: a question with an old search at least has
+literature behind it.
 
 `gaps` is read-only; it writes no event. `next` recommends running it (rule `gaps`, medium)
 once one high-severity gap or 3 gaps of any severity exist; the ranking decides where that lands
@@ -567,7 +703,8 @@ contract above, with the usage block appended in text mode only.
 ## Testing
 
 `PHDUDE_FAKE_FETCH=<path>` is an internal, test-only hook. When it is set, `phdude research`
-builds its providers' `fetch` from the JSON routes file at that path instead of the network, so
+and `phdude research-fresh` build their providers' `fetch` from the JSON routes file at that
+path instead of the network, so
 the end-to-end tests can exercise the whole command offline. Each route is
 `{ "match": "<substring of the URL>", "status": 200, "body": …, "bodyFile": "<path relative to
 the routes file>", "headers": {…}, "times": N }`; an unmatched URL throws rather than falling
