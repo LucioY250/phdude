@@ -11,7 +11,9 @@
         "state": { "$ref": "phdude://common#/$defs/state" },
         "supported_by": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
         "questions": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
-        "sections": { "type": "array", "items": { "type": "string" } }
+        "sections": { "type": "array", "items": { "type": "string" } },
+        "contradicts": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+        "provenance": { "$ref": "phdude://common#/$defs/provenance" }
       },
       "required": ["statement", "kind", "state", "supported_by", "questions", "sections"]
     }

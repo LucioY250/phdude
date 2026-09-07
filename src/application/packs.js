@@ -1,5 +1,6 @@
 import { PhdudeError } from '../domain/errors.js';
 import { scorePackDetection, recommendPacks } from '../domain/packs.js';
+import { assertUpToDate } from './guard.js';
 
 const FIELD_BY_KIND = { field: 'fields', method: 'methods' };
 
@@ -40,6 +41,7 @@ export async function list({ store, loadPacks }) {
  */
 export async function detect({ store, loadPacks, clock, actor }) {
   const project = await requireProject(store);
+  assertUpToDate(project);
   const packs = await loadPacks();
   const artifacts = await store.listEntities('artifact');
   const texts = [];
@@ -73,6 +75,7 @@ export async function detect({ store, loadPacks, clock, actor }) {
  */
 export async function apply({ store, loadPacks, clock, actor }, name) {
   const project = await requireProject(store);
+  assertUpToDate(project);
   const packs = await loadPacks();
   const pack = packs.find((p) => p.name === name);
   if (!pack) throw new PhdudeError('USAGE', `unknown pack ${name}`, 'phdude packs list');

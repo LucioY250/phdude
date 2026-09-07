@@ -27,6 +27,17 @@ export async function userName(dir) {
   }
 }
 
+// False when git is unavailable or this is not a repository: there is no history to protect,
+// so there is nothing for a caller to refuse over.
+export async function isDirty(dir) {
+  try {
+    const { stdout } = await execFileAsync('git', ['status', '--porcelain'], { cwd: dir });
+    return stdout.trim() !== '';
+  } catch {
+    return false;
+  }
+}
+
 export async function isAvailable() {
   try {
     await execFileAsync('git', ['--version']);
@@ -36,4 +47,4 @@ export async function isAvailable() {
   }
 }
 
-export const gitAdapter = { isInsideRepo, initRepo, userName, isAvailable };
+export const gitAdapter = { isInsideRepo, initRepo, userName, isAvailable, isDirty };

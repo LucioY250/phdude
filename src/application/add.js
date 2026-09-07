@@ -9,6 +9,7 @@ import {
 } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
 import { normalizeText } from '../domain/normalize.js';
+import { assertUpToDate } from './guard.js';
 
 const FACTORIES = {
   claim: newClaim,
@@ -106,6 +107,8 @@ async function addArtifactRole({ store, clock, actor }, { id, role }) {
  * @returns {Promise<{obj: object, created: boolean}>}
  */
 export async function addEntity({ store, clock, actor }, type, input) {
+  assertUpToDate(await store.readProject());
+
   if (type === 'decision') {
     throw new PhdudeError(
       'USAGE',

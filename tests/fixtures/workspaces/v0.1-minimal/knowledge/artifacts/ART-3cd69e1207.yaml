@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-3cd69e1207
+created: 2026-01-15T09:00:00Z
+actor:
+  researcher: legacy
+  agent: cli
+path: sources/lab-notebooks.md
+paths:
+  - sources/lab-notebooks.md
+hash: 3cd69e1207f60a0ed6d9205e95ab42f50c1b7e876c8e1a235d5aff09aa8e7879
+bytes: 173
+mime: text/markdown
+kind: md
+role: notes
+extracted:
+  status: ok
+  method: text
+  text_chars: 173
+  sections: 2
+  tables: 0
+  warnings: []
+mtime: 2026-01-10T00:00:00Z

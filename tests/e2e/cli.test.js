@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BIN = join(REPO_ROOT, 'bin', 'phdude.js');
 const FIXTURES_DIR = join(REPO_ROOT, 'tests', 'fixtures', 'docs');
+const V01_WORKSPACE = join(REPO_ROOT, 'tests', 'fixtures', 'workspaces', 'v0.1-minimal');
 const ACTOR = ['--actor', 'researcher=tester,agent=e2e'];
 
 function phdude(cwd, args) {
@@ -476,4 +477,60 @@ test('e2e: errors are typed, and --json reports them as structured output', asyn
   const badJson = await phdude(ws, ['add', 'claim', '--json', '{not json', ...ACTOR]);
   assert.equal(badJson.code, 2);
   assert.match(badJson.stderr, /JSON/);
+});
+
+test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-migrate-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await cp(V01_WORKSPACE, ws, { recursive: true });
+
+  // Reads work on a v0.1 workspace and say what is wrong with it.
+  const before = await runJson(ws, ['status']);
+  assert.equal(before.knowledge.byType.claim.total, 1);
+  assert.ok(before.warnings.includes('workspace needs migration (1 → 2)'));
+
+  // Writes do not, and they name the command that fixes it.
+  const refused = await phdude(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'A claim written before the migration.' }),
+    ...ACTOR,
+  ]);
+  assert.equal(refused.code, 1);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'USAGE');
+  assert.equal(refusal.message, 'workspace needs migration (1 → 2)');
+  assert.equal(refusal.hint, 'run phdude migrate');
+
+  const dryRun = await runJson(ws, ['migrate', '--dry-run']);
+  assert.equal(dryRun.applied, false);
+  assert.equal(dryRun.from, 1);
+  assert.ok(dryRun.steps[0].changed.includes('phdude.yaml'));
+  const stillBehind = await runJson(ws, ['status']);
+  assert.ok(
+    stillBehind.warnings.includes('workspace needs migration (1 → 2)'),
+    'a dry run writes nothing',
+  );
+
+  const applied = await run(ws, ['migrate']);
+  assert.match(applied.stdout, /Migrated workspace 1 → 2/);
+
+  const after = await runJson(ws, ['status']);
+  assert.deepEqual(after.warnings, []);
+  assert.ok(after.recentEvents.some((e) => e.op === 'migrate'));
+
+  const doctor = await runJson(ws, ['doctor']);
+  assert.equal(doctor.workspaceVersion, 2);
+
+  // The write that was refused now goes through.
+  await run(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'A claim written after the migration.' }),
+  ]);
+
+  const second = await run(ws, ['migrate']);
+  assert.match(second.stdout, /Workspace is up to date \(2\)/);
 });

@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CURRENT_WORKSPACE_VERSION } from '../domain/versioning.js';
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEFAULTS_DIR = join(PACKAGE_ROOT, 'defaults');
@@ -138,6 +139,7 @@ export async function initWorkspace(
     const cfg = {
       schema: 'phdude.project',
       version: 1,
+      workspace_version: CURRENT_WORKSPACE_VERSION,
       title,
       language: 'en',
       fields: [],

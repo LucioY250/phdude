@@ -22,6 +22,7 @@
     "bin",
     "src",
     "schemas",
+    "migrations",
     "defaults",
     "skills",
     "commands",

@@ -4,6 +4,7 @@ import { makeId } from '../domain/ids.js';
 import { newArtifact, mimeFor } from '../domain/entities.js';
 import { linkVersions } from '../domain/versions.js';
 import { PhdudeError } from '../domain/errors.js';
+import { assertUpToDate } from './guard.js';
 
 function toRelPath(root, absPath) {
   return relative(root, absPath).split(sep).join('/');
@@ -206,6 +207,8 @@ export async function ingest(
   { store, fs, parsers, clock, actor },
   { paths = ['sources'], force = false } = {},
 ) {
+  assertUpToDate(await store.readProject());
+
   const discovered = [];
   const symlinks = [];
   for (const p of paths) {

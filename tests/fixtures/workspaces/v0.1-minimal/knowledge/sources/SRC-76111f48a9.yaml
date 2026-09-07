@@ -1,0 +1,16 @@
+schema: phdude.source
+version: 1
+id: SRC-76111f48a9
+created: 2026-01-15T09:00:00Z
+actor:
+  researcher: legacy
+  agent: cli
+tags: []
+title: Lab Notebook Review of the 2019 Field Season
+authors:
+  - D. Delta
+type: report
+artifacts:
+  - ART-3cd69e1207
+state: candidate
+year: 2019

@@ -21,6 +21,7 @@ const OPTIONS = {
   change: { type: 'string' },
   paths: { type: 'string', multiple: true },
   'no-git': { type: 'boolean' },
+  'dry-run': { type: 'boolean' },
   help: { type: 'boolean', short: 'h' },
   version: { type: 'boolean', short: 'v' },
 };
@@ -160,6 +161,7 @@ function build(argv, variadicTo) {
       id: values.id,
       change: values.change,
       noGit: values['no-git'] === true,
+      dryRun: values['dry-run'] === true,
       help: values.help === true,
       version: values.version === true,
     },

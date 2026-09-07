@@ -18,6 +18,7 @@ const LINES = [
   '  promote <id> --decision <DEC-id>  move an object to canonical',
   '  packs list|detect|apply <name>    field and method packs',
   '  mode lite|full|ruthless|off       set the review mode',
+  '  migrate [--dry-run] [--force]     upgrade the workspace to the current schema version',
   '  doctor                            adapters, cache, schema versions, git state',
   '  help                              show this message',
   '',

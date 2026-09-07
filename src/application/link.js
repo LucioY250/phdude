@@ -1,5 +1,6 @@
 import { PhdudeError } from '../domain/errors.js';
 import { parseId } from '../domain/ids.js';
+import { assertUpToDate } from './guard.js';
 
 // Which target type each linkable object accepts, and the field the link lands in. Anything
 // absent here has no v0.1 link relation: the way to change it is a Decision.
@@ -22,6 +23,8 @@ const RELATION_HINT =
  * @returns {Promise<{obj: object, added: string[]}>}
  */
 export async function link({ store, clock, actor }, id, { to = [] } = {}) {
+  assertUpToDate(await store.readProject());
+
   if (to.length === 0) {
     throw new PhdudeError('USAGE', 'link needs at least one target', 'phdude link <id> --to <id>');
   }

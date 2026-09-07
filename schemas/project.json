@@ -5,6 +5,7 @@
   "properties": {
     "schema": { "const": "phdude.project" },
     "version": { "const": 1 },
+    "workspace_version": { "type": "integer", "minimum": 1 },
     "title": { "type": "string" },
     "language": { "type": "string" },
     "fields": { "type": "array", "items": { "type": "string" } },

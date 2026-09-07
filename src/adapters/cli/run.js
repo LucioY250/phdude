@@ -19,6 +19,7 @@ import ingest from './commands/ingest.js';
 import init from './commands/init.js';
 import knowledge from './commands/knowledge.js';
 import link from './commands/link.js';
+import migrate from './commands/migrate.js';
 import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
@@ -36,6 +37,7 @@ const COMMANDS = {
   init,
   knowledge,
   link,
+  migrate,
   mode,
   next,
   packs,

@@ -13,15 +13,26 @@ function render(report) {
     .join(', ');
 
   const lines = [
-    `node:            ${report.node}`,
-    `git:             ${yesNo(report.git)}`,
-    `pdftotext:       ${yesNo(report.pdftotext)}`,
-    `workspace:       ${report.workspace ? 'phdude.yaml found' : 'not a PhDude workspace'}`,
-    `parsers:         ${parsers}`,
-    `cache entries:   ${report.cacheEntries}`,
-    `packs available: ${report.packsAvailable.length ? report.packsAvailable.join(', ') : '(none)'}`,
-    `schema versions: ${versions}`,
+    `node:              ${report.node}`,
+    `git:               ${yesNo(report.git)}`,
+    `pdftotext:         ${yesNo(report.pdftotext)}`,
+    `workspace:         ${report.workspace ? 'phdude.yaml found' : 'not a PhDude workspace'}`,
   ];
+
+  if (report.workspaceVersion !== null) {
+    const note =
+      report.workspaceVersion >= report.workspaceVersionCurrent
+        ? '(current)'
+        : `(needs migration → ${report.workspaceVersionCurrent})`;
+    lines.push(`workspace version: ${report.workspaceVersion} ${note}`);
+  }
+
+  lines.push(
+    `parsers:           ${parsers}`,
+    `cache entries:     ${report.cacheEntries}`,
+    `packs available:   ${report.packsAvailable.length ? report.packsAvailable.join(', ') : '(none)'}`,
+    `schema versions:   ${versions}`,
+  );
 
   if (report.warnings.length > 0) {
     lines.push('', 'Warnings:');

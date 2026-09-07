@@ -1,6 +1,7 @@
 import { newDecision } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
 import { KNOWLEDGE_STATES, canTransition } from '../domain/states.js';
+import { assertUpToDate } from './guard.js';
 
 async function assertReferenceExists(store, id) {
   const obj = await store.readEntity(id);
@@ -47,6 +48,8 @@ export async function propose(
   { store, clock, actor },
   { title, rationale, affects = [], change = {} },
 ) {
+  assertUpToDate(await store.readProject());
+
   for (const id of affects) await assertReferenceExists(store, id);
 
   const candidate = newDecision({
@@ -79,6 +82,8 @@ export async function propose(
  * @returns {Promise<object>}
  */
 export async function approve({ store, clock, actor }, id, { by } = {}) {
+  assertUpToDate(await store.readProject());
+
   const approver = requireBy(by, 'approve', 'approvals');
   const decision = await getDecision(store, id);
 
@@ -120,6 +125,8 @@ export async function approve({ store, clock, actor }, id, { by } = {}) {
  * @returns {Promise<object>}
  */
 export async function reject({ store, clock, actor }, id, { by, reason } = {}) {
+  assertUpToDate(await store.readProject());
+
   const rejector = requireBy(by, 'reject', 'rejections');
   const decision = await getDecision(store, id);
 
@@ -156,6 +163,8 @@ export async function reject({ store, clock, actor }, id, { by, reason } = {}) {
  * @returns {Promise<object>}
  */
 export async function supersede({ store, clock, actor }, id, { by } = {}) {
+  assertUpToDate(await store.readProject());
+
   const newDecisionId = by;
   if (newDecisionId === id) {
     throw new PhdudeError('USAGE', 'a decision cannot supersede itself', null, null);
@@ -187,6 +196,8 @@ export async function supersede({ store, clock, actor }, id, { by } = {}) {
  * @returns {Promise<object>}
  */
 export async function promote({ store, clock, actor }, id, { to = 'canonical', decision } = {}) {
+  assertUpToDate(await store.readProject());
+
   if (!KNOWLEDGE_STATES.includes(to)) {
     throw new PhdudeError(
       'USAGE',

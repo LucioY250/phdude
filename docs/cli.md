@@ -230,12 +230,28 @@ three need a workspace: outside one they exit 1 and point at `phdude init`.
 Sets the review mode in `phdude.yaml`. Setting the mode it already has changes nothing and
 records no event.
 
+### `phdude migrate [--dry-run] [--force]`
+
+Upgrades a workspace written by an older PhDude to the current workspace version.
+`phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
+current version is 2. Migration steps ship with the package, one module per step, and run in
+order through the store; each applied step appends one `migrate` event.
+
+Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 2)`
+as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
+`packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
+
+`--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
+undo for an in-place rewrite, `migrate` exits 3 on a dirty git tree unless `--force` is given; a
+dry run is a read and stays available either way. Steps are idempotent, so running `migrate` on
+an up-to-date workspace prints `Workspace is up to date (2)` and records no event.
+
 ### `phdude doctor`
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
-availability, whether the current directory is a workspace, the cache entry count, the
-discoverable packs and the schema versions, plus warnings for anything missing. It is
-diagnostic only and never writes.
+availability, whether the current directory is a workspace, its workspace version and whether
+that version needs migrating, the cache entry count, the discoverable packs and the schema
+versions, plus warnings for anything missing. It is diagnostic only and never writes.
 
 ### `phdude help`
 
