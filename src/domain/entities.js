@@ -1,5 +1,5 @@
 import { makeId, makeSeqId } from './ids.js';
-import { normalizeKey } from './normalize.js';
+import { normalizeKey, stableStringify } from './normalize.js';
 import { PhdudeError } from './errors.js';
 
 function requireText(label, value) {
@@ -326,7 +326,7 @@ export function newDecision({
     titleText,
     rationaleText,
     [...affects].sort().join(','),
-    JSON.stringify(change, Object.keys(change).sort()),
+    stableStringify(change),
   ].join('\n');
   return {
     schema: 'phdude.decision',

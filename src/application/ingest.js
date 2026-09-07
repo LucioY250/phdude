@@ -89,8 +89,13 @@ function resolveInsideRoot(store, requestedPath) {
 async function collectFiles(fs, store, requestedPath) {
   const absPath = resolveInsideRoot(store, requestedPath);
   const files = [];
+  const symlinks = [];
   try {
     for await (const entry of fs.walk(absPath)) {
+      if (entry.symlink !== undefined) {
+        symlinks.push(toRelPath(store.root, entry.symlink));
+        continue;
+      }
       files.push({
         absPath: entry.path,
         relPath: toRelPath(store.root, entry.path),
@@ -107,7 +112,7 @@ async function collectFiles(fs, store, requestedPath) {
     }
     throw err;
   }
-  return files;
+  return { files, symlinks };
 }
 
 async function extract(parsers, bytes, relPath, kind) {
@@ -202,8 +207,11 @@ export async function ingest(
   { paths = ['sources'], force = false } = {},
 ) {
   const discovered = [];
+  const symlinks = [];
   for (const p of paths) {
-    discovered.push(...(await collectFiles(fs, store, p)));
+    const found = await collectFiles(fs, store, p);
+    discovered.push(...found.files);
+    symlinks.push(...found.symlinks);
   }
 
   const groups = new Map(); // hash -> { hash, bytes, entries: [{relPath, mtime}] }
@@ -222,7 +230,7 @@ export async function ingest(
   }
 
   const skipped = [];
-  const warnings = [];
+  const warnings = symlinks.map((rel) => `skipped symlink: ${rel}`);
   const writtenIds = new Set();
   const touched = new Map();
 

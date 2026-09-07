@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { makeId, makeSeqId, parseId, ID_PREFIXES } from '../../../src/domain/ids.js';
-import { normalizeText, normalizeKey } from '../../../src/domain/normalize.js';
+import { normalizeText, normalizeKey, stableStringify } from '../../../src/domain/normalize.js';
 import { sha256 } from '../../../src/domain/hash.js';
 
 test('sha256 of empty string is known', () => {
@@ -29,4 +29,18 @@ test('makeSeqId and parseId', () => {
   assert.deepEqual(parseId('CLAIM-0123456789'), { type: 'claim', suffix: '0123456789' });
   assert.equal(parseId('nope'), null);
   assert.equal(Object.keys(ID_PREFIXES).length, 9);
+});
+
+test('stableStringify sorts keys at every depth and matches JSON.stringify semantics', () => {
+  assert.equal(stableStringify({ b: 1, a: 2 }), '{"a":2,"b":1}');
+  assert.equal(
+    stableStringify({ z: { d: 4, c: [3, { f: 6, e: 5 }] }, a: 1 }),
+    '{"a":1,"z":{"c":[3,{"e":5,"f":6}],"d":4}}',
+  );
+  assert.equal(stableStringify({}), '{}');
+  assert.equal(stableStringify({ a: undefined, b: 1 }), '{"b":1}', 'undefined members are dropped');
+  assert.equal(stableStringify([1, 'two', null, true]), '[1,"two",null,true]');
+  assert.equal(stableStringify([undefined]), '[null]', 'a hole in an array is null, as in JSON');
+  assert.equal(stableStringify('x'), '"x"');
+  assert.equal(stableStringify(null), 'null');
 });

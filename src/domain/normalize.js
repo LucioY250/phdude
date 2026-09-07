@@ -6,3 +6,22 @@ export function normalizeKey(s) {
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
 }
+
+// JSON.stringify with keys sorted at every depth. The replacer-array form sorts only the top
+// level and silently drops every nested key, which would erase nested values from any id
+// derived from an object (see domain/entities.js newDecision). Member and array semantics
+// otherwise match JSON.stringify: an undefined member is dropped, an undefined array slot is
+// null.
+export function stableStringify(value) {
+  if (value === undefined || typeof value === 'function') return undefined;
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((v) => stableStringify(v) ?? 'null').join(',')}]`;
+  }
+  const members = [];
+  for (const key of Object.keys(value).sort()) {
+    const encoded = stableStringify(value[key]);
+    if (encoded !== undefined) members.push(`${JSON.stringify(key)}:${encoded}`);
+  }
+  return `{${members.join(',')}}`;
+}

@@ -91,7 +91,12 @@ export class FsStore {
       if (err.code === 'ENOENT') return null;
       throw err;
     }
-    const obj = parse(text);
+    let obj;
+    try {
+      obj = parse(text);
+    } catch {
+      obj = null;
+    }
     if (obj === null || typeof obj !== 'object' || Array.isArray(obj) || obj.id === undefined) {
       throw new PhdudeError(
         'VALIDATION',

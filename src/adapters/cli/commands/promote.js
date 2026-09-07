@@ -12,7 +12,7 @@ export default async function promoteCommand({ positionals, flags, deps }) {
   }
 
   const obj = await promote({ store: deps.store, clock: deps.clock, actor: deps.actor }, id, {
-    to: flags.to[0],
+    to: flags.to,
     decision: flags.decision,
   });
 

@@ -8,6 +8,7 @@ import {
   readFile,
   readdir,
   stat,
+  symlink,
   utimes,
   writeFile,
 } from 'node:fs/promises';
@@ -259,4 +260,53 @@ test('ingest: the workspace root itself is still an acceptable path', async () =
   const deps = makeDeps(root);
   const result = await ingest(deps, { paths: ['.'] });
   assert.ok(result.artifacts.length > 0);
+});
+
+test('ingest: symlinks under sources are skipped with a warning, not followed', async (t) => {
+  const outside = await mkdtemp(join(tmpdir(), 'phdude-symlink-outside-'));
+  await writeFile(join(outside, 'secret.txt'), 'SECRET_TOKEN=abc123\n');
+  const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-symlink-'));
+  await mkdir(join(root, 'sources'), { recursive: true });
+  await writeFile(join(root, 'sources', 'real.md'), '# Real\n\nA genuine source file.\n');
+
+  try {
+    await symlink(outside, join(root, 'sources', 'escape'), 'dir');
+    await symlink(join(root, 'sources', 'real.md'), join(root, 'sources', 'link.md'));
+  } catch {
+    t.skip('this platform does not allow creating symlinks');
+    return;
+  }
+
+  const deps = makeDeps(root);
+  const result = await ingest(deps, { paths: ['sources'] });
+
+  assert.equal(result.artifacts.length, 1, 'only the real file is ingested');
+  assert.deepEqual(result.artifacts[0].paths, ['sources/real.md']);
+  assert.deepEqual(result.warnings, [
+    'skipped symlink: sources/escape',
+    'skipped symlink: sources/link.md',
+  ]);
+
+  const cached = await readdir(join(root, '.phdude', 'cache'));
+  assert.equal(cached.length, 1, 'nothing outside the workspace reached the cache');
+});
+
+test('ingest: a symlink named directly as a path is skipped, not followed', async (t) => {
+  const outside = await mkdtemp(join(tmpdir(), 'phdude-symlink-direct-'));
+  await writeFile(join(outside, 'secret.txt'), 'SECRET_TOKEN=abc123\n');
+  const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-symlink-direct-'));
+  await mkdir(join(root, 'sources'), { recursive: true });
+
+  try {
+    await symlink(outside, join(root, 'sources', 'escape'), 'dir');
+  } catch {
+    t.skip('this platform does not allow creating symlinks');
+    return;
+  }
+
+  const deps = makeDeps(root);
+  const result = await ingest(deps, { paths: ['sources/escape'] });
+  assert.deepEqual(result.artifacts, []);
+  assert.deepEqual(result.warnings, ['skipped symlink: sources/escape']);
+  assert.equal((await deps.store.listEntities('artifact')).length, 0);
 });

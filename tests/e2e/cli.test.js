@@ -279,6 +279,11 @@ test('e2e: link attaches evidence that add cannot, and next stops asking for it'
   const linked = await runJson(ws, ['link', claim.id, '--to', evidence.id]);
   assert.deepEqual(linked.supported_by, [evidence.id]);
 
+  // `--to` is variadic only for link, so promote still accepts the flag before the id.
+  const flagFirst = await runJson(ws, ['promote', '--to', 'candidate', claim.id]);
+  assert.equal(flagFirst.state, 'candidate');
+  await run(ws, ['promote', claim.id, '--to', 'supported']);
+
   const after = await runJson(ws, ['next']);
   assert.ok(
     !after.actions.some((a) => a.rule === 'unsupported-claims'),
@@ -359,6 +364,19 @@ test('e2e: a malformed entity file makes status exit 2 and names the file', asyn
   assert.equal(result.code, 2);
   assert.match(result.stderr, /malformed entity file: knowledge\/facts\/FACT-0123456789\.yaml/);
   assert.match(result.stderr, /Suggested action: fix or delete the file/);
+
+  // A git merge conflict is the realistic trigger, and it makes the YAML unparseable rather
+  // than empty; it must be named the same way instead of escaping as an internal error.
+  await writeFile(
+    join(ws, 'knowledge', 'facts', 'FACT-0123456789.yaml'),
+    '<<<<<<< HEAD\nvalue: 142\n=======\nvalue: 151\n>>>>>>> theirs\n',
+  );
+  const conflicted = await phdude(ws, ['status', '--json', ...ACTOR]);
+  assert.equal(conflicted.code, 2);
+  const payload = JSON.parse(conflicted.stderr).error;
+  assert.equal(payload.code, 'VALIDATION');
+  assert.equal(payload.message, 'malformed entity file: knowledge/facts/FACT-0123456789.yaml');
+  assert.equal(payload.hint, 'fix or delete the file');
 });
 
 test('e2e: packs outside a workspace point at init instead of crashing', async (t) => {

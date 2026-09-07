@@ -12,6 +12,7 @@ const OPTIONS = {
   query: { type: 'string' },
   by: { type: 'string' },
   decision: { type: 'string' },
+  to: { type: 'string' },
   file: { type: 'string' },
   rationale: { type: 'string' },
   reason: { type: 'string' },
@@ -29,9 +30,11 @@ function looksLikeJson(token) {
 }
 
 // `--json` is both the global output flag and the payload carrier for `phdude add` /
-// `phdude decide propose`. node:util.parseArgs cannot express that, so both it and the
-// variadic `--affects ID…` / `--to ID…` forms are lifted out before parseArgs runs.
-function preprocess(argv) {
+// `phdude decide propose`. node:util.parseArgs cannot express that, so it and the variadic
+// `--affects ID…` form are lifted out before parseArgs runs. `phdude link` takes `--to ID…`
+// the same way; every other command's `--to` is a single value (`promote --to <state>`) and
+// must stay one, or the flag swallows the id that follows it.
+function preprocess(argv, variadicTo) {
   const rest = [];
   const affects = [];
   const to = [];
@@ -51,7 +54,7 @@ function preprocess(argv) {
       json = true;
       const value = arg.slice('--json='.length);
       if (looksLikeJson(value)) jsonPayload = value;
-    } else if (arg === '--affects' || arg === '--to') {
+    } else if (arg === '--affects' || (variadicTo && arg === '--to')) {
       const target = arg === '--to' ? to : affects;
       let j = i + 1;
       while (j < argv.length && !argv[j].startsWith('-')) {
@@ -61,7 +64,7 @@ function preprocess(argv) {
       i = j - 1;
     } else if (arg.startsWith('--affects=')) {
       affects.push(arg.slice('--affects='.length));
-    } else if (arg.startsWith('--to=')) {
+    } else if (variadicTo && arg.startsWith('--to=')) {
       to.push(arg.slice('--to='.length));
     } else {
       rest.push(arg);
@@ -113,12 +116,8 @@ export function parseJsonArg(text, label) {
   return parsed;
 }
 
-/**
- * @param {string[]} argv - process.argv.slice(2)
- * @returns {{command: string|null, sub: string|null, positionals: string[], flags: object}}
- */
-export function parseCli(argv) {
-  const { rest, json, jsonPayload, affects, to } = preprocess(argv);
+function build(argv, variadicTo) {
+  const { rest, json, jsonPayload, affects, to } = preprocess(argv, variadicTo);
 
   let parsed;
   try {
@@ -153,7 +152,7 @@ export function parseCli(argv) {
       query: values.query,
       by: values.by,
       decision: values.decision,
-      to,
+      to: variadicTo ? to : values.to,
       file: values.file,
       rationale: values.rationale,
       reason: values.reason,
@@ -165,4 +164,15 @@ export function parseCli(argv) {
       version: values.version === true,
     },
   };
+}
+
+/**
+ * @param {string[]} argv - process.argv.slice(2)
+ * @returns {{command: string|null, sub: string|null, positionals: string[], flags: object}}
+ */
+export function parseCli(argv) {
+  // Which command it is decides how `--to` is parsed, and only parsing tells us the command,
+  // so the scalar pass runs first and `link` is re-parsed with the variadic form.
+  const scalar = build(argv, false);
+  return scalar.command === 'link' ? build(argv, true) : scalar;
 }

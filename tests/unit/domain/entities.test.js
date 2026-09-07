@@ -258,6 +258,38 @@ test('newDecision: id is stable under affects order and change key order', () =>
   );
 });
 
+test('newDecision: identity reaches nested values inside change', () => {
+  const base = {
+    title: 'Record the study metadata',
+    rationale: 'The methodology section lists it.',
+    proposed_by: actor,
+    created,
+  };
+  assert.notEqual(
+    newDecision({ ...base, change: { fact_key: 'k', meta: { a: 1 } } }).id,
+    newDecision({ ...base, change: { fact_key: 'k', meta: { b: 2 } } }).id,
+    'a nested change value must not be erased from the id material',
+  );
+  assert.notEqual(
+    newDecision({ ...base, change: { meta: { list: [1, 2] } } }).id,
+    newDecision({ ...base, change: { meta: { list: [2, 1] } } }).id,
+    'array order inside change is content, not ordering noise',
+  );
+});
+
+test('newDecision: nested change key order does not change the id', () => {
+  const base = {
+    title: 'Record the study metadata',
+    rationale: 'The methodology section lists it.',
+    proposed_by: actor,
+    created,
+  };
+  assert.equal(
+    newDecision({ ...base, change: { fact_key: 'k', meta: { a: 1, b: { x: 1, y: 2 } } } }).id,
+    newDecision({ ...base, change: { meta: { b: { y: 2, x: 1 }, a: 1 }, fact_key: 'k' } }).id,
+  );
+});
+
 test('newDecision: rejects empty title', () => {
   assert.throws(
     () =>

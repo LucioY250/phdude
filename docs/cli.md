@@ -83,7 +83,9 @@ inventoried and hashed, with `extracted.status` reporting why the text is missin
 
 Every requested path must resolve inside the workspace. `phdude ingest ../elsewhere` exits 1
 rather than recording an external path in a tracked artifact and copying the file's text into
-the cache; copy the material into `sources/` first.
+the cache; copy the material into `sources/` first. Symlinks are never followed, for the same
+reason; each one is reported as `skipped symlink: <path>` among the warnings rather than
+ignored in silence.
 
 The result carries four keys:
 

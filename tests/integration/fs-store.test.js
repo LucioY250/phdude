@@ -97,3 +97,29 @@ test('readEntity still returns null for a file that is simply absent', async () 
   const store = new FsStore(root);
   assert.equal(await store.readEntity('CLAIM-0123456789'), null);
 });
+
+test('readEntity names a file whose YAML does not parse, such as a merge conflict', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  await mkdir(join(root, 'knowledge', 'facts'), { recursive: true });
+  const conflicted = [
+    '<<<<<<< HEAD',
+    'value: 142',
+    '=======',
+    'value: 151',
+    '>>>>>>> theirs',
+    '',
+  ].join('\n');
+  await writeFile(join(root, 'knowledge', 'facts', 'FACT-0123456789.yaml'), conflicted);
+
+  const expected = (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'VALIDATION');
+    assert.equal(err.message, 'malformed entity file: knowledge/facts/FACT-0123456789.yaml');
+    assert.equal(err.hint, 'fix or delete the file');
+    return true;
+  };
+
+  await assert.rejects(store.readEntity('FACT-0123456789'), expected);
+  await assert.rejects(store.listEntities('fact'), expected);
+});
