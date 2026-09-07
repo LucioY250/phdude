@@ -1,0 +1,28 @@
+src/application/ingest.js
+  s_946fc7502759d8::t_5ea43d37b71d12 270
+  s_946fc7502759d8::t_8991ad6cf4f17d 29
+tests/integration/ingest.test.js
+  s_946fc7502759d8::t_8e200256012761 106-195,203-216
+  s_946fc7502759d8::t_42731ac3d2ca27 3-13,196-202
+tests/unit/application/ingest-csv.test.js
+  s_946fc7502759d8::t_d9a284b71ba52d 1-15
+tests/unit/domain/versions.test.js
+  s_946fc7502759d8::t_7e1e1edee32799 47,55-89
+  s_946fc7502759d8::t_42731ac3d2ca27 48-54
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "7e4238c987ad3d17d7e558fccdffce3a76ec4dd3",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
