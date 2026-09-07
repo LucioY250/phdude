@@ -32,10 +32,18 @@ function lastRun(analysis) {
   return analysis.runs.length === 0 ? null : analysis.runs[analysis.runs.length - 1];
 }
 
+// A run with no exit code was ended by a signal, not by the script. Both `runState` and the run
+// table say so, because "exit null" reads as a run that returned nothing rather than one that was
+// killed before it could return anything.
+function killedBy(run, joiner) {
+  return `killed${run.signal ? `${joiner}${run.signal}` : ''}`;
+}
+
 function runState(analysis) {
   const last = lastRun(analysis);
   if (last === null) return 'never run';
   if (last.timed_out === true) return 'timed out';
+  if (last.exit === null) return killedBy(last, ' by ');
   return last.exit === 0 ? `ran ${last.at}` : `failed (exit ${last.exit})`;
 }
 
@@ -56,7 +64,12 @@ function renderRuns({ id, name, runs }) {
   if (runs.length === 0) return header.concat('(never run)', '').join('\n');
 
   const rows = runs.map((run) => {
-    const status = run.timed_out === true ? 'timed out' : `exit ${run.exit}`;
+    const status =
+      run.timed_out === true
+        ? 'timed out'
+        : run.exit === null
+          ? killedBy(run, ' ')
+          : `exit ${run.exit}`;
     const results = `${run.results.length} result(s)`;
     const outputs = `${Object.keys(run.output_hashes).length} output(s)`;
     return `${run.at}  ${status.padEnd(9)}  ${String(run.duration_ms).padStart(7)}ms  ${results}  ${outputs}`;

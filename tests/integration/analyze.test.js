@@ -8,7 +8,7 @@ import { parse } from 'yaml';
 import { localRunner } from '../../src/adapters/execution/local.js';
 import { parseTable } from '../../src/adapters/documents/index.js';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
-import { read } from '../../src/adapters/store/fs-walk.js';
+import { read, realpath } from '../../src/adapters/store/fs-walk.js';
 import * as analyze from '../../src/application/analyze.js';
 import * as data from '../../src/application/data.js';
 import { PhdudeError } from '../../src/domain/errors.js';
@@ -37,6 +37,7 @@ function makeDeps(root, startTick = 0) {
     actor,
     runner: localRunner,
     readBytes: (rel) => read(join(root, rel)),
+    realpath,
     parseTable,
   };
 }
@@ -505,6 +506,92 @@ test('a script that outruns the timeout is recorded as timed out and reported as
     (await events(deps.store, 'analyze')).filter((e) => /timed out/.test(e.summary)).length,
     1,
   );
+});
+
+// The runner reports a killed run as `exitCode: null` with `timedOut: false` - a shape that used
+// to be indistinguishable from a clean exit. These drive it through a stub, because a real signal
+// kill is the local adapter's own contract suite to prove, not this one's.
+function stubRunner(result) {
+  return {
+    name: 'stub',
+    available: async () => true,
+    run: async () => ({ stdout: '', stderr: '', durationMs: 12, signal: null, ...result }),
+  };
+}
+
+test('a run a signal ended is recorded as a failure naming the signal, never as a success', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  const { analysis, dataset } = await declare(deps);
+  const killed = stubRunner({
+    exitCode: null,
+    timedOut: false,
+    signal: 'SIGKILL',
+    stderr: 'Killed\n',
+  });
+
+  await assert.rejects(analyze.run({ ...deps, runner: killed }, { id: analysis.id }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'EXECUTION');
+    assert.match(err.message, /killed by SIGKILL/);
+    return true;
+  });
+
+  const recorded = await deps.store.readEntity(analysis.id);
+  assert.equal(recorded.runs.length, 1);
+  assert.equal(recorded.runs[0].exit, null);
+  assert.equal(recorded.runs[0].signal, 'SIGKILL');
+  assert.equal(recorded.runs[0].timed_out, undefined, 'a signal kill is not a timeout');
+  assert.deepEqual(recorded.runs[0].results, []);
+  assert.deepEqual(recorded.runs[0].input_hashes, { [dataset.id]: dataset.hash });
+  assert.match(recorded.runs[0].stderr_tail, /Killed/);
+  assert.deepEqual(await deps.store.listEntities('result'), []);
+
+  const killedEvents = (await events(deps.store, 'analyze')).filter((e) =>
+    /killed/.test(e.summary),
+  );
+  assert.equal(killedEvents.length, 1);
+  assert.deepEqual(killedEvents[0].ids, [analysis.id]);
+
+  // And it left the analysis stale, so the next run is not refused as up to date.
+  assert.equal((await analyze.run(deps, { id: analysis.id })).ran, true);
+});
+
+test('a run that ended with no exit code and no signal named is still a failure', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  const { analysis } = await declare(deps);
+  const killed = stubRunner({ exitCode: null, timedOut: false, signal: null });
+
+  await assert.rejects(
+    analyze.run({ ...deps, runner: killed }, { id: analysis.id }),
+    (err) => err.code === 'EXECUTION' && /was killed/.test(err.message),
+  );
+
+  const recorded = await deps.store.readEntity(analysis.id);
+  assert.equal(recorded.runs[0].exit, null);
+  assert.equal(recorded.runs[0].signal, undefined);
+  assert.deepEqual(await deps.store.listEntities('result'), []);
+});
+
+test('a timeout stays a timeout, and records the signal that ended it', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  const { analysis } = await declare(deps);
+  const timedOut = stubRunner({ exitCode: null, timedOut: true, signal: 'SIGKILL' });
+
+  await assert.rejects(
+    analyze.run({ ...deps, runner: timedOut }, { id: analysis.id }),
+    (err) => err.code === 'TOOL_MISSING' && /timed out after 30s/.test(err.message),
+  );
+
+  const recorded = await deps.store.readEntity(analysis.id);
+  assert.equal(recorded.runs[0].timed_out, true);
+  assert.equal(recorded.runs[0].exit, null);
+  assert.equal(recorded.runs[0].signal, 'SIGKILL');
 });
 
 test('a results.json that never arrived, or does not parse, is a validation error that records nothing', async (t) => {
