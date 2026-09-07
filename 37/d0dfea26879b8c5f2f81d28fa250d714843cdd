@@ -1,0 +1,39 @@
+docs/superpowers/specs/2026-09-07-phdude-v0.4-design.md
+  s_946fc7502759d8::t_dc90a8adfd4a95 1-92
+docs/superpowers/plans/2026-09-07-phdude-v0.4.md
+  s_946fc7502759d8::t_6b12a9c6541503 1-60
+README.md
+  s_946fc7502759d8::t_690a56ef6fe736 245,256-257
+  s_946fc7502759d8::t_5bdc6de7c3b5c9 12,40-77,81,132,139,145,278-279,283-285,301,321,358,387-388
+scripts/make-diagrams.mjs
+  s_946fc7502759d8::t_3c9041f96d737a 755,778
+docs/cli.md
+  s_946fc7502759d8::t_e63c54cba63a97 39,43-44
+docs/workspace.md
+  s_946fc7502759d8::t_82f27363af11ea 47,61-72,181-186
+  s_946fc7502759d8::t_7ac76af66075bc 37,187-192
+  s_946fc7502759d8::t_3405c554625806 193
+docs/extending.md
+  s_946fc7502759d8::t_e63c54cba63a97 95,191,250-252
+  s_946fc7502759d8::t_7ac76af66075bc 152-190,192-195
+docs/assets/diagrams/next.excalidraw
+  s_946fc7502759d8::t_3c9041f96d737a 135-136
+docs/assets/diagrams/next.svg
+  s_946fc7502759d8::t_3c9041f96d737a 1-2,8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "37d0dfea26879b8c5f2f81d28fa250d714843cdd",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
