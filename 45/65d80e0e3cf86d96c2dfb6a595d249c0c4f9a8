@@ -1,0 +1,26 @@
+tests/integration/fs-store.test.js
+  s_946fc7502759d8::t_16ee4967bb1f14 1-53
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_2a8a6fd967b08b 1-139
+src/ports/store.js
+  s_946fc7502759d8::t_7dfc8e831baa73 1-17
+src/adapters/store/atomic.js
+  s_946fc7502759d8::t_6bea6340f53151 7-10
+  s_946fc7502759d8::t_fad8a9cf824e64 1-6,11-13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "4565d80e0e3cf86d96c2dfb6a595d249c0c4f9a8",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
