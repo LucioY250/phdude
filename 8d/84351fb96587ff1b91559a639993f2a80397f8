@@ -1,0 +1,37 @@
+tests/fixtures/objects/v0.4-result.json
+  s_946fc7502759d8::t_5786f3942ad6bf 1-12
+docs/cli.md
+  s_946fc7502759d8::t_0014e29339bbd9 263,635
+  s_946fc7502759d8::t_d298ef946a5c84 268-272
+src/domain/entities.js
+  s_946fc7502759d8::t_888dbf6792d6a0 280-283
+docs/adr/0009-execution-policy-and-results-contract.md
+  s_946fc7502759d8::t_8596e6a1a16cdf 65-79
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_5ced7f08f3fde8 3,512-524
+  s_946fc7502759d8::t_06a3b8c6d1b525 525-526
+tests/integration/edit.test.js
+  s_946fc7502759d8::t_310164153ddd0a 213,221-223,225-238
+CHANGELOG.md
+  s_946fc7502759d8::t_d63e66e8a8d057 41-45,92-99
+src/application/edit.js
+  s_946fc7502759d8::t_888dbf6792d6a0 14,45
+README.md
+  s_946fc7502759d8::t_7b53902274f2ce 63-65,438-445
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "8d84351fb96587ff1b91559a639993f2a80397f8",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
