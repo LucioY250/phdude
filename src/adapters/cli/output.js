@@ -310,6 +310,15 @@ export function renderProse(report) {
     lines.push(`${label.padEnd(24)}${score === null ? NEEDS_CONTEXT : score}`);
   }
 
+  const voice = report.voice ?? [];
+  if (voice.length > 0) {
+    lines.push('', `Voice (${voice.length}):`);
+    for (const finding of voice) {
+      lines.push(`  - ${finding.message}`);
+      if (finding.hint) lines.push(`    Hint: ${finding.hint}`);
+    }
+  }
+
   lines.push('', `Observations (${report.observations.length}):`);
   if (report.observations.length === 0) {
     lines.push('  (none)');

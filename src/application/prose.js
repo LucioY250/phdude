@@ -1,5 +1,6 @@
 import { PhdudeError } from '../domain/errors.js';
 import { markerCounts, markerInventory } from '../domain/gates/markers.js';
+import { voiceGate } from '../domain/gates/voice.js';
 import { parseSectionFile, sectionHash } from '../domain/manuscript.js';
 import { lint } from '../domain/prose-lint.js';
 import { findSection, gateContext, loadManuscript } from './manuscript.js';
@@ -86,6 +87,9 @@ export async function proseSection({ store, loadProfile }, section) {
     markers: markerCounts(markerInventory(body, ctx)),
     profile: ctx.voiceProfile,
   });
+  // The Author Voice number is a comparison against the profile, so the report shows the
+  // comparisons behind it rather than leaving the section's recorded warnings off the screen.
+  const voice = voiceGate.run(body, ctx).findings;
 
   const stored = (await store.readReport(entry.id)) ?? {
     schema: 'phdude.section-report',
@@ -103,5 +107,5 @@ export async function proseSection({ store, loadProfile }, section) {
   );
   await store.writeReport(entry.id, { ...stored, scores });
 
-  return { section: entry, file: entry.file, ...report, stored: { ...stored, scores } };
+  return { section: entry, file: entry.file, ...report, voice, stored: { ...stored, scores } };
 }

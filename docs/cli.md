@@ -677,7 +677,9 @@ always exits 0.
 With a section id it reports on that manuscript section with the evidence graph behind it, so
 Evidence Alignment and Epistemic Precision are real numbers, and it stores the six scores in
 `manuscript/reports/<section>.yaml`. That report is a derived file, like `references.bib`: it
-records no event, and the prose itself is never touched.
+records no event, and the prose itself is never touched. A section written under a voice profile
+also lists, under `Voice`, the `gate-voice` comparisons its Author Voice score came from, so the
+screen shows the same findings the stored report counted.
 
 With `--file` it reports on any text file and needs no workspace at all. `--lang` picks the
 language resources (`en` and `es` ship). A language with no resources runs only the structural

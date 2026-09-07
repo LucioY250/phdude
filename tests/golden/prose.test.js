@@ -48,3 +48,21 @@ test('prose golden: the stored report matches the one the example already carrie
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('prose golden: the rendered report shows every voice finding the stored report counted', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-prose-golden-'));
+  try {
+    await cp(WORKSPACE, root, { recursive: true });
+    const store = new FsStore(root);
+    const stored = await store.readReport('introduction');
+    const counted = stored.gates.find((row) => row.gate === 'gate-voice').findings;
+    const result = await proseSection({ store }, 'introduction');
+
+    // The screen and `manuscript/reports/introduction.yaml` report the same number of voice
+    // findings: a warning the file counts is a warning the report prints.
+    assert.equal(result.voice.length, counted);
+    assert.match(renderProse(result), new RegExp(`^Voice \\(${counted}\\):$`, 'm'));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

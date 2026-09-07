@@ -9,5 +9,11 @@ Structural Variation    100
 Author Voice            85
 Conciseness             100
 
+Voice (2):
+  - mean sentence length 19.25 vs learned 26.88 ± 6.72
+    Hint: not a defect: check whether the section reads like the rest of the thesis
+  - first-person rate 0 vs learned 0.125 ± 0.1
+    Hint: match the profile's "we"/"I" habit, or update the profile
+
 Observations (0):
   (none)

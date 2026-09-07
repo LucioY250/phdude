@@ -400,9 +400,12 @@ test('with a voice on file the pipeline scores authorVoice and warns without blo
   const stored = await deps.store.readReport('introduction');
   assert.equal(stored.scores.authorVoice, result.report.scores.authorVoice);
 
-  // The section's own prose report reads the same profile, so it does not erase the score.
+  // The section's own prose report reads the same profile, so it does not erase the score, and
+  // it carries the comparisons the score came from rather than counting them nowhere.
   const report = await proseSection(deps, 'introduction');
   assert.equal(report.scores.authorVoice, result.report.scores.authorVoice);
+  assert.deepEqual(report.voice, voice);
+  assert.equal(report.voice.length, stored.gates.find((row) => row.gate === 'gate-voice').findings);
   assert.equal(
     (await deps.store.readReport('introduction')).scores.authorVoice,
     result.report.scores.authorVoice,
