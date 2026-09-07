@@ -1,7 +1,6 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { assertValid } from '../schemas/index.js';
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const DEFAULTS_DIR = join(PACKAGE_ROOT, 'defaults');
@@ -40,26 +39,39 @@ const POLICY_FILES = [
   'author-profile.yaml',
 ];
 
-async function copyDirInto(srcDir, destRel, store, created, skipped) {
+// Classifies each copied file as created (new), updated (existed with different
+// content, rewritten) or skipped (existed with identical content, left untouched).
+async function copyDirInto(srcDir, destRel, store, created, updated, skipped) {
   const entries = await readdir(srcDir, { withFileTypes: true });
   for (const entry of entries) {
     const srcPath = join(srcDir, entry.name);
     const destRelPath = join(destRel, entry.name);
     if (entry.isDirectory()) {
-      await copyDirInto(srcPath, destRelPath, store, created, skipped);
+      await copyDirInto(srcPath, destRelPath, store, created, updated, skipped);
       continue;
     }
-    const existed = await store.exists(destRelPath);
     const text = await readFile(srcPath, 'utf8');
-    await store.writeTextAtomic(destRelPath, text);
-    (existed ? skipped : created).push(destRelPath);
+    const existing = await store.readText(destRelPath);
+    if (existing === null) {
+      await store.writeTextAtomic(destRelPath, text);
+      created.push(destRelPath);
+    } else if (existing !== text) {
+      await store.writeTextAtomic(destRelPath, text);
+      updated.push(destRelPath);
+    } else {
+      skipped.push(destRelPath);
+    }
   }
 }
 
-async function copySkills(store, created, skipped) {
+// Copies each `<srcDir>/<name>/` skill directory recursively into `.phdude/skills/<name>/`;
+// skills are PhDude-owned so existing files are overwritten when their content changed
+// (see copyDirInto for the created/updated/skipped classification) and this silently
+// does nothing when srcDir doesn't exist.
+export async function copySkills(store, srcDir, created, updated, skipped) {
   let entries;
   try {
-    entries = await readdir(SKILLS_DIR, { withFileTypes: true });
+    entries = await readdir(srcDir, { withFileTypes: true });
   } catch (err) {
     if (err.code === 'ENOENT') return;
     throw err;
@@ -67,20 +79,25 @@ async function copySkills(store, created, skipped) {
   for (const entry of entries) {
     if (!entry.isDirectory()) continue;
     await copyDirInto(
-      join(SKILLS_DIR, entry.name),
+      join(srcDir, entry.name),
       join('.phdude', 'skills', entry.name),
       store,
       created,
+      updated,
       skipped,
     );
   }
 }
 
+/**
+ * @returns {Promise<{ created: string[], updated: string[], skipped: string[], gitInitialized: boolean }>}
+ */
 export async function initWorkspace(
   { store, git, agentHosts = [], clock, actor },
   { title, agents = [], noGit = false } = {},
 ) {
   const created = [];
+  const updated = [];
   const skipped = [];
 
   for (const dir of DIRS) {
@@ -108,7 +125,6 @@ export async function initWorkspace(
       mode: 'full',
       agents,
     };
-    assertValid('project', cfg);
     await store.writeProject(cfg);
     created.push('phdude.yaml');
   }
@@ -146,7 +162,7 @@ export async function initWorkspace(
     }
   }
 
-  await copySkills(store, created, skipped);
+  await copySkills(store, SKILLS_DIR, created, updated, skipped);
 
   for (const host of agentHosts) {
     const { written } = await host.install(store.root, { project });
@@ -167,5 +183,5 @@ export async function initWorkspace(
     summary: 'workspace initialized',
   });
 
-  return { created, skipped, gitInitialized };
+  return { created, updated, skipped, gitInitialized };
 }

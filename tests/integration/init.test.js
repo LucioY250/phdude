@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, stat } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
-import { initWorkspace } from '../../src/application/init.js';
+import { copySkills, initWorkspace } from '../../src/application/init.js';
 
 const deps = (root) => ({
   store: new FsStore(root),
@@ -69,4 +69,35 @@ test('with agents: [] and no agentHosts, phdude.yaml has agents: [] and mode: fu
   const text = await readFile(join(root, 'phdude.yaml'), 'utf8');
   assert.match(text, /agents: \[\]/);
   assert.match(text, /mode: full/);
+});
+
+test('copySkills classifies created, then skipped, then updated on content change', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  const srcDir = await mkdtemp(join(tmpdir(), 'phdude-skills-src-'));
+  await mkdir(join(srcDir, 'demo', 'references'), { recursive: true });
+  await writeFile(join(srcDir, 'demo', 'SKILL.md'), '# demo skill\n');
+  await writeFile(join(srcDir, 'demo', 'references', 'a.md'), 'reference a\n');
+
+  const skillPath = join('.phdude', 'skills', 'demo', 'SKILL.md');
+  const refPath = join('.phdude', 'skills', 'demo', 'references', 'a.md');
+
+  const r1 = { created: [], updated: [], skipped: [] };
+  await copySkills(store, srcDir, r1.created, r1.updated, r1.skipped);
+  assert.deepEqual(r1.created.sort(), [refPath, skillPath].sort());
+  assert.equal(r1.updated.length, 0);
+  assert.equal(r1.skipped.length, 0);
+
+  const r2 = { created: [], updated: [], skipped: [] };
+  await copySkills(store, srcDir, r2.created, r2.updated, r2.skipped);
+  assert.equal(r2.created.length, 0);
+  assert.equal(r2.updated.length, 0);
+  assert.deepEqual(r2.skipped.sort(), [refPath, skillPath].sort());
+
+  await writeFile(join(srcDir, 'demo', 'references', 'a.md'), 'reference a, revised\n');
+  const r3 = { created: [], updated: [], skipped: [] };
+  await copySkills(store, srcDir, r3.created, r3.updated, r3.skipped);
+  assert.equal(r3.created.length, 0);
+  assert.deepEqual(r3.updated, [refPath]);
+  assert.deepEqual(r3.skipped, [skillPath]);
 });
