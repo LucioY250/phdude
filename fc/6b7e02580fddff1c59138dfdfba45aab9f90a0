@@ -1,0 +1,27 @@
+schemas/figure.json
+  s_946fc7502759d8::t_1ee9af93b8aa93 52-54
+src/application/figure.js
+  s_946fc7502759d8::t_1ee9af93b8aa93 222,230-231,244-258,269
+CHANGELOG.md
+  s_946fc7502759d8::t_5dfa6ed81806df 116-117
+tests/integration/figure.test.js
+  s_946fc7502759d8::t_fa599e49744fb1 441-478
+docs/cli.md
+  s_946fc7502759d8::t_5dfa6ed81806df 981-983
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "fc6b7e02580fddff1c59138dfdfba45aab9f90a0",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
