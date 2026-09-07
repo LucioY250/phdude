@@ -1,0 +1,30 @@
+src/application/prose.js
+  s_946fc7502759d8::t_47527f5e4b8ebb 3,90-92,110
+tests/golden/expected/prose-introduction.txt
+  s_946fc7502759d8::t_cc1a5712f657b6 12-17
+tests/golden/prose.test.js
+  s_946fc7502759d8::t_1c91d76401c8e5 51-68
+tests/integration/write.test.js
+  s_946fc7502759d8::t_1c91d76401c8e5 403-404,407
+  s_946fc7502759d8::t_5d8d8f598b2170 408
+docs/cli.md
+  s_946fc7502759d8::t_8f597774b7ba2d 680-682
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_dc0fe6ae4c3b1f 313-321
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f567b7a2e5eb9b4da4f4d897ccf11fb88ec86e6c",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
