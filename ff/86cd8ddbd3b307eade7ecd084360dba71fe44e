@@ -1,0 +1,33 @@
+docs/superpowers/specs/2026-09-07-phdude-v1.0-design.md
+  s_946fc7502759d8::t_09e7eb04648ea0 1-56
+docs/superpowers/specs/2026-09-07-phdude-v0.5-design.md
+  s_946fc7502759d8::t_f0aada9c026aab 1-73
+docs/superpowers/specs/2026-09-07-phdude-v0.7-design.md
+  s_946fc7502759d8::t_100974f67b30d5 1-59
+docs/superpowers/plans/2026-09-07-phdude-v0.6.md
+  s_946fc7502759d8::t_32a3b14291eb24 1-55
+docs/superpowers/plans/2026-09-07-phdude-v1.0.md
+  s_946fc7502759d8::t_8182e176026d8e 1-51
+docs/superpowers/specs/2026-09-07-phdude-v0.6-design.md
+  s_946fc7502759d8::t_f7e54893028822 1-68
+docs/superpowers/plans/2026-09-07-phdude-v0.7.md
+  s_946fc7502759d8::t_ce5f18342fd545 1-48
+docs/superpowers/plans/2026-09-07-phdude-v0.5.md
+  s_946fc7502759d8::t_efedcfacff1181 1-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ff86cd8ddbd3b307eade7ecd084360dba71fe44e",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
