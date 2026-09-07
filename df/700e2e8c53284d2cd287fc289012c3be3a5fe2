@@ -1,0 +1,74 @@
+skills/review-modes/SKILL.md
+  s_946fc7502759d8::t_27f8d7fdc299c7 1-46
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_5fdc513eac593d 1-80
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_4e0b3d43adacf7 1-111,115-137
+  s_946fc7502759d8::t_e02940c6408649 112-114
+commands/status.md
+  s_946fc7502759d8::t_a769f831682d95 1-18
+src/application/init.js
+  s_946fc7502759d8::t_33f6c828b9ab7e 188,190-191
+  s_946fc7502759d8::t_295d7ae3166442 42-61
+  s_946fc7502759d8::t_e379c3ddf11dfc 189
+tests/unit/skills.test.js
+  s_946fc7502759d8::t_7f08f1b3b22de9 1-23
+skills/decisions/SKILL.md
+  s_946fc7502759d8::t_fbb68d20fd8cd9 1-53
+commands/ingest.md
+  s_946fc7502759d8::t_feb36e8f0f7143 1-17
+commands/next.md
+  s_946fc7502759d8::t_c72a08c9e6813d 1-17
+commands/knowledge.md
+  s_946fc7502759d8::t_918544b92e5b19 1-17
+commands/mode.md
+  s_946fc7502759d8::t_afbb99b83a0c38 1-17
+src/adapters/agents/claude-code.js
+  s_946fc7502759d8::t_f93851a8c6d60e 1-60
+commands/decide.md
+  s_946fc7502759d8::t_500c6bafb4a3de 1-18
+skills/next/SKILL.md
+  s_946fc7502759d8::t_a56448a4629893 1-56
+src/ports/agent-host.js
+  s_946fc7502759d8::t_8983f29e0c54de 1-49
+skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_1c9b38bf61c7bd 1-57
+commands/add.md
+  s_946fc7502759d8::t_a064bd2e01cbf5 1-18
+tests/contracts/agent-host.test.js
+  s_946fc7502759d8::t_a9d7fb79299a7a 1-43
+src/adapters/agents/codex.js
+  s_946fc7502759d8::t_10da8a893b30b0 1-13
+tests/unit/adapters/agents-shared.test.js
+  s_946fc7502759d8::t_bcce0f5eaab93c 1-2,8-23
+  s_946fc7502759d8::t_e02940c6408649 3-7
+commands/packs.md
+  s_946fc7502759d8::t_b560e13fcbdd7e 1-17
+commands/doctor.md
+  s_946fc7502759d8::t_6b0a511b4e335a 1-16
+commands/bootstrap.md
+  s_946fc7502759d8::t_f4df1b95575556 1-17
+commands/phdude.md
+  s_946fc7502759d8::t_53574a7290453d 1-29
+skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_1d4d1976c67573 1-79
+tests/integration/init.test.js
+  s_946fc7502759d8::t_1fab4d9469b57f 75-89
+  s_946fc7502759d8::t_f4fdf845acc2a1 8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "df700e2e8c53284d2cd287fc289012c3be3a5fe2",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "unknown"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
