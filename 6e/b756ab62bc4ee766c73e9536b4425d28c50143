@@ -1,0 +1,59 @@
+src/application/init.js
+  s_946fc7502759d8::t_2c149127e1a6b3 123-133,138
+  s_946fc7502759d8::t_a13c71df7206e5 1
+  s_946fc7502759d8::t_3265bab2c575f5 153,158-159,233-240,278
+docs/cli.md
+  s_946fc7502759d8::t_fe206eacebb49a 77-80
+tests/integration/edit.test.js
+  s_946fc7502759d8::t_7541eedcd541ce 235-270
+examples/generic-thesis/.phdude/author-profile.yaml
+  s_946fc7502759d8::t_9f0f382ea0182e 4-8
+docs/adr/0007-network-policy-and-search-providers.md
+  s_946fc7502759d8::t_d1f8273f5e28f2 37-38
+tests/live/search.live.test.js
+  s_946fc7502759d8::t_d1f8273f5e28f2 1-35
+tests/integration/init.test.js
+  s_946fc7502759d8::t_66da68ca041b2e 290-329
+src/application/edit.js
+  s_946fc7502759d8::t_e64e3237fdb4e7 163
+  s_946fc7502759d8::t_cc474faf543dbf 62-84
+  s_946fc7502759d8::t_50ca5fde59d59d 133-135
+tests/unit/adapters/search.test.js
+  s_946fc7502759d8::t_fa3eda1cdd95f9 638-673
+src/adapters/search/http.js
+  s_946fc7502759d8::t_e198d3b996808d 47-49,54,58-66
+  s_946fc7502759d8::t_00e2986103bd21 67-68
+src/adapters/cli/commands/init.js
+  s_946fc7502759d8::t_f6f21b146608c1 51-54
+  s_946fc7502759d8::t_4d46c28afe4d6f 63
+src/domain/next.js
+  s_946fc7502759d8::t_82668feab2d279 8-10
+  s_946fc7502759d8::t_93bc392a232f8f 230-236
+  s_946fc7502759d8::t_f210c4638fa6b8 265
+  s_946fc7502759d8::t_11786b3b102540 145
+tests/unit/schemas.test.js
+  s_946fc7502759d8::t_94606e13ba5a9e 6,47-53
+  s_946fc7502759d8::t_59fdd9c66bd04d 54
+src/application/research.js
+  s_946fc7502759d8::t_94606e13ba5a9e 33-36
+defaults/author-profile.yaml
+  s_946fc7502759d8::t_bb14c006d6a40b 4-8
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_fa3eda1cdd95f9 474-485
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "6eb756ab62bc4ee766c73e9536b4425d28c50143",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
