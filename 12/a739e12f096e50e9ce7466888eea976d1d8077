@@ -1,0 +1,101 @@
+src/adapters/cli/commands/packs.js
+  s_946fc7502759d8::t_186d92e0780249 66
+docs/extending.md
+  s_946fc7502759d8::t_dac375a47d4379 101-144
+src/application/doctor.js
+  s_946fc7502759d8::t_e4984f19ff1dbd 19-28
+  s_946fc7502759d8::t_ccc8d677ca6471 17
+  s_946fc7502759d8::t_bdb6c623bac9ff 69-70,72-75,87
+  s_946fc7502759d8::t_ef000e8c649047 12-13
+  s_946fc7502759d8::t_8aaee40ef443ed 71
+  s_946fc7502759d8::t_6fa6b05e2ac956 3
+tests/unit/application/skills.test.js
+  s_946fc7502759d8::t_543a92c0b7a45c 4-6
+  s_946fc7502759d8::t_d3adfd0f1d23ca 43-44
+  s_946fc7502759d8::t_9f7597b68a7bf7 1-3,7-42,45-57,61-65
+  s_946fc7502759d8::t_cb80d998990658 58-60
+tests/fixtures/objects/valid/skill.1.json
+  s_946fc7502759d8::t_a19902ffaddc89 1-9
+defaults/research-policy.yaml
+  s_946fc7502759d8::t_2320ad0abbf09c 28-30
+src/adapters/skills/loader.js
+  s_946fc7502759d8::t_322b125d2dcf86 1-98
+examples/generic-thesis/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_6988042b065edd 28-30
+tests/fixtures/objects/invalid/skill.1.json
+  s_946fc7502759d8::t_8885ffbef31008 1-9
+tests/integration/init.test.js
+  s_946fc7502759d8::t_644690da29779c 120-126,153-157,185-193,212-214
+  s_946fc7502759d8::t_0966acb9f74f18 134,140,147
+  s_946fc7502759d8::t_8c45becf0f7558 217,228-231
+  s_946fc7502759d8::t_27d1428db0ee10 8,23
+  s_946fc7502759d8::t_452fcd87c3277a 152,158-184,194-196,198-211,215-216,218-227,232-233
+  s_946fc7502759d8::t_42d95698776356 197
+  s_946fc7502759d8::t_6ed17ffe412bbc 11
+  s_946fc7502759d8::t_5ff96269651f1d 118-119,127
+src/schemas/index.js
+  s_946fc7502759d8::t_ceb641c7684ce4 29
+src/application/packs.js
+  s_946fc7502759d8::t_8b73a729eba086 74-77,81
+  s_946fc7502759d8::t_7ad476fbd13889 102-107
+  s_946fc7502759d8::t_963adea1b95775 1,4
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_9c5e6e952bfbf8 230-234
+tests/unit/application/migrate.test.js
+  s_946fc7502759d8::t_6f1e8aa8033c57 1-40,45-69
+  s_946fc7502759d8::t_644690da29779c 41-44
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_e3337f6ca8d740 79-81
+  s_946fc7502759d8::t_3f60d195fd0ad8 9-10
+tests/unit/adapters/skill-loader.test.js
+  s_946fc7502759d8::t_d3cf45a0a8dd33 1-10,15-144
+  s_946fc7502759d8::t_644690da29779c 11-14
+tests/integration/packs.test.js
+  s_946fc7502759d8::t_ac402b3b79eebb 203-238,240,242-249
+  s_946fc7502759d8::t_80614bf911eecd 3
+  s_946fc7502759d8::t_f245b78329592a 12,30,38-41
+  s_946fc7502759d8::t_74c060f2b9164d 239,241
+scripts/make-example.mjs
+  s_946fc7502759d8::t_81b4bf1d7168a4 11
+  s_946fc7502759d8::t_439d1357a9a1da 100
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_ba1f692ce36309 37-46
+  s_946fc7502759d8::t_bafbf3527eea63 63-64
+docs/cli.md
+  s_946fc7502759d8::t_f23748d3ca399c 225-228
+  s_946fc7502759d8::t_12a4d7c11f8ce3 258-263
+src/application/skills.js
+  s_946fc7502759d8::t_6aebff6f0670a6 1-21,28-30,33-52
+  s_946fc7502759d8::t_a74935bd83e7bb 22-27,31-32
+schemas/skill.json
+  s_946fc7502759d8::t_fbebd43764a44a 1-33
+src/application/migrate.js
+  s_946fc7502759d8::t_7051a2ca1a6e55 28-44
+src/adapters/cli/commands/init.js
+  s_946fc7502759d8::t_09506577e7c200 32
+tests/contracts/skills.test.js
+  s_946fc7502759d8::t_64f1369b4a857c 1-39
+src/application/init.js
+  s_946fc7502759d8::t_05e15027f0369c 94-96,107-109
+  s_946fc7502759d8::t_d6adc60c9a9558 97-106
+  s_946fc7502759d8::t_91952877efc349 204
+  s_946fc7502759d8::t_ee4cfcd5f95529 5
+  s_946fc7502759d8::t_7f9c4874cdf7c0 134
+  s_946fc7502759d8::t_3139784791f2be 205
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "12a739e12f096e50e9ce7466888eea976d1d8077",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
