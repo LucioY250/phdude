@@ -1,0 +1,25 @@
+src/domain/conflicts.js
+  s_946fc7502759d8::t_21346f4d6409e4 1-21,24-64
+  s_946fc7502759d8::t_621e95999e7b69 22-23
+tests/unit/domain/conflicts.test.js
+  s_946fc7502759d8::t_8bdeb5f0c4cc27 8-16,237
+  s_946fc7502759d8::t_554a471dcede53 179-180
+  s_946fc7502759d8::t_218d74bdb9e6ae 1-7,17-157,159-178,181-236,238-263
+  s_946fc7502759d8::t_8719936c2a5faa 158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "8fe3d2938dc79fa680a972d9d48945a73c3c1439",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
