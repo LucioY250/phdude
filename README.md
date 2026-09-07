@@ -64,11 +64,11 @@ The agent thinks. The harness remembers, validates, and refuses.
 flowchart LR
     You([You]) <--> Agent[Claude Code / Codex]
     Agent -- "phdude … --json" --> CLI[phdude CLI]
-    CLI -- validated, attributed,<br>logged writes --> WS[(Research workspace<br>YAML + Markdown in git)]
+    CLI -- "validated, attributed, logged writes" --> WS[(Research workspace<br>YAML + Markdown in git)]
     WS -- status, next, knowledge --> CLI
     CLI --> Agent
-    Skills[Skills<br>SKILL.md] -. how to work .-> Agent
-    Packs[Packs<br>field / method] -. vocabulary,<br>review questions .-> Agent
+    Skills[Skills<br>SKILL.md] -. "how to work" .-> Agent
+    Packs[Packs<br>field / method] -. "vocabulary, review questions" .-> Agent
     Packs -.-> CLI
 ```
 
@@ -114,7 +114,7 @@ candidate claims. Everything it adds points back to where it came from:
 ```mermaid
 flowchart LR
     ART[ART-…<br>thesis.docx] --> SRC[SRC-…<br>Smith 2023]
-    SRC --> EVID[EVID-…<br>"n = 312, p. 41"]
+    SRC --> EVID[EVID-…<br>n = 312, p. 41]
     EVID --> CLAIM[CLAIM-…<br>candidate]
     CLAIM --> RQ[RQ-1<br>research question]
     ART --> FACT[FACT-…<br>sample_size = 312]
@@ -129,7 +129,7 @@ come from?" has an answer.
 stateDiagram-v2
     [*] --> candidate: phdude add claim
     candidate --> supported: evidence linked
-    supported --> canonical: promote --decision DEC-x<br>(DEC-x approved by a human,<br>and it names this claim)
+    supported --> canonical: promote --decision DEC-x (approved by a human, names this claim)
     candidate --> disputed
     supported --> disputed
     canonical --> disputed: new contradicting evidence
@@ -384,7 +384,7 @@ sources; nothing is applied until you say so.
 ```mermaid
 flowchart LR
     T[(cached text)] --> K[keyword hits<br>per pack] --> S[score ≥ 0.25?] --> Rec[packs_recommended<br>in phdude.yaml]
-    Rec -- "phdude packs apply <name>" --> Applied[fields / methods<br>in phdude.yaml]
+    Rec -- "phdude packs apply NAME" --> Applied[fields / methods<br>in phdude.yaml]
     Applied --> Skill[pack skill loaded<br>when relevant]
 ```
 
