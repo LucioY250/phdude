@@ -1,0 +1,39 @@
+eslint.config.js
+  s_946fc7502759d8::t_64770942f9a896 1-13
+README.md
+  s_946fc7502759d8::t_b0745a7ac89a1d 1-9
+.github/workflows/ci.yml
+  s_946fc7502759d8::t_356a22f8d0d66c 1-15
+tests/unit/layering.test.js
+  s_946fc7502759d8::t_eeb49bac3e5e18 1-27
+LICENSE
+  s_946fc7502759d8::t_49c3c2247eb295 1-21
+bin/phdude.js
+  s_946fc7502759d8::t_378db0055e9846 1-9
+.prettierrc
+  s_946fc7502759d8::t_31d35a77dec50a 1
+package.json
+  s_946fc7502759d8::t_cc157fd394e750 7-23,30-34,36-40
+  s_946fc7502759d8::t_87a5b1f63417f8 25-26
+  s_946fc7502759d8::t_306e629590d575 1-6,24,27-29,35,41
+.prettierignore
+  s_946fc7502759d8::t_b928ba5263738b 1-6
+package-lock.json
+  s_946fc7502759d8::t_0589414ad865f7 1-1089
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "45fecd87c1f60838507daaee1e5ad56d6173349e",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
