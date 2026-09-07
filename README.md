@@ -1,5 +1,6 @@
 # PhDude
-<img width="634" height="562" alt="84A306A5-0C9C-47B5-B487-B4ADD11DE307_1_201_a" src="https://github.com/user-attachments/assets/208ddeb8-702e-4f8c-b5d9-c113a13e7e15" />
+<img width="254" height="254" alt="logoPHDude" src="https://github.com/user-attachments/assets/1716fadd-7327-4a99-907e-a59855b557cc" />
+
 
 
 
