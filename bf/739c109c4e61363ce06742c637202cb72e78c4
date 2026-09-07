@@ -1,0 +1,26 @@
+src/domain/gates/voice.js
+  s_946fc7502759d8::t_3c91c706da9277 60,70,80
+tests/unit/domain/gates/voice.test.js
+  s_946fc7502759d8::t_d2144cedee9385 5,183-190
+  s_946fc7502759d8::t_45bdf4ed564609 191-192
+tests/unit/domain/voice.test.js
+  s_946fc7502759d8::t_667dc0c4948a06 389,391-395,397
+src/domain/voice.js
+  s_946fc7502759d8::t_5424731de986f1 336,342,374,385-386,409-410
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "bf739c109c4e61363ce06742c637202cb72e78c4",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
