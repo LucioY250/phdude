@@ -1,0 +1,37 @@
+src/application/doctor.js
+  s_946fc7502759d8::t_1b7c0cc89c778c 68-70,72,76
+  s_946fc7502759d8::t_9ebcce6b5e1c2c 20
+  s_946fc7502759d8::t_ebbfa77dd60dbc 106-108
+tests/unit/application/doctor.test.js
+  s_946fc7502759d8::t_ef93d802b04c47 42,46,51-55,57-59,62-67
+  s_946fc7502759d8::t_6831008635c956 68
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_cbe00f78749429 43-45,47,49,54-61
+  s_946fc7502759d8::t_58c6cbaa8b8b67 62
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_cacc95445319f4 32-44
+tests/integration/fs-store.test.js
+  s_946fc7502759d8::t_c26532e7419159 126-150
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_f30f65bf056cd4 399-443
+docs/cli.md
+  s_946fc7502759d8::t_93e146a3d0cc59 695-701
+src/application/skills.js
+  s_946fc7502759d8::t_e5815ef706f5ac 71-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "3dc4bc1d072c537b8d5c922358b92273e25a8e0a",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
