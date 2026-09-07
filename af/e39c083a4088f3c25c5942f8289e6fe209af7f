@@ -1,0 +1,47 @@
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_c1f15c808bc63c 66-90,222-236,238-259
+  s_946fc7502759d8::t_3070e7f04d903e 237
+  s_946fc7502759d8::t_32704e1397a5a0 260
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_dd95ad4657845c 6,15
+src/application/add.js
+  s_946fc7502759d8::t_ebe1816b277be8 11
+  s_946fc7502759d8::t_26cfa923a45284 48
+  s_946fc7502759d8::t_43b70a32074b00 105-113
+docs/adr/0003-content-derived-ids.md
+  s_946fc7502759d8::t_dc7f0942786dc6 13-26,30-36,38-40
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_202575a4255739 26
+examples/generic-thesis/knowledge/claims/CLAIM-ab73621987.yaml
+  s_946fc7502759d8::t_dd95ad4657845c 13
+examples/generic-thesis/knowledge/evidence/EVID-93cd3745fc.yaml
+  s_946fc7502759d8::t_dd95ad4657845c 1-13
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_4d5d40ca08fa41 51-56
+examples/generic-thesis/decisions/DEC-7aa12a7b78.yaml
+  s_946fc7502759d8::t_dd95ad4657845c 1-22
+tests/integration/add-knowledge.test.js
+  s_946fc7502759d8::t_9eecd18b46b826 108-136
+docs/cli.md
+  s_946fc7502759d8::t_98916d406c06ad 160-163
+  s_946fc7502759d8::t_1809f4a546c976 117-134
+src/domain/entities.js
+  s_946fc7502759d8::t_745ba7f11bac2f 129
+  s_946fc7502759d8::t_ca75aec5fc5734 323-330,334
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "afe39c083a4088f3c25c5942f8289e6fe209af7f",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
