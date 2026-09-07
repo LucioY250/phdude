@@ -337,6 +337,8 @@ export async function run(deps, { id, allowExec = false, force = false }) {
 
   if (outcome.timedOut || outcome.exitCode !== 0) {
     const tail = stderrTail(outcome.stderr);
+    const signal =
+      typeof outcome.signal === 'string' && outcome.signal !== '' ? outcome.signal : null;
     const failed = {
       at,
       exit: outcome.timedOut ? null : outcome.exitCode,
@@ -346,7 +348,10 @@ export async function run(deps, { id, allowExec = false, force = false }) {
       results: [],
     };
     if (outcome.timedOut) failed.timed_out = true;
+    if (signal !== null) failed.signal = signal;
     if (tail !== '') failed.stderr_tail = tail;
+
+    const details = tail === '' ? null : tail.trimEnd().split('\n').slice(-10);
 
     if (outcome.timedOut) {
       const seconds = Math.round(timeoutMs / 1000);
@@ -355,6 +360,20 @@ export async function run(deps, { id, allowExec = false, force = false }) {
         'TOOL_MISSING',
         `analysis timed out after ${seconds}s: ${analysis.name}`,
         'raise execution.timeout_seconds in .phdude/research-policy.yaml, or make the script do less',
+      );
+    }
+
+    // No exit code and no timeout means a signal ended the run. That shape is identical to a
+    // clean exit apart from the missing code, so it is named here rather than left to read as
+    // one: the script never got to write its results, whatever it had already printed.
+    if (outcome.exitCode === null) {
+      const named = signal === null ? '' : ` by ${signal}`;
+      await recordFailure(deps, analysis, failed, `analysis killed${named}: ${analysis.name}`);
+      throw new PhdudeError(
+        'EXECUTION',
+        `the analysis script was killed${named}: ${analysis.name}`,
+        `something outside PhDude ended the run; the recorded output is in phdude analyze runs ${analysis.id}`,
+        details,
       );
     }
 
@@ -368,7 +387,7 @@ export async function run(deps, { id, allowExec = false, force = false }) {
       'EXECUTION',
       `the analysis script exited ${outcome.exitCode}: ${analysis.name}`,
       `read the recorded output with phdude analyze runs ${analysis.id}`,
-      tail === '' ? null : tail.trimEnd().split('\n').slice(-10),
+      details,
     );
   }
 

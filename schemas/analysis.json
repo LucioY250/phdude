@@ -29,6 +29,7 @@
               "at": { "type": "string", "format": "date-time" },
               "exit": { "type": ["integer", "null"] },
               "timed_out": { "type": "boolean" },
+              "signal": { "type": "string" },
               "duration_ms": { "type": "integer", "minimum": 0 },
               "input_hashes": {
                 "type": "object",

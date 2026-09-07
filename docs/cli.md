@@ -43,9 +43,9 @@ carries a hint. With `--json` they print `{"error":{"code","message","hint","det
 stderr instead. Exit code 4 is rare, because degradation is the rule: a missing `pdftotext`
 produces a warning and a partial extraction, and one failed search provider produces a warning
 and the other providers' results. A `phdude research` run where every provider failed exits 4,
-and so does an analysis whose script exited non-zero (`EXECUTION`) or ran past
-`execution.timeout_seconds` (`TOOL_MISSING`) - PhDude did its part, and the thing it called
-did not come back.
+and so does an analysis whose script exited non-zero or was killed by a signal (`EXECUTION`),
+or ran past `execution.timeout_seconds` (`TOOL_MISSING`) - PhDude did its part, and the thing it
+called did not come back.
 
 ## Commands
 
@@ -739,7 +739,7 @@ command in PhDude that executes a researcher's code.
 | `outputs.results` | Where the script writes `results.json`. Defaults to `analysis/out/<name>/results.json`, and must also stay inside `analysis/`. |
 | `outputs.files` | Anything else the run produces — a figure, a table. Workspace-relative; hashed after every successful run. |
 | `params` | A free object. PhDude records it and never interprets it. |
-| `runs` | One entry per run: `at`, `exit`, `duration_ms`, `input_hashes`, `output_hashes`, `results`, and `stderr_tail` when it failed. |
+| `runs` | One entry per run: `at`, `exit`, `duration_ms`, `input_hashes`, `output_hashes`, `results`, plus `stderr_tail`, `timed_out` and `signal` when it failed. |
 
 Declaring the same name again corrects the declaration in place — a mistyped script path is
 fixed with the command that made it — and the record keeps its creation time, its state and
@@ -775,7 +775,9 @@ the analysis, `values` as written, and `ext.analysis: { key, run_at, unit? }`.
 4. The runner spawns the script with the policy's `timeout_seconds`.
 5. A non-zero exit records the run with its exit code and the last 2000 characters of stderr,
    writes no result, and exits 4. A run that outran the timeout is recorded the same way with
-   `timed_out: true`. Either way the analysis stays stale, so the next run is not refused.
+   `timed_out: true`, and one a signal ended with `exit: null` and `signal: SIGKILL` — never as
+   a success, because a killed run is shaped like a clean one apart from the missing code.
+   Either way the analysis stays stale, so the next run is not refused.
 6. On success, `results.json` is read and validated. A missing, unparseable or off-contract file
    is a validation error (exit 2) that records **nothing** — a run PhDude cannot read the
    results of must not count as the successful run that makes an analysis up to date.
