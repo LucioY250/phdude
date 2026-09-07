@@ -60,84 +60,33 @@ and review questions arrive as packs.
 
 The agent thinks. The harness remembers, validates, and refuses.
 
-```mermaid
-flowchart LR
-    You([You]) <--> Agent[Claude Code / Codex]
-    Agent -- "phdude … --json" --> CLI[phdude CLI]
-    CLI -- "validated, attributed, logged writes" --> WS[(Research workspace<br>YAML + Markdown in git)]
-    WS -- status, next, knowledge --> CLI
-    CLI --> Agent
-    Skills[Skills<br>SKILL.md] -. "how to work" .-> Agent
-    Packs[Packs<br>field / method] -. "vocabulary, review questions" .-> Agent
-    Packs -.-> CLI
-```
+<p align="center"><img src="docs/assets/diagrams/loop.svg" alt="You talk to the agent, the agent runs the phdude CLI, the CLI validates and logs every write into the research workspace" width="900"></p>
 
 The agent never edits research state by hand. It goes through the CLI, so every change is
 schema-validated, attributed to a researcher and an agent, and appended to an audit log. Four
 kinds of parts make this up:
 
-```mermaid
-flowchart TB
-    subgraph ADAPTERS["ADAPTERS · how PhDude talks to the outside"]
-        A1[Claude Code host] --- A2[Codex host] --- A3[PDF / DOCX / PPTX / XLSX parsers] --- A4[git]
-    end
-    subgraph SKILLS["SKILLS · what PhDude knows how to do"]
-        S1[bootstrap] --- S2[knowledge] --- S3[decisions] --- S4[next] --- S5[review modes]
-    end
-    subgraph PACKS["PACKS · how PhDude adapts to a field or method"]
-        P1[computer-science] --- P2[medicine] --- P3[humanities] --- P4[quantitative] --- P5[…]
-    end
-    subgraph CORE["CORE · what PhDude knows and remembers"]
-        C1[workspace state] --- C2[knowledge graph + provenance] --- C3[approval gates] --- C4[cache + invalidation] --- C5[next-action rules]
-    end
-    SKILLS --> CORE
-    PACKS --> SKILLS
-    ADAPTERS --> CORE
-```
+<p align="center"><img src="docs/assets/diagrams/layers.svg" alt="Four layers: adapters, skills, packs and core" width="900"></p>
 
 ### Where the knowledge comes from
 
 Drop documents in `sources/` and run `phdude ingest`. Nothing here involves a model: it is
 hashing, parsing and bookkeeping, and it is idempotent.
 
-```mermaid
-flowchart LR
-    D[discover<br>sources/**] --> I[inventory<br>sha256 → ART-id] --> X[dedup<br>same hash, many paths]
-    X --> E[extract<br>text · sections · tables] --> C[(cache<br>.phdude/cache/ART-*/)]
-    C --> V[link versions<br>thesis_v1 → thesis_v2] --> R[record<br>knowledge/artifacts/ART-*.yaml]
-```
+<p align="center"><img src="docs/assets/diagrams/ingest.svg" alt="Ingestion pipeline: discover, inventory, dedup, extract, cache, link versions, record" width="900"></p>
 
 The agent then reads the cached text section by section, never whole documents, and turns it
 into research objects through `phdude add`: sources, facts with their locators, evidence, and
 candidate claims. Everything it adds points back to where it came from:
 
-```mermaid
-flowchart LR
-    ART[ART-…<br>thesis.docx] --> SRC[SRC-…<br>Smith 2023]
-    SRC --> EVID[EVID-…<br>n = 312, p. 41]
-    EVID --> CLAIM[CLAIM-…<br>candidate]
-    CLAIM --> RQ[RQ-1<br>research question]
-    ART --> FACT[FACT-…<br>sample_size = 312]
-```
+<p align="center"><img src="docs/assets/diagrams/lineage.svg" alt="Lineage from an artifact through source, evidence and claim to a research question" width="900"></p>
 
 `phdude knowledge trace CLAIM-…` walks this graph in both directions, so "where did this number
 come from?" has an answer.
 
 ### How a claim earns the right to be stated plainly
 
-```mermaid
-stateDiagram-v2
-    [*] --> candidate: phdude add claim
-    candidate --> supported: evidence linked
-    supported --> canonical: promote --decision DEC-x (approved by a human, names this claim)
-    candidate --> disputed
-    supported --> disputed
-    canonical --> disputed: new contradicting evidence
-    disputed --> supported
-    candidate --> rejected
-    supported --> rejected
-    rejected --> candidate
-```
+<p align="center"><img src="docs/assets/diagrams/states.svg" alt="Knowledge states: candidate, supported, canonical, disputed, rejected" width="900"></p>
 
 The transition into `canonical` is the only one the CLI gates, and it gates it hard: without an
 approved decision that lists the object, `phdude promote` exits with code 3. An agent cannot
@@ -145,18 +94,7 @@ talk its way around it, and neither can a tired researcher at 2 a.m.
 
 ### How "what next?" is decided
 
-```mermaid
-flowchart LR
-    S[(workspace snapshot)] --> R{ten rules}
-    R --> a[no research questions?]
-    R --> b[artifacts without text?]
-    R --> c[open fact conflicts?]
-    R --> d[claims without evidence?]
-    R --> e[decisions awaiting approval?]
-    R --> f[…]
-    a & b & c & d & e & f --> K[rank: impact,<br>then dependents,<br>then rule order]
-    K --> T[top action<br>+ why + exact command]
-```
+<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, ten rules, ranking, top action with reasons" width="900"></p>
 
 Every rule is deterministic and every recommendation carries its reasons, its impact, and the
 command that does it. There is no hidden score.
@@ -380,13 +318,6 @@ brings terminology, reviewers, recommended checks and a skill with concrete revi
 and the epistemic norms of its discipline, so "demonstrates" and "suggests" are used the way
 that field uses them. `phdude packs detect` recommends packs from what it finds in your
 sources; nothing is applied until you say so.
-
-```mermaid
-flowchart LR
-    T[(cached text)] --> K[keyword hits<br>per pack] --> S[score ≥ 0.25?] --> Rec[packs_recommended<br>in phdude.yaml]
-    Rec -- "phdude packs apply NAME" --> Applied[fields / methods<br>in phdude.yaml]
-    Applied --> Skill[pack skill loaded<br>when relevant]
-```
 
 Writing your own is a `pack.yaml` and a `SKILL.md`: see [docs/extending.md](docs/extending.md).
 

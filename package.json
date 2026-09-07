@@ -41,7 +41,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "example": "node scripts/make-example.mjs",
-    "fixtures": "node scripts/make-fixtures.mjs"
+    "fixtures": "node scripts/make-fixtures.mjs",
+    "diagrams": "node scripts/make-diagrams.mjs"
   },
   "dependencies": {
     "ajv": "^8.17.1",
