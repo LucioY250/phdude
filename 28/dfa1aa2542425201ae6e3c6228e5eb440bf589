@@ -1,0 +1,40 @@
+docs/adr/0007-network-policy-and-search-providers.md
+  s_946fc7502759d8::t_f0d49943992ae6 18-20
+src/application/research.js
+  s_946fc7502759d8::t_f0d49943992ae6 161-164
+commands/research.md
+  s_946fc7502759d8::t_1623882b673bdd 17,20-21,24-25
+  s_946fc7502759d8::t_8eea5dcc69f081 26
+CHANGELOG.md
+  s_946fc7502759d8::t_078e756a1cf7ba 30
+  s_946fc7502759d8::t_32f7f364ae954d 13-14,95-102
+docs/cli.md
+  s_946fc7502759d8::t_1623882b673bdd 386-388,402-410
+  s_946fc7502759d8::t_f0d49943992ae6 395-399
+docs/extending.md
+  s_946fc7502759d8::t_1623882b673bdd 135-142
+skills/research/SKILL.md
+  s_946fc7502759d8::t_32f7f364ae954d 42-46
+README.md
+  s_946fc7502759d8::t_d6da6ae75eb00d 337-353
+  s_946fc7502759d8::t_f0d49943992ae6 45-46,63-66
+  s_946fc7502759d8::t_078e756a1cf7ba 131
+  s_946fc7502759d8::t_10f77423310df7 283-285,290,297-299
+  s_946fc7502759d8::t_8a6340139f300d 300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "28dfa1aa2542425201ae6e3c6228e5eb440bf589",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
