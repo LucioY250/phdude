@@ -1,0 +1,25 @@
+src/application/decide.js
+  s_946fc7502759d8::t_47cbc5fc056c41 146-148
+tests/integration/decide.test.js
+  s_946fc7502759d8::t_d5f889684e4d7b 185-194
+  s_946fc7502759d8::t_f0b511731419fc 124-125,130-144
+  s_946fc7502759d8::t_24eaa60ccf8f96 220-221,226-233
+  s_946fc7502759d8::t_79ac4b23452a35 126-129,222-225
+  s_946fc7502759d8::t_3d20fa4af91f2e 99-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "1cbeaf78594f162219e99e759f015fafe8191de8",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
