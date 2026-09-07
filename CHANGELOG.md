@@ -22,7 +22,8 @@ model anywhere in the runtime, and still no network call.
   source: the research questions and claims its evidence reaches, the strongest evidence citing
   it directly, the facts drawn from its artifacts, and any pack-declared method tags.
 - **Research gaps.** `phdude gaps` reports ten kinds of gap grouped by severity, each with the
-  reason it fired and a runnable command. `phdude next` gained a matching rule that recommends
+  reason it fired and a runnable command. The uncited-source condition carries the one name
+  `uncited-source` in both `gaps` and `cite check`. `phdude next` gained a matching rule that recommends
   the report once one high-severity gap or three gaps of any severity exist, and its closing
   line reports the open gap count rather than claiming the workspace is consistent.
 - **Claim contradictions.** `phdude link CLAIM-a --contradicts CLAIM-b` records that two claims

@@ -148,7 +148,9 @@ phdude knowledge trace <id>
 
 `list` filters by type (`artifact`, `source`, `claim`, `evidence`, `fact`, `result`,
 `question`, `hypothesis`, `method`, `decision`), by state, and by a case-insensitive substring
-of the object's primary text. `trace` walks the lineage graph in both directions: `up` is what
+of the object's primary text. A `--type` or `--state` value outside those lists exits 1 naming
+the value and listing what is accepted, rather than printing an empty result that reads as "no
+such objects". `trace` walks the lineage graph in both directions: `up` is what
 the object rests on, `down` is what rests on it.
 
 `trace` prints a `provenance:` line for an object that carries one (claims and evidence):
@@ -190,7 +192,9 @@ and the same value reported by two artifacts is deliberately two facts — that 
 conflict `status` reports. See [ADR 3](adr/0003-content-derived-ids.md).
 
 `artifact-role` is the exception: it sets `role` on an existing artifact rather than
-creating a new object, and takes `{"id":"ART-…","role":"paper"}`.
+creating a new object, and takes `{"id":"ART-…","role":"paper"}`. Text mode prints
+`Updated <id> role → <role>` when the role changed and `Unchanged <id>` when it was already
+that role, which writes nothing and records no event.
 
 A method records how the study was done: `{"name":"Cross-sectional survey","design":"…",
 "paradigm":"quantitative","sampling":"…","instruments":[…],"analysis":[…],"limitations":[…],
@@ -380,7 +384,9 @@ GitHub-flavored Markdown table or CSV; `--json` returns the full row objects reg
 
 A row with an empty Questions column means the source is recorded, and may even be cited by
 evidence, but that evidence is not yet attached to any claim — it has not been used to support
-an argument yet. `--question RQ-n` filters to rows whose Questions column includes that id.
+an argument yet. `--question RQ-n` filters to rows whose Questions column includes that id; an
+id no research question carries exits 1 with `not found: RQ-n`, since an empty table would
+otherwise read as "no source addresses this question".
 
 ### `phdude gaps`
 
@@ -401,7 +407,7 @@ concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, c
 | `claim-without-evidence` | high | A non-`rejected` claim's `supported_by` is empty. |
 | `claim-weak-evidence` | medium | Every evidence item supporting the claim has `strength: weak`. |
 | `hypothesis-untested` | medium | No claim addresses any of the hypothesis's questions. |
-| `source-uncited` | low | No evidence item's `source` is this SRC id directly (same rule as `cite check`'s `uncited-source`). |
+| `uncited-source` | low | No evidence item's `source` is this SRC id directly - the same rule, and the same name, as `cite check`'s `uncited-source` finding. |
 | `artifact-unmined` | low | The artifact's role is classified (not `unknown`), but no source, fact, or evidence references it. |
 | `open-conflict` | high | An unresolved fact conflict (see `status` above), one gap per conflict key. |
 | `disputed-pair` | high | A pair of claims that contradict each other with neither side `rejected` (same rule as `status`'s disputed pairs). |

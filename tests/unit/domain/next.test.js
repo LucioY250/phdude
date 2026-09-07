@@ -311,7 +311,7 @@ test('recommendNext: every action has non-empty why, valid impact, string comman
 });
 
 // A fully-addressed, fully-methoded RQ (so no other rule, question-gaps included, fires) plus
-// `count` never-cited sources - each an isolated low-severity `source-uncited` gap and nothing
+// `count` never-cited sources - each an isolated low-severity `uncited-source` gap and nothing
 // else, so the gaps rule's threshold and its "no high rule fired" guard can be tested in
 // isolation.
 function uncitedSourcesSnapshot(count) {
@@ -364,7 +364,7 @@ function uncitedSourcesSnapshot(count) {
 test('recommendNext: gaps fires at >= 3 gaps when no high-impact rule fired', () => {
   const actions = recommendNext(uncitedSourcesSnapshot(3), []);
   const gapsAction = actions.find((a) => a.rule === 'gaps');
-  assert.ok(gapsAction, '3 source-uncited gaps and no high rule should fire the gaps rule');
+  assert.ok(gapsAction, '3 uncited-source gaps and no high rule should fire the gaps rule');
   assert.equal(gapsAction.impact, 'medium');
   assert.equal(gapsAction.command, 'phdude gaps');
   assert.equal(gapsAction.dependents, 3);

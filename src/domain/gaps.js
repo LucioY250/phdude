@@ -124,7 +124,7 @@ function gapsForSources(snapshot) {
   for (const s of sources) {
     if (citedSourceIds.has(s.id)) continue;
     gaps.push({
-      kind: 'source-uncited',
+      kind: 'uncited-source',
       id: s.id,
       why: `${s.id} is not cited by any evidence`,
       command: `phdude add evidence --json '{"source":"${s.id}","excerpt":"…","strength":"moderate"}'`,

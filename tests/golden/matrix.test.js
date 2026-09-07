@@ -31,3 +31,12 @@ test('matrix golden: at least one row has no questions (cited but never used in 
   assert.ok(result.rows.some((r) => r.questions.length === 0));
   assert.ok(result.rows.some((r) => r.questions.length > 0));
 });
+
+test('matrix: --question with an id no research question carries is a usage error', async () => {
+  const store = new FsStore(WORKSPACE);
+  await assert.rejects(matrix({ store }, { question: 'RQ-99' }), {
+    code: 'USAGE',
+    message: 'not found: RQ-99',
+    hint: 'run phdude knowledge list --type question',
+  });
+});

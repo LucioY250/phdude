@@ -1,5 +1,6 @@
 import { PhdudeError } from '../domain/errors.js';
 import { trace as traceGraph } from '../domain/lineage.js';
+import { KNOWLEDGE_STATES } from '../domain/states.js';
 import { loadSnapshot } from './snapshot.js';
 
 const COLLECTION_BY_TYPE = {
@@ -37,6 +38,21 @@ function byId(a, b) {
  * @returns {Promise<object[]>}
  */
 export async function list({ store }, { type, state, query } = {}) {
+  if (type !== undefined && COLLECTION_BY_TYPE[type] === undefined) {
+    throw new PhdudeError(
+      'USAGE',
+      `unknown type: ${type}`,
+      `valid types: ${Object.keys(COLLECTION_BY_TYPE).join(', ')}`,
+    );
+  }
+  if (state !== undefined && !KNOWLEDGE_STATES.includes(state)) {
+    throw new PhdudeError(
+      'USAGE',
+      `unknown state: ${state}`,
+      `valid states: ${KNOWLEDGE_STATES.join(', ')}`,
+    );
+  }
+
   const snapshot = await loadSnapshot(store);
   let objs = type
     ? (snapshot[COLLECTION_BY_TYPE[type]] ?? [])

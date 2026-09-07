@@ -33,6 +33,6 @@ LOW (2):
   - [artifact-unmined] ART-d93aa9cdea
     Why: ART-d93aa9cdea (role: notes) is not referenced by any source, fact, or evidence
     Command: phdude add fact --json '{"key":"…","value":"…","from":{"artifact":"ART-d93aa9cdea"}}'
-  - [source-uncited] SRC-8295946d20
+  - [uncited-source] SRC-8295946d20
     Why: SRC-8295946d20 is not cited by any evidence
     Command: phdude add evidence --json '{"source":"SRC-8295946d20","excerpt":"…","strength":"moderate"}'

@@ -93,7 +93,7 @@ high → medium → low. Work it in that order:
    source the workspace does not have (e.g. a `question-without-claims` gap with nothing in the
    literature yet), say so plainly and describe what the researcher should look for — a method,
    a population, a date range — instead of fabricating a citation to make the gap disappear.
-4. A `source-uncited` or `artifact-unmined` gap is often fine to leave open for a while (low
+4. An `uncited-source` or `artifact-unmined` gap is often fine to leave open for a while (low
    severity) — note it, do not treat it as urgent.
 
 ### Reporting to the researcher

@@ -35,13 +35,16 @@ export default async function addCommand(ctx) {
   }
 
   const input = await readInput(ctx);
-  const { obj, created } = await addEntity(
+  const { obj, created, updated } = await addEntity(
     { store: deps.store, clock: deps.clock, actor: deps.actor },
     type,
     input,
   );
 
-  const verb = created ? 'Added' : 'Unchanged';
-  const state = obj.state ? ` (${obj.state})` : '';
-  return { text: `${verb} ${obj.id}${state}\n`, json: obj };
+  if (created) {
+    const state = obj.state ? ` (${obj.state})` : '';
+    return { text: `Added ${obj.id}${state}\n`, json: obj };
+  }
+  const text = updated ? `Updated ${obj.id} role → ${obj.role}\n` : `Unchanged ${obj.id}\n`;
+  return { text, json: obj };
 }

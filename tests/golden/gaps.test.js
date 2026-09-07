@@ -41,6 +41,6 @@ test('gaps golden: every gap kind appears on the example', async () => {
     'question-only-candidates',
     'question-without-claims',
     'question-without-method',
-    'source-uncited',
+    'uncited-source',
   ]);
 });

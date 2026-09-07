@@ -148,11 +148,12 @@ test('artifact-role updates the role of an existing artifact and appends one eve
   });
   await deps.store.writeEntity(artifact);
 
-  const { obj, created } = await addEntity(deps, 'artifact-role', {
+  const { obj, created, updated } = await addEntity(deps, 'artifact-role', {
     id: artifact.id,
     role: 'paper',
   });
   assert.equal(created, false);
+  assert.equal(updated, true);
   assert.equal(obj.role, 'paper');
   assert.equal((await deps.store.readEntity(artifact.id)).role, 'paper');
 
@@ -160,6 +161,10 @@ test('artifact-role updates the role of an existing artifact and appends one eve
   assert.equal(events.length, 1);
   assert.equal(events[0].summary, 'artifact role set to paper');
   assert.deepEqual(events[0].ids, [artifact.id]);
+
+  const again = await addEntity(deps, 'artifact-role', { id: artifact.id, role: 'paper' });
+  assert.equal(again.updated, false, 'setting the role it already has changes nothing');
+  assert.equal((await deps.store.readEvents()).length, 1, 'a no-op records no event');
 });
 
 test('artifact-role rejects an invalid role', async () => {
@@ -412,4 +417,23 @@ test('trace: the traced object comes back with it, so provenance can be reported
   assert.equal(traced.obj.id, evidence.id);
   assert.equal(traced.obj.provenance.method, 'agent-extraction');
   assert.equal((await trace(deps, 'CLAIM-0000000000')).obj, null);
+});
+
+test('knowledge list: an unknown type or state is a usage error, not an empty list', async () => {
+  const deps = makeDeps(await newRoot());
+
+  await assert.rejects(list(deps, { type: 'bogus' }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'USAGE');
+    assert.equal(err.message, 'unknown type: bogus');
+    assert.match(err.hint, /^valid types: artifact, source, claim,/);
+    return true;
+  });
+
+  await assert.rejects(list(deps, { state: 'bogus' }), (err) => {
+    assert.equal(err.code, 'USAGE');
+    assert.equal(err.message, 'unknown state: bogus');
+    assert.equal(err.hint, 'valid states: canonical, supported, candidate, disputed, rejected');
+    return true;
+  });
 });

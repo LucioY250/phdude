@@ -20,6 +20,16 @@ export async function matrix({ store }, { format = 'md', question } = {}) {
   }
 
   const snapshot = await loadSnapshot(store);
+  // An unknown id would filter to an empty table and exit 0, which reads as "no source
+  // addresses this question" - the same misreading the strict flag table exists to prevent.
+  if (question !== undefined && !snapshot.questions.some((q) => q.id === question)) {
+    throw new PhdudeError(
+      'USAGE',
+      `not found: ${question}`,
+      'run phdude knowledge list --type question',
+    );
+  }
+
   const keys = assignBibkeys(snapshot.sources);
   const rows = buildMatrix(snapshot, { keys, question });
   return { rows, format };

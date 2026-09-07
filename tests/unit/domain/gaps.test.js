@@ -258,20 +258,20 @@ test('findGaps: hypothesis-untested does not fire once a claim addresses one of 
   assert.ok(!gaps.some((g) => g.kind === 'hypothesis-untested'));
 });
 
-test('findGaps: source-uncited fires when no evidence cites the source id directly (low)', () => {
+test('findGaps: uncited-source fires when no evidence cites the source id directly (low)', () => {
   const s = source('SRC-a');
   const gaps = findGaps(snapshot({ sources: [s] }), []);
-  const gap = gaps.find((g) => g.kind === 'source-uncited');
+  const gap = gaps.find((g) => g.kind === 'uncited-source');
   assert.ok(gap);
   assert.equal(gap.id, 'SRC-a');
   assert.equal(gap.severity, 'low');
 });
 
-test('findGaps: source-uncited does not fire once evidence cites the source id directly', () => {
+test('findGaps: uncited-source does not fire once evidence cites the source id directly', () => {
   const s = source('SRC-a');
   const ev = evidence('EVID-a', 'SRC-a');
   const gaps = findGaps(snapshot({ sources: [s], evidence: [ev] }), []);
-  assert.ok(!gaps.some((g) => g.kind === 'source-uncited'));
+  assert.ok(!gaps.some((g) => g.kind === 'uncited-source'));
 });
 
 test('findGaps: artifact-unmined fires for a classified artifact referenced by nothing (low)', () => {

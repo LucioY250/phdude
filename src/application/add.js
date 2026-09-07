@@ -138,6 +138,8 @@ async function addArtifactRole({ store, clock, actor }, { id, role }) {
   if (!existing) {
     throw new PhdudeError('VALIDATION', `unknown reference ${id}`, 'run phdude knowledge list');
   }
+  if (existing.role === role) return { obj: existing, created: false, updated: false };
+
   const updated = { ...existing, role };
   await store.writeEntity(updated);
   await store.appendEvent({
@@ -147,14 +149,15 @@ async function addArtifactRole({ store, clock, actor }, { id, role }) {
     ids: [id],
     summary: `artifact role set to ${role}`,
   });
-  return { obj: updated, created: false };
+  return { obj: updated, created: false, updated: true };
 }
 
 /**
  * @param {{store: object, clock: () => string, actor: object}} deps
  * @param {string} type
  * @param {object} input
- * @returns {Promise<{obj: object, created: boolean}>}
+ * @returns {Promise<{obj: object, created: boolean, updated?: boolean}>} `updated` is reported
+ *   by `artifact-role`, the one type that changes an object instead of creating one
  */
 export async function addEntity({ store, clock, actor }, type, input) {
   assertUpToDate(await store.readProject());

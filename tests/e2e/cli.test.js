@@ -546,6 +546,27 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.match(second.stdout, /Workspace is up to date \(2\)/);
 });
 
+test('e2e: add artifact-role reports the update in text mode', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-role-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Role thesis', '--no-git']);
+  await cp(FIXTURES_DIR, join(ws, 'sources'), { recursive: true });
+  const ingested = await runJson(ws, ['ingest']);
+  const artifact = ingested.artifacts.find((a) => a.kind === 'md');
+
+  // --file, not --json: `--json '<obj>'` also turns on JSON output, so the text verb below is
+  // only ever seen through the file form.
+  const payload = join(ws, 'role.json');
+  await writeFile(payload, JSON.stringify({ id: artifact.id, role: 'paper' }));
+
+  const updated = await run(ws, ['add', 'artifact-role', '--file', payload]);
+  assert.equal(updated.stdout, `Updated ${artifact.id} role → paper\n`);
+
+  const unchanged = await run(ws, ['add', 'artifact-role', '--file', payload]);
+  assert.equal(unchanged.stdout, `Unchanged ${artifact.id}\n`);
+});
+
 test('e2e: a workspace newer than this phdude refuses writes and doctor says so', async (t) => {
   const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-newer-'));
   t.after(() => rm(ws, { recursive: true, force: true }));
@@ -1025,8 +1046,21 @@ test('e2e: matrix (md/csv/--question) and gaps (text/--json) shapes', async (t) 
 
   const filtered = await runJson(ws, ['matrix', '--question', rq.id]);
   assert.equal(filtered.rows.length, 1);
-  const filteredOut = await runJson(ws, ['matrix', '--question', 'RQ-999']);
-  assert.equal(filteredOut.rows.length, 0);
+
+  const unknownQuestion = await phdude(ws, ['matrix', '--question', 'RQ-999', ...ACTOR]);
+  assert.equal(unknownQuestion.code, 1);
+  assert.match(unknownQuestion.stderr, /not found: RQ-999/);
+  assert.match(unknownQuestion.stderr, /phdude knowledge list --type question/);
+
+  const unknownType = await phdude(ws, ['knowledge', 'list', '--type', 'bogus', ...ACTOR]);
+  assert.equal(unknownType.code, 1);
+  assert.match(unknownType.stderr, /unknown type: bogus/);
+  assert.match(unknownType.stderr, /valid types: /);
+
+  const unknownState = await phdude(ws, ['knowledge', 'list', '--state', 'bogus', ...ACTOR]);
+  assert.equal(unknownState.code, 1);
+  assert.match(unknownState.stderr, /unknown state: bogus/);
+  assert.match(unknownState.stderr, /valid states: /);
 
   const badFormat = await phdude(ws, ['matrix', '--format', 'xml', ...ACTOR]);
   assert.equal(badFormat.code, 1);
