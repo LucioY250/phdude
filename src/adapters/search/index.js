@@ -1,9 +1,18 @@
 import { PhdudeError } from '../../domain/errors.js';
+import { arxiv } from './arxiv.js';
 import { crossref } from './crossref.js';
 import { openalex } from './openalex.js';
+import { pubmed } from './pubmed.js';
+import { semanticScholar } from './semantic-scholar.js';
 
 /** Every provider this build can search. The policy's `providers:` list names these. */
-export const PROVIDER_FACTORIES = { openalex, crossref };
+export const PROVIDER_FACTORIES = {
+  openalex,
+  crossref,
+  arxiv,
+  'semantic-scholar': semanticScholar,
+  pubmed,
+};
 
 /**
  * Builds the providers a search will run, in the order the workspace asked for them.

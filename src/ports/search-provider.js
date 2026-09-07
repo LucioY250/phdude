@@ -20,6 +20,8 @@
  * @typedef {object} SearchProvider
  * @property {string} name
  * @property {string} [requiresKey] - the environment variable holding this provider's API key
+ * @property {boolean} [filtersDateClientSide] - true when the provider has no server-side date
+ *   filter and applies `from` itself after fetching (see `searchProviderContract`)
  * @property {(query: string, opts: {from?: number|null, limit?: number,
  *   signal?: AbortSignal}) => Promise<Candidate[]>} search
  */
@@ -63,12 +65,13 @@ export function searchProviderContract(test, assert, makeProvider, fixtures) {
     const fetch = fakeFetch(routes);
     return { fetch, provider: makeProvider({ fetch, env }) };
   };
-  const name = makeProvider({
+  const probe = makeProvider({
     fetch: () => {
       throw new Error('the contract suite never calls the network');
     },
     env,
-  }).name;
+  });
+  const name = probe.name;
 
   test(`${name}: a successful response maps into well-shaped candidates`, async () => {
     const { provider } = build(fixtures.success.routes);
@@ -120,15 +123,27 @@ export function searchProviderContract(test, assert, makeProvider, fixtures) {
     assert.ok(results.length <= 1, `expected at most 1 candidate, got ${results.length}`);
   });
 
-  if (fixtures.success.expectFromInUrl) {
-    test(`${name}: forwards the from filter in the request URL`, async () => {
+  if (fixtures.success.expectFromInUrl || probe.filtersDateClientSide) {
+    test(`${name}: honours the from filter`, async () => {
       const { fetch, provider } = build(fixtures.success.routes);
-      await provider.search('open science', { from: 2021, limit: 3 });
-      const urls = fetch.calls.map((c) => c.url);
-      assert.ok(
-        urls.some((u) => decodeURIComponent(u).includes(fixtures.success.expectFromInUrl)),
-        `no request carried ${fixtures.success.expectFromInUrl}: ${urls.join(' ')}`,
-      );
+      const results = await provider.search('open science', { from: 2021, limit: 3 });
+      if (provider.filtersDateClientSide) {
+        // No server-side date filter to forward: the provider filters its own response, so the
+        // contract checks the results instead of the request URL.
+        assert.ok(results.length > 0, 'the client-side filter still returns results');
+        for (const candidate of results) {
+          assert.ok(
+            candidate.year === null || candidate.year >= 2021,
+            `expected every candidate at or after 2021, got ${candidate.year}`,
+          );
+        }
+      } else {
+        const urls = fetch.calls.map((c) => c.url);
+        assert.ok(
+          urls.some((u) => decodeURIComponent(u).includes(fixtures.success.expectFromInUrl)),
+          `no request carried ${fixtures.success.expectFromInUrl}: ${urls.join(' ')}`,
+        );
+      }
     });
   }
 
@@ -141,7 +156,15 @@ export function searchProviderContract(test, assert, makeProvider, fixtures) {
     const { fetch, provider } = build(fixtures.rateLimited.routes);
     const results = await provider.search('open science', { limit: 3 });
     assert.ok(results.length > 0, 'the retry returns the successful response');
-    assert.equal(fetch.calls.length, 2, 'exactly one retry');
+    // A single-request provider makes exactly two calls, both to the same URL; a multi-step
+    // provider (e.g. an esearch/esummary pair) makes more, but exactly one of its URLs should
+    // have been retried.
+    const callsPerUrl = new Map();
+    for (const call of fetch.calls) callsPerUrl.set(call.url, (callsPerUrl.get(call.url) ?? 0) + 1);
+    assert.ok(
+      [...callsPerUrl.values()].some((count) => count === 2),
+      `expected exactly one retried request, got ${JSON.stringify([...callsPerUrl.entries()])}`,
+    );
   });
 
   test(`${name}: a server error becomes a typed error naming the provider`, async () => {

@@ -457,9 +457,18 @@ an up-to-date workspace prints `Workspace is up to date (2)` and records no even
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
-that version is `(current)`, `(needs migration → 2)` or `(newer than this phdude)`, the cache
+that version is `(current)`, `(needs migration → 2)` or `(newer than this phdude)`, whether
+network access is enabled and the configured search providers, the cache
 entry count, the discoverable packs and the schema
 versions, plus warnings for anything missing. It is diagnostic only and never writes.
+
+The `network:` and `providers:` lines read `.phdude/research-policy.yaml` without calling
+anything: `network` is `enabled` only when that file sets `network.enabled: true`, and
+`providers` lists the workspace's `providers:` array in order (or the default `openalex,
+crossref, arxiv` when the file has none). This is the workspace's *active* list, not every
+provider PhDude can search — `openalex`, `crossref`, `arxiv`, `semantic-scholar` and `pubmed`
+are all registered in `src/adapters/search/index.js` and can be added to `providers:` to enable
+them. See [SearchProvider](extending.md#searchprovider).
 
 It also lists every discoverable skill (core, applied packs, and the workspace's own
 `.phdude/skills/`) with its source, declared network and workspace permissions, and any loader

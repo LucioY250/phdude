@@ -1,0 +1,57 @@
+{
+  "total": 3,
+  "offset": 0,
+  "data": [
+    {
+      "paperId": "649def34f8be52c8b66281af98ae884c09aef38",
+      "title": "Open Science Practices in Applied Research",
+      "abstract": "Open science practices are spreading across applied fields.",
+      "venue": "Journal of Research Practice",
+      "year": 2021,
+      "url": "https://www.semanticscholar.org/paper/649def34f8be52c8b66281af98ae884c09aef38",
+      "citationCount": 128,
+      "isOpenAccess": true,
+      "publicationTypes": ["JournalArticle"],
+      "externalIds": {
+        "DOI": "10.1109/ICCV48922.2021.00986",
+        "CorpusId": 245812345
+      },
+      "authors": [
+        { "authorId": "2058679234", "name": "Ada Lovelace" },
+        { "authorId": "2058679235", "name": "Charles Babbage" }
+      ]
+    },
+    {
+      "paperId": "7150a2b3f4c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2",
+      "title": "A Preprint on Reproducible Pipelines",
+      "abstract": null,
+      "venue": null,
+      "year": 2023,
+      "url": "https://www.semanticscholar.org/paper/7150a2b3f4c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2",
+      "citationCount": 4,
+      "isOpenAccess": true,
+      "publicationTypes": ["Conference"],
+      "externalIds": {
+        "ArXiv": "2304.09999",
+        "CorpusId": 258123456
+      },
+      "authors": [{ "authorId": "2061234567", "name": "Grace Hopper" }]
+    },
+    {
+      "paperId": "aabbccdd1122334455667788990011223344556",
+      "title": "Measurement Error in Survey Chapters",
+      "abstract": "A survey of measurement error correction methods in social science chapters.",
+      "venue": "Handbook of Survey Methods",
+      "year": 2022,
+      "url": "https://www.semanticscholar.org/paper/aabbccdd1122334455667788990011223344556",
+      "citationCount": 0,
+      "isOpenAccess": false,
+      "publicationTypes": ["BookSection"],
+      "externalIds": {
+        "DOI": "10.1007/978-3-030-12345-6_7",
+        "CorpusId": 251987654
+      },
+      "authors": [{ "authorId": "2099887766", "name": "Rosalind Franklin" }]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "header": { "type": "esummary", "version": "0.3" },
+  "result": {
+    "uids": ["36000001", "36000002", "36000003"],
+    "36000001": {
+      "uid": "36000001",
+      "title": "Open Science Practices in Applied Research",
+      "authors": [
+        { "name": "Lovelace A", "authtype": "Author" },
+        { "name": "Babbage C", "authtype": "Author" }
+      ],
+      "pubdate": "2021 Oct",
+      "fulljournalname": "Journal of Research Practice",
+      "articleids": [
+        { "idtype": "pubmed", "idtypen": 1, "value": "36000001" },
+        { "idtype": "doi", "idtypen": 3, "value": "10.1109/ICCV48922.2021.00986" }
+      ]
+    },
+    "36000002": {
+      "uid": "36000002",
+      "title": "A Preprint on Reproducible Pipelines",
+      "authors": [{ "name": "Hopper G", "authtype": "Author" }],
+      "pubdate": "2023 Apr",
+      "fulljournalname": "",
+      "articleids": [{ "idtype": "pubmed", "idtypen": 1, "value": "36000002" }]
+    },
+    "36000003": {
+      "uid": "36000003",
+      "title": "Measurement Error in Survey Chapters",
+      "authors": [{ "name": "Franklin R", "authtype": "Author" }],
+      "pubdate": "2022",
+      "fulljournalname": "Handbook of Survey Methods",
+      "articleids": [
+        { "idtype": "pubmed", "idtypen": 1, "value": "36000003" },
+        { "idtype": "doi", "idtypen": 3, "value": "10.1007/978-3-030-12345-6_7" }
+      ]
+    }
+  }
+}

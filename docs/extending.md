@@ -245,6 +245,67 @@ agentHostContract(test, assert, { mkdtemp: mkroot, readFile }, myHost);
 
 Then register the host in `src/adapters/cli/commands/init.js` so `--agents` accepts its name.
 
+### SearchProvider
+
+```js
+{
+  name: 'my-provider',
+  requiresKey: 'PHDUDE_MY_PROVIDER_KEY',      // optional: the env var holding its API key
+  filtersDateClientSide: true,                // optional: see below
+  async search(query, { from, limit, signal }) => Candidate[],
+}
+```
+
+A `Candidate` carries exactly `provider, external_id, title, authors, year, venue, doi, url,
+abstract, type, open_access, cited_by` — the full typedef is in `src/ports/search-provider.js`.
+A provider drops a work it cannot title or address (no title, no id) rather than emitting a
+half-mapped candidate; DOIs are normalized to a lowercase bare `10.xxxx/...` string with
+`normalizeDoi` (`src/domain/normalize.js`), never the resolver URL.
+
+Every request goes through `fetchWithPolicy` (`src/adapters/search/http.js`): a 15 s
+`AbortController` timeout merged with the caller's signal, exactly one retry on 429/503 with a
+backoff capped at 2 s, a `phdude/<version>` User-Agent, and typed errors naming the provider — a
+status the caller is responsible for (a non-429 4xx) is `VALIDATION`, everything else the
+provider's own fault is `TOOL_MISSING`. `fetch` and `env` arrive through `deps`, never imported,
+so tests never touch the network and a provider's API key never has to be read from
+`process.env` directly.
+
+```js
+import { searchProviderContract } from '../../src/ports/search-provider.js';
+import { fakeFetch } from '../support/fake-fetch.js';
+
+searchProviderContract(
+  test,
+  assert,
+  ({ fetch, env }) => myProvider({ fetch, env, version: '0.3.0' }),
+  {
+    fakeFetch,
+    success: { routes: [...], expectMinResults: 3, expectFromInUrl: '...' },
+    empty: { routes: [...] },
+    rateLimited: { routes: [...] },
+    serverError: { routes: [...] },
+    malformed: { routes: [...] },
+  },
+);
+```
+
+The suite checks the normalized candidate shape, that `limit` and `from` are honoured, an empty
+result set comes back as `[]`, a 429 retries exactly once and then succeeds, a 5xx and a
+malformed body both become typed errors naming the provider, and an already-aborted signal
+rejects. A provider that calls more than one endpoint per search (PubMed's esearch/esummary
+pair, for instance) can hand the suite routes for each endpoint; the retry check looks for one
+URL that was called exactly twice rather than assuming the whole search is one request.
+
+A provider with no server-side date filter — arXiv is the one that ships this way — sets
+`filtersDateClientSide: true` on the object it returns instead of `expectFromInUrl` on its
+fixtures. The contract then checks the *results* (every candidate at or after `from`, applied by
+the provider itself after fetching) rather than the request URL.
+
+Register the adapter in `src/adapters/search/index.js` (`PROVIDER_FACTORIES`), keyed by the name
+a workspace's `providers:` list in `.phdude/research-policy.yaml` would use — that key is also
+the provider's own `name` and the `provider` field on every candidate it returns, so all three
+must agree.
+
 ### Store
 
 `src/ports/store.js` documents the storage interface used by every use case. `FsStore` is the
