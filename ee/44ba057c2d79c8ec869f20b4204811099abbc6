@@ -1,0 +1,65 @@
+tests/contracts/search-provider.test.js
+  s_946fc7502759d8::t_a2ebf1a1237dfa 53-54,56-73,77-79
+  s_946fc7502759d8::t_779a1b015235ad 52,55,80-84,86-137
+  s_946fc7502759d8::t_6dbd238206db1b 85
+  s_946fc7502759d8::t_98e4c28c3bbfd5 74-76
+  s_946fc7502759d8::t_94521c6b6b93eb 5,8-9
+tests/fixtures/search/arxiv/malformed.txt
+  s_946fc7502759d8::t_1274218033b9a3 1
+tests/fixtures/search/semantic-scholar/malformed.txt
+  s_946fc7502759d8::t_c5b0cd4bc5f59a 1
+tests/fixtures/search/pubmed/esearch.json
+  s_946fc7502759d8::t_b0e772b80c63b9 1-9
+tests/fixtures/search/semantic-scholar/search.json
+  s_946fc7502759d8::t_8b23e159390b24 1-57
+tests/unit/adapters/search.test.js
+  s_946fc7502759d8::t_98e4c28c3bbfd5 376-380
+  s_946fc7502759d8::t_bf0e737e524c6b 278-375,381-544
+  s_946fc7502759d8::t_383cddc579df42 6,9-10
+src/adapters/search/pubmed.js
+  s_946fc7502759d8::t_71ace6c5d7e9cf 1-120
+src/adapters/search/semantic-scholar.js
+  s_946fc7502759d8::t_0f59a36d3772c4 1-89
+tests/fixtures/search/arxiv/empty.xml
+  s_946fc7502759d8::t_3480ea29a61c2e 1-10
+src/adapters/search/index.js
+  s_946fc7502759d8::t_0d276a03400a10 2,5-6,9-15
+tests/fixtures/search/arxiv/search.xml
+  s_946fc7502759d8::t_0a0a2098652666 1-60
+tests/fixtures/search/semantic-scholar/empty.json
+  s_946fc7502759d8::t_772757e1a92611 1-5
+tests/fixtures/search/pubmed/esearch-empty.json
+  s_946fc7502759d8::t_c267fcc1f407df 1-9
+src/adapters/search/arxiv.js
+  s_946fc7502759d8::t_49b927d8535b70 1-104
+tests/fixtures/search/pubmed/malformed.txt
+  s_946fc7502759d8::t_4a5c1f26bb950e 1
+docs/extending.md
+  s_946fc7502759d8::t_ddfa2c9fc75ea1 248-308
+src/ports/search-provider.js
+  s_946fc7502759d8::t_89a4d032a29556 23-24
+  s_946fc7502759d8::t_3668828af8dd00 159-167
+  s_946fc7502759d8::t_00e0dd794b8285 68,73-74
+  s_946fc7502759d8::t_e8b7d0ab8fac11 126-127,129-146
+tests/fixtures/search/pubmed/esummary.json
+  s_946fc7502759d8::t_71be95910a3237 1-39
+docs/cli.md
+  s_946fc7502759d8::t_6f8274d03dd9c8 460-461,465-471
+  s_946fc7502759d8::t_df3c75b9d10045 472
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ee44ba057c2d79c8ec869f20b4204811099abbc6",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
