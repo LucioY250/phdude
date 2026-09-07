@@ -333,14 +333,13 @@ const METRICS = [
 // Every metric both sides can supply, with the tolerance band expressed in the metric's own
 // units so a finding can name it. A metric whose band works out to zero - a relative tolerance
 // on a learned value of 0 - is not comparable and is skipped rather than always deviating.
-function comparisons(measured, learned, tolerances) {
+function comparisons(measured, learned) {
   const rows = [];
   for (const metric of METRICS) {
     const actual = measured?.[metric.stat];
     const expected = learned?.[metric.learned];
     if (typeof actual !== 'number' || typeof expected !== 'number') continue;
-    const allowed = tolerances?.[metric.tolerance] ?? DEFAULT_TOLERANCES[metric.tolerance];
-    if (typeof allowed !== 'number') continue;
+    const allowed = DEFAULT_TOLERANCES[metric.tolerance];
     const band = metric.relative ? round3(Math.abs(expected) * allowed) : allowed;
     if (!(band > 0)) continue;
     const deviation = round3(Math.abs(actual - expected));
@@ -372,7 +371,7 @@ function avoidedWords(text, profile) {
 
 /**
  * Pure. Compares a draft's descriptive statistics against the active voice profile's `learned`
- * baseline and reports deviations beyond `tolerances`, plus any use of a word listed in
+ * baseline and reports deviations beyond `DEFAULT_TOLERANCES`, plus any use of a word listed in
  * `terminology.avoid` - never a silent rewrite (PRD S30.2). `deviation` is always the absolute
  * difference in the metric's own units and `tolerance` is the band it was judged against, so a
  * caller can print "31.2 vs learned 18.4 ± 4.6" without knowing which metrics are relative.
@@ -380,12 +379,11 @@ function avoidedWords(text, profile) {
  *   measured over (the terminology check reads words, not numbers)
  * @param {object} profile - a `phdude.author-profile`; only `terminology.avoid` is read when it
  *   has no `learned` block
- * @param {object} [tolerances] - defaults to `DEFAULT_TOLERANCES`
  * @returns {object[]} findings, deviations first in metric order, then avoided words in the
  *   order they appear in the text
  */
-export function voiceDeviation(stats, profile, tolerances = DEFAULT_TOLERANCES) {
-  const outside = comparisons(stats, profile?.learned, tolerances)
+export function voiceDeviation(stats, profile) {
+  const outside = comparisons(stats, profile?.learned)
     .filter((row) => row.ratio > 1)
     .map((row) => ({
       kind: row.kind,
@@ -406,11 +404,10 @@ export function voiceDeviation(stats, profile, tolerances = DEFAULT_TOLERANCES) 
  * tolerance scores 0.
  * @param {object} stats - a `textstats.stats` result
  * @param {object} profile - a `phdude.author-profile`
- * @param {object} [tolerances]
  * @returns {number|null} null when nothing is comparable (no profile, or none learned yet)
  */
-export function voiceScore(stats, profile, tolerances = DEFAULT_TOLERANCES) {
-  const rows = comparisons(stats, profile?.learned, tolerances);
+export function voiceScore(stats, profile) {
+  const rows = comparisons(stats, profile?.learned);
   if (rows.length === 0) return null;
   const mean = rows.reduce((sum, row) => sum + row.ratio, 0) / rows.length;
   return Math.max(0, Math.min(100, Math.round(100 - 25 * mean)));

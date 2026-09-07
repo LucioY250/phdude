@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { voiceGate } from '../../../../src/domain/gates/voice.js';
 import { runGates } from '../../../../src/domain/gates/index.js';
+import { lint } from '../../../../src/domain/prose-lint.js';
 
 // A learned baseline of short, plain, third-person sentences with varied openings.
 const LEARNED = {
@@ -177,5 +178,15 @@ test('runGates carries the voice score out, and null when there is no profile', 
   assert.equal(
     typeof runGates(ON_VOICE, { ...ctx, voiceProfile: profile() }, {}).scores.authorVoice,
     'number',
+  );
+});
+
+test('gate-voice and the prose lint score the same draft identically', () => {
+  const active = profile();
+  const gated = voiceGate.run(ON_VOICE, { lang: 'en', voiceProfile: active });
+  assert.equal(typeof gated.scores.authorVoice, 'number');
+  assert.equal(
+    lint(ON_VOICE, { lang: 'en', profile: active }).scores.authorVoice,
+    gated.scores.authorVoice,
   );
 });

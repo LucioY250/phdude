@@ -57,8 +57,7 @@ export const voiceGate = {
 
   /**
    * @param {string} text - the section body
-   * @param {object} ctx - the gate context; `voiceProfile` is the active author profile,
-   *   `voiceTolerances` an optional override of the profile-comparison bands
+   * @param {object} ctx - the gate context; `voiceProfile` is the active author profile
    * @returns {{findings: object[], scores: {authorVoice: number|null}}} nothing at all, and a
    *   null score, when the workspace has recorded no voice
    */
@@ -68,11 +67,7 @@ export const voiceGate = {
 
     const source = String(text ?? '');
     const measured = stats(source, ctx?.lang);
-    const findings = voiceDeviation(
-      { ...measured, text: source },
-      profile,
-      ctx?.voiceTolerances,
-    ).map((finding) => ({
+    const findings = voiceDeviation({ ...measured, text: source }, profile).map((finding) => ({
       gate: NAME,
       severity: 'warn',
       line: typeof finding.index === 'number' ? lineAt(source, finding.index) : 1,
@@ -82,7 +77,7 @@ export const voiceGate = {
 
     return {
       findings: [...findings, ...missingPreservedTerms(source, profile, ctx ?? {})],
-      scores: { authorVoice: voiceScore(measured, profile, ctx?.voiceTolerances) },
+      scores: { authorVoice: voiceScore(measured, profile) },
     };
   },
 };

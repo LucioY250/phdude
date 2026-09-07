@@ -386,14 +386,15 @@ test('the default tolerances are the five metrics spec §3.4 gate 4 names', () =
   ]);
 });
 
-test('voiceDeviation: a caller may narrow the tolerances', () => {
-  const stats = { meanLen: 11 };
+test('every caller is judged against the same tolerance table', () => {
   const profile = { learned: { sentence_length_mean: 10 } };
-  assert.deepEqual(voiceDeviation(stats, profile), []);
+  assert.deepEqual(voiceDeviation({ meanLen: 11 }, profile), []);
   assert.deepEqual(
-    voiceDeviation(stats, profile, { ...DEFAULT_TOLERANCES, sentence_length: 0.05 }).map(
-      (f) => f.kind,
-    ),
+    voiceDeviation({ meanLen: 13 }, profile).map((f) => f.kind),
+    ['sentence-length'],
+  );
+  assert.deepEqual(
+    voiceDeviation({ meanLen: 13 }, profile, { sentence_length: 5 }).map((f) => f.kind),
     ['sentence-length'],
   );
 });
