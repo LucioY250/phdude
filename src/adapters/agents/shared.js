@@ -150,6 +150,11 @@ export const COMMAND_ROWS = [
     'manuscript init|list|show|status|submit|approve|reopen',
     'The manuscript: its sections, their status, submitting a draft through the writing gates, and the approval the researcher decides.',
   ],
+  [
+    'authors list|show|add|learn|consensus',
+    'Per-researcher voice profiles: tone, sentence style, and terminology, learned from ' +
+      'approved samples; consensus merges them for collaborative projects.',
+  ],
   ['packs list|detect|apply', 'List, recommend, or apply field/method research packs.'],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],

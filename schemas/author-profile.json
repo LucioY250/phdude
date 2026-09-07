@@ -1,0 +1,103 @@
+{
+  "$id": "phdude://author-profile",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": { "const": "phdude.author-profile" },
+    "version": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "name": { "type": "string" },
+    "email": { "type": "string" },
+    "language": { "type": "string" },
+    "tone": {
+      "type": "object",
+      "properties": {
+        "academic": { "type": "boolean" },
+        "assertiveness": { "enum": ["low", "moderate", "high"] },
+        "first_person": { "enum": ["never", "sparing", "natural"] }
+      },
+      "required": ["academic", "assertiveness", "first_person"],
+      "additionalProperties": false
+    },
+    "sentences": {
+      "type": "object",
+      "properties": {
+        "length": { "enum": ["short", "varied", "long"] },
+        "openings": { "enum": ["varied", "consistent"] }
+      },
+      "required": ["length", "openings"],
+      "additionalProperties": false
+    },
+    "paragraphs": {
+      "type": "object",
+      "properties": {
+        "density": { "enum": ["low", "medium", "high"] }
+      },
+      "required": ["density"],
+      "additionalProperties": false
+    },
+    "transitions": { "enum": ["minimal", "moderate", "frequent"] },
+    "terminology": {
+      "type": "object",
+      "properties": {
+        "preserve": { "type": "array", "items": { "type": "string" } },
+        "avoid": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["preserve", "avoid"],
+      "additionalProperties": false
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "approved": { "type": "boolean" }
+        },
+        "required": ["path", "approved"],
+        "additionalProperties": false
+      }
+    },
+    "learned": {
+      "type": "object",
+      "properties": {
+        "sentence_length_mean": { "type": "number" },
+        "sentence_length_sd": { "type": "number" },
+        "opening_diversity": { "type": "number" },
+        "transition_rate": { "type": "number" },
+        "first_person_rate": { "type": "number" },
+        "hedge_rate": { "type": "number" },
+        "paragraph_density": { "type": "number" },
+        "preserved_terms": { "type": "array", "items": { "type": "string" } },
+        "sample_count": { "type": "integer" },
+        "learned_at": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "sentence_length_mean",
+        "sentence_length_sd",
+        "opening_diversity",
+        "transition_rate",
+        "first_person_rate",
+        "hedge_rate",
+        "paragraph_density",
+        "preserved_terms",
+        "sample_count",
+        "learned_at"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "version",
+    "id",
+    "language",
+    "tone",
+    "sentences",
+    "paragraphs",
+    "transitions",
+    "terminology",
+    "samples"
+  ],
+  "additionalProperties": false
+}

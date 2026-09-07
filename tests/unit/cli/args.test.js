@@ -189,6 +189,32 @@ test('parseCli: --to is a plain string everywhere except link', () => {
   assert.deepEqual(idFirst.positionals, ['promote', 'FACT-0123456789']);
 });
 
+test('parseCli: authors learn --from takes several paths after one flag, like --affects', () => {
+  const cli = parseCli([
+    'authors',
+    'learn',
+    'researcher-a',
+    '--from',
+    'a.md',
+    'b.md',
+    '--approved',
+  ]);
+  assert.equal(cli.command, 'authors');
+  assert.deepEqual(cli.positionals, ['authors', 'learn', 'researcher-a']);
+  assert.deepEqual(cli.flags.from, ['a.md', 'b.md']);
+  assert.equal(cli.flags.approved, true);
+});
+
+test('parseCli: authors --from may be repeated and accepts the --from=<path> form', () => {
+  const cli = parseCli(['authors', 'learn', 'researcher-a', '--from=a.md', '--from', 'b.md']);
+  assert.deepEqual(cli.flags.from, ['a.md', 'b.md']);
+});
+
+test('parseCli: --from is a plain string everywhere except authors', () => {
+  const cli = parseCli(['research', 'note-taking apps', '--from', '2021']);
+  assert.equal(cli.flags.from, '2021');
+});
+
 test('parseCli: promote --to <state> <id> keeps the id as a positional', () => {
   const flagFirst = parseCli(['promote', '--to', 'supported', 'CLAIM-0123456789']);
   assert.equal(flagFirst.command, 'promote');

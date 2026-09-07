@@ -1,0 +1,38 @@
+{
+  "schema": "phdude.author-profile",
+  "version": 1,
+  "id": "researcher-a",
+  "name": "Ada Researcher",
+  "email": "ada@example.org",
+  "language": "en",
+  "tone": {
+    "academic": true,
+    "assertiveness": "moderate",
+    "first_person": "sparing"
+  },
+  "sentences": {
+    "length": "varied",
+    "openings": "varied"
+  },
+  "paragraphs": {
+    "density": "medium"
+  },
+  "transitions": "minimal",
+  "terminology": {
+    "preserve": ["internationalization capability", "decision process"],
+    "avoid": ["leverage", "robust", "cutting-edge"]
+  },
+  "samples": [{ "path": "authors/samples/researcher-a/chapter-2-approved.md", "approved": true }],
+  "learned": {
+    "sentence_length_mean": 18.5,
+    "sentence_length_sd": 4.25,
+    "opening_diversity": 0.8,
+    "transition_rate": 0.12,
+    "first_person_rate": 0.03,
+    "hedge_rate": 0.05,
+    "paragraph_density": 4.5,
+    "preserved_terms": ["adoption", "campuses", "recruitment"],
+    "sample_count": 2,
+    "learned_at": "2026-09-07T00:00:00Z"
+  }
+}

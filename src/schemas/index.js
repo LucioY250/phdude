@@ -30,6 +30,7 @@ export const SCHEMA_TYPES = [
   'decision',
   'manuscript',
   'section-report',
+  'author-profile',
   'pack',
   'skill',
   'event',
