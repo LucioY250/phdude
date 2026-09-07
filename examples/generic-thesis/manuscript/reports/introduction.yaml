@@ -14,7 +14,7 @@ gates:
     findings: 0
     blocked: false
   - gate: gate-voice
-    findings: 0
+    findings: 2
     blocked: false
   - gate: gate-meaning
     findings: 0
@@ -27,6 +27,7 @@ scores:
   evidenceAlignment: 100
   epistemicPrecision: 100
   structuralVariation: 100
+  authorVoice: 85
   conciseness: 100
-warnings: 0
+warnings: 2
 blocks: 0

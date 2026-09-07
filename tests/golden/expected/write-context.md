@@ -47,14 +47,14 @@ Cite only these keys. A key that resolves to nothing blocks the submit.
 Profile: researcher-a
 
 Learned from approved samples:
-- first_person_rate: 0.005
-- hedge_rate: 0.009
+- first_person_rate: 0.125
+- hedge_rate: 0.25
 - learned_at: 2026-09-01T00:01:02.000Z
-- opening_diversity: 0.875
-- paragraph_density: 2.667
+- opening_diversity: 1
+- paragraph_density: 2.67
 - sample_count: 1
-- sentence_length_mean: 27.125
-- sentence_length_sd: 9.993
+- sentence_length_mean: 26.88
+- sentence_length_sd: 9.89
 - transition_rate: 0
 
 Preserve: note-taking application, recruitment channel
