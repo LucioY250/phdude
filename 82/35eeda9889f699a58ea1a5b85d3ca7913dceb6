@@ -1,0 +1,82 @@
+tests/contracts/document-renderer.test.js
+  s_946fc7502759d8::t_c8a31ba115ddbf 1-49
+tests/fixtures/render/references.bib
+  s_946fc7502759d8::t_8bd98bb6e7316e 1-23
+src/adapters/render/shared.js
+  s_946fc7502759d8::t_00fe898d802421 1-117
+src/adapters/render/latex.js
+  s_946fc7502759d8::t_38264c86e6e3e2 34,55,61-62,86,93,130
+  s_946fc7502759d8::t_9bacd129bcb2fd 137
+  s_946fc7502759d8::t_2abaed4770b1e6 1-18,20-33,35-54,56-60,63-85,87-92,94-129,131-136,138-148
+  s_946fc7502759d8::t_a729ac39422fe9 19
+src/adapters/render/index.js
+  s_946fc7502759d8::t_eec4ee87e5061c 1-35
+tests/fixtures/render/sample.md
+  s_946fc7502759d8::t_8bd98bb6e7316e 1-9
+docs/adr/0010-renderer-adapters-and-reproducible-builds.md
+  s_946fc7502759d8::t_99df465c18b4a7 1-87
+src/ports/document-renderer.js
+  s_946fc7502759d8::t_dc0f49abd9165d 1-36,38-169,176-178,184-190
+  s_946fc7502759d8::t_5586943237e4ce 37
+  s_946fc7502759d8::t_bbb5a21b1b5e4a 170-175
+  s_946fc7502759d8::t_9bacd129bcb2fd 179-183
+tests/unit/domain/citations-md.test.js
+  s_946fc7502759d8::t_4ce61604849601 1-43,48-149
+  s_946fc7502759d8::t_9bacd129bcb2fd 44-47
+tests/unit/application/doctor.test.js
+  s_946fc7502759d8::t_8bebc1ff4f843a 28,154-169,174-197,201-222,224
+  s_946fc7502759d8::t_9bacd129bcb2fd 170-173,198-200
+  s_946fc7502759d8::t_ad3b699fd55bd4 223
+src/domain/bibtex.js
+  s_946fc7502759d8::t_4ec3d64ae1e57e 88-95
+  s_946fc7502759d8::t_dba4cff484bfe0 137-252
+src/adapters/render/pandoc.js
+  s_946fc7502759d8::t_8bfcf7b2a032ef 1-133
+tests/unit/domain/bibtex.test.js
+  s_946fc7502759d8::t_7b0e5c7344a0a1 3,225-322
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_46dcb910b9f6f5 66-75,99
+src/application/doctor.js
+  s_946fc7502759d8::t_a30b63bfc5dd52 22-24,27-28,35,75-104,153
+docs/extending.md
+  s_946fc7502759d8::t_7d66919af16d93 492-560
+docs/cli.md
+  s_946fc7502759d8::t_5586943237e4ce 1341,1372-1379,1381-1382,1384-1387
+  s_946fc7502759d8::t_7761edfc69eacd 1380,1383,1388
+.github/workflows/ci.yml
+  s_946fc7502759d8::t_d8851ccec36bfd 13-15
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_46dcb910b9f6f5 1,12,146
+tests/fixtures/render/cited.md
+  s_946fc7502759d8::t_8bd98bb6e7316e 1-7
+src/adapters/render/markdown.js
+  s_946fc7502759d8::t_1a39bbddd51f81 1-65,70-82
+  s_946fc7502759d8::t_9bacd129bcb2fd 66-69
+src/domain/citations-md.js
+  s_946fc7502759d8::t_9bacd129bcb2fd 100-101
+  s_946fc7502759d8::t_9ba0337e2bf56b 1-53,55-99,102-155
+  s_946fc7502759d8::t_5586943237e4ce 54
+tests/unit/adapters/render.test.js
+  s_946fc7502759d8::t_0284a67536f660 1-329,331-368,377-393,399-407,414-423,425-438,440-449,455-463,468-473,478-493
+  s_946fc7502759d8::t_811664545b324d 464-467
+  s_946fc7502759d8::t_9bacd129bcb2fd 330,394-398,408-413,450-452
+  s_946fc7502759d8::t_38ab82503e8eb8 424,453-454,474-477
+  s_946fc7502759d8::t_5586943237e4ce 439
+  s_946fc7502759d8::t_26410586c07206 369-376
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "8235eeda9889f699a58ea1a5b85d3ca7913dceb6",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
