@@ -1,0 +1,66 @@
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_6dd106dd81e969 13-15
+  s_946fc7502759d8::t_16fb6ec0894be5 11-12
+examples/generic-thesis/knowledge/facts/FACT-2bc4462edb.yaml
+  s_946fc7502759d8::t_16fb6ec0894be5 1-15
+defaults/workspace.gitignore
+  s_946fc7502759d8::t_b822a1114a15cb 4-5
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_96c20d43914b4c 23,26
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_8e687a2b8aded6 85-99,105-126
+  s_946fc7502759d8::t_a1730eb97e242b 100-104
+src/domain/next.js
+  s_946fc7502759d8::t_6e8b95d566ec76 39,43-45,50
+  s_946fc7502759d8::t_a1730eb97e242b 46-49
+  s_946fc7502759d8::t_c9f3ac2951a423 208-218
+  s_946fc7502759d8::t_fbc47eb3b716a9 252
+  s_946fc7502759d8::t_29f1aaa272900d 5
+  s_946fc7502759d8::t_af91647da37184 140
+  s_946fc7502759d8::t_4b867217112c44 203
+  s_946fc7502759d8::t_aa2d19dc8172ca 133
+  s_946fc7502759d8::t_78148f0cc5a312 103,113-114
+scripts/make-example.mjs
+  s_946fc7502759d8::t_dcdaab3ec546eb 162-164,177-182,190,192-194
+examples/generic-thesis/decisions/DEC-da1a3616b6.yaml
+  s_946fc7502759d8::t_6dd106dd81e969 3,9-10,18-20
+examples/generic-thesis/knowledge/facts/FACT-54af7fa906.yaml
+  s_946fc7502759d8::t_6dd106dd81e969 1-15
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_1c7de1e6faeb47 112-116
+  s_946fc7502759d8::t_c0557ab89801be 199
+  s_946fc7502759d8::t_35873cf25019e6 200,202-251,256-286,291-298
+  s_946fc7502759d8::t_a1730eb97e242b 252-255,287-290
+  s_946fc7502759d8::t_30777c5a1b0685 201
+tests/golden/next.test.js
+  s_946fc7502759d8::t_49c4b9aa299737 28,34-37
+examples/generic-thesis/knowledge/facts/FACT-f62e1a2f34.yaml
+  s_946fc7502759d8::t_16fb6ec0894be5 1-15
+examples/generic-thesis/.gitignore
+  s_946fc7502759d8::t_16fb6ec0894be5 4-5
+src/domain/entities.js
+  s_946fc7502759d8::t_325c35bf605e4b 163
+tests/golden/expected/next.txt
+  s_946fc7502759d8::t_96c20d43914b4c 6-7,13,18
+examples/generic-thesis/knowledge/facts/FACT-270dc9059c.yaml
+  s_946fc7502759d8::t_16fb6ec0894be5 1-3,5-14
+  s_946fc7502759d8::t_6dd106dd81e969 4
+src/application/status.js
+  s_946fc7502759d8::t_7b29897f5e4a36 51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "4267fc8e83b676c651aa8716002bcc85debf4ddd",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
