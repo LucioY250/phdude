@@ -16,6 +16,7 @@ import { stableStringify } from '../domain/normalize.js';
 import { assertExecutionAllowed, executionTimeoutMs, runtimeCommand } from '../domain/policy.js';
 import { validateResultsJson } from '../schemas/index.js';
 import { assertUpToDate } from './guard.js';
+import { assertPathsInsideRoot } from './paths.js';
 
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
 
@@ -31,6 +32,16 @@ const RUNTIMES = ['node', 'python3', 'Rscript', 'other'];
 const DECLARED = ['runtime', 'script', 'args', 'inputs', 'outputs', 'params'];
 
 const CONTRACT_HINT = '{ "results": [ { "key", "summary", "values", "unit"? } ] }';
+
+const CONFINED_HINT =
+  'an analysis runs and writes inside the workspace, not through a link that leaves it';
+
+// Lexical confinement says `analysis/evil.mjs` is under `analysis/`; it cannot say what the name
+// points at. The declaration is checked here and again at run time, because a link planted after
+// the declaration would otherwise be the one PhDude spawns.
+function declaredPaths(analysis) {
+  return [analysis.outputs.results, ...analysis.outputs.files];
+}
 
 function assertKnownFields(spec) {
   const unknown = Object.keys(spec ?? {})
@@ -109,12 +120,13 @@ function declaredOutputs(outputs, name) {
  * Nothing runs here. The name is the identity, so declaring the same name again corrects the
  * declaration in place - a mistyped script path is fixed with the same command that made it -
  * and the record keeps its creation time, its state and every run it has already recorded.
- * @param {{store: object, clock: () => string, actor: object}} deps
+ * @param {{store: object, clock: () => string, actor: object,
+ *   realpath: (path: string) => Promise<string>}} deps
  * @param {{name: string, runtime?: string, script: string, args?: string[], inputs?: string[],
  *   outputs?: {results?: string, files?: string[]}, params?: object}} spec
  * @returns {Promise<{analysis: object, created: boolean, changed: boolean}>}
  */
-export async function add({ store, clock, actor }, spec) {
+export async function add({ store, clock, actor, realpath }, spec) {
   assertUpToDate(await store.readProject());
   assertKnownFields(spec);
 
@@ -141,6 +153,13 @@ export async function add({ store, clock, actor }, spec) {
     actor,
     created: clock(),
   });
+
+  await assertPathsInsideRoot(
+    { realpath },
+    store.root,
+    [declared.script, ...declaredPaths(declared)],
+    CONFINED_HINT,
+  );
 
   const recorded = await store.readEntity(declared.id);
   if (recorded) {
@@ -291,13 +310,14 @@ async function recordFailure(deps, analysis, run, summary) {
  * output would otherwise count as the successful run that makes the analysis "up to date".
  * @param {{store: object, clock: () => string, actor: object,
  *   runner: import('../ports/analysis-runner.js').AnalysisRunner,
- *   readBytes: (rel: string) => Promise<Buffer>}} deps
+ *   readBytes: (rel: string) => Promise<Buffer>,
+ *   realpath: (path: string) => Promise<string>}} deps
  * @param {{id: string, allowExec?: boolean, force?: boolean}} options
  * @returns {Promise<{analysis: object, ran: boolean, reason?: string, run?: object,
  *   created: object[], rejected: object[], kept: object[]}>}
  */
 export async function run(deps, { id, allowExec = false, force = false }) {
-  const { store, clock, actor, runner, readBytes } = deps;
+  const { store, clock, actor, runner, readBytes, realpath } = deps;
   assertUpToDate(await store.readProject());
 
   const policy = await store.readYaml(POLICY_PATH);
@@ -322,6 +342,13 @@ export async function run(deps, { id, allowExec = false, force = false }) {
   if (upToDate && !force) {
     return { analysis, ran: false, reason: 'up to date', created: [], rejected: [], kept: [] };
   }
+
+  await assertPathsInsideRoot(
+    { realpath },
+    store.root,
+    [analysis.script, ...declaredPaths(analysis)],
+    CONFINED_HINT,
+  );
 
   const command = runtimeCommand(policy, analysis.runtime);
   const timeoutMs = executionTimeoutMs(policy);
@@ -390,6 +417,10 @@ export async function run(deps, { id, allowExec = false, force = false }) {
       details,
     );
   }
+
+  // The script has run by now, so a path that was absent before it started may be a link it
+  // planted; what PhDude reads and hashes is checked against the real workspace, not the record.
+  await assertPathsInsideRoot({ realpath }, store.root, declaredPaths(analysis), CONFINED_HINT);
 
   const results = await readResults({ store, actor }, analysis, at);
   const existing = (await store.listEntities('result')).filter((r) => r.from === analysis.id);

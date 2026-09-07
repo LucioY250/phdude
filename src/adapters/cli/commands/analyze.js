@@ -110,7 +110,7 @@ export default async function analyzeCommand(ctx) {
 
   if (sub === 'add') {
     const { analysis, created, changed } = await analyze.add(
-      { store: deps.store, clock: deps.clock, actor: deps.actor },
+      { store: deps.store, clock: deps.clock, actor: deps.actor, realpath: deps.fs.realpath },
       await readSpec(ctx),
     );
     const shape = `${analysis.runtime} ${analysis.script} on ${analysis.inputs.length} dataset(s)`;
@@ -137,6 +137,7 @@ export default async function analyzeCommand(ctx) {
         actor: deps.actor,
         runner: deps.runner,
         readBytes: deps.readBytes,
+        realpath: deps.fs.realpath,
       },
       { id, allowExec: flags.allowExec, force: flags.force },
     );

@@ -70,7 +70,7 @@ export default async function figureCommand(ctx) {
 
   if (sub === 'add') {
     const result = await figure.add(
-      { store: deps.store, clock: deps.clock, actor: deps.actor },
+      { store: deps.store, clock: deps.clock, actor: deps.actor, realpath: deps.fs.realpath },
       await readFields(ctx),
     );
     const what = result.created ? 'Declared' : result.changed ? 'Redeclared' : 'Unchanged';
@@ -107,6 +107,7 @@ export default async function figureCommand(ctx) {
         actor: deps.actor,
         runner: deps.runner,
         readBytes: deps.readBytes,
+        realpath: deps.fs.realpath,
         generatorsDir: deps.generatorsDir,
       },
       id,

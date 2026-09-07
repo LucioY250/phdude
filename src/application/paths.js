@@ -1,4 +1,4 @@
-import { isAbsolute, relative } from 'node:path';
+import { isAbsolute, relative, resolve } from 'node:path';
 import { PhdudeError } from '../domain/errors.js';
 
 /**
@@ -32,4 +32,18 @@ export async function assertRealPathInsideRoot(fs, root, requestedPath, absPath,
   }
   const back = relative(realRoot, realPath);
   if (back.startsWith('..') || isAbsolute(back)) throw outsideWorkspace(requestedPath, hint);
+}
+
+/**
+ * The same guard over every path a record declares at once, so a script, its results file and
+ * whatever else it writes are all checked by one rule.
+ * @param {{realpath: (path: string) => Promise<string>}} fs
+ * @param {string} root - the workspace root
+ * @param {string[]} paths - workspace-relative
+ * @param {string} hint
+ */
+export async function assertPathsInsideRoot(fs, root, paths, hint) {
+  for (const rel of paths) {
+    await assertRealPathInsideRoot(fs, root, rel, resolve(root, rel), hint);
+  }
 }

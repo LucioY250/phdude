@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chmod, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -597,4 +597,109 @@ test('show and build refuse an id that is not a figure, and a figure that is not
 test('the shipped generator is the one the package ships, resolved outside the workspace', async () => {
   assert.equal(DEFAULT_GENERATORS_DIR, join(REPO_ROOT, 'generators'));
   assert.ok(await read(join(DEFAULT_GENERATORS_DIR, 'bar-chart.mjs')));
+});
+
+async function outsideRoot(t) {
+  const dir = await mkdtemp(join(tmpdir(), 'phdude-outside-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  return dir;
+}
+
+test('add refuses a generator that is a symlink out of the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+
+  await writeFile(join(outside, 'evil.mjs'), 'process.exit(0)\n');
+  await symlink(join(outside, 'evil.mjs'), join(root, 'figures', 'evil.mjs'));
+
+  await assert.rejects(
+    figure.add(deps, {
+      ...FIELDS,
+      inputs: [],
+      generator: { ...FIELDS.generator, script: 'figures/evil.mjs' },
+    }),
+    (err) => err.code === 'USAGE' && /outside the workspace/.test(err.message),
+  );
+  assert.deepEqual(await figure.list(deps), []);
+  assert.deepEqual(await events(deps.store, 'figure'), []);
+});
+
+test('add refuses an output that is a symlink out of the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+
+  await mkdir(join(root, 'figures', 'out'), { recursive: true });
+  await writeFile(join(outside, 'mean-weight.svg'), '<svg/>\n');
+  await symlink(join(outside, 'mean-weight.svg'), join(root, 'figures', 'out', 'mean-weight.svg'));
+
+  await assert.rejects(
+    figure.add(deps, { ...FIELDS, inputs: [] }),
+    (err) => err.code === 'USAGE' && /outside the workspace/.test(err.message),
+  );
+  assert.deepEqual(await figure.list(deps), []);
+});
+
+test('build refuses a generator linked out of the workspace after it was declared', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+
+  await writeScript(root, 'figures/plot.mjs', 'process.exit(0)\n');
+  const { figure: declared } = await figure.add(deps, {
+    ...FIELDS,
+    inputs: [],
+    generator: { ...FIELDS.generator, script: 'figures/plot.mjs', args: [] },
+  });
+
+  const marker = join(outside, 'ran');
+  await writeFile(
+    join(outside, 'evil.mjs'),
+    `import { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(marker)}, 'ran\\n');\n`,
+  );
+  await rm(join(root, 'figures', 'plot.mjs'));
+  await symlink(join(outside, 'evil.mjs'), join(root, 'figures', 'plot.mjs'));
+
+  await assert.rejects(
+    figure.build(deps, declared.id, { allowExec: false }),
+    (err) => err.code === 'USAGE' && /outside the workspace/.test(err.message),
+  );
+  await assert.rejects(readFile(marker), (err) => err.code === 'ENOENT');
+  assert.deepEqual((await figure.show(deps, declared.id)).runs, []);
+});
+
+test('build refuses to hash an output the generator linked out of the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+
+  await writeFile(join(outside, 'mean-weight.svg'), '<svg/>\n');
+  await writeScript(
+    root,
+    'figures/plot.mjs',
+    [
+      "import { mkdir, symlink } from 'node:fs/promises';",
+      "import { dirname, join } from 'node:path';",
+      "const out = join(process.env.PHDUDE_WORKSPACE, 'figures/out/mean-weight.svg');",
+      'await mkdir(dirname(out), { recursive: true });',
+      `await symlink(${JSON.stringify(join(outside, 'mean-weight.svg'))}, out);`,
+      '',
+    ].join('\n'),
+  );
+  const { figure: declared } = await figure.add(deps, {
+    ...FIELDS,
+    inputs: [],
+    generator: { ...FIELDS.generator, script: 'figures/plot.mjs', args: [] },
+  });
+
+  await assert.rejects(
+    figure.build(deps, declared.id, { allowExec: false }),
+    (err) => err.code === 'USAGE' && /outside the workspace/.test(err.message),
+  );
+  assert.deepEqual((await figure.show(deps, declared.id)).runs, []);
 });

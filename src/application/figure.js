@@ -7,10 +7,21 @@ import { parseId } from '../domain/ids.js';
 import { stableStringify } from '../domain/normalize.js';
 import { assertExecutionAllowed, executionTimeoutMs, runtimeCommand } from '../domain/policy.js';
 import { assertUpToDate } from './guard.js';
+import { assertPathsInsideRoot } from './paths.js';
 import { sourceHash } from './table.js';
 
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
 const ALLOWED_FIELDS = ['name', 'caption', 'alt', 'generator', 'inputs', 'outputs'];
+
+const CONFINED_HINT =
+  'a figure generator and its outputs live inside the workspace, not behind a link that leaves it';
+
+// `figures/evil.mjs` is under `figures/` whatever it points at, so the declaration is checked
+// against the real workspace here and again at build time, when a link could have been planted
+// since. A shipped generator has no path in the workspace and nothing to check.
+function outputPaths(figure) {
+  return (figure.outputs ?? []).map((output) => output.path);
+}
 
 function assertKnownFields(fields) {
   const unknown = Object.keys(fields ?? {})
@@ -63,15 +74,23 @@ async function currentInputHashes({ store, readBytes }, inputs) {
  * Declares a figure: what generates it, from what, to where, and the sentence a reader who
  * cannot see it needs. The name is the identity, so declaring the same figure again corrects
  * the declaration in place and keeps every run it has been through.
- * @param {{store: object, clock: () => string, actor: object}} deps
+ * @param {{store: object, clock: () => string, actor: object,
+ *   realpath: (path: string) => Promise<string>}} deps
  * @param {{name: string, caption: string, alt: string, generator: object, inputs?: string[],
  *   outputs: object[]}} fields
  * @returns {Promise<{figure: object, created: boolean, changed: boolean}>}
  */
-export async function add({ store, clock, actor }, fields) {
+export async function add({ store, clock, actor, realpath }, fields) {
   assertUpToDate(await store.readProject());
   assertKnownFields(fields);
-  await assertInputsExist(store, validateFigure(fields).inputs);
+  const valid = validateFigure(fields);
+  await assertInputsExist(store, valid.inputs);
+  await assertPathsInsideRoot(
+    { realpath },
+    store.root,
+    [generatorScript(valid.generator.script).path, ...outputPaths(valid)].filter(Boolean),
+    CONFINED_HINT,
+  );
 
   const declared = newFigure({ ...fields, actor, created: clock() });
   const existing = await store.readEntity(declared.id);
@@ -131,14 +150,15 @@ async function recordRun({ store, actor }, figure, run, summary) {
  * wrote. A run that fails is still a run: the record keeps its exit code so the next reader can
  * see the figure was attempted and did not render, rather than that it was never tried.
  * @param {{store: object, clock: () => string, actor: object, runner: object,
- *   readBytes: (rel: string) => Promise<Buffer>, generatorsDir: string}} deps
+ *   readBytes: (rel: string) => Promise<Buffer>,
+ *   realpath: (path: string) => Promise<string>, generatorsDir: string}} deps
  * @param {string} id
  * @param {{allowExec?: boolean}} [opts]
  * @returns {Promise<{figure: object, run: object,
  *   outputs: {path: string, format: string, hash: string}[]}>}
  */
 export async function build(deps, id, { allowExec = false } = {}) {
-  const { store, clock, runner, readBytes, generatorsDir } = deps;
+  const { store, clock, runner, readBytes, realpath, generatorsDir } = deps;
   assertUpToDate(await store.readProject());
 
   const figure = await show(deps, id);
@@ -147,6 +167,12 @@ export async function build(deps, id, { allowExec = false } = {}) {
 
   const resolved = generatorScript(figure.generator.script);
   const script = resolved.shipped ? join(generatorsDir, resolved.shipped) : resolved.path;
+  await assertPathsInsideRoot(
+    { realpath },
+    store.root,
+    [resolved.path, ...outputPaths(figure)].filter(Boolean),
+    CONFINED_HINT,
+  );
   const runtime = runtimeCommand(policy, figure.generator.runtime);
   const timeoutMs = executionTimeoutMs(policy);
   const inputHashes = await currentInputHashes(deps, figure.inputs);
@@ -192,6 +218,10 @@ export async function build(deps, id, { allowExec = false } = {}) {
       (result.stderr || result.stdout).trim().split('\n').filter(Boolean).slice(-10),
     );
   }
+
+  // The generator has run by now, so an output that was absent before it started may be a link
+  // it planted; what PhDude hashes is checked against the real workspace, not the record.
+  await assertPathsInsideRoot({ realpath }, store.root, outputPaths(figure), CONFINED_HINT);
 
   // A generator that exits 0 without writing what it declared has not built the figure, and
   // hashing the outputs that happen to be there would record a run that did not happen.

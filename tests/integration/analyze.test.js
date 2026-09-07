@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -709,4 +709,176 @@ test('add and run refuse a workspace that has not been migrated', async (t) => {
     analyze.run(deps, { id: 'ANALYSIS-0123456789' }),
     (err) => err.code === 'USAGE' && /needs migration/.test(err.message),
   );
+});
+
+async function outsideRoot(t) {
+  const dir = await mkdtemp(join(tmpdir(), 'phdude-outside-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  return dir;
+}
+
+test('add refuses a script that is a symlink out of the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+  const { dataset } = await data.add(deps, 'data/survey.csv');
+
+  await writeFile(join(outside, 'evil.mjs'), 'process.exit(0)\n');
+  await symlink(join(outside, 'evil.mjs'), join(root, 'analysis', 'evil.mjs'));
+
+  await assert.rejects(
+    analyze.add(deps, {
+      name: 'evil analysis',
+      runtime: 'node',
+      script: 'analysis/evil.mjs',
+      inputs: [dataset.id],
+    }),
+    (err) =>
+      err instanceof PhdudeError &&
+      err.code === 'USAGE' &&
+      /outside the workspace/.test(err.message),
+  );
+  assert.deepEqual(await analyze.list(deps), [], 'the refusal declares no analysis');
+  assert.equal((await events(deps.store, 'analyze')).length, 0);
+});
+
+test('add refuses a results path that is a symlink out of the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+  const { dataset } = await data.add(deps, 'data/survey.csv');
+
+  await mkdir(join(root, 'analysis', 'out'), { recursive: true });
+  await writeFile(join(outside, 'results.json'), '{"results":[]}\n');
+  await symlink(join(outside, 'results.json'), join(root, 'analysis', 'out', 'results.json'));
+
+  await assert.rejects(
+    analyze.add(deps, {
+      name: 'describe survey',
+      runtime: 'node',
+      script: 'analysis/echo.mjs',
+      inputs: [dataset.id],
+      outputs: { results: 'analysis/out/results.json' },
+    }),
+    (err) => err.code === 'USAGE' && /outside the workspace/.test(err.message),
+  );
+  assert.deepEqual(await analyze.list(deps), []);
+});
+
+test('add accepts a script that is a symlink staying inside the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  const { dataset } = await data.add(deps, 'data/survey.csv');
+  await symlink(join(root, 'analysis', 'echo.mjs'), join(root, 'analysis', 'link.mjs'));
+
+  const { analysis, created } = await analyze.add(deps, {
+    name: 'describe survey',
+    runtime: 'node',
+    script: 'analysis/link.mjs',
+    inputs: [dataset.id],
+  });
+  assert.equal(created, true);
+  assert.equal(analysis.script, 'analysis/link.mjs');
+});
+
+test('run refuses a script linked out of the workspace after it was declared', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+  const { analysis } = await declare(deps);
+
+  const marker = join(outside, 'ran');
+  await writeFile(
+    join(outside, 'evil.mjs'),
+    `import { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(marker)}, 'ran\\n');\n`,
+  );
+  await rm(join(root, 'analysis', 'echo.mjs'));
+  await symlink(join(outside, 'evil.mjs'), join(root, 'analysis', 'echo.mjs'));
+  const before = (await events(deps.store, 'analyze')).length;
+
+  await assert.rejects(
+    analyze.run(deps, { id: analysis.id }),
+    (err) => err.code === 'USAGE' && /outside the workspace/.test(err.message),
+  );
+  await assert.rejects(readFile(marker), (err) => err.code === 'ENOENT');
+  assert.deepEqual(
+    (await analyze.show(deps, analysis.id)).runs,
+    [],
+    'nothing ran, nothing recorded',
+  );
+  assert.equal((await events(deps.store, 'analyze')).length, before);
+});
+
+test('run refuses to read a results file the script linked out of the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+
+  await writeFile(join(outside, 'results.json'), '{"results":[]}\n');
+  await writeFile(
+    join(root, 'analysis', 'link.mjs'),
+    [
+      "import { mkdir, symlink } from 'node:fs/promises';",
+      "import { dirname, join } from 'node:path';",
+      `const out = join(process.env.PHDUDE_WORKSPACE, ${JSON.stringify(RESULTS)});`,
+      'await mkdir(dirname(out), { recursive: true });',
+      `await symlink(${JSON.stringify(join(outside, 'results.json'))}, out);`,
+      '',
+    ].join('\n'),
+  );
+  const { dataset } = await data.add(deps, 'data/survey.csv');
+  const { analysis } = await analyze.add(deps, {
+    name: 'describe survey',
+    runtime: 'node',
+    script: 'analysis/link.mjs',
+    inputs: [dataset.id],
+  });
+
+  await assert.rejects(
+    analyze.run(deps, { id: analysis.id }),
+    (err) => err.code === 'USAGE' && /outside the workspace/.test(err.message),
+  );
+  assert.deepEqual(await deps.store.listEntities('result'), [], 'no result comes from outside');
+  assert.deepEqual((await analyze.show(deps, analysis.id)).runs, []);
+});
+
+test('run refuses to hash an output file linked out of the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const outside = await outsideRoot(t);
+  const deps = makeDeps(root);
+  const extra = 'analysis/out/describe-survey/summary.csv';
+
+  await writeFile(join(outside, 'summary.csv'), 'mean,n\n1,1\n');
+  await writeFile(
+    join(root, 'analysis', 'link.mjs'),
+    [
+      "import { mkdir, symlink, writeFile } from 'node:fs/promises';",
+      "import { dirname, join } from 'node:path';",
+      `const out = join(process.env.PHDUDE_WORKSPACE, ${JSON.stringify(RESULTS)});`,
+      'await mkdir(dirname(out), { recursive: true });',
+      'await writeFile(out, JSON.stringify({ results: [] }));',
+      `await symlink(${JSON.stringify(join(outside, 'summary.csv'))}, join(dirname(out), 'summary.csv'));`,
+      '',
+    ].join('\n'),
+  );
+  const { dataset } = await data.add(deps, 'data/survey.csv');
+  const { analysis } = await analyze.add(deps, {
+    name: 'describe survey',
+    runtime: 'node',
+    script: 'analysis/link.mjs',
+    inputs: [dataset.id],
+    outputs: { results: RESULTS, files: [extra] },
+  });
+
+  await assert.rejects(
+    analyze.run(deps, { id: analysis.id }),
+    (err) => err.code === 'USAGE' && /outside the workspace/.test(err.message),
+  );
+  assert.deepEqual((await analyze.show(deps, analysis.id)).runs, []);
 });

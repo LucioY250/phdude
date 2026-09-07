@@ -733,11 +733,11 @@ command in PhDude that executes a researcher's code.
 |---|---|
 | `name` | The identity. `ANALYSIS-<first 10 of the sha256 of the normalized name>`. |
 | `runtime` | `node`, `python3`, `Rscript` or `other`. Which executable it resolves to is `execution.runtimes` in the policy, not the record. |
-| `script` | Workspace-relative, and it must resolve inside `analysis/`. Anything that leaves that directory exits 2. |
+| `script` | Workspace-relative, and it must resolve inside `analysis/`. Anything that leaves that directory exits 2, and a link whose real path leaves the workspace exits 1 — at `add`, and again before every run. |
 | `args` | Passed to the script after the script path, as an argument array. Never a shell. |
 | `inputs` | `DATASET-` ids. Each one must already be registered with `phdude data add`. |
-| `outputs.results` | Where the script writes `results.json`. Defaults to `analysis/out/<name>/results.json`, and must also stay inside `analysis/`. |
-| `outputs.files` | Anything else the run produces — a figure, a table. Workspace-relative; hashed after every successful run. |
+| `outputs.results` | Where the script writes `results.json`. Defaults to `analysis/out/<name>/results.json`, and must also stay inside `analysis/` — real path included, checked again after the run before PhDude reads it. |
+| `outputs.files` | Anything else the run produces — a figure, a table. Workspace-relative; hashed after every successful run, once the real path is confirmed inside the workspace. |
 | `params` | A free object. PhDude records it and never interprets it. |
 | `runs` | One entry per run: `at`, `exit`, `duration_ms`, `input_hashes`, `output_hashes`, `results`, plus `stderr_tail`, `timed_out` and `signal` when it failed. |
 
@@ -869,10 +869,11 @@ and the files it writes.
 | `alt` | What the figure **shows**, in one sentence (PRD §100). Required and non-empty; a figure without it never becomes a record. |
 | `generator` | `{"runtime":…,"script":…,"args":[…]}`. |
 | `inputs` | `RESULT` and `DATASET` ids. What the run hashes, and what makes the figure stale. |
-| `outputs` | `[{"path":"figures/out/….svg","format":"svg\|png\|pdf"}]`, at least one, all under `figures/`. |
+| `outputs` | `[{"path":"figures/out/….svg","format":"svg\|png\|pdf"}]`, at least one, all under `figures/` — real path included, checked again after the build before each one is hashed. |
 
 `script` is either `phdude:bar-chart` — the accessible SVG generator the package ships — or a
-script the workspace holds under `figures/`. Nothing else runs. `runtime` is resolved through
+script the workspace holds under `figures/`, whose real path must stay inside the workspace or
+`build` exits 1. Nothing else runs. `runtime` is resolved through
 `execution.runtimes` in `.phdude/research-policy.yaml`; a runtime the workspace never named exits
 2. The generator is run with `execFile` and an argument array, never a shell, with the workspace
 as its working directory and an environment holding `PATH`, `HOME`, `LANG`, `PHDUDE_WORKSPACE`
