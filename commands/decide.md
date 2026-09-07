@@ -1,5 +1,5 @@
 ---
-description: Propose, approve, or reject a research Decision.
+description: Propose, approve, reject, or supersede a research Decision.
 allowed-tools: Bash(phdude:*), Bash(npx:*)
 phdude-managed: true
 ---

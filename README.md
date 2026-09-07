@@ -137,7 +137,7 @@ This writes:
 |---|---|
 | `CLAUDE.md` | Entry point. Imports `AGENTS.md` and adds Claude-specific notes. |
 | `AGENTS.md` | Operating rules, the command reference, and an *index* of skills. Skills are loaded on demand, not up front, to keep your context small. |
-| `.claude/commands/phdude*.md` | Slash commands: `/phdude`, `/phdude-bootstrap`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-packs`, `/phdude-mode`, `/phdude-doctor`, `/phdude-ingest`. |
+| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-packs`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
 | `.phdude/skills/*/SKILL.md` | The skills themselves, in the open `SKILL.md` convention. |
 
 Open Claude Code in the directory and start with:
@@ -308,7 +308,8 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |
 | `phdude mode lite\|full\|ruthless\|off` | How hard the agent pushes back. |
 | `phdude migrate [--dry-run]` | Upgrade a workspace written by an older PhDude. |
-| `phdude doctor` | Adapters, cache, schema versions, git state. |
+| `phdude doctor` | Adapters, cache, schema versions, skill permissions, git state. |
+| `phdude help` | The command list, the global options, and what each exit code means. |
 
 Every command takes `--json`. Exit codes mean something: 0 ok, 1 usage, 2 validation,
 3 policy, 4 external tool missing. Errors come with a suggested action. The full reference is
