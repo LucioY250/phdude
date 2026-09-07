@@ -1,0 +1,31 @@
+docs/cli.md
+  s_946fc7502759d8::t_8062e35dd345c4 685
+src/adapters/cli/commands/data.js
+  s_946fc7502759d8::t_55955f090fbc45 92
+src/application/data.js
+  s_946fc7502759d8::t_6c76013015fad3 1,13,64,70-74,79-85
+src/application/ingest.js
+  s_946fc7502759d8::t_f6fa807a71cdfe 8,93,101-102,115
+src/application/paths.js
+  s_946fc7502759d8::t_81093f1a5f9d0f 1-35
+tests/fixtures/objects/invalid/dataset.1.json
+  s_946fc7502759d8::t_761c47bd43abcc 1-26
+tests/integration/data.test.js
+  s_946fc7502759d8::t_8879ac4dba9634 3,9,27,253-287
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b8ddd4c9e23ebc743ecd49ca8a34263211bcaf1c",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
