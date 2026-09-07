@@ -1,0 +1,123 @@
+tests/unit/domain/candidates.test.js
+  s_946fc7502759d8::t_88ead067ede56a 68-69,78-82,88-116
+  s_946fc7502759d8::t_779d6a08f02f20 1-37,43-67,76-77,117-212,217-233
+  s_946fc7502759d8::t_0b0969f81dc029 38-42,70-75,83-87,213-216
+src/domain/entities.js
+  s_946fc7502759d8::t_39b082a1844371 431-560
+schemas/search.json
+  s_946fc7502759d8::t_77ec042a355eb7 1-35
+tests/fixtures/search/e2e-routes.json
+  s_946fc7502759d8::t_5801557d4d6af3 3-4
+  s_946fc7502759d8::t_8b66fb75e0649c 1-2,5
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_8a310ca71630f3 263-305
+src/adapters/cli/commands/research.js
+  s_946fc7502759d8::t_31a70a75794d32 108-110
+  s_946fc7502759d8::t_a7ade8ca89eb20 1-53,55-107,111
+  s_946fc7502759d8::t_5a5e7e885ca185 54
+skills/research/SKILL.md
+  s_946fc7502759d8::t_6f57e6758771ac 1-104
+docs/cli.md
+  s_946fc7502759d8::t_a8c5a426f498d9 39,43-46,547-548,558-567
+  s_946fc7502759d8::t_9d987f46225371 363-420
+src/application/research.js
+  s_946fc7502759d8::t_0b0969f81dc029 194-197
+  s_946fc7502759d8::t_5bdc252096537b 146-149,151
+  s_946fc7502759d8::t_c3072eb880ca17 1-131,138-145,150,152-193,198-269
+  s_946fc7502759d8::t_5801557d4d6af3 132-137
+tests/fixtures/objects/valid/search.1.json
+  s_946fc7502759d8::t_14061e9f437766 1-16
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_a77cdb5c2684ff 9-10,13,35,57,61-83,118-119,124-127
+  s_946fc7502759d8::t_eb6a8f675e9c57 128
+src/adapters/cli/commands/init.js
+  s_946fc7502759d8::t_b036745cb7eb68 43-50,60
+src/ports/agent-host.js
+  s_946fc7502759d8::t_5f7c9e244970b0 6
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_c8beb99b57e55b 124-127
+  s_946fc7502759d8::t_7910a9043b6bb7 71-74,82,86,151-153,158,160
+src/adapters/agents/codex.js
+  s_946fc7502759d8::t_7910a9043b6bb7 17,22
+tests/integration/init.test.js
+  s_946fc7502759d8::t_9a0cfe70da43e8 250,276-277,286
+  s_946fc7502759d8::t_ea35ecbb4499c0 208,215,217-227,229-230,232-235,237-238,242-249,251-269,271-275,278-285,287-288
+  s_946fc7502759d8::t_0b0969f81dc029 270
+tests/unit/domain/ids.test.js
+  s_946fc7502759d8::t_102aa5c10d1eaf 36-37,39
+src/adapters/search/fake-fetch.js
+  s_946fc7502759d8::t_a1d0096033c840 1-111
+tests/fixtures/objects/valid/candidate.1.json
+  s_946fc7502759d8::t_14061e9f437766 1-28
+tests/integration/research.test.js
+  s_946fc7502759d8::t_5bdc252096537b 29-30,148
+  s_946fc7502759d8::t_18dac1506b7b16 1-2,5-28,31-41,43-97,103,105-147,149-349
+  s_946fc7502759d8::t_0b0969f81dc029 98-102,104
+  s_946fc7502759d8::t_cae07ca442ee99 3-4,42
+src/application/skills.js
+  s_946fc7502759d8::t_0b0969f81dc029 4
+  s_946fc7502759d8::t_6baf68b6cb866c 9-10,30,77
+src/domain/ids.js
+  s_946fc7502759d8::t_f97728249fc684 14-15
+tests/fixtures/objects/invalid/search.1.json
+  s_946fc7502759d8::t_14061e9f437766 1-13
+src/adapters/agents/claude-code.js
+  s_946fc7502759d8::t_5f7c9e244970b0 77,85
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_38efe4437a0336 58-65,234-237
+tests/unit/application/skills.test.js
+  s_946fc7502759d8::t_102aa5c10d1eaf 52-56,155-157,176-180
+schemas/candidate.json
+  s_946fc7502759d8::t_94f7a7689bcce8 1-67
+schemas/common.json
+  s_946fc7502759d8::t_f97728249fc684 7
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_f97728249fc684 16,20
+src/schemas/index.js
+  s_946fc7502759d8::t_f97728249fc684 28-29
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_c8beb99b57e55b 20-22
+README.md
+  s_946fc7502759d8::t_2fd71efbd9e2ad 178,347
+docs/workspace.md
+  s_946fc7502759d8::t_3a2d8421ec5945 31-32,36-37,106-107,110-129,201-209
+  s_946fc7502759d8::t_f2b2d53b5e6053 210
+src/application/init.js
+  s_946fc7502759d8::t_f97728249fc684 20,24
+  s_946fc7502759d8::t_5bf6bb9dc0b45c 5,98-102,113-121,127,132,142,146-147,221-224,233-238,262
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_1e25d5b51f7e74 1131,1139,1150,1182
+  s_946fc7502759d8::t_5801557d4d6af3 1136,1138,1145,1147,1151,1154-1159,1171-1175,1186,1188,1191,1197,1223
+  s_946fc7502759d8::t_00837c5b08ddf7 15,20,28-29,34-35,1095-1130,1132-1135,1137,1140-1144,1146,1148-1149,1152-1153,1160-1170,1176-1181,1183-1185,1187,1189-1190,1192-1196,1198-1222
+  s_946fc7502759d8::t_41ae9c56c13f58 1224
+tests/support/fake-fetch.js
+  s_946fc7502759d8::t_db930a817b02a8 1-4
+commands/research.md
+  s_946fc7502759d8::t_982145aec3a698 1-26
+tests/fixtures/objects/invalid/candidate.1.json
+  s_946fc7502759d8::t_14061e9f437766 1-27
+tests/unit/adapters/search.test.js
+  s_946fc7502759d8::t_8a310ca71630f3 11,545-557
+  s_946fc7502759d8::t_b1da71cd711629 558
+src/domain/candidates.js
+  s_946fc7502759d8::t_732167579b72b1 33-34,37,41-43,46-49
+  s_946fc7502759d8::t_0b0969f81dc029 121-124
+  s_946fc7502759d8::t_9ef9f1d3258873 4-11,13-16
+  s_946fc7502759d8::t_3f2293376abd95 1-3,12,17-32,35-36,38-40,44-45,50-120,125-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ffdc65d827905d6883204ec8a4b3b487ba16f6eb",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
