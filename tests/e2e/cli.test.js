@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { cp, mkdtemp, rm, stat, unlink, writeFile } from 'node:fs/promises';
+import { appendFile, cp, mkdtemp, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -229,9 +229,15 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
   assert.ok(doctor.packsAvailable.includes('quantitative'));
   const bootstrapSkill = doctor.skills.find((s) => s.name === 'bootstrap');
   assert.ok(bootstrapSkill, 'doctor lists the bootstrap skill');
-  assert.equal(bootstrapSkill.source, 'workspace');
+  // `init` copied it into .phdude/skills/, but the bytes are the shipped ones, so it is still
+  // the core skill; only an edited copy is the workspace's own.
+  assert.equal(bootstrapSkill.source, 'core');
   assert.deepEqual(bootstrapSkill.permissions, { network: 'none', workspace: ['read'] });
   assert.deepEqual(bootstrapSkill.warnings, []);
+
+  await appendFile(join(ws, '.phdude', 'skills', 'bootstrap', 'SKILL.md'), '\nlocal note\n');
+  const doctorEdited = await runJson(ws, ['doctor']);
+  assert.equal(doctorEdited.skills.find((s) => s.name === 'bootstrap').source, 'workspace');
 
   // mode persists to phdude.yaml
   await run(ws, ['mode', 'ruthless']);

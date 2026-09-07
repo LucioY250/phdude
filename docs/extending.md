@@ -140,8 +140,14 @@ skill in the batch is invalid or over-privileged.
 **Discovery order.** `discoverSkills` (`src/adapters/skills/loader.js`) walks a list of roots in
 order — the package's own `skills/`, each applied pack's skill directories, then
 `<workspace>/.phdude/skills/` — and a later root's skill overrides an earlier one with the same
-name. `phdude doctor` reports the resulting set with each skill's `source` (`core`, `pack:<name>`,
-or `workspace`) and declared permissions; see [`phdude doctor`](cli.md#phdude-doctor).
+name. One unloadable skill aborts the whole discovery, which is what `init` and `packs apply`
+need: neither may adopt half a set. `phdude doctor` passes an `onError` callback to opt out of
+that, so a broken skill costs one warning instead of the entire report.
+
+`phdude doctor` reports the resulting set with each skill's `source` (`core`, `pack:<name>`, or
+`workspace`) and declared permissions. Because `init` copies the core skills into
+`.phdude/skills/`, `source` compares the copy against the shipped bytes: identical is still
+`core`, and only an edited copy is `workspace`. See [`phdude doctor`](cli.md#phdude-doctor).
 
 ## Ports and contract suites
 

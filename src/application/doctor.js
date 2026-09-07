@@ -68,7 +68,11 @@ export async function doctor({
 
   let skills = [];
   try {
-    skills = await listSkills({ store, loadPacks, discoverSkills, skillsDir });
+    const listed = await listSkills({ store, loadPacks, discoverSkills, skillsDir });
+    skills = listed.skills;
+    // One bad skill file, or one skill the workspace policy has not cleared for network access,
+    // is a line in this report - never the reason the report is empty.
+    warnings.push(...listed.warnings);
   } catch (err) {
     warnings.push(`skills could not be loaded: ${err.message}`);
   }

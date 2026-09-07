@@ -24,9 +24,11 @@ async function exists(path) {
 /**
  * Loads and validates one `SKILL.md`. A skill with no `phdude:` block gets the least-privilege
  * default contract and a warning, never a hard failure - a plain Agent Skill must still load.
+ * `text` is the file verbatim, so a caller can tell a workspace copy of a shipped skill from an
+ * edited one without reading the file a second time.
  * @param {string} dir - the skill's directory (its basename is the skill name)
  * @returns {Promise<{name: string, description: string, contract: object, path: string,
- *   warnings: string[]}>}
+ *   text: string, warnings: string[]}>}
  */
 export async function loadSkill(dir) {
   const name = basename(dir);
@@ -58,7 +60,7 @@ export async function loadSkill(dir) {
     }
   }
 
-  return { name, description: meta.description ?? '', contract, path, warnings };
+  return { name, description: meta.description ?? '', contract, path, text, warnings };
 }
 
 async function skillDirsUnder(dir) {
@@ -83,14 +85,27 @@ async function skillDirsUnder(dir) {
  * Discovers skills across `roots` in order; a later root's skill overrides an earlier one with
  * the same name. Each root is either a single skill directory (contains `SKILL.md` directly)
  * or a directory of skill directories (e.g. `skills/`, `.phdude/skills/`).
+ *
+ * One unloadable skill aborts the whole discovery by default, which is what `init` and
+ * `packs apply` want: neither may adopt half a set. `onError` opts out of that - the failing
+ * skill is reported and skipped, and the rest are still returned - which is what `doctor`
+ * wants, since a report that vanishes because one file is broken is the report you needed.
  * @param {{dir: string, source: string}[]} roots
+ * @param {{onError?: (failure: {name: string, source: string, dir: string, error: Error}) => void}} [options]
  * @returns {Promise<object[]>} skills sorted by name, each carrying its root's `source`
  */
-export async function discoverSkills(roots) {
+export async function discoverSkills(roots, { onError } = {}) {
   const byName = new Map();
   for (const { dir, source } of roots) {
     for (const skillDir of await skillDirsUnder(dir)) {
-      const skill = await loadSkill(skillDir);
+      let skill;
+      try {
+        skill = await loadSkill(skillDir);
+      } catch (error) {
+        if (!onError) throw error;
+        onError({ name: basename(skillDir), source, dir: skillDir, error });
+        continue;
+      }
       byName.set(skill.name, { ...skill, source });
     }
   }

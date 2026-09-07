@@ -92,8 +92,15 @@ Every requested path must resolve inside the workspace. `phdude ingest ../elsewh
 rather than recording an external path in a tracked artifact and copying the file's text into
 the cache; copy the material into `sources/` first. The check runs twice, lexically and again
 on the resolved real path, so a symlink under `sources/` cannot smuggle a directory in from
-outside. Symlinks are never followed, for the same reason; each one is reported as
-`skipped symlink: <path>` among the warnings rather than ignored in silence.
+outside.
+
+Symlinks are never followed, and the two ways one turns up are treated differently. A path
+named on the command line that resolves outside the workspace exits 1, symlink or not — that is
+the containment check above, and it is an error because you asked for exactly that path. Every
+other symlink is a warning: one named on the command line that resolves *inside* the workspace,
+and every symlink found while walking a directory, is skipped and reported as
+`skipped symlink: <path>` rather than ignored in silence. A run that hits only those still
+succeeds, with the linked files simply not ingested.
 
 Ingest reads source material only. `phdude ingest .` walks `sources/`, not the whole
 workspace; an explicit path into `knowledge/`, `research/`, `decisions/`, `.phdude/`,
@@ -436,6 +443,16 @@ It also lists every discoverable skill (core, applied packs, and the workspace's
 warnings — one line each: `<name> (<source>) network=<none|allowed> workspace=<read,...>`. See
 [Skill contract](extending.md#skill-contract). `--json` includes the same data as a `skills`
 array of `{ name, source, permissions, reads, writes, warnings }`.
+
+`source` is `workspace` only when the workspace's copy actually differs from the shipped file.
+`init` copies every core skill into `.phdude/skills/`, so an untouched workspace would otherwise
+report all of them as its own; the bytes are compared, and an unmodified copy stays `core`.
+
+Being the command you run when something is wrong, `doctor` degrades rather than fails. A skill
+whose `SKILL.md` cannot be loaded costs one warning naming that skill, and every other skill is
+still listed. A skill that declares `permissions.network: allowed` while
+`.phdude/research-policy.yaml` has not set `skills.allow_network: true` is listed with a warning
+too — `phdude packs apply` and `phdude init` are where that becomes a refusal (exit 3).
 
 ### `phdude help`
 
