@@ -1,0 +1,51 @@
+{
+  "$id": "phdude://manuscript",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": { "const": "phdude.manuscript" },
+    "version": { "const": 1 },
+    "title": { "type": "string" },
+    "language": { "type": "string" },
+    "voice": {
+      "type": "object",
+      "properties": {
+        "kind": { "enum": ["author", "consensus"] },
+        "author": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }
+      },
+      "required": ["kind"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "author" } }, "required": ["kind"] },
+          "then": { "required": ["author"] }
+        }
+      ]
+    },
+    "target_profile": { "type": "string" },
+    "date": { "type": "string", "format": "date-time" },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "title": { "type": "string" },
+          "file": { "type": "string", "pattern": "^manuscript/[A-Za-z0-9._-]+\\.md$" },
+          "order": { "type": "integer", "minimum": 1 },
+          "status": { "enum": ["planned", "draft", "revised", "approved"] },
+          "hash": {
+            "anyOf": [{ "type": "string", "pattern": "^[0-9a-f]{64}$" }, { "type": "null" }]
+          },
+          "claims": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+          "questions": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+          "approved_by": { "type": "string", "pattern": "^DEC-[0-9a-f]{10}$" }
+        },
+        "required": ["id", "title", "file", "order", "status", "hash", "claims", "questions"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema", "version", "title", "language", "voice", "sections"],
+  "additionalProperties": false
+}

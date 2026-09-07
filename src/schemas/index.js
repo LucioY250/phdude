@@ -28,6 +28,8 @@ export const SCHEMA_TYPES = [
   'candidate',
   'search',
   'decision',
+  'manuscript',
+  'section-report',
   'pack',
   'skill',
   'event',

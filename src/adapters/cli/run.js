@@ -28,6 +28,7 @@ import ingest from './commands/ingest.js';
 import init from './commands/init.js';
 import knowledge from './commands/knowledge.js';
 import link from './commands/link.js';
+import manuscript from './commands/manuscript.js';
 import matrix from './commands/matrix.js';
 import migrate from './commands/migrate.js';
 import mode from './commands/mode.js';
@@ -53,6 +54,7 @@ const COMMANDS = {
   init,
   knowledge,
   link,
+  manuscript,
   matrix,
   migrate,
   mode,

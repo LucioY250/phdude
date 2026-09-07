@@ -1,0 +1,40 @@
+{
+  "$id": "phdude://section-report",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": { "const": "phdude.section-report" },
+    "version": { "const": 1 },
+    "section": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "at": { "type": "string", "format": "date-time" },
+    "gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "gate": { "type": "string" },
+          "findings": { "type": "integer", "minimum": 0 },
+          "blocked": { "type": "boolean" }
+        },
+        "required": ["gate", "findings", "blocked"],
+        "additionalProperties": false
+      }
+    },
+    "scores": { "type": "object", "additionalProperties": { "type": "number" } },
+    "warnings": { "type": "integer", "minimum": 0 },
+    "blocks": { "type": "integer", "minimum": 0 }
+  },
+  "required": [
+    "schema",
+    "version",
+    "section",
+    "hash",
+    "at",
+    "gates",
+    "scores",
+    "warnings",
+    "blocks"
+  ],
+  "additionalProperties": false
+}

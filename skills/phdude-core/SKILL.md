@@ -53,15 +53,19 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 
 Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude link CLAIM-a
 --contradicts CLAIM-b`), `phdude edit`, `phdude decide`, `phdude promote`,
-`phdude research accept`, `phdude research dismiss`, `phdude packs apply`, or `phdude mode`.
+`phdude research accept`, `phdude research dismiss`, `phdude packs apply`, `phdude mode`,
+`phdude manuscript init`, `phdude manuscript submit`, `phdude manuscript approve`, or
+`phdude manuscript reopen`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
 cache — expected setup steps, not knowledge edits. `phdude research` and `phdude research-fresh`
 write candidates and search records, which are not knowledge until accepted. `phdude cite
 export` writes `references.bib` or `references.json` at the workspace root, a derived file that
 records no event and is never a substitute for the `SRC-` id itself.) Every other command —
 `phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `freshness`,
-`packs list|detect`, `doctor`, `help` — only reads or derives from what is already recorded.
-Never write YAML files directly, even to "fix a typo".
+`packs list|detect`, `manuscript list|show|status`, `doctor`, `help` — only reads or derives from
+what is already recorded. Never write YAML files directly, even to "fix a typo", and never edit a
+file under `manuscript/` by hand: prose reaches a section through `phdude manuscript submit`,
+which runs the writing gates first.
 
 ### Correcting a record
 

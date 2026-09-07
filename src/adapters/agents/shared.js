@@ -142,6 +142,10 @@ export const COMMAND_ROWS = [
     'gaps',
     'Research gaps: questions, claims, sources, artifacts, and conflicts needing attention.',
   ],
+  [
+    'manuscript init|list|show|status|submit|approve|reopen',
+    'The manuscript: its sections, their status, submitting a draft through the writing gates, and the approval the researcher decides.',
+  ],
   ['packs list|detect|apply', 'List, recommend, or apply field/method research packs.'],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],

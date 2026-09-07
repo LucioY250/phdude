@@ -1442,3 +1442,128 @@ test('e2e: research, accept, dismiss, cite check, edit, freshness and research-f
     ['accepted', 'accepted', 'dismissed'],
   );
 });
+
+test('e2e: manuscript init, a blocked submit, a clean one, approve and reopen', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-manuscript-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Manuscript thesis', '--no-git']);
+
+  const created = await runJson(ws, ['manuscript', 'init', '--voice', 'researcher-a']);
+  assert.equal(created.title, 'Manuscript thesis');
+  assert.deepEqual(created.voice, { kind: 'author', author: 'researcher-a' });
+  assert.equal(created.sections.length, 6);
+  assert.equal(
+    await exists(join(ws, 'manuscript', 'introduction.md')),
+    false,
+    'init plans sections, it does not write them',
+  );
+
+  // A citation with nothing behind it blocks: exit 2, the finding located, and no file written.
+  const draft = join(ws, 'draft.md');
+  await writeFile(draft, '# Introduction\n\nSMEs adopt AI slowly [@nobody2000nothing].\n');
+  const blocked = await phdude(ws, [
+    'manuscript',
+    'submit',
+    'introduction',
+    '--file',
+    draft,
+    ...ACTOR,
+  ]);
+  assert.equal(blocked.code, 2);
+  assert.match(blocked.stderr, /section blocked by gate-citations: 1 finding\(s\)/);
+  assert.match(blocked.stderr, /gate-citations:3 \[@nobody2000nothing\]/);
+  assert.equal(await exists(join(ws, 'manuscript', 'introduction.md')), false);
+
+  await run(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'A Study of Cognitive Load',
+      authors: ['Z. Zeta'],
+      year: 2020,
+      type: 'article',
+    }),
+  ]);
+
+  await writeFile(draft, '# Introduction\n\nSMEs adopt AI slowly [@zeta2020study].\n');
+  const submitted = await runJson(ws, ['manuscript', 'submit', 'introduction', '--file', draft]);
+  assert.equal(submitted.section.status, 'draft');
+  assert.equal(submitted.report.blocks, 0);
+  const sectionText = await readFile(join(ws, 'manuscript', 'introduction.md'), 'utf8');
+  assert.match(sectionText, /^---\nsection: introduction\nstatus: draft\n/);
+  assert.match(sectionText, /SMEs adopt AI slowly \[@zeta2020study\]\./);
+
+  const report = await readFile(join(ws, 'manuscript', 'reports', 'introduction.yaml'), 'utf8');
+  assert.match(report, /gate: gate-citations/);
+
+  // Approving needs an approved decision that names the section.
+  const notYet = await phdude(ws, ['manuscript', 'approve', 'introduction', ...ACTOR]);
+  assert.equal(notYet.code, 1);
+
+  const decision = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Approve the introduction',
+    '--rationale',
+    'Read end to end by the supervisor.',
+    '--affects',
+    'manuscript:introduction',
+  ]);
+  const unapproved = await phdude(ws, [
+    'manuscript',
+    'approve',
+    'introduction',
+    '--decision',
+    decision.id,
+    ...ACTOR,
+  ]);
+  assert.equal(unapproved.code, 3, 'a proposed decision does not approve a section');
+
+  await run(ws, ['decide', 'approve', decision.id, '--by', 'A Supervisor']);
+  const approved = await runJson(ws, [
+    'manuscript',
+    'approve',
+    'introduction',
+    '--decision',
+    decision.id,
+  ]);
+  assert.equal(approved.section.status, 'approved');
+  assert.equal(approved.section.approved_by, decision.id);
+
+  const overwrite = await phdude(ws, [
+    'manuscript',
+    'submit',
+    'introduction',
+    '--file',
+    draft,
+    ...ACTOR,
+  ]);
+  assert.equal(overwrite.code, 3, 'approved text is not overwritten');
+
+  const reopened = await runJson(ws, ['manuscript', 'reopen', 'introduction']);
+  assert.equal(reopened.section.status, 'revised');
+
+  const status = await runJson(ws, ['manuscript', 'status']);
+  assert.deepEqual(status.counts, { planned: 5, draft: 0, revised: 1, approved: 0 });
+
+  const statusText = await run(ws, ['manuscript', 'status']);
+  assert.match(statusText.stdout, /voice researcher-a/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'manuscript');
+  assert.deepEqual(
+    events.map((e) => e.summary),
+    [
+      'manuscript initialized (6 sections)',
+      'submitted introduction (draft)',
+      `approved introduction (${decision.id})`,
+      'reopened introduction (revised)',
+    ],
+  );
+});

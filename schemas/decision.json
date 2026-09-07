@@ -12,7 +12,15 @@
         "approved_by": { "type": "array", "items": { "type": "string" } },
         "status": { "enum": ["proposed", "approved", "rejected", "superseded"] },
         "change": { "type": "object" },
-        "affects": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+        "affects": {
+          "type": "array",
+          "items": {
+            "anyOf": [
+              { "$ref": "phdude://common#/$defs/id" },
+              { "type": "string", "pattern": "^manuscript:[a-z0-9]+(-[a-z0-9]+)*$" }
+            ]
+          }
+        },
         "resolved": { "type": "string", "format": "date-time" }
       },
       "required": [
