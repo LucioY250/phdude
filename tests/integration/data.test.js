@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parse } from 'yaml';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
 import { parseTable } from '../../src/adapters/documents/index.js';
-import { read } from '../../src/adapters/store/fs-walk.js';
+import { read, realpath } from '../../src/adapters/store/fs-walk.js';
 import { PhdudeError } from '../../src/domain/errors.js';
 import { CURRENT_WORKSPACE_VERSION } from '../../src/domain/versioning.js';
 import * as data from '../../src/application/data.js';
@@ -24,6 +24,7 @@ function makeDeps(root, startTick = 0) {
     clock: () => new Date(Date.UTC(2026, 8, 7, 10, 0, tick++)).toISOString(),
     actor,
     readBytes: (rel) => read(join(root, rel)),
+    realpath,
     parseTable,
   };
 }
@@ -247,6 +248,41 @@ test('add refuses a path outside data/, a missing file and an unknown field', as
       err instanceof PhdudeError && err.code === 'VALIDATION' && /unknown field/.test(err.message),
   );
   assert.equal(await eventCount(deps.store), 0, 'a refusal writes nothing');
+});
+
+test('add refuses a data/ path that is a symlink out of the workspace', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-data-outside-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const workspace = await newRoot();
+  t.after(() => rm(workspace, { recursive: true, force: true }));
+  const deps = makeDeps(workspace);
+
+  const secret = join(root, 'secret.csv');
+  await writeFile(secret, 'token\nsk-do-not-read\n');
+  await symlink(secret, join(workspace, 'data', 'evil.csv'));
+
+  await assert.rejects(
+    () => data.add(deps, 'data/evil.csv'),
+    (err) =>
+      err instanceof PhdudeError &&
+      err.code === 'USAGE' &&
+      /outside the workspace/.test(err.message),
+  );
+  assert.deepEqual(await data.list(deps), [], 'the refusal records no dataset');
+  assert.equal(await eventCount(deps.store), 0, 'a refusal writes nothing');
+});
+
+test('add follows a symlink that stays inside the workspace', async (t) => {
+  const root = await newRoot();
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const deps = makeDeps(root);
+  await writeData(root, 'data/survey.csv', SURVEY);
+  await symlink(join(root, 'data', 'survey.csv'), join(root, 'data', 'copy.csv'));
+
+  const { dataset, created } = await data.add(deps, 'data/copy.csv');
+  assert.equal(created, true);
+  assert.equal(dataset.path, 'data/copy.csv');
+  assert.equal(dataset.profile.rows, 3);
 });
 
 test('add refuses to write into a workspace that needs migration', async (t) => {

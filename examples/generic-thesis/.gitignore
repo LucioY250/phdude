@@ -3,5 +3,11 @@
 .env.*
 outputs/*
 !outputs/.gitkeep
+analysis/out/*
+!analysis/out/.gitkeep
+tables/out/*
+!tables/out/.gitkeep
+figures/out/*
+!figures/out/.gitkeep
 references.bib
 references.json

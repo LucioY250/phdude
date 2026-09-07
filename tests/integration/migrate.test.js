@@ -91,7 +91,7 @@ test('migrate --dry-run lists the files that would change and writes nothing', a
   assert.match(result.steps[0].description, /provenance/);
   assert.deepEqual(
     result.steps[1].changed.sort(),
-    [...NEW_DIRS.map((dir) => `${dir}/.gitkeep`), 'phdude.yaml'].sort(),
+    [...NEW_DIRS.map((dir) => `${dir}/.gitkeep`), '.gitignore', 'phdude.yaml'].sort(),
   );
   assert.match(result.steps[1].description, /execution/);
 
@@ -237,6 +237,37 @@ test('reads still work on a workspace newer than the runtime and carry the warni
   assert.ok(report.warnings.includes('workspace version 4 is newer than this PhDude (3)'));
 });
 
+test('migrate adds the out/ ignore rules to an existing .gitignore and only the missing ones', async (t) => {
+  const root = await fixtureCopy(t, FIXTURE_V2);
+  const store = new FsStore(root);
+
+  await migrate(deps(root));
+
+  const lines = (await readFile(join(root, '.gitignore'), 'utf8')).split('\n');
+  for (const dir of ['analysis/out', 'tables/out', 'figures/out']) {
+    assert.ok(lines.includes(`${dir}/*`), `${dir} is ignored`);
+    assert.ok(lines.includes(`!${dir}/.gitkeep`), `${dir} keeps its .gitkeep`);
+  }
+  assert.equal(
+    lines.filter((l) => l === 'outputs/*').length,
+    1,
+    'the rules it had are not doubled',
+  );
+
+  const again = await migration0002.preview(store);
+  assert.equal(again.includes('.gitignore'), false, 'a second run has nothing left to add');
+});
+
+test('migrate writes no .gitignore into a workspace that has none', async (t) => {
+  const root = await fixtureCopy(t, FIXTURE_V2);
+  await rm(join(root, '.gitignore'));
+
+  const result = await migrate(deps(root));
+
+  assert.equal(result.steps[0].changed.includes('.gitignore'), false);
+  await assert.rejects(() => readFile(join(root, '.gitignore'), 'utf8'), { code: 'ENOENT' });
+});
+
 test('the v0.2 fixture is schema-valid and carries workspace_version 2', async () => {
   const store = new FsStore(FIXTURE_V2);
   assert.equal((await store.readProject()).workspace_version, 2);
@@ -262,6 +293,7 @@ test('migrate 2 → 3 adds the execution policy keys and the analysis output dir
     [
       ...NEW_DIRS.map((dir) => `${dir}/.gitkeep`),
       POLICY_PATH.split(sep).join('/'),
+      '.gitignore',
       'phdude.yaml',
     ].sort(),
   );

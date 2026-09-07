@@ -32,9 +32,9 @@ analysis is refused instead of spawning something nobody declared. A workspace t
 pinned interpreter names it there (`python3: /opt/venv/bin/python`) rather than relying on PATH.
 
 **Scripts run behind a port.** `src/ports/analysis-runner.js` defines
-`run({ runtime, script, args, cwd, env, timeoutMs }) → { exitCode, timedOut, stdout, stderr,
-durationMs }` and ships the contract suite every implementation must pass. `localRunner`
-(`src/adapters/execution/local.js`) is the only implementation: `execFile` with an argument
+`run({ runtime, script, args, cwd, env, timeoutMs }) → { exitCode, timedOut, signal, stdout,
+stderr, durationMs }` and ships the contract suite every implementation must pass. `localRunner`
+(`src/adapters/execution/local.js`) is the only implementation: `spawn` with an argument
 array and no shell, so nothing in a script path, an argument or a policy value is ever
 interpreted as a command; `cwd` is the workspace root; and the environment is built, not
 inherited — `PATH`, `HOME`, `LANG` plus the `PHDUDE_WORKSPACE` and `PHDUDE_ANALYSIS` the caller
@@ -46,6 +46,13 @@ workspace declared.
 script that outruns `timeout_seconds` comes back as `{ exitCode: null, timedOut: true }` — the
 application turns that into `TOOL_MISSING` with a hint to raise the timeout. Both are recorded on
 the analysis; a run that failed is part of the record of what was tried.
+
+**The timeout binds the process tree, not one pid.** A run is spawned into its own process group,
+and `timeout_seconds` ends the group: SIGTERM, then SIGKILL two seconds later. A script that traps
+the polite signal, and the compiled tool or interpreter it shelled out to, both die with it —
+otherwise the one bound on an arbitrary-code surface would be whatever the script agreed to
+honour. `exitCode: null` with `timedOut: false` is a run some other signal ended, named in
+`signal`; it is a failure, never a run that succeeded quietly.
 
 **The results contract.** A script reads its inputs from `data/`, is told which analysis it is
 through `PHDUDE_ANALYSIS`, and writes `analysis/out/<name>/results.json`:
@@ -73,7 +80,10 @@ the rest; `phdude packs apply` refuses the whole pack.
 - Every run costs one event and one entry in the analysis's `runs`, so `git log` and
   `.phdude/events.jsonl` show what ran, when, against which input hashes.
 - Migration 0002 takes the workspace to version 3: it adds the policy keys when they are missing
-  and creates `knowledge/datasets/`, `analysis/out/`, `tables/out/` and `figures/out/`. It writes
+  and creates `knowledge/datasets/`, `analysis/out/`, `tables/out/` and `figures/out/`. What those
+  three `out/` directories hold is regenerable — a `results.json`, a rendered table, a figure
+  image — so they are ignored the way `outputs/` is, and the migration appends the rules to a
+  `.gitignore` the workspace already has rather than writing one it chose to delete. It writes
   the policy file through the YAML parser, so comments a researcher added to that one file do not
   survive the step — `phdude migrate` refuses a dirty tree precisely so the rewrite is one
   reviewable diff. A workspace with no policy file gets none written: every key it would add

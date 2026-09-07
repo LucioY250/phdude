@@ -1,0 +1,26 @@
+{
+  "schema": "phdude.dataset",
+  "version": 1,
+  "id": "DATASET-0123456789",
+  "created": "2026-09-07T00:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "path": "data/survey.csv",
+  "hash": "not-a-sha256",
+  "bytes": 128,
+  "format": "parquet",
+  "profile": {
+    "rows": 3,
+    "columns": [
+      {
+        "name": "age",
+        "inferred_type": "number",
+        "missing": 0,
+        "distinct": 900,
+        "distinct_truncated": false,
+        "samples": ["31", "44", "52", "61", "70", "88"]
+      }
+    ]
+  },
+  "sensitive": false,
+  "state": "candidate"
+}

@@ -15,6 +15,18 @@ const EXECUTION_DEFAULTS = {
 
 const NEW_DIRS = ['knowledge/datasets', 'analysis/out', 'tables/out', 'figures/out'];
 
+// Kept in step with `defaults/workspace.gitignore`. What an analysis, a table or a figure writes
+// is a regenerable artefact, ignored the way `outputs/` already is, so a workspace does not start
+// committing rendered output the day it gains the directories to write it into.
+const IGNORE_RULES = [
+  'analysis/out/*',
+  '!analysis/out/.gitkeep',
+  'tables/out/*',
+  '!tables/out/.gitkeep',
+  'figures/out/*',
+  '!figures/out/.gitkeep',
+];
+
 function isMapping(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -43,6 +55,18 @@ function backfillPolicy(policy) {
   return Object.keys(patch).length > 0 ? { ...policy, ...patch } : null;
 }
 
+// Only the rules that are not there already, appended: the order and the comments a researcher
+// gave their own file are theirs. A workspace with no `.gitignore` is one that decided against
+// ignoring anything, and writing one now would be inventing a document rather than backfilling.
+function backfillGitignore(existing) {
+  if (typeof existing !== 'string') return null;
+  const lines = existing.split('\n');
+  const missing = IGNORE_RULES.filter((rule) => !lines.includes(rule));
+  if (missing.length === 0) return null;
+  const gap = existing === '' || existing.endsWith('\n') ? '' : '\n';
+  return existing + gap + missing.join('\n') + '\n';
+}
+
 // The change list is computed before anything is written so `preview` and `apply` cannot
 // disagree about what this step touches.
 async function planChanges(store) {
@@ -52,6 +76,9 @@ async function planChanges(store) {
     const path = `${dir}/.gitkeep`;
     if (!(await store.exists(path))) changes.push({ path, text: '' });
   }
+
+  const gitignore = backfillGitignore(await store.readText('.gitignore'));
+  if (gitignore !== null) changes.push({ path: '.gitignore', text: gitignore });
 
   // A workspace with no policy file is one the researcher never opened anything in; writing one
   // now would be inventing a document, not backfilling a shape.

@@ -5,6 +5,7 @@ import { newArtifact, mimeFor } from '../domain/entities.js';
 import { linkVersions } from '../domain/versions.js';
 import { PhdudeError } from '../domain/errors.js';
 import { assertUpToDate } from './guard.js';
+import { assertRealPathInsideRoot, outsideWorkspace } from './paths.js';
 
 function toRelPath(root, absPath) {
   return relative(root, absPath).split(sep).join('/');
@@ -89,13 +90,7 @@ const NOT_SOURCES = new Set([
   '.gitignore',
 ]);
 
-function outsideWorkspace(requestedPath) {
-  return new PhdudeError(
-    'USAGE',
-    `path is outside the workspace: ${requestedPath}`,
-    'copy the files into sources/ first',
-  );
-}
+const OUTSIDE_HINT = 'copy the files into sources/ first';
 
 // The slash commands hand the agent `Bash(phdude:*)` as a narrow capability, so ingest must
 // not become an arbitrary file read plus copy-into-repo: contain every requested path under
@@ -103,7 +98,8 @@ function outsideWorkspace(requestedPath) {
 function resolveInsideRoot(store, requestedPath) {
   const absPath = resolve(store.root, requestedPath);
   const back = relative(store.root, absPath);
-  if (back.startsWith('..') || isAbsolute(back)) throw outsideWorkspace(requestedPath);
+  if (back.startsWith('..') || isAbsolute(back))
+    throw outsideWorkspace(requestedPath, OUTSIDE_HINT);
   if (back !== '' && NOT_SOURCES.has(back.split(sep)[0])) {
     throw new PhdudeError(
       'USAGE',
@@ -114,26 +110,9 @@ function resolveInsideRoot(store, requestedPath) {
   return absPath;
 }
 
-// Lexical containment cannot see through a symlink: `sources/escape` may resolve anywhere.
-// The walker refuses to follow links, and this refuses to start behind one.
-async function assertRealPathInsideRoot(fs, store, requestedPath, absPath) {
-  let realRoot;
-  let realPath;
-  try {
-    realRoot = await fs.realpath(store.root);
-    realPath = await fs.realpath(absPath);
-  } catch (err) {
-    // A path that does not exist yet is the walker's error to report, with its own hint.
-    if (err && err.code === 'ENOENT') return;
-    throw err;
-  }
-  const back = relative(realRoot, realPath);
-  if (back.startsWith('..') || isAbsolute(back)) throw outsideWorkspace(requestedPath);
-}
-
 async function collectFiles(fs, store, requestedPath) {
   const absPath = resolveInsideRoot(store, requestedPath);
-  await assertRealPathInsideRoot(fs, store, requestedPath, absPath);
+  await assertRealPathInsideRoot(fs, store.root, requestedPath, absPath, OUTSIDE_HINT);
   const files = [];
   const symlinks = [];
   try {

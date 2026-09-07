@@ -44,6 +44,17 @@ test('init creates layout and is idempotent', async () => {
   assert.equal(events.length, 2);
 });
 
+test('the workspace .gitignore ignores every regenerable out/ directory', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  await initWorkspace(deps(root), { title: 'My thesis', agents: [] });
+
+  const lines = (await readFile(join(root, '.gitignore'), 'utf8')).split('\n');
+  for (const dir of ['outputs', 'analysis/out', 'tables/out', 'figures/out']) {
+    assert.ok(lines.includes(`${dir}/*`), `${dir} is ignored`);
+    assert.ok(lines.includes(`!${dir}/.gitkeep`), `${dir} keeps its .gitkeep`);
+  }
+});
+
 test('init creates the authors dir for per-researcher voice profiles', async () => {
   const root = await mkdtemp(join(tmpdir(), 'phdude-'));
   await initWorkspace(deps(root), { title: 'My thesis', agents: [] });
