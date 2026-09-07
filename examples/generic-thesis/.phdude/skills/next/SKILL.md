@@ -23,6 +23,12 @@ phdude next --json
 Returns `{ actions, top }`, where `actions` is every candidate action ranked by impact, then by
 how many objects depend on it, then by rule order (PRD S45).
 
+One rule is worth knowing by name. `gaps` fires only when the workspace has three or more
+research gaps *and* no high-impact rule fired this run, and its command is `phdude gaps`. Seeing
+it at the top means nothing urgent is outstanding and the useful next move is to work the gap
+report — follow `[[literature]]` for how to read one. Seeing it absent while gaps exist means
+something higher-impact already points at the same underlying problem; do that instead.
+
 ## Present the top 3
 
 Show `top` first, then the next two entries of `actions`, each with:

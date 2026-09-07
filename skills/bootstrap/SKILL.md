@@ -104,7 +104,20 @@ phdude link CLAIM-0123456789 --to EVID-0123456789 RQ-1
 Links are additive and idempotent; a target the object already lists is ignored. A claim that
 is already `canonical` cannot be linked — propose a Decision instead (`[[decisions]]`).
 
-## 4. Close the loop
+## 4. Check the citation registry
+
+```
+phdude cite check --json
+```
+
+Run this once you have added sources and evidence, before you report anything. It catches a
+source recorded without a title, authors or a year, an evidence item pointing at a source id
+that does not exist, a malformed DOI, and duplicates — all of which are cheapest to fix now,
+while you still remember which artifact each record came from. `uncited-source` is
+informational and does not fail the check; every other finding does, and the command exits 2
+until it is resolved. See `[[literature]]` for what each finding means.
+
+## 5. Close the loop
 
 ```
 phdude packs detect --json
@@ -112,7 +125,7 @@ phdude status --json
 phdude next --json
 ```
 
-## 5. Summarize for the researcher
+## 6. Summarize for the researcher
 
 Finish with a summary of 10 lines or fewer covering: what the project is, what is known so far,
 what conflicts exist (from `status`), and the single next step (from `next`). See `[[next]]`

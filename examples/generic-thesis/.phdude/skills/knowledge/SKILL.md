@@ -22,8 +22,8 @@ phdude knowledge list --type claim --state candidate --json
 phdude knowledge list --query "sample size" --json
 ```
 
-`--type` filters by object type (`claim | evidence | fact | source | question | hypothesis |
-method | result`). `--state` filters by knowledge state. `--query` is a case-insensitive
+`--type` filters by object type (`artifact | source | claim | evidence | fact | result |
+question | hypothesis | method | decision`). `--state` filters by knowledge state. `--query` is a case-insensitive
 substring match over the object's primary text. Use filters before reading — never dump the whole knowledge
 base into context.
 

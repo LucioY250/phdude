@@ -54,9 +54,12 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude link CLAIM-a
 --contradicts CLAIM-b`), `phdude decide`, `phdude promote`, `phdude packs apply`, or
 `phdude mode`. (`phdude init` creates the workspace and `phdude ingest` writes the artifact
-inventory and its cache — expected setup steps, not knowledge edits.) Every other command only
-reads or derives from what is already recorded. Never write YAML files directly, even to "fix
-a typo".
+inventory and its cache — expected setup steps, not knowledge edits. `phdude cite export`
+writes `references.bib` or `references.json` at the workspace root, a derived file that records
+no event and is never a substitute for the `SRC-` id itself.) Every other command —
+`phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `packs list|detect`,
+`doctor`, `help` — only reads or derives from what is already recorded. Never write YAML files
+directly, even to "fix a typo".
 
 ## Contradictions are recorded, not resolved by you
 
@@ -93,6 +96,14 @@ prose each time it comes up. Record the design, paradigm, sampling, instruments,
 limitations the researcher confirms, link each method to the questions it addresses
 (`phdude link METH-x --to RQ-n`), and when a manuscript sentence describes the methodology,
 take it from that record instead of restating it from memory.
+
+## Migration is the researcher's command
+
+When a command reports `workspace needs migration (1 → 2)`, that message is for the researcher,
+not a problem for you to clear. Reads keep working; every write is refused until it is done.
+Tell them what you saw and ask them to run `phdude migrate` themselves — do not run it, and do
+not pass `--force`. It rewrites files in place and git is the only undo, so whether the tree is
+clean enough for that is their call, not yours.
 
 ## Never fabricate
 
