@@ -26,7 +26,21 @@
           ]
         },
         "artifacts": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
-        "state": { "$ref": "phdude://common#/$defs/state" }
+        "state": { "$ref": "phdude://common#/$defs/state" },
+        "bibkey": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "abstract": { "type": "string" },
+        "keywords": { "type": "array", "items": { "type": "string" } },
+        "identifiers": {
+          "type": "object",
+          "properties": {
+            "doi": { "type": "string", "pattern": "^10\\.\\d{4,9}/\\S+$" },
+            "isbn": { "type": "string" },
+            "arxiv": { "type": "string" },
+            "pmid": { "type": "string" },
+            "url": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
       },
       "required": ["title", "authors", "type", "artifacts", "state"]
     }

@@ -113,7 +113,7 @@ export async function generate(root) {
   const artGamma = artifactIdFor(artifacts, 'sources/survey-gamma.md');
   const artCsv = artifactIdFor(artifacts, 'sources/participants.csv');
 
-  await addEntity(deps, 'source', {
+  const { obj: source1 } = await addEntity(deps, 'source', {
     title: 'Survey Alpha and Beta: Note-Taking App Adoption',
     authors: ['A. Alpha', 'B. Beta'],
     year: 2025,
@@ -126,6 +126,26 @@ export async function generate(root) {
     year: 2025,
     type: 'report',
     artifacts: [artGamma],
+  });
+  // A second cited source, with a DOI - not backed by an ingested artifact of its own, which
+  // is a normal state for a source you know about and cite before you have ingested its file.
+  const { obj: source3 } = await addEntity(deps, 'source', {
+    title: 'Cross-Institutional Meta-Analysis of Note-Taking App Adoption',
+    authors: ['D. Delta'],
+    year: 2024,
+    venue: 'Journal of Educational Technology Research',
+    type: 'article',
+    identifiers: { doi: '10.1234/jetr.2024.0099' },
+    artifacts: [],
+  });
+  // A third source, never cited by any evidence - exercises `cite check`'s informational
+  // `uncited-source` finding (it does not fail the check on its own).
+  await addEntity(deps, 'source', {
+    title: 'Longitudinal Trends in Student Mobile Device Usage',
+    authors: ['E. Epsilon'],
+    year: 2023,
+    type: 'preprint',
+    artifacts: [],
   });
 
   const { obj: rq } = await addEntity(deps, 'question', {
@@ -149,6 +169,23 @@ export async function generate(root) {
     locator: 'Methods',
     excerpt:
       '312 undergraduate students reported daily use of at least one note-taking application (Survey Alpha).',
+    strength: 'moderate',
+  });
+
+  // Cites a SRC id directly (rather than an artifact) - the citation registry (`phdude cite
+  // list|check|export`) counts a source as cited only by an evidence item recorded this way.
+  await addEntity(deps, 'evidence', {
+    source: source1.id,
+    locator: 'Introduction',
+    excerpt:
+      'The combined report synthesizes note-taking app adoption findings across two independently recruited undergraduate samples.',
+    strength: 'weak',
+  });
+  await addEntity(deps, 'evidence', {
+    source: source3.id,
+    locator: 'Abstract',
+    excerpt:
+      'A cross-institutional meta-analysis corroborates high daily adoption of note-taking applications among undergraduates.',
     strength: 'moderate',
   });
 

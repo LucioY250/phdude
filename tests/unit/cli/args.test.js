@@ -246,6 +246,13 @@ test('parseCli: an unknown command reports the command, not its flags', () => {
   assert.equal(cli.flags.json, true);
 });
 
+test('parseCli: cite export --format', () => {
+  const cli = parseCli(['cite', 'export', '--format', 'csl-json']);
+  assert.equal(cli.command, 'cite');
+  assert.equal(cli.sub, 'export');
+  assert.equal(cli.flags.format, 'csl-json');
+});
+
 test('optionsFor: an unknown command has only the global options', () => {
   assert.deepEqual(
     Object.keys(optionsFor('frobnicate')).sort(),

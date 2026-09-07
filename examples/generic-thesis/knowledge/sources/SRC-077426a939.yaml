@@ -1,0 +1,18 @@
+schema: phdude.source
+version: 1
+id: SRC-077426a939
+created: 2026-09-01T00:00:10.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Cross-Institutional Meta-Analysis of Note-Taking App Adoption
+authors:
+  - D. Delta
+type: article
+artifacts: []
+state: candidate
+year: 2024
+venue: Journal of Educational Technology Research
+identifiers:
+  doi: 10.1234/jetr.2024.0099

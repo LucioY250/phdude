@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { cp, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -837,4 +837,77 @@ test('e2e: link --contradicts disputes both claims and promote requires a resolv
 
   const finalStatus = await runJson(ws, ['status']);
   assert.deepEqual(finalStatus.disputedPairs, []);
+});
+
+test('e2e: cite check exits 2 while a source is broken, then 0 once it is fixed', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-cite-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Cite thesis', '--no-git']);
+
+  const broken = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'A Study With A Bad DOI',
+      authors: ['A. One'],
+      year: 2024,
+      doi: 'not-a-doi',
+    }),
+  ]);
+
+  const failing = await phdude(ws, ['cite', 'check', ...ACTOR]);
+  assert.equal(failing.code, 2, 'an invalid DOI fails the check');
+  assert.match(failing.stdout, /FAILED/);
+  assert.match(failing.stdout, /invalid-doi/);
+  assert.equal(failing.stderr, '', 'a failed check is a report, not an error');
+
+  const failingJson = await phdude(ws, ['cite', 'check', '--json', ...ACTOR]);
+  assert.equal(failingJson.code, 2);
+  const report = JSON.parse(failingJson.stdout);
+  assert.equal(report.ok, false);
+  assert.ok(report.findings.some((f) => f.kind === 'invalid-doi' && f.id === broken.id));
+
+  // A source's DOI is not part of its content-derived id, so `add` cannot correct it in
+  // place (re-adding under the same title/year is a no-op, see docs/cli.md). The mistaken
+  // record is not yet cited by anything, so it is safe to remove directly and replace with a
+  // corrected one, the same recovery this workspace already uses for a corrupted YAML file.
+  await unlink(join(ws, 'knowledge', 'sources', `${broken.id}.yaml`));
+
+  const fixed = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'A Study With A Good DOI',
+      authors: ['A. One'],
+      year: 2024,
+      doi: '10.1234/xyz.2024.01',
+    }),
+  ]);
+  await run(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({ source: fixed.id, excerpt: 'A finding.' }),
+  ]);
+
+  const passing = await phdude(ws, ['cite', 'check', ...ACTOR]);
+  assert.equal(passing.code, 0, 'the check passes once the broken source is gone');
+  assert.match(passing.stdout, /^OK/);
+
+  // list reports the fixed source's bibkey and DOI.
+  const rows = await runJson(ws, ['cite', 'list']);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].doi, '10.1234/xyz.2024.01');
+  assert.equal(rows[0].cited_by, 1);
+
+  // export writes a bibliography and records no event.
+  const beforeEvents = (await runJson(ws, ['status'])).recentEvents.length;
+  const exported = await runJson(ws, ['cite', 'export']);
+  assert.equal(exported.count, 1);
+  assert.equal(await exists(exported.path), true);
+  const afterEvents = (await runJson(ws, ['status'])).recentEvents.length;
+  assert.equal(afterEvents, beforeEvents, 'export is derived, not knowledge');
 });

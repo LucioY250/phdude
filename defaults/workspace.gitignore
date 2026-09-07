@@ -3,3 +3,5 @@
 .env.*
 outputs/*
 !outputs/.gitkeep
+references.bib
+references.json

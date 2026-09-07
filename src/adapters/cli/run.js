@@ -14,6 +14,7 @@ import { parseCli } from './args.js';
 import { printJson } from './output.js';
 import add from './commands/add.js';
 import bootstrap from './commands/bootstrap.js';
+import cite from './commands/cite.js';
 import decide from './commands/decide.js';
 import doctor from './commands/doctor.js';
 import help, { usage } from './commands/help.js';
@@ -33,6 +34,7 @@ const { version } = createRequire(import.meta.url)('../../../package.json');
 const COMMANDS = {
   add,
   bootstrap,
+  cite,
   decide,
   doctor,
   ingest,
@@ -162,7 +164,10 @@ export async function run(argv, { stdout, stderr, cwd, env }) {
     } else if (result.text) {
       stdout.write(result.text.endsWith('\n') ? result.text : `${result.text}\n`);
     }
-    return 0;
+    // A handler that succeeded (no PhdudeError thrown) but found something wrong - `cite
+    // check`'s failed findings - still prints its full report rather than an error shape, so
+    // it opts into a non-zero exit this way instead of throwing.
+    return result.exitCode ?? 0;
   } catch (err) {
     return writeError(err, { stderr, json, env });
   }

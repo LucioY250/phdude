@@ -78,7 +78,7 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Object | Id | Key fields |
 |---|---|---|
 | Artifact | `ART-<hash10>` | `path`, `paths[]`, `hash`, `bytes`, `mime`, `kind`, `extracted`, `role` |
-| Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]` |
+| Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]`, `bibkey?`, `abstract?`, `keywords[]?`, `identifiers?{doi,isbn,arxiv,pmid,url}` |
 | Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]`, `provenance` |
 | Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength`, `provenance` |
 | Fact | `FACT-<hash10>` | `key`, `value`, `unit`, `from {artifact, locator}` |

@@ -302,6 +302,7 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude link <id> --to <ids…>` | Attach evidence to a claim, a claim or method to a question, an artifact to a source. |
 | `phdude decide propose\|approve\|reject\|supersede` | Research decisions. The agent proposes; the researcher decides. |
 | `phdude promote <id> --decision <DEC-id>` | Make an object canonical, with an approved decision behind it. |
+| `phdude cite list\|check\|export` | Citation registry: list sources, verify them, export BibTeX/CSL-JSON. |
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |
 | `phdude mode lite\|full\|ruthless\|off` | How hard the agent pushes back. |
 | `phdude migrate [--dry-run]` | Upgrade a workspace written by an older PhDude. |

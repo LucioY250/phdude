@@ -16,6 +16,7 @@ const LINES = [
   '  decide propose|approve|reject|supersede',
   '                                    research decisions; the researcher decides',
   '  promote <id> --decision <DEC-id>  move an object to canonical',
+  '  cite list|check|export            citation registry: list, verify, export BibTeX/CSL',
   '  packs list|detect|apply <name>    field and method packs',
   '  mode lite|full|ruthless|off       set the review mode',
   '  migrate [--dry-run] [--force]     upgrade the workspace to the current schema version',

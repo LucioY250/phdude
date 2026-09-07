@@ -1,0 +1,18 @@
+schema: phdude.evidence
+version: 1
+id: EVID-09913dd0eb
+created: 2026-09-01T00:00:20.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: SRC-c2221faf93
+locator: Introduction
+excerpt: The combined report synthesizes note-taking app adoption findings across two independently recruited undergraduate samples.
+strength: weak
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-35146e2f6d
+    - ART-f7ced78004

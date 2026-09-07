@@ -297,6 +297,48 @@ survivor. Promoting the losing claim with the same decision exits 3 naming the s
 instead. Resolving the pair does not touch the loser automatically beyond that manual
 rejection, and `contradicts` is kept on the survivor as history of the dispute.
 
+### `phdude cite list|check|export`
+
+```
+phdude cite list
+phdude cite check
+phdude cite export --format bibtex|csl-json
+```
+
+The citation registry (PRD §37, spec §3.3): a `bibkey`, deterministically derived unless the
+source declares its own, plus BibTeX/CSL-JSON export. **It is derived, never canonical** —
+nothing here changes a claim's or evidence item's state, and the citation itself is always the
+`SRC-…` id, not the bibkey.
+
+`list` prints every source with its `bibkey`, authors, year, DOI and `cited_by`: the number of
+evidence items whose `source` is that SRC id directly. An evidence item that cites an artifact
+instead of a formal source does not count — that gap is exactly what `check`'s `uncited-source`
+finding reports.
+
+`check` verifies the registry and exits 2 if anything but `uncited-source` is wrong:
+
+| Finding kind | Meaning |
+|---|---|
+| `uncited-source` | No evidence item cites this source directly. Informational only — it never fails the check by itself. |
+| `evidence-missing-source` | An evidence item's `source` id does not exist. |
+| `invalid-doi` | A DOI (`identifiers.doi` or the legacy top-level `doi`) does not match `^10\.\d{4,9}/\S+$`. |
+| `missing-field` | The source has no `title`, no `authors`, or no `year`. |
+| `duplicate-source` | Two sources share the same normalized title and year. |
+| `duplicate-bibkey` | Two sources declare the same explicit `bibkey`. |
+
+A source's id is derived from its `title` and `year` (see `phdude add` above), so none of these
+fields can be corrected on an existing record in place — fixing one means adding a corrected
+source and, once it is not relied on anywhere, removing the mistaken YAML file directly.
+
+`export --format bibtex|csl-json` (default `bibtex`) writes `references.bib` or
+`references.json` at the workspace root, covering every source regardless of whether it is
+cited. It records no event — a derived artifact, not knowledge — but still refuses on an
+out-of-date workspace like any other write (`phdude migrate`).
+
+A source may carry `bibkey` (`^[a-z0-9-]+$`, wins over the derived key), `abstract`, `keywords`
+(a string array), and `identifiers: { doi?, isbn?, arxiv?, pmid?, url? }`. The top-level `doi`
+and `url` fields from v0.1 still work; `identifiers.doi` takes precedence when both are set.
+
 ### `phdude packs list|detect|apply <name>`
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's
