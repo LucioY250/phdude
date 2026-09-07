@@ -1,89 +1,266 @@
+<div align="center">
+
+<img src="docs/assets/phdude-hero.png" alt="PhDude: a researcher at a desk, laptop open, notes everywhere, thinking hard" width="420">
+
 # PhDude
-<img width="254" height="254" alt="logoPHDude" src="https://github.com/user-attachments/assets/1716fadd-7327-4a99-907e-a59855b557cc" />
-
-
-
 
 **The senior researcher in your terminal.**
 
 Your AI can write. PhDude helps make the research worth publishing.
 
-PhDude is a free, open-source, field-agnostic research co-author harness for AI coding
-agents. It turns a general-purpose agent such as Claude Code or Codex into a persistent,
-evidence-aware research collaborator that owns the whole project rather than one-off
-answers: what you are trying to establish, what evidence exists, what is missing, what
-contradicts what, and what to do next.
+[![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
+[![version](https://img.shields.io/badge/version-0.1.0-blue)](CHANGELOG.md)
+[![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
+[![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
+[![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
 
-Nothing about your discipline is baked in. A medical trial, an ethnography and an empirical
-software-engineering paper all work the same way; the field-specific vocabulary arrives
-through packs.
+</div>
 
-> **Status:** v0.1. The deterministic harness, the workspace, the knowledge graph, conflict
-> detection, status and next-action recommendations are done. Literature search, analysis
-> execution and the writing engine are on the roadmap below.
+---
 
-## What it is
+Coding agents are already good at the individual tasks of research: find a paper, summarize
+it, draft a section, run a regression. What they are bad at is the *project*. They forget what
+you decided last month, they state a shaky claim as fact because it reads well, and they have
+no idea that the sample size in your thesis draft disagrees with the one in your defense slides.
 
-- **A persistent research state** in your own git repository: artifacts, sources, claims,
-  evidence, facts, research questions, hypotheses and decisions, one YAML file each.
-- **A deterministic runtime** that owns inventory, hashing, text extraction, validation,
-  lineage, contradiction detection and next-action scoring. No model is involved in any of it.
-- **Agent skills** that give the model the working discipline of a senior researcher, and a
-  CLI it must write through so every change is validated, attributed and logged.
+PhDude is the part that remembers. It is a free, open-source harness that wraps Claude Code,
+Codex or any agent that reads `AGENTS.md` in a persistent, evidence-aware research workspace,
+so the agent behaves like a senior colleague who has actually read your project:
 
-## What it is not
+- **it knows what you are trying to establish**, what evidence exists, and what is missing;
+- **it will not let a claim outrun its evidence**: every claim carries an explicit knowledge
+  state, and nothing becomes "canonical" without a decision you approved;
+- **it notices contradictions** between your own documents before a reviewer does;
+- **it always has an answer to "what should we do next?"**, with the reasons attached.
 
-Not a chatbot, a citation generator, a PDF-chat app, a literature-search website, a thesis
-generator, a research SaaS, or another AI text editor. It does not write your thesis for
-you and it will not pretend a claim is established when the evidence says otherwise.
+It makes no assumptions about your field. A clinical trial, an archival history and an
+empirical software-engineering paper get the same treatment; discipline-specific vocabulary
+and review questions arrive as packs.
+
+> **Where things stand.** This is v0.1. The deterministic core is done and tested: workspace,
+> ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`,
+> and the Claude Code and Codex adapters. Literature search, analysis execution and the
+> writing engine come next; see the [roadmap](#roadmap).
+
+## Contents
+
+- [How it works](#how-it-works)
+- [Install](#install)
+- [Set up your agent](#set-up-your-agent) (Claude Code, Codex, anything else)
+- [A first session](#a-first-session)
+- [What's in the box](#whats-in-the-box)
+- [Your workspace](#your-workspace)
+- [Commands](#commands)
+- [Packs](#packs)
+- [Principles](#principles)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+
+## How it works
+
+The agent thinks. The harness remembers, validates, and refuses.
+
+```mermaid
+flowchart LR
+    You([You]) <--> Agent[Claude Code / Codex]
+    Agent -- "phdude … --json" --> CLI[phdude CLI]
+    CLI -- validated, attributed,<br>logged writes --> WS[(Research workspace<br>YAML + Markdown in git)]
+    WS -- status, next, knowledge --> CLI
+    CLI --> Agent
+    Skills[Skills<br>SKILL.md] -. how to work .-> Agent
+    Packs[Packs<br>field / method] -. vocabulary,<br>review questions .-> Agent
+    Packs -.-> CLI
+```
+
+The agent never edits research state by hand. It goes through the CLI, so every change is
+schema-validated, attributed to a researcher and an agent, and appended to an audit log. Four
+kinds of parts make this up:
+
+```mermaid
+flowchart TB
+    subgraph ADAPTERS["ADAPTERS · how PhDude talks to the outside"]
+        A1[Claude Code host] --- A2[Codex host] --- A3[PDF / DOCX / PPTX / XLSX parsers] --- A4[git]
+    end
+    subgraph SKILLS["SKILLS · what PhDude knows how to do"]
+        S1[bootstrap] --- S2[knowledge] --- S3[decisions] --- S4[next] --- S5[review modes]
+    end
+    subgraph PACKS["PACKS · how PhDude adapts to a field or method"]
+        P1[computer-science] --- P2[medicine] --- P3[humanities] --- P4[quantitative] --- P5[…]
+    end
+    subgraph CORE["CORE · what PhDude knows and remembers"]
+        C1[workspace state] --- C2[knowledge graph + provenance] --- C3[approval gates] --- C4[cache + invalidation] --- C5[next-action rules]
+    end
+    SKILLS --> CORE
+    PACKS --> SKILLS
+    ADAPTERS --> CORE
+```
+
+### Where the knowledge comes from
+
+Drop documents in `sources/` and run `phdude ingest`. Nothing here involves a model: it is
+hashing, parsing and bookkeeping, and it is idempotent.
+
+```mermaid
+flowchart LR
+    D[discover<br>sources/**] --> I[inventory<br>sha256 → ART-id] --> X[dedup<br>same hash, many paths]
+    X --> E[extract<br>text · sections · tables] --> C[(cache<br>.phdude/cache/ART-*/)]
+    C --> V[link versions<br>thesis_v1 → thesis_v2] --> R[record<br>knowledge/artifacts/ART-*.yaml]
+```
+
+The agent then reads the cached text section by section, never whole documents, and turns it
+into research objects through `phdude add`: sources, facts with their locators, evidence, and
+candidate claims. Everything it adds points back to where it came from:
+
+```mermaid
+flowchart LR
+    ART[ART-…<br>thesis.docx] --> SRC[SRC-…<br>Smith 2023]
+    SRC --> EVID[EVID-…<br>"n = 312, p. 41"]
+    EVID --> CLAIM[CLAIM-…<br>candidate]
+    CLAIM --> RQ[RQ-1<br>research question]
+    ART --> FACT[FACT-…<br>sample_size = 312]
+```
+
+`phdude knowledge trace CLAIM-…` walks this graph in both directions, so "where did this number
+come from?" has an answer.
+
+### How a claim earns the right to be stated plainly
+
+```mermaid
+stateDiagram-v2
+    [*] --> candidate: phdude add claim
+    candidate --> supported: evidence linked
+    supported --> canonical: promote --decision DEC-x<br>(DEC-x approved by a human,<br>and it names this claim)
+    candidate --> disputed
+    supported --> disputed
+    canonical --> disputed: new contradicting evidence
+    disputed --> supported
+    candidate --> rejected
+    supported --> rejected
+    rejected --> candidate
+```
+
+The transition into `canonical` is the only one the CLI gates, and it gates it hard: without an
+approved decision that lists the object, `phdude promote` exits with code 3. An agent cannot
+talk its way around it, and neither can a tired researcher at 2 a.m.
+
+### How "what next?" is decided
+
+```mermaid
+flowchart LR
+    S[(workspace snapshot)] --> R{ten rules}
+    R --> a[no research questions?]
+    R --> b[artifacts without text?]
+    R --> c[open fact conflicts?]
+    R --> d[claims without evidence?]
+    R --> e[decisions awaiting approval?]
+    R --> f[…]
+    a & b & c & d & e & f --> K[rank: impact,<br>then dependents,<br>then rule order]
+    K --> T[top action<br>+ why + exact command]
+```
+
+Every rule is deterministic and every recommendation carries its reasons, its impact, and the
+command that does it. There is no hidden score.
 
 ## Install
 
-v0.1 is not yet published to npm. Install it from the repository:
+v0.1 is not on npm yet. Install it from the repository:
 
 ```
 git clone https://github.com/LucioY250/phdude && cd phdude
 npm ci
 npm link
-phdude --version
+phdude --version      # phdude 0.1.0
 ```
 
-`npm install` support comes with the 0.1.x release.
+Node 22 or newer. `pdftotext` (poppler-utils) is optional: without it PDFs are still
+inventoried and hashed, and `phdude doctor` tells you exactly what is missing.
 
-Node 22 or newer. `pdftotext` (poppler-utils) is optional; without it PDFs are still
-inventoried and hashed, and `phdude doctor` tells you what is missing.
+```
+sudo apt install poppler-utils     # Debian / Ubuntu
+brew install poppler               # macOS
+```
 
-## Quick start
+## Set up your agent
+
+`phdude init` creates the workspace and writes the files each agent host needs. The research
+state is identical whichever agent you use, and two people on two different agents can share
+one repository.
+
+### Claude Code
 
 ```
 mkdir my-research && cd my-research
-phdude init --title "Adaptive scheduling in edge clusters"
-cp ~/Downloads/*.pdf ~/Downloads/*.docx sources/
+phdude init --title "Adaptive scheduling in edge clusters" --agents claude-code
 ```
 
-**With Claude Code**, open the directory and run the slash command:
+This writes:
+
+| File | Purpose |
+|---|---|
+| `CLAUDE.md` | Entry point. Imports `AGENTS.md` and adds Claude-specific notes. |
+| `AGENTS.md` | Operating rules, the command reference, and an *index* of skills. Skills are loaded on demand, not up front, to keep your context small. |
+| `.claude/commands/phdude*.md` | Slash commands: `/phdude`, `/phdude-bootstrap`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-packs`, `/phdude-mode`, `/phdude-doctor`, `/phdude-ingest`. |
+| `.phdude/skills/*/SKILL.md` | The skills themselves, in the open `SKILL.md` convention. |
+
+Open Claude Code in the directory and start with:
 
 ```
 /phdude bootstrap
 ```
 
-**With Codex** (or any other agent), run the command yourself and let the agent take it from
-there; `AGENTS.md` already tells it what to do:
+`/phdude` on its own reports status and the top next action. `/phdude ruthless` (or `lite`,
+`full`, `off`) sets how hard the agent pushes back. Every slash command runs the CLI with
+`--json` and follows the matching skill; the commands are allow-listed to `phdude` only.
+
+### Codex
 
 ```
-phdude bootstrap
+mkdir my-research && cd my-research
+phdude init --title "Adaptive scheduling in edge clusters" --agents codex
 ```
 
-Either way PhDude ingests `sources/`, extracts and caches the text, reports what it found,
-and hands off to the agent to classify the artifacts and extract the first sources, facts
-and candidate claims. Then ask it anything:
+Codex has no slash commands and no on-demand skill loading, so it gets one file:
+
+| File | Purpose |
+|---|---|
+| `AGENTS.md` | Operating rules, the command reference, and every skill inlined in full. Codex reads it at the start of each session. |
+
+Open Codex in the directory and ask it to bootstrap the research workspace. It will run
+`phdude bootstrap --json`, follow the bootstrap skill, and report what the project is, what is
+known, what conflicts, and what to do next. From then on ask it for status, the next action, or
+any `phdude` command by name.
+
+### Both, or another agent
+
+```
+phdude init --title "…" --agents claude-code,codex
+```
+
+is the default, and gives you both sets of files; the compact skills index wins for `AGENTS.md`, since Claude Code
+loads skills on demand and Codex still finds them by path. Any other agent that reads
+`AGENTS.md` (OpenCode, Gemini CLI, and most others) works the same way as Codex. If yours reads
+nothing by default, point it at `.phdude/skills/phdude-core/SKILL.md` and it has the rules.
+
+`init` never overwrites a `CLAUDE.md` or `AGENTS.md` you wrote yourself; it only manages files
+that carry its own marker, and it tells you which ones it skipped.
+
+## A first session
+
+```
+cp ~/Downloads/*.pdf ~/Downloads/*.docx sources/
+```
+
+Then `/phdude bootstrap` (Claude Code) or `phdude bootstrap` (Codex, or you). PhDude
+inventories and hashes every file, extracts and caches the text, and hands the agent a plan:
+classify the artifacts, pull out sources, facts and candidate claims, propose research
+questions for you to confirm. From then on you talk to your project:
 
 ```
 phdude status     # what the project is, what is known, what conflicts
 phdude next       # the highest-impact next action, and why
 ```
 
-`phdude next` always explains itself:
+`phdude next` never just tells you what to do. It shows its work:
 
 ```
 Highest-impact next action:
@@ -106,72 +283,128 @@ Other candidates:
 3. (low) No further automatic recommendations; add new sources or refine claims
 ```
 
-That block is `node bin/phdude.js next --workspace examples/generic-thesis`, verbatim.
+That block is the real output of `phdude next` on the [example workspace](examples/generic-thesis)
+that ships with the repository. The workspace was generated by a script from the same CLI you
+will use; nothing in it is hand-written.
+
+When the agent proposes a decision, you approve it by name, and only then can the object it
+names become canonical:
+
+```
+phdude decide approve DEC-… --by lucio
+phdude promote CLAIM-… --decision DEC-…
+```
+
+## What's in the box
+
+```
+phdude/
+├── bin/phdude.js          the CLI entry point
+├── src/
+│   ├── domain/            pure logic: ids, hashing, lineage, conflicts, next-action rules
+│   ├── application/       use cases: init, ingest, add, link, decide, status, next, packs
+│   ├── ports/             the contracts adapters implement (+ their contract test suites)
+│   ├── adapters/          filesystem store, document parsers, git, agent hosts, CLI
+│   └── schemas/           the JSON Schema validator
+├── schemas/               one JSON Schema per research object
+├── skills/                the six core skills, one SKILL.md directory each
+├── commands/              the Claude Code slash-command templates
+├── packs/                 seven starter packs: fields/ and methods/
+├── defaults/              the research constitution and policies a new workspace gets
+├── examples/              a complete generated workspace, used by the golden tests
+├── docs/                  CLI reference, workspace guide, extending guide, ADRs
+└── tests/                 unit · contract · integration · golden · e2e (node:test only)
+```
+
+Three runtime dependencies (`yaml`, `ajv`, `fflate`). No network calls anywhere. The domain
+layer cannot import the filesystem, and a test makes sure it never does.
+
+## Your workspace
+
+```
+my-research/
+├── phdude.yaml          # project: title, fields, methods, outputs, mode
+├── AGENTS.md            # shared agent instructions
+├── CLAUDE.md            # Claude Code entry point
+├── .claude/commands/    # slash commands (Claude Code)
+├── .phdude/
+│   ├── constitution.yaml, research-policy.yaml, writing-policy.yaml, …
+│   ├── skills/          # installed skills
+│   ├── events.jsonl     # append-only audit log
+│   └── cache/           # extracted text, gitignored, rebuildable
+├── sources/             # the raw materials you drop in
+├── authors/             # voice profiles (v0.4)
+├── knowledge/
+│   ├── artifacts/       # ART-*.yaml   one per unique file
+│   ├── sources/         # SRC-*.yaml   bibliographic sources
+│   ├── claims/          # CLAIM-*.yaml
+│   ├── evidence/        # EVID-*.yaml
+│   ├── facts/           # FACT-*.yaml  project facts with their origin
+│   └── results/         # RESULT-*.yaml
+├── research/            # questions/ RQ-*.yaml · hypotheses/ H-*.yaml
+├── decisions/           # DEC-*.yaml
+└── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
+```
+
+One object per file, content-derived ids, schema on every file. Plain YAML and Markdown under
+git: you can read, diff, review and merge all of it without PhDude installed, and if you stop
+using it you keep a folder, not a database dump. Details in [docs/workspace.md](docs/workspace.md).
 
 ## Commands
 
 | Command | What it does |
 |---|---|
-| `phdude init [dir]` | Create a workspace. Idempotent. |
+| `phdude init [dir]` | Create a workspace. Safe to run again. |
 | `phdude bootstrap` | Ingest, detect packs, report status and next, hand off to the agent. |
 | `phdude ingest [paths…]` | Inventory, hash, extract and cache source documents. |
 | `phdude status` | Project, inventory, knowledge counts, conflicts, pending decisions. |
 | `phdude next` | The highest-impact next action, with reasons and the exact command. |
-| `phdude knowledge list\|show\|trace` | Query the knowledge graph and its lineage. |
-| `phdude add <type>` | Add a claim, evidence, fact, source, question, hypothesis or result, or set an artifact's role with `add artifact-role`. |
-| `phdude link <id> --to <id>…` | Attach evidence or questions to a claim, questions to a hypothesis, artifacts to a source. |
-| `phdude decide propose\|approve\|reject\|supersede` | Research decisions; the researcher decides. |
-| `phdude promote <id> --decision <DEC-id>` | Move an object to canonical. |
+| `phdude knowledge list\|show\|trace` | Query the knowledge graph and follow its lineage. |
+| `phdude add <type>` | Add a claim, evidence, fact, source, question, hypothesis or result; set an artifact's role with `add artifact-role`. |
+| `phdude link <id> --to <ids…>` | Attach evidence to a claim, a claim to a question, an artifact to a source. |
+| `phdude decide propose\|approve\|reject\|supersede` | Research decisions. The agent proposes; the researcher decides. |
+| `phdude promote <id> --decision <DEC-id>` | Make an object canonical, with an approved decision behind it. |
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |
-| `phdude mode lite\|full\|ruthless\|off` | Set the review mode. |
+| `phdude mode lite\|full\|ruthless\|off` | How hard the agent pushes back. |
 | `phdude doctor` | Adapters, cache, schema versions, git state. |
 
-Every command takes `--json`. Exit codes: 0 ok, 1 usage, 2 validation, 3 policy, 4 external
-tool missing. Full reference: [docs/cli.md](docs/cli.md).
+Every command takes `--json`. Exit codes mean something: 0 ok, 1 usage, 2 validation,
+3 policy, 4 external tool missing. Errors come with a suggested action. The full reference is
+in [docs/cli.md](docs/cli.md).
 
-## The workspace
+## Packs
 
+Seven packs ship with v0.1: four fields (`computer-science`, `business`, `medicine`,
+`humanities`) and three methods (`quantitative`, `qualitative`, `systematic-review`). Each
+brings terminology, reviewers, recommended checks and a skill with concrete review questions
+and the epistemic norms of its discipline, so "demonstrates" and "suggests" are used the way
+that field uses them. `phdude packs detect` recommends packs from what it finds in your
+sources; nothing is applied until you say so.
+
+```mermaid
+flowchart LR
+    T[(cached text)] --> K[keyword hits<br>per pack] --> S[score ≥ 0.25?] --> Rec[packs_recommended<br>in phdude.yaml]
+    Rec -- "phdude packs apply <name>" --> Applied[fields / methods<br>in phdude.yaml]
+    Applied --> Skill[pack skill loaded<br>when relevant]
 ```
-my-research/
-├── phdude.yaml          # project config: title, fields, methods, outputs, mode
-├── AGENTS.md            # shared agent instructions
-├── CLAUDE.md            # Claude Code entry point
-├── .phdude/             # policies, installed skills, events.jsonl, cache/
-├── sources/             # the raw materials you drop in
-├── knowledge/           # artifacts, sources, claims, evidence, facts, results
-├── research/            # questions, hypotheses
-├── decisions/           # DEC-*.yaml
-└── data/ analysis/ figures/ tables/ manuscript/ outputs/
-```
 
-Plain YAML and Markdown in a git repository. You can read, diff and merge all of it without
-PhDude installed. Full detail: [docs/workspace.md](docs/workspace.md).
+Writing your own is a `pack.yaml` and a `SKILL.md`: see [docs/extending.md](docs/extending.md).
 
 ## Principles
 
 - **Research quality over text generation.** The goal is publishable research, not fluent prose.
-- **Evidence before claims.** Nothing is stated more confidently than its knowledge state
-  allows. `candidate` gets hedged; only `canonical` gets stated plainly.
-- **Human authority.** Research questions, methodology, accepted results and canonical
-  claims belong to the researcher. The agent proposes; approval is a human act, enforced by
-  the CLI.
+- **Evidence determines language strength.** Nothing is stated more confidently than its
+  knowledge state allows.
+- **Human authority.** Research questions, methodology, accepted results and canonical claims
+  belong to the researcher. The agent proposes; approval is a human act, enforced by the CLI.
 - **Field agnosticism.** No discipline is assumed. Domain knowledge arrives as packs.
-- **Local-first, data yours.** Your research lives in your repository, in a format that
-  outlives this tool.
-- **Token-efficient by architecture.** Agents read cached sections, not whole documents.
-- **Skill-first, not skill-only:**
+- **Local-first, and the data is yours.** Your research lives in your repository, in a format
+  that outlives this tool. Nothing is sent anywhere.
+- **Token-efficient by architecture.** Agents read cached sections, not whole documents, and
+  load a skill only when they need it.
+- **Skill-first, not skill-only.** Skills define capabilities. Core defines truth.
 
-  ```
-  CORE     = what PhDude knows and remembers.
-  SKILLS   = what PhDude knows how to do.
-  PACKS    = how PhDude adapts to a field, method or venue.
-  ADAPTERS = how PhDude interacts with an agent or external system.
-  ```
-
-  A capability that needs no memory, no provenance and no approval gate is a Skill. Anything
-  that must be true tomorrow for another researcher on another agent belongs in Core.
-
-The reasoning behind the big calls lives in [docs/adr/](docs/adr/).
+The reasoning behind the big calls is in [docs/adr/](docs/adr/).
 
 ## Roadmap
 
@@ -180,7 +413,7 @@ The reasoning behind the big calls lives in [docs/adr/](docs/adr/).
 | **v0.1** | MVP | workspace, ingestion, knowledge graph, decisions, conflicts, status, next, packs, Claude Code and Codex adapters |
 | v0.2 | Research Brain | evidence graph, literature matrix, research gaps, citation registry, schema migrations, skill permission enforcement |
 | v0.3 | Research Engine | fresh literature search, provider adapters, candidate review, freshness tracking |
-| v0.4 | Co-Author | author voice profiles, section writing, academic-prose skill, `/phdude deslop`, writing gates |
+| v0.4 | Co-Author | author voice profiles, section writing, the `academic-prose` skill, `/phdude deslop`, writing gates |
 | v0.5 | Analysis & Visualization | analysis skills, tables, charts, figures, reproducibility lineage |
 | v0.6 | Document Factory | DOCX, PDF, LaTeX, PPTX and XLSX output, venue packs (IEEE, ACM) |
 | v0.7 | Reviewer | citation auditor, methodology reviewer, Reviewer #2, Research Health, submission readiness |
@@ -191,17 +424,13 @@ The reasoning behind the big calls lives in [docs/adr/](docs/adr/).
 Install from source as above, then:
 
 ```
-npm test
-```
-
-Tests use `node:test` only. Before opening a pull request:
-
-```
 npm run format && npm run lint && npm test
 ```
 
-New parsers, agent hosts and packs plug in behind documented ports with contract suites you
-can run against your implementation. Start at [docs/extending.md](docs/extending.md).
+Tests use `node:test` only and run in a few seconds. New parsers, agent hosts and packs plug
+in behind documented ports with contract suites you can run against your own implementation.
+Start at [docs/extending.md](docs/extending.md); [CHANGELOG.md](CHANGELOG.md) records what
+changed and why.
 
 ## License
 
