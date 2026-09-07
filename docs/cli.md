@@ -37,13 +37,16 @@ answer. The global options above are accepted everywhere.
 | 2 | Validation | an object that fails its JSON Schema, malformed `--json` |
 | 3 | Policy | `promote` to canonical without an approved decision |
 | 4 | External tool missing | every search provider failed on a `phdude research` run |
+| 4 | Execution | the script behind a `phdude analyze run` exited non-zero |
 
 Errors print the message on stderr, followed by a `Suggested action:` line when the error
 carries a hint. With `--json` they print `{"error":{"code","message","hint","details"}}` on
 stderr instead. Exit code 4 is rare, because degradation is the rule: a missing `pdftotext`
 produces a warning and a partial extraction, and one failed search provider produces a warning
-and the other providers' results. Only a `phdude research` run where every provider failed
-exits 4.
+and the other providers' results. A `phdude research` run where every provider failed exits 4,
+and so does an analysis whose script exited non-zero (`EXECUTION`) or ran past
+`execution.timeout_seconds` (`TOOL_MISSING`) - PhDude did its part, and the thing it called
+did not come back.
 
 ## Commands
 
@@ -712,6 +715,90 @@ versions. `data show` prints the whole record as YAML. `data profile` prints the
 Only `data add` writes: one `data` event per registration, naming the new dataset and every
 version it superseded. The three readers write nothing.
 
+### `phdude analyze add --json | list | show <id> | run <id> | runs <id>`
+
+```
+phdude analyze add --json '{"name":"describe survey","runtime":"node","script":"analysis/describe.mjs","inputs":["DATASET-8f0a1c2b3d"]}'
+phdude analyze list
+phdude analyze show ANALYSIS-…
+phdude analyze run ANALYSIS-… --allow-exec
+phdude analyze run ANALYSIS-… --force
+phdude analyze runs ANALYSIS-…
+```
+
+Declares a script as a research object, runs it under the workspace execution policy, and turns
+what it reports into `RESULT-` objects (spec §3.3). `add` never runs anything; `run` is the only
+command in PhDude that executes a researcher's code.
+
+| Field | What it holds |
+|---|---|
+| `name` | The identity. `ANALYSIS-<first 10 of the sha256 of the normalized name>`. |
+| `runtime` | `node`, `python3`, `Rscript` or `other`. Which executable it resolves to is `execution.runtimes` in the policy, not the record. |
+| `script` | Workspace-relative, and it must resolve inside `analysis/`. Anything that leaves that directory exits 2. |
+| `args` | Passed to the script after the script path, as an argument array. Never a shell. |
+| `inputs` | `DATASET-` ids. Each one must already be registered with `phdude data add`. |
+| `outputs.results` | Where the script writes `results.json`. Defaults to `analysis/out/<name>/results.json`, and must also stay inside `analysis/`. |
+| `outputs.files` | Anything else the run produces — a figure, a table. Workspace-relative; hashed after every successful run. |
+| `params` | A free object. PhDude records it and never interprets it. |
+| `runs` | One entry per run: `at`, `exit`, `duration_ms`, `input_hashes`, `output_hashes`, `results`, and `stderr_tail` when it failed. |
+
+Declaring the same name again corrects the declaration in place — a mistyped script path is
+fixed with the command that made it — and the record keeps its creation time, its state and
+every run already on it. A re-declaration that changes nothing writes nothing.
+
+#### The script contract
+
+A script gets `PHDUDE_WORKSPACE` and `PHDUDE_ANALYSIS` in its environment, `PATH`, `HOME` and
+`LANG` from the parent, and nothing else: an API key in your shell is not one `os.environ` away
+from a script the workspace declared. It runs with the workspace root as its working directory,
+through `execFile` with an argument array, never a shell.
+
+It reads its inputs from `data/` and writes:
+
+```json
+{
+  "results": [
+    { "key": "mean_age", "summary": "Mean respondent age is 38.4 years", "values": { "mean": 38.4, "n": 312 }, "unit": "years" }
+  ],
+  "notes": ["optional"]
+}
+```
+
+`schemas/results-json.json` is that contract. Each entry becomes a `RESULT-` with `from` set to
+the analysis, `values` as written, and `ext.analysis: { key, run_at, unit? }`.
+
+#### What a run does, in order
+
+1. The workspace must be current, or the run stops and asks for `phdude migrate`.
+2. `execution.enabled` must be true, or `--allow-exec` must be passed. Otherwise: exit 3.
+3. If every input dataset is at the same bytes as the last **successful** run, the run is
+   refused as up to date — exit 0, no event, nothing written. `--force` runs it anyway.
+4. The runner spawns the script with the policy's `timeout_seconds`.
+5. A non-zero exit records the run with its exit code and the last 2000 characters of stderr,
+   writes no result, and exits 4. A run that outran the timeout is recorded the same way with
+   `timed_out: true`. Either way the analysis stays stale, so the next run is not refused.
+6. On success, `results.json` is read and validated. A missing, unparseable or off-contract file
+   is a validation error (exit 2) that records **nothing** — a run PhDude cannot read the
+   results of must not count as the successful run that makes an analysis up to date.
+7. Each finding is matched against what this analysis already recorded, by its `key`:
+
+| The key came back… | What happens |
+|---|---|
+| for the first time | a new `RESULT-`, state `candidate` |
+| with identical values and unit | kept untouched; nothing is written |
+| with a different summary | a new `RESULT-`, and the old one becomes `rejected` with `superseded_by` pointing at it |
+| with new values under the same summary | the same record, corrected in place |
+
+The last row is the identity rule showing through: a result id is derived from its summary and
+its analysis, so a record cannot supersede itself. A script that wants version history puts the
+finding in the summary — `"Mean respondent age is 38.4 years"`, not `"Mean age"`.
+
+Then the run is appended and exactly one `analyze` event is recorded, naming the analysis and
+every result the run wrote.
+
+`analyze runs` prints the run table and the recorded stderr of any run that failed. `analyze
+list` and `analyze show` write nothing; `analyze add` and `analyze run` do.
+
 ### `phdude prose <section> | --file <path>`
 
 ```
@@ -1003,8 +1090,9 @@ an up-to-date workspace prints `Workspace is up to date (2)` and records no even
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
-that version is `(current)`, `(needs migration → 2)` or `(newer than this phdude)`, whether
-network access is enabled and the configured search providers, the cache
+that version is `(current)`, `(needs migration → 3)` or `(newer than this phdude)`, whether
+network access is enabled and the configured search providers, whether script execution is
+enabled and under what limits, the cache
 entry count, the discoverable packs and the schema
 versions, plus warnings for anything missing. It is diagnostic only and never writes.
 
@@ -1016,9 +1104,15 @@ provider PhDude can search — `openalex`, `crossref`, `arxiv`, `semantic-schola
 are all registered in `src/adapters/search/index.js` and can be added to `providers:` to enable
 them. See [SearchProvider](extending.md#searchprovider).
 
-A policy file that is not valid YAML replaces both lines with
+The `execution:` line reads the same file and reports the other switch the workspace holds
+shut: `enabled` only when `execution.enabled: true`, the runtime names it will resolve (the
+three built in, plus anything `execution.runtimes` adds), and `execution.timeout_seconds`. It
+answers "why did `analyze run` refuse" without running anything either. `--json` carries it as
+`execution: { enabled, runtimes[], timeoutSeconds }`.
+
+A policy file that is not valid YAML replaces all three lines with
 `policy: unreadable (malformed YAML: .phdude/research-policy.yaml)`, and `--json` reports it as
-`policyError` with `network: null` and `providers: []`. `doctor` still exits 0 — printing the
+`policyError` with `network: null`, `providers: []` and `execution: null`. `doctor` still exits 0 — printing the
 built-in defaults there would answer the question with a fiction. Every other command that
 reads the policy (`status`, `gaps`, `next`, `freshness`, `cite check`, `research`,
 `research-fresh`) exits 2 with that same message and the hint `fix the file`.

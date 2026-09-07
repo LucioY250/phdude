@@ -1,0 +1,38 @@
+{
+  "schema": "phdude.analysis",
+  "version": 1,
+  "id": "ANALYSIS-3f9a10c2b7",
+  "created": "2026-09-07T10:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com", "agent": "cli" },
+  "tags": [],
+  "name": "describe survey",
+  "runtime": "node",
+  "script": "analysis/describe.mjs",
+  "args": ["--round", "1"],
+  "inputs": ["DATASET-0123456789"],
+  "outputs": {
+    "results": "analysis/out/describe-survey/results.json",
+    "files": ["analysis/out/describe-survey/summary.csv"]
+  },
+  "params": { "alpha": 0.05 },
+  "runs": [
+    {
+      "at": "2026-09-07T10:05:00Z",
+      "exit": 0,
+      "duration_ms": 412,
+      "input_hashes": { "DATASET-0123456789": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+      "output_hashes": { "analysis/out/describe-survey/results.json": "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210" },
+      "results": ["RESULT-6f1d8b3a90"]
+    },
+    {
+      "at": "2026-09-07T10:09:00Z",
+      "exit": 3,
+      "duration_ms": 88,
+      "input_hashes": { "DATASET-0123456789": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef" },
+      "output_hashes": {},
+      "results": [],
+      "stderr_tail": "TypeError: no such column: age\n"
+    }
+  ],
+  "state": "candidate"
+}

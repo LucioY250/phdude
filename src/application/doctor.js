@@ -1,6 +1,12 @@
 import { join } from 'node:path';
 import { driftNote, parseSectionFile, sectionDrift } from '../domain/manuscript.js';
-import { networkAllowed, providerNames } from '../domain/policy.js';
+import {
+  executionAllowed,
+  executionRuntimes,
+  executionTimeoutMs,
+  networkAllowed,
+  providerNames,
+} from '../domain/policy.js';
 import { CURRENT_WORKSPACE_VERSION, workspaceVersionOf } from '../domain/versioning.js';
 import { migrationWarning } from './guard.js';
 import { listSkills } from './skills.js';
@@ -18,7 +24,7 @@ const SCHEMA_VERSION = 1;
  *   skillsDir: string}} deps
  * @returns {Promise<{node: string, pdftotext: boolean, git: boolean, workspace: boolean,
  *   workspaceVersion: number|null, workspaceVersionCurrent: number, parsers: object,
- *   policyError: string|null, network: boolean|null, providers: string[],
+ *   policyError: string|null, network: boolean|null, providers: string[], execution: object|null,
  *   schemaVersions: object, cacheEntries: number, packsAvailable: string[],
  *   skills: object[], manuscript: object|null, warnings: string[]}>}
  */
@@ -116,6 +122,17 @@ export async function doctor({
     policyError,
     network: policyError === null ? networkAllowed(policy, {}) : null,
     providers: policyError === null ? providerNames(policy) : [],
+    // What the workspace will and will not run, next to what it will and will not fetch. Both
+    // are closed by default and both are the kind of thing a researcher checks before asking
+    // why `analyze run` refused (spec §3.1).
+    execution:
+      policyError === null
+        ? {
+            enabled: executionAllowed(policy, {}),
+            runtimes: Object.keys(executionRuntimes(policy)).sort((a, b) => a.localeCompare(b)),
+            timeoutSeconds: Math.round(executionTimeoutMs(policy) / 1000),
+          }
+        : null,
     schemaVersions: Object.fromEntries(schemaTypes.map((t) => [t, SCHEMA_VERSION])),
     cacheEntries: (await store.listCacheEntries()).length,
     packsAvailable,

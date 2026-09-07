@@ -1,0 +1,14 @@
+{
+  "schema": "phdude.result",
+  "version": 1,
+  "id": "RESULT-1a2b3c4d5e",
+  "created": "2026-09-07T10:05:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com", "agent": "cli" },
+  "tags": [],
+  "summary": "Mean respondent age is 38.4 years",
+  "from": "ANALYSIS-3f9a10c2b7",
+  "values": { "mean": 38.4, "sd": 11.2, "n": 312 },
+  "ext": { "analysis": { "key": "mean_age", "run_at": "2026-09-07T10:05:00Z", "unit": "years" } },
+  "superseded_by": "RESULT-6f1d8b3a90",
+  "state": "rejected"
+}

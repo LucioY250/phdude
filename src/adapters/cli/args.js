@@ -91,6 +91,7 @@ export const COMMAND_OPTIONS = {
   },
   gaps: {},
   data: {},
+  analyze: { 'allow-exec': { type: 'boolean' } },
   authors: {
     from: { type: 'string', multiple: true },
     approved: { type: 'boolean' },
@@ -312,6 +313,7 @@ function build(
       approved: values.approved === true,
       limit: values.limit,
       allowNetwork: values['allow-network'] === true,
+      allowExec: values['allow-exec'] === true,
       approvePreprint: values['approve-preprint'] === true,
       all: values.all === true,
       paths: values.paths ?? [],

@@ -69,6 +69,23 @@ export function assertExecutionAllowed(policy, flags) {
 }
 
 /**
+ * Every runtime this workspace may run, as name → executable: the three built in, plus whatever
+ * `execution.runtimes` names or overrides. `doctor` reports it and `runtimeCommand` resolves
+ * through it, so the two can never disagree about what is installed.
+ * @param {object|null} policy
+ * @returns {Record<string, string>}
+ */
+export function executionRuntimes(policy) {
+  const configured = policy?.execution?.runtimes;
+  return {
+    ...DEFAULT_RUNTIMES,
+    ...(configured !== null && typeof configured === 'object' && !Array.isArray(configured)
+      ? configured
+      : {}),
+  };
+}
+
+/**
  * The executable a runtime name resolves to. `execution.runtimes` is the whole registry of what
  * this workspace may run: a runtime it does not name is unknown, so a typo in an analysis is a
  * validation error rather than a spawn of something nobody declared.
@@ -77,13 +94,7 @@ export function assertExecutionAllowed(policy, flags) {
  * @returns {string}
  */
 export function runtimeCommand(policy, runtime) {
-  const configured = policy?.execution?.runtimes;
-  const commands = {
-    ...DEFAULT_RUNTIMES,
-    ...(configured !== null && typeof configured === 'object' && !Array.isArray(configured)
-      ? configured
-      : {}),
-  };
+  const commands = executionRuntimes(policy);
   const command = commands[runtime];
   if (typeof command !== 'string' || command.trim() === '') {
     const known = Object.keys(commands)

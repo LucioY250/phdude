@@ -11,7 +11,9 @@ import {
   newDecision,
   newMethod,
   newDataset,
+  newAnalysis,
 } from '../../../src/domain/entities.js';
+import { makeId } from '../../../src/domain/ids.js';
 import { assertValid } from '../../../src/schemas/index.js';
 import { PhdudeError } from '../../../src/domain/errors.js';
 
@@ -482,6 +484,78 @@ test('newDataset: an empty path is refused', () => {
         bytes: 0,
         format: 'other',
         profile: { rows: 0, columns: [] },
+        actor,
+        created,
+      }),
+    PhdudeError,
+  );
+});
+
+test('newResult: the analysis it came from is part of the id', () => {
+  const base = { summary: 'Mean age is 38.4 years', actor, created };
+  const a = newResult({ ...base, from: 'ANALYSIS-0123456789' });
+  const b = newResult({ ...base, from: 'ANALYSIS-9999999999' });
+  assert.notEqual(a.id, b.id);
+  assert.equal(a.id, newResult({ ...base, from: 'ANALYSIS-0123456789' }).id);
+});
+
+test('newResult: a result with no `from` keeps the id v0.4 gave it', () => {
+  const summary = 'A notable finding';
+  const bare = newResult({ summary, from: '', actor, created });
+  assert.equal(bare.id, makeId('result', summary));
+  assert.equal(newResult({ summary, from: undefined, actor, created }).id, bare.id);
+});
+
+test('newAnalysis: schema-valid, id derived from the name, no runs yet', () => {
+  const analysis = newAnalysis({
+    name: 'describe survey',
+    runtime: 'node',
+    script: 'analysis/describe.mjs',
+    inputs: ['DATASET-0123456789'],
+    outputs: { results: 'analysis/out/describe-survey/results.json', files: [] },
+    actor,
+    created,
+  });
+
+  assertValid('analysis', analysis);
+  assert.equal(analysis.id, makeId('analysis', 'describe survey'));
+  assert.match(analysis.id, /^ANALYSIS-[0-9a-f]{10}$/);
+  assert.deepEqual(analysis.runs, []);
+  assert.deepEqual(analysis.args, []);
+  assert.deepEqual(analysis.params, {});
+  assert.deepEqual(analysis.tags, []);
+  assert.equal(analysis.state, 'candidate');
+});
+
+test('newAnalysis: the name alone is the identity', () => {
+  const outputs = { results: 'analysis/out/x/results.json', files: [] };
+  const a = newAnalysis({
+    name: 'Describe  Survey',
+    runtime: 'node',
+    script: 'analysis/a.mjs',
+    outputs,
+    actor,
+    created,
+  });
+  const b = newAnalysis({
+    name: 'describe survey',
+    runtime: 'python3',
+    script: 'analysis/b.py',
+    outputs,
+    actor,
+    created,
+  });
+  assert.equal(a.id, b.id);
+});
+
+test('newAnalysis: rejects an empty name', () => {
+  assert.throws(
+    () =>
+      newAnalysis({
+        name: '  ',
+        runtime: 'node',
+        script: 'analysis/a.mjs',
+        outputs: { results: 'analysis/out/x/results.json', files: [] },
         actor,
         created,
       }),

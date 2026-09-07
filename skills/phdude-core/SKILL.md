@@ -56,15 +56,17 @@ Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude l
 `phdude research accept`, `phdude research dismiss`, `phdude packs apply`, `phdude mode`,
 `phdude authors add`, `phdude authors learn`, `phdude authors consensus`,
 `phdude manuscript init`, `phdude manuscript submit`, `phdude manuscript approve`,
-`phdude manuscript reopen`, or `phdude deslop <section> --file <revised.md>`.
+`phdude manuscript reopen`, `phdude data add`, `phdude analyze add`, `phdude analyze run`,
+or `phdude deslop <section> --file <revised.md>`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
 cache — expected setup steps, not knowledge edits. `phdude research` and `phdude research-fresh`
 write candidates and search records, which are not knowledge until accepted. `phdude cite
 export` writes `references.bib` or `references.json` at the workspace root, a derived file that
 records no event and is never a substitute for the `SRC-` id itself.) Every other command —
 `phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `freshness`,
-`packs list|detect`, `authors list|show`, `manuscript list|show|status`, `prose`, `doctor`,
-`help` — only reads or derives from what is already recorded. (`phdude write` and
+`packs list|detect`, `authors list|show`, `manuscript list|show|status`,
+`data list|show|profile`, `analyze list|show|runs`, `prose`, `doctor`, `help` — only reads
+or derives from what is already recorded. (`phdude write` and
 `phdude deslop <section>` without a file write only `.phdude/cache/`, and
 `phdude prose <section>` stores the section's scores in `manuscript/reports/`, a derived file.)
 Never write YAML files directly, even to "fix a typo", and never edit a file under

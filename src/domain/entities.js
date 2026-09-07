@@ -274,10 +274,14 @@ export function newSource({
  */
 export function newResult({ summary, from, values = {}, tags = [], actor, created }) {
   const text = requireText('summary', summary);
+  // Two analyses can reach the same finding and each owns its own record, so the analysis is
+  // part of the identity. A result recorded without one keeps the id v0.4 gave it, which is why
+  // migration 0002 has nothing to rewrite.
+  const material = from ? `${text}|${from}` : text;
   return {
     schema: 'phdude.result',
     version: 1,
-    id: makeId('result', text),
+    id: makeId('result', material),
     created,
     actor,
     tags,
@@ -616,4 +620,52 @@ export function newDataset({
   if (description !== undefined) dataset.description = description;
   if (license !== undefined) dataset.license = license;
   return dataset;
+}
+
+/**
+ * A script the researcher declared as an analysis: what to run, on which datasets, and where it
+ * leaves its results. The name alone is the identity - a study has one "describe survey", and
+ * pointing it at a different script later corrects that record rather than minting a second one.
+ * Runs accumulate on the record; nothing here runs anything.
+ * @param {object} p
+ * @param {string} p.name
+ * @param {string} p.runtime - node|python3|Rscript|other
+ * @param {string} p.script - workspace-relative, under `analysis/`
+ * @param {string[]} [p.args]
+ * @param {string[]} [p.inputs] - DATASET ids
+ * @param {{results: string, files: string[]}} p.outputs
+ * @param {object} [p.params]
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.analysis`
+ */
+export function newAnalysis({
+  name,
+  runtime,
+  script,
+  args = [],
+  inputs = [],
+  outputs,
+  params = {},
+  actor,
+  created,
+}) {
+  const text = requireText('name', name);
+  return {
+    schema: 'phdude.analysis',
+    version: 1,
+    id: makeId('analysis', text),
+    created,
+    actor,
+    tags: [],
+    name: text,
+    runtime,
+    script,
+    args,
+    inputs,
+    outputs,
+    params,
+    runs: [],
+    state: 'candidate',
+  };
 }

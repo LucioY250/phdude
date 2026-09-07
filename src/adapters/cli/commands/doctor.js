@@ -39,6 +39,7 @@ function render(report) {
     lines.push(
       `network:           ${report.network ? 'enabled' : 'disabled'}`,
       `providers:         ${report.providers.join(', ')}`,
+      `execution:         ${report.execution.enabled ? 'enabled' : 'disabled'} (runtimes: ${report.execution.runtimes.join(', ')}; timeout ${report.execution.timeoutSeconds}s)`,
     );
   }
 

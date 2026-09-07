@@ -15,6 +15,7 @@ const ENTITY_DIRS = {
   result: join('knowledge', 'results'),
   candidate: join('knowledge', 'candidates'),
   dataset: join('knowledge', 'datasets'),
+  analysis: 'analysis',
   question: join('research', 'questions'),
   hypothesis: join('research', 'hypotheses'),
   method: join('research', 'methods'),

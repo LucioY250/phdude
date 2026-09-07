@@ -9,6 +9,22 @@
         "summary": { "type": "string" },
         "from": { "type": "string" },
         "values": { "type": "object" },
+        "ext": {
+          "type": "object",
+          "properties": {
+            "analysis": {
+              "type": "object",
+              "properties": {
+                "key": { "type": "string", "minLength": 1 },
+                "run_at": { "type": "string", "format": "date-time" },
+                "unit": { "type": "string" }
+              },
+              "required": ["key", "run_at"],
+              "additionalProperties": false
+            }
+          }
+        },
+        "superseded_by": { "$ref": "phdude://common#/$defs/id" },
         "state": { "$ref": "phdude://common#/$defs/state" }
       },
       "required": ["summary", "from", "values", "state"]

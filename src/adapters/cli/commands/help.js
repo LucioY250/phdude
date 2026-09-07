@@ -32,6 +32,11 @@ const LINES = [
   '  data add <path>|list|show <id>|profile <id>',
   '                                    register a file under data/ as a dataset: hash, format',
   '                                    and a deterministic column profile',
+  "  analyze add --json '<decl>'       declare an analysis: a script under analysis/, the",
+  '                                    datasets it reads, and where it leaves results.json',
+  '          list|show <id>|runs <id>  what is declared, and every run of one analysis',
+  '          run <id> [--allow-exec]   run it and record the RESULTs; refuses when the inputs',
+  '              [--force]             have not changed since the last successful run',
   '  prose <section> | --file <path>   academic prose quality report: six scores, located',
   '        [--lang c]                  observations, and what to do about each one',
   '  write <section> [--voice id]      assemble the writing context and the draft contract',
@@ -59,7 +64,7 @@ const LINES = [
   '                                    override the recorded actor',
   '  --version                         print the version',
   '',
-  'Exit codes: 0 ok, 1 usage, 2 validation, 3 policy, 4 external tool missing.',
+  'Exit codes: 0 ok, 1 usage, 2 validation, 3 policy, 4 tool missing or script failed.',
   'Full reference: docs/cli.md',
 ];
 

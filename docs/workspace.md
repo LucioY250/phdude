@@ -45,7 +45,9 @@ my-research/
 │   ├── <section>.md              # the prose, front matter + Markdown body
 │   └── reports/<section>.yaml    # schema phdude.section-report v1: the last gate run
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
-├── data/ analysis/ figures/ tables/ templates/ outputs/
+├── analysis/       ANALYSIS-*.yaml # declared analysis scripts and their runs
+│   └── out/                      # where a run's results.json and files land
+├── data/ figures/ tables/ templates/ outputs/
 └── .gitignore
 ```
 
@@ -106,7 +108,8 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]`, `provenance` |
 | Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength`, `provenance` |
 | Fact | `FACT-<hash10>` | `key`, `value`, `unit`, `from {artifact, locator}` |
-| Result | `RESULT-<hash10>` | `summary`, `from`, `values{}` |
+| Result | `RESULT-<hash10>` | `summary`, `from`, `values{}`, `ext.analysis?{key,run_at,unit}`, `superseded_by?` |
+| Analysis | `ANALYSIS-<hash10>` | `name`, `runtime`, `script`, `args[]`, `inputs[]`, `outputs{results,files[]}`, `params`, `runs[]` |
 | ResearchQuestion | `RQ-<n>` | `text`, `objectives[]` |
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
 | Method | `METH-<hash10>` | `name`, `design`, `paradigm`, `sampling`, `instruments[]`, `analysis[]`, `limitations[]`, `questions[]` |

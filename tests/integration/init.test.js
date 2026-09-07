@@ -253,10 +253,11 @@ test('init installs every skill but the networked one, and says which it withhel
 
   assert.deepEqual(
     result.withheldSkills.map((entry) => entry.name),
-    ['research'],
-    'the default policy leaves skills.allow_network false',
+    ['analysis', 'research'],
+    'the default policy leaves skills.allow_network and skills.allow_execution false',
   );
   assert.equal(await store.exists(join('.phdude', 'skills', 'research', 'SKILL.md')), false);
+  assert.equal(await store.exists(join('.phdude', 'skills', 'analysis', 'SKILL.md')), false);
   assert.equal(await store.exists(join('.phdude', 'skills', 'literature', 'SKILL.md')), true);
 
   // A withheld skill is withheld from the agent-facing files too, or the agent goes looking
@@ -264,6 +265,7 @@ test('init installs every skill but the networked one, and says which it withhel
   const agentsMd = await store.readText('AGENTS.md');
   assert.ok(agentsMd.includes('**literature**'));
   assert.ok(!agentsMd.includes('**research**'));
+  assert.ok(!agentsMd.includes('**analysis**'));
 
   // The slash command is still installed: the CLI command exists whatever the skill policy
   // says, and it enforces `network.enabled` on its own.
@@ -284,8 +286,31 @@ test('init installs the research skill once the policy allows network skills', a
   );
 
   const result = await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
-  assert.deepEqual(result.withheldSkills, []);
+  assert.deepEqual(
+    result.withheldSkills.map((entry) => entry.name),
+    ['analysis'],
+    'one setting opens one permission; execution is still closed',
+  );
   assert.equal(await store.exists(join('.phdude', 'skills', 'research', 'SKILL.md')), true);
+});
+
+test('init installs the analysis skill once the policy allows execution skills', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  const hostDeps = { ...deps(root), store, agentHosts: [codexHost] };
+  await initWorkspace(hostDeps, { title: 'An executing workspace', noGit: true });
+
+  const policyPath = join('.phdude', 'research-policy.yaml');
+  await store.writeTextAtomic(
+    policyPath,
+    (await store.readText(policyPath))
+      .replace('allow_network: false', 'allow_network: true')
+      .replace('allow_execution: false', 'allow_execution: true'),
+  );
+
+  const result = await initWorkspace(hostDeps, { title: 'An executing workspace', noGit: true });
+  assert.deepEqual(result.withheldSkills, []);
+  assert.equal(await store.exists(join('.phdude', 'skills', 'analysis', 'SKILL.md')), true);
 });
 
 test('init takes an installed skill back off disk when the policy closes again', async () => {
@@ -317,7 +342,7 @@ test('init takes an installed skill back off disk when the policy closes again',
   assert.equal(await store.exists(join('.phdude', 'skills', 'research')), false);
   assert.deepEqual(
     closed.withheldSkills.map((entry) => entry.name),
-    ['research'],
+    ['analysis', 'research'],
   );
 
   // Every other skill is untouched, and a third run has nothing left to remove.

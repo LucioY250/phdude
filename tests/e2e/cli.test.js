@@ -1286,7 +1286,9 @@ test('e2e: research refuses without network, then searches, records and lists ca
       .replace('enabled: false', 'enabled: true'),
   );
   const reinit = await run(ws, ['init', '--title', 'Research engine', '--no-git']);
-  assert.doesNotMatch(reinit.stdout, /was not installed/);
+  // Only the network skill is at stake here; `analysis` stays withheld until the same file also
+  // sets skills.allow_execution.
+  assert.doesNotMatch(reinit.stdout, /skill research was not installed/);
   assert.equal(await exists(join(ws, '.phdude', 'skills', 'research', 'SKILL.md')), true);
 
   // With the policy open, no flag is needed.
@@ -2005,4 +2007,139 @@ test('e2e: data add profiles a file under data/, re-adds as a no-op, and version
     .map((line) => JSON.parse(line))
     .filter((e) => e.op === 'data');
   assert.equal(events.length, 3, 'one data event per registration, none for the no-op');
+});
+
+test('e2e: declare an analysis, refuse it under the closed policy, run it with --allow-exec', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-analyze-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Analysis thesis', '--agents', 'claude-code', '--no-git']);
+
+  // The analysis skill asks for script execution, which the default policy has not granted.
+  assert.equal(
+    await exists(join(ws, '.phdude', 'skills', 'analysis', 'SKILL.md')),
+    false,
+    'a skill that asks for execution is withheld until skills.allow_execution is set',
+  );
+
+  const doctorText = await run(ws, ['doctor']);
+  assert.match(doctorText.stdout, /execution: +disabled \(runtimes: .*node.*timeout 600s\)/);
+
+  const survey = ['id,age,group', '1,31,a', '2,44,b', '3,,a'].join('\n') + '\n';
+  await writeFile(join(ws, 'data', 'survey.csv'), survey);
+  await cp(
+    join(REPO_ROOT, 'tests', 'fixtures', 'scripts', 'analysis-echo.mjs'),
+    join(ws, 'analysis', 'describe.mjs'),
+  );
+
+  const { dataset } = await runJson(ws, ['data', 'add', 'data/survey.csv']);
+
+  const declaration = {
+    name: 'describe survey',
+    runtime: 'node',
+    script: 'analysis/describe.mjs',
+    args: ['--input', 'data/survey.csv', '--out', 'analysis/out/describe-survey/results.json'],
+    inputs: [dataset.id],
+  };
+  const declared = await runJson(ws, ['analyze', 'add', '--json', JSON.stringify(declaration)]);
+  assert.equal(declared.created, true);
+  assert.match(declared.analysis.id, /^ANALYSIS-[0-9a-f]{10}$/);
+  assert.equal(
+    declared.analysis.outputs.results,
+    'analysis/out/describe-survey/results.json',
+    'the results path defaults from the name',
+  );
+  const id = declared.analysis.id;
+
+  // Nothing runs while the policy is closed, and the refusal names the way out.
+  const refused = await phdude(ws, ['analyze', 'run', id, ...ACTOR]);
+  assert.equal(refused.code, 3);
+  assert.match(refused.stderr, /script execution is disabled/);
+  assert.match(refused.stderr, /--allow-exec/);
+
+  // Pin the runtime to the interpreter running these tests, so the run does not depend on PATH.
+  const policyPath = join(ws, '.phdude', 'research-policy.yaml');
+  const policy = await readFile(policyPath, 'utf8');
+  await writeFile(policyPath, policy.replace('    node: node', `    node: ${process.execPath}`));
+
+  const ran = await runJson(ws, ['analyze', 'run', id, '--allow-exec']);
+  assert.equal(ran.ran, true);
+  assert.equal(ran.created.length, 2);
+  assert.equal(ran.run.exit, 0);
+  assert.deepEqual(ran.run.input_hashes, { [dataset.id]: dataset.hash });
+
+  const mean = ran.created.find((r) => r.ext.analysis.key === 'mean_age');
+  assert.match(mean.summary, /37\.5 years/);
+  assert.equal(mean.from, id);
+  assert.ok(
+    await exists(join(ws, 'knowledge', 'results', `${mean.id}.yaml`)),
+    'a finding lands in knowledge/results/',
+  );
+  assert.ok(await exists(join(ws, 'analysis', 'out', 'describe-survey', 'results.json')));
+
+  // A second run with the same inputs is refused as up to date, and says how to override it.
+  const upToDate = await run(ws, ['analyze', 'run', id, '--allow-exec']);
+  assert.match(upToDate.stdout, /is up to date/);
+  assert.match(upToDate.stdout, /--force/);
+
+  const runsText = await run(ws, ['analyze', 'runs', id]);
+  assert.match(runsText.stdout, /exit 0/);
+  const listText = await run(ws, ['analyze', 'list']);
+  assert.match(listText.stdout, /describe survey/);
+
+  // New data, new findings: the old results are kept and marked superseded.
+  await writeFile(join(ws, 'data', 'survey.csv'), survey.replace('3,,a', '3,50,a'));
+  const { dataset: edited } = await runJson(ws, ['data', 'add', 'data/survey.csv']);
+  await runJson(ws, [
+    'analyze',
+    'add',
+    '--json',
+    JSON.stringify({ ...declaration, inputs: [edited.id] }),
+  ]);
+  const rerun = await runJson(ws, ['analyze', 'run', id, '--allow-exec']);
+  assert.equal(rerun.created.length, 2);
+  assert.equal(rerun.rejected.length, 2);
+  const superseded = await runJson(ws, ['knowledge', 'show', mean.id]);
+  assert.equal(superseded.state, 'rejected');
+
+  // A script that fails records the run and its stderr, and exits 4.
+  await runJson(ws, [
+    'analyze',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'broken',
+      runtime: 'node',
+      script: 'analysis/describe.mjs',
+      args: ['--out', 'analysis/out/broken/results.json', '--fail', '3'],
+      inputs: [edited.id],
+    }),
+  ]);
+  const broken = (await runJson(ws, ['analyze', 'list'])).find((a) => a.name === 'broken');
+  const failed = await phdude(ws, ['analyze', 'run', broken.id, '--allow-exec', ...ACTOR]);
+  assert.equal(failed.code, 4);
+  assert.match(failed.stderr, /exited 3/);
+  const brokenRuns = await runJson(ws, ['analyze', 'runs', broken.id]);
+  assert.equal(brokenRuns.runs[0].exit, 3);
+  assert.match(brokenRuns.runs[0].stderr_tail, /no such column/);
+  assert.deepEqual(
+    await runJson(ws, ['analyze', 'runs', broken.id]).then((r) => r.runs[0].results),
+    [],
+  );
+
+  // `analyze add` without a declaration is a usage error, not an empty analysis.
+  const noPayload = await phdude(ws, ['analyze', 'add', ...ACTOR]);
+  assert.equal(noPayload.code, 1);
+  assert.match(noPayload.stderr, /needs a declaration/);
+
+  const analyzeEvents = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((e) => e.op === 'analyze');
+  assert.equal(
+    analyzeEvents.length,
+    6,
+    'declared, ran, redeclared, ran again, declared broken, failed - and nothing for the no-op run',
+  );
 });

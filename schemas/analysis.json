@@ -1,0 +1,67 @@
+{
+  "$id": "phdude://analysis",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.analysis" },
+        "name": { "type": "string" },
+        "runtime": { "enum": ["node", "python3", "Rscript", "other"] },
+        "script": { "type": "string" },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "inputs": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+        "outputs": {
+          "type": "object",
+          "properties": {
+            "results": { "type": "string" },
+            "files": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["results", "files"],
+          "additionalProperties": false
+        },
+        "params": { "type": "object" },
+        "runs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": { "type": "string", "format": "date-time" },
+              "exit": { "type": ["integer", "null"] },
+              "timed_out": { "type": "boolean" },
+              "duration_ms": { "type": "integer", "minimum": 0 },
+              "input_hashes": {
+                "type": "object",
+                "additionalProperties": { "type": ["string", "null"] }
+              },
+              "output_hashes": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              },
+              "results": {
+                "type": "array",
+                "items": { "$ref": "phdude://common#/$defs/id" }
+              },
+              "stderr_tail": { "type": "string", "maxLength": 2000 }
+            },
+            "required": ["at", "exit", "duration_ms", "input_hashes", "output_hashes", "results"],
+            "additionalProperties": false
+          }
+        },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": [
+        "name",
+        "runtime",
+        "script",
+        "args",
+        "inputs",
+        "outputs",
+        "params",
+        "runs",
+        "state"
+      ]
+    }
+  ],
+  "unevaluatedProperties": false
+}

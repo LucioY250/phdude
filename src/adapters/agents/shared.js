@@ -148,6 +148,12 @@ export const COMMAND_ROWS = [
       'reports rows, column types, missing cells and distinct values.',
   ],
   [
+    'analyze add|list|show|run|runs',
+    'Declare an analysis - a script under analysis/, the datasets it reads, where it writes ' +
+      'results.json - run it under the execution policy, and record every finding as a RESULT. ' +
+      'Never run a script yourself.',
+  ],
+  [
     'prose <section> | --file <path>',
     'Academic Prose Quality report over a manuscript section or a text file: six located sub-scores and the observations behind them. Never an AI-detector score.',
   ],

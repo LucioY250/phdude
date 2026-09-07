@@ -1,0 +1,26 @@
+{
+  "$id": "phdude://results-json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "The results.json an analysis script writes",
+  "type": "object",
+  "properties": {
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": { "type": "string", "minLength": 1 },
+          "summary": { "type": "string", "minLength": 1 },
+          "values": { "type": "object" },
+          "unit": { "type": "string" }
+        },
+        "required": ["key", "summary", "values"],
+        "additionalProperties": false
+      }
+    },
+    "tables": { "type": "array" },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["results"],
+  "additionalProperties": false
+}

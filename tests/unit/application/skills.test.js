@@ -92,9 +92,10 @@ test('listSkills reports the shipped core skills with source "core" and their de
     discoverSkills,
     skillsDir: DEFAULT_SKILLS_DIR,
   });
-  // `research` is the one shipped skill that declares network access, so a workspace with no
-  // policy (the default, closed) reports it - and still lists every skill.
+  // `research` declares network access and `analysis` declares script execution, so a workspace
+  // with no policy (the default, closed) reports both - and still lists every skill.
   assert.deepEqual(warnings, [
+    'skill analysis requests script execution; set skills.allow_execution: true in .phdude/research-policy.yaml',
     'skill research requests network access; set skills.allow_network: true in .phdude/research-policy.yaml',
   ]);
   const bootstrap = skills.find((s) => s.name === 'bootstrap');
@@ -227,7 +228,8 @@ test('listSkills warns, and does not throw, on a skill the network policy has no
 test('listSkills stays quiet once the workspace policy allows network access', async (t) => {
   const store = await workspaceWith(t, {
     '.phdude/skills/searcher/SKILL.md': skillMd('searcher', { network: 'allowed' }),
-    '.phdude/research-policy.yaml': 'skills:\n  allow_network: true\n',
+    // Both settings, because the shipped `analysis` skill is discovered here too.
+    '.phdude/research-policy.yaml': 'skills:\n  allow_network: true\n  allow_execution: true\n',
   });
 
   const { warnings } = await listSkills({

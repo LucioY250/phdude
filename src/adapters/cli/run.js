@@ -8,6 +8,7 @@ import { detectKind, parseTable, parserFor, PARSERS } from '../documents/index.j
 import { DEFAULT_PACKS_DIR, discoverPacks, loadProfile } from '../packs/loader.js';
 import { buildProviders } from '../search/index.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
+import { localRunner } from '../execution/local.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
 import { discoverSkills, loadSkill } from '../skills/loader.js';
 import { providerNames } from '../../domain/policy.js';
@@ -16,6 +17,7 @@ import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
 import { printJson } from './output.js';
 import add from './commands/add.js';
+import analyze from './commands/analyze.js';
 import authors from './commands/authors.js';
 import bootstrap from './commands/bootstrap.js';
 import cite from './commands/cite.js';
@@ -48,6 +50,7 @@ const { version } = createRequire(import.meta.url)('../../../package.json');
 
 const COMMANDS = {
   add,
+  analyze,
   authors,
   bootstrap,
   cite,
@@ -130,6 +133,7 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     parserAdapters: PARSERS,
     readBytes: (rel) => read(join(workspace, rel)),
     parseTable,
+    runner: localRunner,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     loadProfile: (name) =>
       loadProfile(name, [DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
