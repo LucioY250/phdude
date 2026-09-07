@@ -13,7 +13,7 @@ its current state: what was claimed, on what evidence, and when it changed (PRD 
 
 The workspace is a plain git repository of YAML and Markdown. Each canonical object is its
 own file, named by its id, under a directory named for its type:
-`knowledge/claims/CLAIM-3d035aa05b.yaml`, `decisions/DEC-da1a3616b6.yaml`, and so on.
+`knowledge/claims/CLAIM-3d035aa05b.yaml`, `decisions/DEC-7aa12a7b78.yaml`, and so on.
 
 - **No database and no single index file.** Every count, list and conflict report in `status`
   is derived on read by walking the directories.

@@ -18,6 +18,7 @@ import help, { usage } from './commands/help.js';
 import ingest from './commands/ingest.js';
 import init from './commands/init.js';
 import knowledge from './commands/knowledge.js';
+import link from './commands/link.js';
 import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
@@ -34,6 +35,7 @@ const COMMANDS = {
   ingest,
   init,
   knowledge,
+  link,
   mode,
   next,
   packs,

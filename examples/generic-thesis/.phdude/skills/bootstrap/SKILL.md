@@ -75,6 +75,18 @@ phdude add claim --json '{"statement":"...","kind":"empirical","supported_by":["
 `kind` is one of `literature | empirical | theoretical | methodological`. Re-adding the same
 statement is a safe no-op (content-derived ids).
 
+**Attaching evidence to a claim that already exists** — because ids are content-derived,
+re-adding the claim with a longer `supported_by` returns the original record unchanged. Use
+`link` instead, which also attaches a research question to a claim or hypothesis, and an
+artifact to a source:
+
+```
+phdude link CLAIM-0123456789 --to EVID-0123456789 RQ-1
+```
+
+Links are additive and idempotent; a target the object already lists is ignored. A claim that
+is already `canonical` cannot be linked — propose a Decision instead (`[[decisions]]`).
+
 ## 4. Close the loop
 
 ```

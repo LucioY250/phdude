@@ -146,7 +146,25 @@ test('parseCli: workspace, file, reason, role, id and to flags', () => {
   assert.equal(cli.flags.reason, 'bad evidence');
   assert.equal(cli.flags.role, 'paper');
   assert.equal(cli.flags.id, 'ART-0123456789');
-  assert.equal(cli.flags.to, 'supported');
+  assert.deepEqual(cli.flags.to, ['supported']);
+});
+
+test('parseCli: --to takes several ids after one flag, like --affects', () => {
+  const cli = parseCli(['link', 'CLAIM-0123456789', '--to', 'EVID-a', 'EVID-b', '--json']);
+  assert.equal(cli.command, 'link');
+  assert.deepEqual(cli.positionals, ['link', 'CLAIM-0123456789']);
+  assert.deepEqual(cli.flags.to, ['EVID-a', 'EVID-b']);
+  assert.equal(cli.flags.json, true);
+});
+
+test('parseCli: --to may be repeated and accepts the --to=<id> form', () => {
+  const cli = parseCli(['link', 'CLAIM-0123456789', '--to=EVID-a', '--to', 'EVID-b']);
+  assert.deepEqual(cli.flags.to, ['EVID-a', 'EVID-b']);
+});
+
+test('parseCli: promote keeps a single --to state', () => {
+  const cli = parseCli(['promote', 'FACT-0123456789', '--to', 'rejected']);
+  assert.deepEqual(cli.flags.to, ['rejected']);
 });
 
 test('parseCli: --paths may be repeated', () => {

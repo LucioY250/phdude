@@ -173,6 +173,18 @@ test('recommendNext: conflict with 3 dependent claims outranks unsupported-claim
   assert.ok(actions.indexOf(openConflictAction) < actions.indexOf(unsupportedAction));
 });
 
+test('recommendNext: unsupported-claims suggests a link command naming the claim', () => {
+  const unsupported = claim('CLAIM-0000000004', { state: 'supported', supported_by: [] });
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    claims: [unsupported],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'unsupported-claims');
+  assert.ok(action);
+  assert.equal(action.command, `phdude link ${unsupported.id} --to <EVID-id>`);
+});
+
 test('recommendNext: fully consistent workspace -> only consistent action', () => {
   const rq = question('RQ-1');
   const addressingClaim = claim('CLAIM-0000000001', {

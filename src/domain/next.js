@@ -130,7 +130,7 @@ function ruleUnsupportedClaims(snapshot) {
       `${unsupported.length} claim(s) marked canonical/supported have no evidence: ${shown.join(', ')}`,
     ],
     impact: 'high',
-    command: `phdude add evidence --json '{"source":"SRC-…","excerpt":"…","strength":"moderate"}'`,
+    command: `phdude link ${unsupported[0].id} --to <EVID-id>`,
     dependents: unsupported.length,
   };
 }

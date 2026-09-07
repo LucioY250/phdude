@@ -242,6 +242,62 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
   assert.match(unknown.stderr, /Usage/);
 });
 
+test('e2e: link attaches evidence that add cannot, and next stops asking for it', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-link-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Link thesis', '--no-git']);
+  await cp(FIXTURES_DIR, join(ws, 'sources'), { recursive: true });
+  const ingested = await runJson(ws, ['ingest']);
+  const artifact = ingested.artifacts.find((a) => a.kind === 'md');
+
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({ title: 'A linkable study', artifacts: [artifact.id] }),
+  ]);
+  const evidence = await runJson(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({ source: source.id, locator: 'p. 2', excerpt: 'Throughput rose by 14%.' }),
+  ]);
+  const claim = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'Throughput rose after the intervention.' }),
+  ]);
+  await run(ws, ['promote', claim.id, '--to', 'supported']);
+
+  // A supported claim with no evidence is exactly what next rule 5 is for.
+  const before = await runJson(ws, ['next']);
+  assert.equal(before.top.rule, 'unsupported-claims');
+  assert.equal(before.top.command, `phdude link ${claim.id} --to <EVID-id>`);
+
+  const linked = await runJson(ws, ['link', claim.id, '--to', evidence.id]);
+  assert.deepEqual(linked.supported_by, [evidence.id]);
+
+  const after = await runJson(ws, ['next']);
+  assert.ok(
+    !after.actions.some((a) => a.rule === 'unsupported-claims'),
+    'the claim is no longer unsupported',
+  );
+
+  const events = await runJson(ws, ['status']);
+  assert.ok(events.recentEvents.some((e) => e.op === 'link'));
+
+  // Re-running the same link changes nothing and is not an error.
+  const again = await run(ws, ['link', claim.id, '--to', evidence.id]);
+  assert.match(again.stdout, /already links to every target/);
+
+  // Linking to an object of the wrong type is a validation error.
+  const wrongType = await phdude(ws, ['link', claim.id, '--to', source.id, ...ACTOR]);
+  assert.equal(wrongType.code, 2);
+  assert.match(wrongType.stderr, /cannot link/);
+});
+
 test('e2e: usage errors honour --json too', async (t) => {
   const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-usage-'));
   t.after(() => rm(ws, { recursive: true, force: true }));

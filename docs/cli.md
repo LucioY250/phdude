@@ -145,6 +145,31 @@ JSON. Use `--file` if you want the short text confirmation instead.
 References are checked before writing: a claim citing an evidence id that does not exist is
 a validation error, not a dangling edge.
 
+### `phdude link <id> --to <id> [<id>…]`
+
+```
+phdude link CLAIM-3d035aa05b --to EVID-93cd3745fc RQ-1
+phdude link SRC-04b75ed54a --to ART-35146e2f6d
+```
+
+Attaches existing objects to an existing object. This is the one edit `add` cannot make:
+ids are derived from content, so re-adding a claim with a longer `supported_by` returns the
+original record unchanged.
+
+| From | To | Field |
+|---|---|---|
+| claim | evidence | `supported_by` |
+| claim | question | `questions` |
+| hypothesis | question | `questions` |
+| source | artifact | `artifacts` |
+
+`--to` accepts several ids after one flag. Links are additive and idempotent: a target the
+object already lists is ignored, and a call that adds nothing writes no file and records no
+event. Every target must exist and be of a type the relation accepts, or the command exits 2.
+
+A `canonical` object cannot be linked: it exits 3 and points at `decide propose`, because
+canonical knowledge changes only through an approved decision.
+
 ### `phdude decide propose|approve|reject|supersede`
 
 ```

@@ -115,6 +115,7 @@ That block is `node bin/phdude.js next --workspace examples/generic-thesis`, ver
 | `phdude next` | The highest-impact next action, with reasons and the exact command. |
 | `phdude knowledge list\|show\|trace` | Query the knowledge graph and its lineage. |
 | `phdude add <type>` | Add a claim, evidence, fact, source, question, hypothesis or result, or set an artifact's role with `add artifact-role`. |
+| `phdude link <id> --to <id>…` | Attach evidence or questions to a claim, questions to a hypothesis, artifacts to a source. |
 | `phdude decide propose\|approve\|reject\|supersede` | Research decisions; the researcher decides. |
 | `phdude promote <id> --decision <DEC-id>` | Move an object to canonical. |
 | `phdude packs list\|detect\|apply <name>` | Field and method packs. |

@@ -12,7 +12,6 @@ const OPTIONS = {
   query: { type: 'string' },
   by: { type: 'string' },
   decision: { type: 'string' },
-  to: { type: 'string' },
   file: { type: 'string' },
   rationale: { type: 'string' },
   reason: { type: 'string' },
@@ -31,10 +30,11 @@ function looksLikeJson(token) {
 
 // `--json` is both the global output flag and the payload carrier for `phdude add` /
 // `phdude decide propose`. node:util.parseArgs cannot express that, so both it and the
-// variadic `--affects ID…` form of spec S12 are lifted out before parseArgs runs.
+// variadic `--affects ID…` / `--to ID…` forms are lifted out before parseArgs runs.
 function preprocess(argv) {
   const rest = [];
   const affects = [];
+  const to = [];
   let json = false;
   let jsonPayload = null;
 
@@ -51,21 +51,24 @@ function preprocess(argv) {
       json = true;
       const value = arg.slice('--json='.length);
       if (looksLikeJson(value)) jsonPayload = value;
-    } else if (arg === '--affects') {
+    } else if (arg === '--affects' || arg === '--to') {
+      const target = arg === '--to' ? to : affects;
       let j = i + 1;
       while (j < argv.length && !argv[j].startsWith('-')) {
-        affects.push(argv[j]);
+        target.push(argv[j]);
         j++;
       }
       i = j - 1;
     } else if (arg.startsWith('--affects=')) {
       affects.push(arg.slice('--affects='.length));
+    } else if (arg.startsWith('--to=')) {
+      to.push(arg.slice('--to='.length));
     } else {
       rest.push(arg);
     }
   }
 
-  return { rest, json, jsonPayload, affects };
+  return { rest, json, jsonPayload, affects, to };
 }
 
 function parseActor(value) {
@@ -115,7 +118,7 @@ export function parseJsonArg(text, label) {
  * @returns {{command: string|null, sub: string|null, positionals: string[], flags: object}}
  */
 export function parseCli(argv) {
-  const { rest, json, jsonPayload, affects } = preprocess(argv);
+  const { rest, json, jsonPayload, affects, to } = preprocess(argv);
 
   let parsed;
   try {
@@ -150,7 +153,7 @@ export function parseCli(argv) {
       query: values.query,
       by: values.by,
       decision: values.decision,
-      to: values.to,
+      to,
       file: values.file,
       rationale: values.rationale,
       reason: values.reason,

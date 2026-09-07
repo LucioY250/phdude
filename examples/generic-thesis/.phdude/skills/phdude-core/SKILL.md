@@ -51,11 +51,16 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 
 ## The only way to write
 
-Write to the workspace ONLY via `phdude add`, `phdude decide`, `phdude promote`,
+Write to the workspace ONLY via `phdude add`, `phdude link`, `phdude decide`, `phdude promote`,
 `phdude packs apply`, or `phdude mode`. (`phdude init` creates the workspace and `phdude ingest`
 writes the artifact inventory and its cache — expected setup steps, not knowledge edits.) Every
 other command only reads or derives from what is already recorded. Never write YAML files
 directly, even to "fix a typo".
+
+Ids are derived from content, so `phdude add` cannot correct an object that already exists:
+re-adding it returns the original record unchanged. To attach evidence, a research question
+or an artifact after the fact, use `phdude link <id> --to <id>…`. To change anything else,
+propose a Decision.
 
 ## Never fabricate
 
