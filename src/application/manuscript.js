@@ -67,6 +67,13 @@ function withoutApproval(entry) {
   return rest;
 }
 
+// The section file carries `status` in its front matter (spec §3.1), so a status change that
+// touched only manuscript.yaml would leave the two disagreeing on disk.
+async function writeSectionStatus(store, entry, status) {
+  const { front, body } = parseSectionFile(await store.readSection(entry.file));
+  await store.writeSection(entry.file, renderSectionFile({ ...front, status }, body));
+}
+
 /**
  * Everything the gates read, gathered once: the citation registry, the claims and evidence a
  * marker resolves against, the manuscript's language, venue and author voice, and the review
@@ -448,6 +455,7 @@ export async function approve({ store, clock, actor }, { section, decision } = {
   await store.writeManuscript(
     withSection(manuscript, entry.id, { status: 'approved', approved_by: decision }),
   );
+  await writeSectionStatus(store, entry, 'approved');
   await store.appendEvent({
     ts: clock(),
     op: 'manuscript',
@@ -483,6 +491,7 @@ export async function reopen({ store, clock, actor }, { section } = {}) {
     ...manuscript,
     sections: manuscript.sections.map((s) => (s.id === entry.id ? reopened : s)),
   });
+  await writeSectionStatus(store, entry, 'revised');
   await store.appendEvent({
     ts: clock(),
     op: 'manuscript',

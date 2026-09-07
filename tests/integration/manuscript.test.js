@@ -247,6 +247,30 @@ test('approve needs an approved decision that names manuscript:<section>', async
   );
 });
 
+test('approve and reopen keep the section file front matter in step with manuscript.yaml', async () => {
+  const deps = await initialized();
+  const { decision } = await approvedSection(deps);
+  const path = join(deps.store.root, 'manuscript', 'introduction.md');
+  const drafted = parseSectionFile(await readFile(path, 'utf8'));
+  assert.equal(drafted.front.status, 'draft');
+  const before = (await deps.store.readEvents()).length;
+
+  await manuscript.approve(deps, { section: 'introduction', decision: decision.id });
+  const approvedFile = parseSectionFile(await readFile(path, 'utf8'));
+  assert.equal(approvedFile.front.status, 'approved');
+  assert.equal(approvedFile.front.hash, drafted.front.hash);
+  assert.equal(approvedFile.front.updated, drafted.front.updated);
+  assert.equal(approvedFile.body, drafted.body);
+  assert.equal((await deps.store.readEvents()).length, before + 1);
+
+  await manuscript.reopen(deps, { section: 'introduction' });
+  const reopenedFile = parseSectionFile(await readFile(path, 'utf8'));
+  assert.equal(reopenedFile.front.status, 'revised');
+  assert.equal(reopenedFile.front.hash, drafted.front.hash);
+  assert.equal(reopenedFile.body, drafted.body);
+  assert.equal((await deps.store.readEvents()).length, before + 2);
+});
+
 test('approve refuses without a decision, on an unapproved one, and on the wrong subject', async () => {
   const deps = await initialized();
   const file = await draft(deps, 'draft.md', '# Introduction\n\nDrafted.\n');

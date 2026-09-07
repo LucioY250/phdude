@@ -1,6 +1,6 @@
 ---
 section: introduction
-status: revised
+status: approved
 hash: fbdfb605abdfbedbd66cbd862bcaa7eb4796ea5abf48e97727895426b638987d
 updated: 2026-09-01T00:01:08.000Z
 ---
