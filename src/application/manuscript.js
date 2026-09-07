@@ -128,7 +128,8 @@ export async function gateContext({ store, loadProfile }, { manuscript, entry } 
 }
 
 function formatFinding(finding) {
-  return `${finding.gate}:${finding.line} ${finding.message}`;
+  const line = `${finding.gate}:${finding.line} ${finding.message}`;
+  return finding.hint ? `${line} (${finding.hint})` : line;
 }
 
 /**

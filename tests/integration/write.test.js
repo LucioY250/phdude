@@ -254,6 +254,7 @@ test('a revision that drops a citation is blocked and changes nothing', async ()
     assert.equal(err.code, 'VALIDATION');
     assert.match(err.message, /gate-meaning/);
     assert.match(err.details[0], /drops the citation zeta2020adoption/);
+    assert.match(err.details[0], /\(.+\)$/, 'a blocking finding prints its hint');
     return true;
   });
 
