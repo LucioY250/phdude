@@ -35,8 +35,8 @@ Pending decisions (1):
   - DEC-7aa12a7b78: Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta
 
 Recent events:
-  authors: author profile researcher-a added
-  authors: author profile researcher-a learned from 1 sample(s)
-  decide: decision proposed
-  manuscript: manuscript initialized (6 sections)
   manuscript: submitted introduction (draft)
+  manuscript: submitted introduction (revised)
+  decide: decision proposed
+  decide: decision approved by example
+  manuscript: approved introduction (DEC-2567086fc6)

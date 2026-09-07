@@ -12,11 +12,12 @@ import { discoverSkills } from '../src/adapters/skills/loader.js';
 import { initWorkspace } from '../src/application/init.js';
 import { ingest } from '../src/application/ingest.js';
 import { addEntity } from '../src/application/add.js';
-import { promote, propose } from '../src/application/decide.js';
+import { approve as approveDecision, promote, propose } from '../src/application/decide.js';
 import { link } from '../src/application/link.js';
 import * as authors from '../src/application/authors.js';
 import * as research from '../src/application/research.js';
 import * as manuscript from '../src/application/manuscript.js';
+import * as prose from '../src/application/prose.js';
 import { buildProviders } from '../src/adapters/search/index.js';
 import { fakeFetch } from '../src/adapters/search/fake-fetch.js';
 
@@ -232,34 +233,79 @@ async function acceptOneCandidate(deps, candidateIds) {
   throw new Error('no article candidate to accept');
 }
 
-// The manuscript, so the example carries a section that went through the writing gates: a
-// planned six-section plan, and one introduction submitted as a draft. The prose asserts the
-// one supported claim in the workspace, with the marker and the citation key the writing
-// context would have handed an agent, so `phdude write introduction` and `phdude prose
-// introduction` both have something real to report on the committed example.
-async function writeIntroduction(deps, claim) {
-  await manuscript.init(deps, { language: 'en' });
-
-  const draft = [
+// The first paragraph asserts the one supported claim in the workspace, with the marker and
+// the citation key the writing context would have handed an agent. The middle paragraph is the
+// filler a model reaches for when it has nothing to say: an appeal to "the literature" with
+// nobody cited, an intensifier standing in for a number, and a phrase that could be deleted
+// whole. `phdude deslop introduction` reports all three.
+function draftIntroduction(claim) {
+  return [
     'Undergraduates report using note-taking applications daily, and the pattern holds across',
     'three independently recruited samples [@alpha2025survey].',
     `<!-- claim: ${claim.id} -->`,
+    '',
+    'It is important to note that the literature suggests adoption of these tools is significant',
+    'across institutions.',
     '',
     'How far that generalises is the open question. The three surveys recruited through different',
     'channels, and the sample sizes they report do not agree, so this thesis asks whether adoption',
     'differs by recruitment channel and campus.',
   ].join('\n');
+}
 
+// The revision the deslop contract asks for: the middle paragraph now says something the
+// workspace can back, and the claim marker, the citation and the negations `gate-meaning`
+// watches all survive it.
+function revisedIntroduction(claim) {
+  return [
+    'Undergraduates report using note-taking applications daily, and the pattern holds across',
+    'three independently recruited samples [@alpha2025survey].',
+    `<!-- claim: ${claim.id} -->`,
+    '',
+    'The three surveys did not recruit the same way: one used the university mailing list, one a',
+    'campus social media group, and one a stratified sample across three campuses.',
+    '',
+    'How far the pattern generalises is therefore the open question. The sample sizes the three',
+    'surveys report do not agree either, so this thesis asks whether adoption differs by',
+    'recruitment channel and campus.',
+  ].join('\n');
+}
+
+async function submitDraft(deps, body, options) {
   const path = join(deps.store.root, 'draft-introduction.md');
-  await writeFile(path, draft + '\n');
+  await writeFile(path, body + '\n');
   await manuscript.submit(
     { ...deps, readText: () => readFile(path, 'utf8') },
-    {
-      section: 'introduction',
-      file: path,
-    },
+    { section: 'introduction', file: path, ...options },
   );
   await rm(path);
+}
+
+// The manuscript, so the example carries a section that went through the whole writing loop
+// rather than one step of it: a planned six-section plan, an introduction submitted as a draft,
+// the same section revised once with its filler removed, the prose report `phdude prose`
+// stores, and finally an approval with a decision behind it - the human-authority gate, which
+// is the only way a section reaches `approved`.
+async function writeIntroduction(deps, claim) {
+  // The manuscript names researcher-a as its voice, which is what makes the profile above more
+  // than decoration: `phdude write` reads it into the writing context, and the voice check
+  // compares a draft against its learned statistics.
+  await manuscript.init(deps, { language: 'en', voice: RESEARCHER_A_PROFILE.id });
+
+  await submitDraft(deps, draftIntroduction(claim));
+  await submitDraft(deps, revisedIntroduction(claim), { revision: true });
+
+  await prose.proseSection(deps, 'introduction');
+
+  const { obj: decision } = await propose(deps, {
+    title: 'Approve the introduction as revised',
+    rationale:
+      'The section asserts one supported claim with the evidence and citation behind it, and ' +
+      'the revision passed every writing gate with no findings.',
+    affects: ['manuscript:introduction'],
+  });
+  await approveDecision(deps, decision.id, { by: ACTOR.researcher });
+  await manuscript.approve(deps, { section: 'introduction', decision: decision.id });
 }
 
 // One author profile, learned from one approved sample - `phdude authors learn`'s paths are

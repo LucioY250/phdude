@@ -35,3 +35,7 @@
 {"ts":"2026-09-01T00:01:05.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-7aa12a7b78"],"summary":"decision proposed"}
 {"ts":"2026-09-01T00:01:06.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"manuscript initialized (6 sections)"}
 {"ts":"2026-09-01T00:01:07.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"submitted introduction (draft)"}
+{"ts":"2026-09-01T00:01:08.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"submitted introduction (revised)"}
+{"ts":"2026-09-01T00:01:10.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-2567086fc6"],"summary":"decision proposed"}
+{"ts":"2026-09-01T00:01:12.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-2567086fc6"],"summary":"decision approved by example"}
+{"ts":"2026-09-01T00:01:13.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":["DEC-2567086fc6"],"summary":"approved introduction (DEC-2567086fc6)"}

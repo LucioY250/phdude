@@ -1,7 +1,7 @@
 # Writing context: Introduction
 
 Manuscript: Generic Thesis Example (language en)
-Section: introduction (draft), position 2
+Section: introduction (approved), position 2
 
 Purpose: Establish the problem, what is already known and where the gap is, and end on the research questions this work addresses.
 
@@ -44,7 +44,21 @@ Cite only these keys. A key that resolves to nothing blocks the submit.
 
 ## Author voice
 
-No author voice profile is active; write in the manuscript language, plainly.
+Profile: researcher-a
+
+Learned from approved samples:
+- first_person_rate: 0.005
+- hedge_rate: 0.009
+- learned_at: 2026-09-01T00:01:02.000Z
+- opening_diversity: 0.875
+- paragraph_density: 2.667
+- sample_count: 1
+- sentence_length_mean: 27.125
+- sentence_length_sd: 9.993
+- transition_rate: 0
+
+Preserve: note-taking application, recruitment channel
+Avoid: leverage, robust, cutting-edge
 
 ## Which verb each claim allows
 
