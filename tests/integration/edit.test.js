@@ -232,3 +232,39 @@ test("edit: a result's `from` is editable, its `summary` is not", async () => {
     },
   );
 });
+
+test('edit: a reference that does not resolve is refused, the way add refuses it', async () => {
+  const deps = makeDeps(await newRoot());
+  const source = await aSource(deps);
+  const { obj: question } = await addEntity(deps, 'question', {
+    text: 'How do open science practices spread?',
+  });
+  const { obj: claim } = await addEntity(deps, 'claim', {
+    statement: 'Reproducible pipelines shorten review cycles.',
+    kind: 'empirical',
+  });
+
+  const unknown = (fields) => async () => edit(deps, claim.id, fields);
+  for (const fields of [
+    { supported_by: ['EVID-0123456789'] },
+    { questions: [question.id, 'RQ-9'] },
+  ]) {
+    await assert.rejects(unknown(fields)(), (err) => {
+      assert.equal(err.code, 'VALIDATION');
+      assert.match(err.message, /^unknown reference /);
+      assert.equal(err.hint, 'run phdude knowledge list');
+      return true;
+    });
+  }
+
+  // The write never happened: the refusal is the whole point, not a warning after the fact.
+  assert.deepEqual((await deps.store.readEntity(claim.id)).supported_by, []);
+
+  // A source's `artifacts` is checked the same way, and a reference that does resolve is fine.
+  await assert.rejects(edit(deps, source.id, { artifacts: ['ART-0123456789'] }), {
+    code: 'VALIDATION',
+  });
+  assert.deepEqual((await edit(deps, claim.id, { questions: [question.id] })).questions, [
+    question.id,
+  ]);
+});

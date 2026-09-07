@@ -48,6 +48,10 @@ export default async function init({ flags, deps, workspace }) {
     `    ${entry.hint}`,
   ]);
 
+  // Only when it happened: a `removed: 0` on every ordinary init would be noise, and taking a
+  // skill back off disk is rare enough to deserve the line when it does.
+  const removed = result.removed.length > 0 ? [`  removed: ${result.removed.length}`] : [];
+
   const text =
     [
       `Initialized PhDude workspace at ${workspace}`,
@@ -56,6 +60,7 @@ export default async function init({ flags, deps, workspace }) {
       `  created: ${result.created.length}`,
       `  updated: ${result.updated.length}`,
       `  skipped: ${result.skipped.length}`,
+      ...removed,
       `  git:     ${git}`,
       ...withheld,
       '',

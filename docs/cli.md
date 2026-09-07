@@ -74,6 +74,10 @@ under `updated`, so a local edit to a skill does not survive an upgrade. Project
 guidance belongs in the policy files under `.phdude/`, or in a workspace pack under
 `.phdude/packs/` (see [docs/extending.md](extending.md)).
 
+A skill the policy no longer clears for network access is withheld, and one already installed
+under an earlier permission is deleted: `removed` in `--json` lists the skill directories that
+went, and the text output adds a `removed:` line when there were any.
+
 ### `phdude bootstrap`
 
 The command to run on a messy existing project. It ingests `sources/`, scores pack

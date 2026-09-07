@@ -635,3 +635,39 @@ test('a provider API key never reaches an error the researcher sees', async () =
     });
   }
 });
+
+test('fetchWithPolicy: releases the body of every response it will not return', async () => {
+  const cancelled = [];
+  const make = (status) => ({
+    ok: status >= 200 && status < 300,
+    status,
+    headers: { get: (name) => (String(name).toLowerCase() === 'retry-after' ? '0' : null) },
+    body: {
+      cancel: async () => {
+        cancelled.push(status);
+      },
+    },
+    async text() {
+      return '';
+    },
+  });
+
+  // The 429 is dropped in favour of the retry, so undici would otherwise hold its connection
+  // open until the socket timed out. The 200 the caller receives is left alone to be read.
+  const statuses = [429, 200];
+  let i = 0;
+  const retried = await fetchWithPolicy(async () => make(statuses[i++]), URL_OK, {
+    provider: 'demo',
+  });
+  assert.equal(retried.status, 200);
+  assert.deepEqual(cancelled, [429]);
+
+  cancelled.length = 0;
+  await assert.rejects(
+    fetchWithPolicy(async () => make(500), URL_OK, { provider: 'demo' }),
+    {
+      code: 'TOOL_MISSING',
+    },
+  );
+  assert.deepEqual(cancelled, [500], 'a status the caller never sees still releases its body');
+});

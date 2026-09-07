@@ -5,8 +5,9 @@ import { findGaps } from './gaps.js';
 import { DEFAULT_FILTERS, ENABLE_NETWORK } from './policy.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
-const CANDIDATE_BACKLOG_THRESHOLD = 5;
-const CANDIDATES_PENDING_THRESHOLD = 5;
+// How long a review queue has to be before it is worth an afternoon. Candidate claims and
+// literature candidates are the same kind of backlog, so they share the number.
+const BACKLOG_THRESHOLD = 5;
 const COLLECTION_KEYS = [
   'artifacts',
   'sources',
@@ -141,7 +142,7 @@ function ruleUnsupportedClaims(snapshot) {
 
 function ruleCandidateBacklog(snapshot) {
   const candidates = (snapshot.claims ?? []).filter((c) => c.state === 'candidate');
-  if (candidates.length < CANDIDATE_BACKLOG_THRESHOLD) return null;
+  if (candidates.length < BACKLOG_THRESHOLD) return null;
   return {
     rule: 'candidate-backlog',
     action: 'Review the candidate-claims backlog',
@@ -226,7 +227,13 @@ function ruleStaleSearch(snapshot) {
   const why = [
     `${stale.length} research question(s) have no current literature search: ${stale.map((r) => r.question).join(', ')}`,
   ];
-  if (never.length > 0) why.push(`${never.length} of them have never been searched`);
+  if (never.length > 0) {
+    why.push(
+      never.length === 1
+        ? '1 of them has never been searched'
+        : `${never.length} of them have never been searched`,
+    );
+  }
   if (aged.length > 0) {
     const oldest = aged.reduce((worst, row) => (row.daysAgo > worst.daysAgo ? row : worst));
     why.push(`the oldest search ran ${oldest.daysAgo} day(s) ago (stale after ${staleAfterDays})`);
@@ -255,7 +262,7 @@ function ruleStaleSearch(snapshot) {
 // enough to be worth an afternoon, never per candidate.
 function ruleCandidatesPending(snapshot) {
   const pending = (snapshot.candidates ?? []).filter((c) => c.state === 'candidate');
-  if (pending.length < CANDIDATES_PENDING_THRESHOLD) return null;
+  if (pending.length < BACKLOG_THRESHOLD) return null;
   return {
     rule: 'candidates-pending',
     action: 'Review the literature candidates waiting for a verdict',

@@ -44,12 +44,26 @@ export async function fetchWithPolicy(
   let response = await attempt(fetch, url, { provider, headers, timeoutMs, signal });
 
   if (retryOn.includes(response.status)) {
-    await sleep(retryAfterMs(response.headers.get('retry-after')));
+    const backoff = retryAfterMs(response.headers.get('retry-after'));
+    await discard(response);
+    await sleep(backoff);
     response = await attempt(fetch, url, { provider, headers, timeoutMs, signal });
   }
 
   if (response.ok) return response;
+  await discard(response);
   throw statusError(provider, response.status);
+}
+
+// A response nobody is going to read still holds its connection until its body is consumed or
+// cancelled, so a rate-limited or failing provider would otherwise leak one socket per call.
+async function discard(response) {
+  try {
+    if (typeof response.body?.cancel === 'function') await response.body.cancel();
+    else if (typeof response.text === 'function') await response.text();
+  } catch {
+    // A body already consumed or already gone is exactly the state this wanted.
+  }
 }
 
 async function attempt(fetch, url, { provider, headers, timeoutMs, signal }) {

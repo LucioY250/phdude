@@ -287,3 +287,43 @@ test('init installs the research skill once the policy allows network skills', a
   assert.deepEqual(result.withheldSkills, []);
   assert.equal(await store.exists(join('.phdude', 'skills', 'research', 'SKILL.md')), true);
 });
+
+test('init takes an installed skill back off disk when the policy closes again', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  const hostDeps = { ...deps(root), store, agentHosts: [codexHost] };
+  const policyPath = join('.phdude', 'research-policy.yaml');
+  const skillPath = join('.phdude', 'skills', 'research', 'SKILL.md');
+
+  await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
+  await store.writeTextAtomic(
+    policyPath,
+    (await store.readText(policyPath)).replace('allow_network: false', 'allow_network: true'),
+  );
+  const opened = await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
+  assert.deepEqual(opened.removed, []);
+  assert.equal(await store.exists(skillPath), true);
+
+  // Withdrawing the permission has to withdraw the skill: de-indexing it from AGENTS.md alone
+  // would leave the file for anything that reads `.phdude/skills/` directly.
+  await store.writeTextAtomic(
+    policyPath,
+    (await store.readText(policyPath)).replace('allow_network: true', 'allow_network: false'),
+  );
+  const closed = await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true });
+
+  assert.deepEqual(closed.removed, [join('.phdude', 'skills', 'research')]);
+  assert.equal(await store.exists(skillPath), false);
+  assert.equal(await store.exists(join('.phdude', 'skills', 'research')), false);
+  assert.deepEqual(
+    closed.withheldSkills.map((entry) => entry.name),
+    ['research'],
+  );
+
+  // Every other skill is untouched, and a third run has nothing left to remove.
+  assert.equal(await store.exists(join('.phdude', 'skills', 'phdude-core', 'SKILL.md')), true);
+  assert.deepEqual(
+    (await initWorkspace(hostDeps, { title: 'An open workspace', noGit: true })).removed,
+    [],
+  );
+});

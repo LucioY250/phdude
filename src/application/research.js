@@ -30,7 +30,10 @@ const SOURCE_TYPE_BY_CANDIDATE_TYPE = {
   other: 'other',
 };
 
-const SOURCE_TYPES = [
+// The types `research accept --type` will take. This duplicates the enum in
+// schemas/source.json; a test pins the two together, because a value the schema refuses would
+// be caught only at the point of writing, after the candidate has already been marked accepted.
+export const SOURCE_TYPES = [
   'article',
   'book',
   'chapter',

@@ -34,7 +34,8 @@ author profile when one is set.
 ## Consequences
 
 - Tests never touch the network: `tests/support/fake-fetch.js` replays recorded routes, and an
-  unmatched URL throws. Live checks stay behind `PHDUDE_LIVE_TESTS=1`.
+  unmatched URL throws. Live checks stay behind `PHDUDE_LIVE_TESTS=1`
+  (`tests/live/search.live.test.js`), which CI never sets.
 - A new provider is one adapter plus one entry in `PROVIDER_FACTORIES`, proven by the contract
   suite over its own fixtures.
 - `doctor` reports the policy and the configured providers without calling anything.

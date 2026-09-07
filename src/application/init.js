@@ -1,4 +1,4 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CURRENT_WORKSPACE_VERSION } from '../domain/versioning.js';
@@ -120,11 +120,22 @@ export async function copySkills(
     .filter((skill) => !withheldNames.has(skill.name))
     .map((skill) => skill.name);
 
+  // A skill installed under an earlier permission is taken back off disk when the policy that
+  // allowed it is closed again. De-indexing it from AGENTS.md alone would leave the file there
+  // for anything that reads `.phdude/skills/` directly, so the withdrawal would be partial.
+  const removed = [];
+  for (const name of withheldNames) {
+    const rel = join('.phdude', 'skills', name);
+    if (!(await store.exists(rel))) continue;
+    await rm(join(store.root, rel), { recursive: true, force: true });
+    removed.push(rel);
+  }
+
   let entries;
   try {
     entries = await readdir(srcDir, { withFileTypes: true });
   } catch (err) {
-    if (err.code === 'ENOENT') return { withheld, installed };
+    if (err.code === 'ENOENT') return { withheld, installed, removed };
     throw err;
   }
   for (const entry of entries) {
@@ -139,12 +150,13 @@ export async function copySkills(
       skipped,
     );
   }
-  return { withheld, installed };
+  return { withheld, installed, removed };
 }
 
 /**
  * @returns {Promise<{ created: string[], updated: string[], skipped: string[],
- *   withheldSkills: {name: string, reason: string, hint: string}[], gitInitialized: boolean }>}
+ *   removed: string[], withheldSkills: {name: string, reason: string, hint: string}[],
+ *   gitInitialized: boolean }>}
  */
 export async function initWorkspace(
   { store, git, agentHosts = [], clock, actor, discoverSkills },
@@ -218,10 +230,14 @@ export async function initWorkspace(
   }
 
   const policy = await store.readYaml(join('.phdude', 'research-policy.yaml'));
-  const { withheld, installed } = await copySkills(store, SKILLS_DIR, created, updated, skipped, {
-    policy,
-    discoverSkills,
-  });
+  const { withheld, installed, removed } = await copySkills(
+    store,
+    SKILLS_DIR,
+    created,
+    updated,
+    skipped,
+    { policy, discoverSkills },
+  );
 
   if (agentHosts.length > 0) {
     const preExisting = await snapshotAgentHostFiles(store);
@@ -259,5 +275,5 @@ export async function initWorkspace(
     summary: 'workspace initialized',
   });
 
-  return { created, updated, skipped, withheldSkills: withheld, gitInitialized };
+  return { created, updated, skipped, removed, withheldSkills: withheld, gitInitialized };
 }

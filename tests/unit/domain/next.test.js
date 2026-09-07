@@ -471,6 +471,18 @@ test('recommendNext: stale-search points at a first search when the question has
   assert.ok(action.why.some((w) => /never been searched/.test(w)));
 });
 
+test('recommendNext: stale-search counts never-searched questions in the right number', () => {
+  const why = (questions) =>
+    recommendNext(emptySnapshot({ questions }), []).find((a) => a.rule === 'stale-search').why;
+
+  // The why line is read aloud to the researcher; "1 of them have never been searched" reads as
+  // a bug in the count rather than as a sentence.
+  assert.ok(why([question('RQ-1')]).includes('1 of them has never been searched'));
+  assert.ok(
+    why([question('RQ-1'), question('RQ-2')]).includes('2 of them have never been searched'),
+  );
+});
+
 test('recommendNext: stale-search does not fire while every question has a current search', () => {
   const rq = question('RQ-1');
   const snapshot = emptySnapshot({

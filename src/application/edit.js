@@ -59,6 +59,29 @@ const EDITABLE_FIELDS = {
   artifact: ['role', 'tags'],
 };
 
+// The editable fields that hold ids of other objects. `phdude add` refuses an id that does not
+// resolve, and an edit that did not would write a dangling reference, exit 0, and turn up months
+// later as a `status` warning with nothing to trace it back to. Evidence's `source` and a fact's
+// `from.artifact` are absent because they are identity fields: `add` is the only way to set them.
+const REFERENCE_FIELDS = {
+  claim: ['supported_by', 'questions'],
+  source: ['artifacts'],
+  method: ['questions'],
+  hypothesis: ['questions'],
+};
+
+async function assertReferencesExist(store, type, fields) {
+  for (const name of REFERENCE_FIELDS[type] ?? []) {
+    if (fields[name] === undefined) continue;
+    const ids = Array.isArray(fields[name]) ? fields[name] : [fields[name]];
+    for (const id of ids) {
+      if (!(await store.readEntity(id))) {
+        throw new PhdudeError('VALIDATION', `unknown reference ${id}`, 'run phdude knowledge list');
+      }
+    }
+  }
+}
+
 function assertEditableType(type, id) {
   if (type === 'candidate') {
     throw new PhdudeError(
@@ -107,9 +130,9 @@ function assertEditableFields(type, fields) {
 
 /**
  * Corrects the non-identity fields of a recorded object in place (spec §3.4, v0.2 backlog).
- * The three guards are the whole point of the command: a canonical object is the researcher's,
- * an identity field cannot change without changing the object, and a field the schema does not
- * know is a typo rather than a new field.
+ * The four guards are the whole point of the command: a canonical object is the researcher's,
+ * an identity field cannot change without changing the object, a field the schema does not know
+ * is a typo rather than a new field, and a reference that does not resolve is a dangling id.
  * @param {{store: object, clock: () => string, actor: object}} deps
  * @param {string} id
  * @param {object} fields
@@ -137,6 +160,7 @@ export async function edit({ store, clock, actor }, id, fields = {}) {
   }
 
   assertEditableFields(type, fields);
+  await assertReferencesExist(store, type, fields);
 
   const updated = { ...obj, ...fields };
   // The store validates against the schema before it writes, so a value of the wrong shape is
