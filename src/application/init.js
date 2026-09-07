@@ -39,6 +39,26 @@ const POLICY_FILES = [
   'author-profile.yaml',
 ];
 
+// Recursively lists every file already present under `root`, relative to it. Used to tell
+// whether a path an AgentHost reports as `written` is a brand-new file (created) or an existing
+// one it rewrote (updated).
+async function listRelFiles(root, relDir = '') {
+  let entries;
+  try {
+    entries = await readdir(join(root, relDir), { withFileTypes: true });
+  } catch (err) {
+    if (err.code === 'ENOENT') return new Set();
+    throw err;
+  }
+  const out = [];
+  for (const entry of entries) {
+    const rel = relDir ? join(relDir, entry.name) : entry.name;
+    if (entry.isDirectory()) out.push(...(await listRelFiles(root, rel)));
+    else out.push(rel);
+  }
+  return new Set(out);
+}
+
 // Classifies each copied file as created (new), updated (existed with different
 // content, rewritten) or skipped (existed with identical content, left untouched).
 async function copyDirInto(srcDir, destRel, store, created, updated, skipped) {
@@ -165,8 +185,10 @@ export async function initWorkspace(
   await copySkills(store, SKILLS_DIR, created, updated, skipped);
 
   for (const host of agentHosts) {
-    const { written } = await host.install(store.root, { project });
-    created.push(...written);
+    const preExisting = await listRelFiles(store.root);
+    const { written, skipped: hostSkipped } = await host.install(store.root, { project });
+    for (const rel of written) (preExisting.has(rel) ? updated : created).push(rel);
+    skipped.push(...hostSkipped);
   }
 
   let gitInitialized = false;

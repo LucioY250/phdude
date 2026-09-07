@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
 import { copySkills, initWorkspace } from '../../src/application/init.js';
+import { codexHost } from '../../src/adapters/agents/codex.js';
 
 const deps = (root) => ({
   store: new FsStore(root),
@@ -69,6 +70,21 @@ test('with agents: [] and no agentHosts, phdude.yaml has agents: [] and mode: fu
   const text = await readFile(join(root, 'phdude.yaml'), 'utf8');
   assert.match(text, /agents: \[\]/);
   assert.match(text, /mode: full/);
+});
+
+test('agents: [codex] installs codexHost and produces AGENTS.md', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const d = deps(root);
+  d.agentHosts = [codexHost];
+  const r1 = await initWorkspace(d, { title: 'My thesis', agents: ['codex'] });
+  await stat(join(root, 'AGENTS.md'));
+  assert.ok(r1.created.includes('AGENTS.md'));
+  assert.match(await readFile(join(root, 'AGENTS.md'), 'utf8'), /phdude/i);
+
+  const r2 = await initWorkspace(d, { title: 'My thesis', agents: ['codex'] });
+  assert.ok(!r2.created.includes('AGENTS.md'));
+  assert.ok(!r2.updated.includes('AGENTS.md'));
+  assert.ok(r2.skipped.includes('AGENTS.md'));
 });
 
 test('copySkills classifies created, then skipped, then updated on content change', async () => {
