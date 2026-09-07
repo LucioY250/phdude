@@ -1,0 +1,8 @@
+node_modules/
+.env
+.env.*
+.omc/
+.phdude/cache/
+coverage/
+*.log
+.DS_Store
