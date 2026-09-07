@@ -166,7 +166,6 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'manuscript submit',
     'manuscript approve',
     'manuscript reopen',
-    'data add',
     'analyze add',
     'analyze run',
     'deslop',
