@@ -1,0 +1,26 @@
+src/adapters/packs/loader.js
+  s_946fc7502759d8::t_34e4c95173586d 34-41
+  s_946fc7502759d8::t_823a804fc05a3d 2
+tests/unit/adapters/packs-loader.test.js
+  s_946fc7502759d8::t_6e1f189f7789e4 1-99
+tests/integration/packs.test.js
+  s_946fc7502759d8::t_765d6c2fb9ff0f 154-174
+src/application/packs.js
+  s_946fc7502759d8::t_628c769fa388bf 76-83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "7670202ebc07eba6bb4451cc6c58b07b05ddd0d2",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
