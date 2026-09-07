@@ -11,7 +11,7 @@ const IDENTITY_FIELDS = {
   evidence: ['source', 'locator', 'excerpt'],
   fact: ['key', 'value', 'from'],
   source: ['title', 'year'],
-  result: ['summary'],
+  result: ['summary', 'from'],
   decision: ['title', 'rationale', 'affects', 'change'],
   method: ['name'],
   question: ['text'],
@@ -42,7 +42,7 @@ const EDITABLE_FIELDS = {
     'provenance',
     'tags',
   ],
-  result: ['from', 'values', 'tags'],
+  result: ['values', 'tags'],
   decision: ['tags'],
   method: [
     'design',

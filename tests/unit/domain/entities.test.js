@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import {
   newClaim,
   newEvidence,
@@ -506,6 +507,21 @@ test('newResult: a result with no `from` keeps the id v0.4 gave it', () => {
   const bare = newResult({ summary, from: '', actor, created });
   assert.equal(bare.id, makeId('result', summary));
   assert.equal(newResult({ summary, from: undefined, actor, created }).id, bare.id);
+});
+
+test('newResult: a `from` that is not an analysis keeps the v0.4 id', () => {
+  const v04 = JSON.parse(
+    readFileSync(new URL('../../fixtures/objects/v0.4-result.json', import.meta.url), 'utf8'),
+  );
+  const readded = newResult({
+    summary: v04.summary,
+    from: v04.from,
+    values: v04.values,
+    actor,
+    created,
+  });
+  assert.equal(readded.id, v04.id);
+  assert.equal(readded.id, makeId('result', v04.summary));
 });
 
 test('newAnalysis: schema-valid, id derived from the name, no runs yet', () => {

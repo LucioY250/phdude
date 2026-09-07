@@ -1,0 +1,12 @@
+{
+  "schema": "phdude.result",
+  "version": 1,
+  "id": "RESULT-5bd8d4e382",
+  "created": "2026-08-20T16:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "tags": [],
+  "summary": "Firm size significantly predicts AI adoption likelihood (p < .01); cost concerns dominate for firms under 20 employees.",
+  "from": "logistic regression on survey sample (n=312)",
+  "values": { "odds_ratio": 1.8, "p_value": 0.004, "n": 312 },
+  "state": "supported"
+}

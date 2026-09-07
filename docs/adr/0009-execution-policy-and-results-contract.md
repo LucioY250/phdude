@@ -62,11 +62,21 @@ through `PHDUDE_ANALYSIS`, and writes `analysis/out/<name>/results.json`:
 ```
 
 PhDude turns each entry into a `RESULT` object with `from: <ANALYSIS-id>`, state `candidate`, and
-`ext.analysis: { key, run_at }`. Re-running with identical values is a no-op per result; a key
-that reappears with different values creates a new `RESULT` and marks the old one `rejected` with
-a pointer to its replacement, because a superseded number is part of the record too. Each run
-stores the input and output hashes it saw, which is what makes staleness a computation rather
-than a guess.
+`ext.analysis: { key, run_at }`. Re-running with identical values is a no-op per result. A key
+that reappears with a **different summary** creates a new `RESULT` and marks the old one
+`rejected` with a pointer to its replacement, because a superseded finding is part of the record
+too. A key that reappears with **new values under the same summary** is the same record,
+corrected in place: a result id is derived from its summary and its analysis, so that record
+would have to supersede itself, and there is no id for it to point at. A script that wants the
+old numbers kept puts the finding in the summary — `"Mean respondent age is 38.4 years"`, not
+`"Mean age"`. Each run stores the input and output hashes it saw, which is what makes staleness a
+computation rather than a guess.
+
+**A v0.4 result keeps its v0.4 id.** `from` joins the id material only when it names an analysis.
+v0.4 let `from` be prose — `"logistic regression on survey sample (n=312)"` — and every such
+result's id came from its summary alone. Rewriting those ids would break every reference to them,
+so migration 0002 does not, and `newResult` does not compute a different one: adding the same
+v0.4 result again after the migration still finds the record already on disk.
 
 **Skills ask for it explicitly.** The skill contract's `permissions` gains
 `execution: none|allowed`, mirroring `network`, and the workspace grants it with

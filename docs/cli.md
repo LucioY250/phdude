@@ -260,12 +260,16 @@ existing record and writes no event. What counts as "the same object" is the id 
 | `fact` | `key`, `value`, `from.artifact` |
 | `source` | `title`, `year` |
 | `method` | `name` |
-| `result` | `summary` |
+| `result` | `summary`, plus `from` when it names an analysis |
 | `question`, `hypothesis` | sequential `RQ-<n>` / `H-<n>`, deduplicated on normalized `text` |
 
 The same excerpt attributed to a different source or page is therefore different evidence,
 and the same value reported by two artifacts is deliberately two facts — that pair is the
-conflict `status` reports. See [ADR 3](adr/0003-content-derived-ids.md).
+conflict `status` reports. A result's `from` counts only when it names an analysis: two analyses
+can reach the same finding and each owns its record, while a result whose `from` is prose
+(`"logistic regression on survey sample"`, the v0.4 shape) keeps the id v0.4 gave it, so adding
+it again after `phdude migrate` finds the record already there instead of a second copy.
+See [ADR 3](adr/0003-content-derived-ids.md).
 
 `artifact-role` is the exception: it sets `role` on an existing artifact rather than
 creating a new object, and takes `{"id":"ART-…","role":"paper"}`. Text mode prints
@@ -628,7 +632,7 @@ Three refusals, and they are the point of the command:
 | `evidence` | `source`, `locator`, `excerpt` | `strength`, `provenance`, `tags` |
 | `fact` | `key`, `value`, `from` | `unit`, `tags` |
 | `source` | `title`, `year` | `authors`, `venue`, `doi`, `url`, `type`, `artifacts`, `bibkey`, `abstract`, `keywords`, `identifiers`, `provenance`, `tags` |
-| `result` | `summary` | `from`, `values`, `tags` |
+| `result` | `summary`, `from` | `values`, `tags` |
 | `decision` | `title`, `rationale`, `affects`, `change` | `tags` |
 | `method` | `name` | `design`, `paradigm`, `sampling`, `instruments`, `analysis`, `limitations`, `questions`, `tags` |
 | `question` | `text` | `objectives`, `tags` |

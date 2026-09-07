@@ -210,7 +210,7 @@ test('edit: an artifact takes only role and tags', async () => {
   });
 });
 
-test("edit: a result's `from` is editable, its `summary` is not", async () => {
+test("edit: a result's `summary` and `from` are both identity, its `values` are not", async () => {
   const deps = makeDeps(await newRoot());
   const { obj: result } = await addEntity(deps, 'result', {
     summary: 'Adoption rose 12% between waves.',
@@ -218,19 +218,24 @@ test("edit: a result's `from` is editable, its `summary` is not", async () => {
     values: { delta: 0.12 },
   });
 
-  const updated = await edit(deps, result.id, { from: 'analysis/wave-comparison-v2.R' });
-  assert.equal(updated.id, result.id, `only \`summary\` is the result's identity`);
-  assert.equal(updated.from, 'analysis/wave-comparison-v2.R');
+  const updated = await edit(deps, result.id, { values: { delta: 0.13 } });
+  assert.equal(updated.id, result.id);
+  assert.deepEqual(updated.values, { delta: 0.13 });
 
-  await assert.rejects(
-    () => edit(deps, result.id, { summary: 'Adoption fell.' }),
-    (err) => {
-      assert.equal(err.code, 'VALIDATION');
-      assert.match(err.message, /cannot edit the identity field\(s\) of a result: summary/);
-      assert.match(err.hint, /a result is identified by summary/);
-      return true;
-    },
-  );
+  for (const fields of [{ summary: 'Adoption fell.' }, { from: 'ANALYSIS-0123456789' }]) {
+    await assert.rejects(
+      () => edit(deps, result.id, fields),
+      (err) => {
+        assert.equal(err.code, 'VALIDATION');
+        assert.match(err.message, /cannot edit the identity field\(s\) of a result: /);
+        assert.match(err.hint, /a result is identified by summary, from/);
+        return true;
+      },
+    );
+  }
+
+  const onDisk = await deps.store.readEntity(result.id);
+  assert.equal(onDisk.from, 'analysis/wave-comparison.R');
 });
 
 test('edit: a reference that does not resolve is refused, the way add refuses it', async () => {

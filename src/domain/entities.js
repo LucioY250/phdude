@@ -277,9 +277,10 @@ export function newSource({
 export function newResult({ summary, from, values = {}, tags = [], actor, created }) {
   const text = requireText('summary', summary);
   // Two analyses can reach the same finding and each owns its own record, so the analysis is
-  // part of the identity. A result recorded without one keeps the id v0.4 gave it, which is why
-  // migration 0002 has nothing to rewrite.
-  const material = from ? `${text}|${from}` : text;
+  // part of the identity. Only an analysis is: v0.4 let `from` be any prose ("logistic
+  // regression on survey sample"), and those results keep the id v0.4 gave them, so re-adding
+  // one after a migration finds the record it already has instead of minting a second.
+  const material = /^ANALYSIS-/.test(String(from ?? '')) ? `${text}|${from}` : text;
   return {
     schema: 'phdude.result',
     version: 1,

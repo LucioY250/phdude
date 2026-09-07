@@ -38,9 +38,11 @@ does any of this still hold? See
   the datasets it reads, and where it leaves `results.json`. A run records `at`, `exit`,
   `duration_ms`, the hash of every input and every output, and the results it wrote; a run whose
   inputs have not changed since the last successful one is refused as "up to date". Each entry
-  in `results.json` becomes a citable `RESULT` with `from` pointing at the analysis, and a
-  re-run with different values marks the old result `rejected` with `superseded_by` rather than
-  overwriting it.
+  in `results.json` becomes a citable `RESULT` with `from` pointing at the analysis. A re-run
+  that reports a key under a **different summary** marks the old result `rejected` with
+  `superseded_by` pointing at the new one; a re-run that reports **new values under the same
+  summary** corrects that record in place, because the id is derived from the summary and the
+  analysis and a record cannot supersede itself.
 - **Tables.** `phdude table add --json`, `table list|show <id>|build <id> [--format md,latex,csv]`.
   A table renders a `RESULT`'s values or a `DATASET`'s columns as Markdown, LaTeX (`booktabs`,
   with a caption and a label) and CSV under `tables/out/`, deterministically and with LaTeX
@@ -87,8 +89,14 @@ does any of this still hold? See
 - The skill contract's `permissions` accepts an optional `execution: none|allowed`. Skills
   written before v0.5 stay valid and default to `none`.
 - `RESULT` ids now include the analysis they came from, so two analyses can reach the same
-  finding and each keep its own record. Results recorded before v0.5 keep the ids they have;
-  migration 0002 rewrites none of them.
+  finding and each keep its own record. `from` joins the id material only when it names an
+  analysis: v0.4 allowed prose there (`"logistic regression on survey sample"`), and every such
+  result keeps the id computed from its summary alone, so re-adding one after `phdude migrate`
+  finds the record already on disk rather than minting a duplicate. Migration 0002 rewrites no
+  ids at all.
+- `phdude edit` treats a result's `from` as an identity field, alongside `summary`. It was
+  editable in v0.4, when it was not part of the id; changing it now would leave the record
+  wearing an id that no longer describes it.
 - `analysis/out/`, `tables/out/` and `figures/out/` are gitignored in a new workspace, and
   migration 0002 appends those rules to an existing `.gitignore` that has one.
 

@@ -60,8 +60,9 @@ it — all recorded, all hashed, and all checkable in one command.
   It refuses to re-run when nothing has changed, and refuses to run at all unless the execution
   policy is open.
 - **Results with lineage.** Each entry in the script's `results.json` becomes a `RESULT` you can
-  cite, pointing back at the analysis that produced it. A re-run with different numbers supersedes
-  the old result rather than overwriting it.
+  cite, pointing back at the analysis that produced it. A re-run that states the finding
+  differently supersedes the old result; a re-run that only moves the numbers under the same
+  sentence corrects that record in place.
 - **Tables and figures as objects.** `phdude table build` renders a result or a dataset as
   Markdown, LaTeX and CSV, deterministically. `phdude figure build` runs a generator through the
   same execution policy; `phdude:bar-chart` ships with PhDude and draws an accessible SVG.
@@ -434,10 +435,14 @@ What the script owes back is one JSON file:
 ```
 
 Each entry becomes a `RESULT` you can cite like any other knowledge, with `from` pointing back at
-the analysis. Run it again with the same numbers and nothing happens; run it again with different
-numbers and the old result is marked superseded rather than overwritten, so the version of the
-finding your draft quoted is still there. The run itself is recorded with the hash of every input
-it read and every file it wrote.
+the analysis. Run it again with the same numbers and nothing happens. Run it again and get a
+different *sentence* for a key, and the old result is marked superseded rather than overwritten,
+so the version of the finding your draft quoted is still there. Run it again and get different
+*numbers* under the same sentence, and that record is corrected in place: a result's id comes
+from its summary and its analysis, so it has no second id to supersede itself with. Put the
+number in the summary — `"Mean respondent age is 38.4 years"`, not `"Mean age"` — when you want
+the old one kept. The run itself is recorded with the hash of every input it read and every file
+it wrote.
 
 A result becomes a table, and a table is three files:
 
