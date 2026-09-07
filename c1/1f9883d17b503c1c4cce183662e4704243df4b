@@ -1,0 +1,42 @@
+defaults/writing-policy.yaml
+  s_946fc7502759d8::t_77f24e44d55ed2 1-15
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_b3d32c37d6a40b 54-62
+src/application/init.js
+  s_946fc7502759d8::t_cd9252bde9dfa2 1-171
+defaults/constitution.yaml
+  s_946fc7502759d8::t_0a2f494e3b6a30 1-26
+tests/integration/init.test.js
+  s_946fc7502759d8::t_97d22e2aaa17f1 11-15
+  s_946fc7502759d8::t_a1bdd51378c736 1-10,16-72
+defaults/research-policy.yaml
+  s_946fc7502759d8::t_3c5381db66d8ff 1-27
+defaults/author-profile.yaml
+  s_946fc7502759d8::t_7599e3ad5a2578 1-6
+defaults/citation-policy.yaml
+  s_946fc7502759d8::t_78003cc3655b7b 1-6
+defaults/methodology-policy.yaml
+  s_946fc7502759d8::t_5f81ca6ad1bf64 1-4
+src/adapters/git.js
+  s_946fc7502759d8::t_13f467430271b0 1-39
+defaults/publication-policy.yaml
+  s_946fc7502759d8::t_7441beb5596676 1-4
+defaults/workspace.gitignore
+  s_946fc7502759d8::t_3692014986bb83 1-4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "c11f9883d17b503c1c4cce183662e4704243df4b",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
