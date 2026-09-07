@@ -25,8 +25,9 @@ function countBy(objs, keyFn) {
 
 /**
  * @param {{store: object, clock?: () => string}} deps
- * @returns {Promise<object>} a StatusReport: project, inventory, knowledge, literature,
- *   conflicts, pendingDecisions, recentEvents, warnings - all derived on read, nothing cached.
+ * @returns {Promise<object>} a StatusReport: project, inventory, knowledge, analysis,
+ *   literature, conflicts, pendingDecisions, recentEvents, warnings - all derived on read,
+ *   nothing cached.
  */
 export async function status({ store, clock }) {
   const snapshot = await loadSnapshot(store, clock);
@@ -44,6 +45,19 @@ export async function status({ store, clock }) {
     snapshot.now,
     snapshot.staleAfterDays,
   );
+
+  // What the workspace computes, as opposed to what it read: the data behind it, the analyses
+  // over that data, and the tables and figures those analyses produced. `stale` counts every
+  // item `phdude repro check` would not call up to date.
+  const analysis = {
+    datasets: snapshot.datasets.length,
+    analyses: snapshot.analyses.length,
+    results: snapshot.results.length,
+    tables: snapshot.tables.length,
+    figures: snapshot.figures.length,
+    reproducible: snapshot.repro.length,
+    stale: snapshot.repro.filter((item) => item.status !== 'up-to-date').length,
+  };
 
   const pairs = disputedPairs(claims);
   const claimsById = new Map(claims.map((c) => [c.id, c]));
@@ -69,6 +83,7 @@ export async function status({ store, clock }) {
       unknownRole: artifacts.filter((a) => a.role === 'unknown').length,
     },
     knowledge: { byType },
+    analysis,
     literature: {
       candidates: {
         total: snapshot.candidates.length,

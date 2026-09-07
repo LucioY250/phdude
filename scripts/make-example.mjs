@@ -7,17 +7,23 @@ import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FsStore } from '../src/adapters/store/fs-store.js';
 import { walk, read, realpath } from '../src/adapters/store/fs-walk.js';
-import { detectKind, parserFor } from '../src/adapters/documents/index.js';
+import { detectKind, parseTable, parserFor } from '../src/adapters/documents/index.js';
 import { discoverSkills } from '../src/adapters/skills/loader.js';
+import { localRunner } from '../src/adapters/execution/local.js';
+import { DEFAULT_GENERATORS_DIR } from '../src/adapters/execution/generators.js';
 import { initWorkspace } from '../src/application/init.js';
 import { ingest } from '../src/application/ingest.js';
 import { addEntity } from '../src/application/add.js';
 import { approve as approveDecision, promote, propose } from '../src/application/decide.js';
 import { link } from '../src/application/link.js';
+import * as analyze from '../src/application/analyze.js';
 import * as authors from '../src/application/authors.js';
+import * as data from '../src/application/data.js';
+import * as figure from '../src/application/figure.js';
 import * as research from '../src/application/research.js';
 import * as manuscript from '../src/application/manuscript.js';
 import * as prose from '../src/application/prose.js';
+import * as table from '../src/application/table.js';
 import { buildProviders } from '../src/adapters/search/index.js';
 import { fakeFetch } from '../src/adapters/search/fake-fetch.js';
 
@@ -90,6 +96,97 @@ Loose notes taken while reading the three surveys. Nothing here has been turned 
 a fact or an evidence item yet.
 `,
 };
+
+// The one dataset the example carries: twenty synthetic respondents, three recruitment
+// channels, one yes/no answer. Small enough to read in the diff, and shaped so the analysis over
+// it has something to say about the research question the example already asks.
+const SURVEY_CSV =
+  [
+    'respondent_id,campus,recruitment_channel,daily_use',
+    'R01,North,mailing list,yes',
+    'R02,North,mailing list,yes',
+    'R03,North,mailing list,yes',
+    'R04,South,mailing list,no',
+    'R05,South,mailing list,yes',
+    'R06,South,mailing list,yes',
+    'R07,East,mailing list,no',
+    'R08,East,mailing list,yes',
+    'R09,North,campus social media,yes',
+    'R10,North,campus social media,no',
+    'R11,South,campus social media,yes',
+    'R12,South,campus social media,no',
+    'R13,East,campus social media,no',
+    'R14,East,campus social media,yes',
+    'R15,North,stratified campuses,yes',
+    'R16,North,stratified campuses,yes',
+    'R17,South,stratified campuses,no',
+    'R18,South,stratified campuses,yes',
+    'R19,East,stratified campuses,yes',
+    'R20,East,stratified campuses,yes',
+  ].join('\n') + '\n';
+
+// The analysis the example runs, committed under analysis/ exactly as a researcher would commit
+// theirs. Plain Node, no dependencies, no network, and the same numbers out for the same file
+// in - which is what lets `phdude repro check` say anything meaningful about it.
+const ANALYSIS_SCRIPT = `#!/usr/bin/env node
+// Reads data/survey.csv and reports daily note-taking app use per recruitment channel.
+// PhDude runs this through \`phdude analyze run\`; it is never run by hand.
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+
+const OUT = 'analysis/out/survey-descriptives/results.json';
+
+const text = await readFile('data/survey.csv', 'utf8');
+const [header, ...body] = text
+  .trim()
+  .split('\\n')
+  .map((line) => line.split(','));
+
+const channel = header.indexOf('recruitment_channel');
+const daily = header.indexOf('daily_use');
+
+// First-seen order, not alphabetical: the report follows the file rather than reordering it.
+const respondents = new Map();
+const users = new Map();
+for (const row of body) {
+  const name = row[channel];
+  respondents.set(name, (respondents.get(name) ?? 0) + 1);
+  users.set(name, (users.get(name) ?? 0) + (row[daily] === 'yes' ? 1 : 0));
+}
+
+const share = Object.fromEntries(
+  [...respondents].map(([name, total]) => [name, Math.round((users.get(name) / total) * 1000) / 1000]),
+);
+
+await mkdir('analysis/out/survey-descriptives', { recursive: true });
+await writeFile(
+  OUT,
+  JSON.stringify(
+    {
+      results: [
+        {
+          key: 'daily_use_by_channel',
+          summary:
+            'Reported daily note-taking app use is lowest in the sample recruited through the campus social media group.',
+          values: share,
+          unit: 'proportion',
+        },
+        {
+          key: 'respondents_by_channel',
+          summary: 'The three recruitment channels contributed unequal numbers of respondents.',
+          values: Object.fromEntries(respondents),
+          unit: 'participants',
+        },
+      ],
+    },
+    null,
+    2,
+  ) + '\\n',
+);
+`;
+
+const FIGURE_ALT =
+  'Bar chart: the mailing list contributed 8 of the 20 respondents; the campus social media ' +
+  'group and the stratified campus sample contributed 6 each.';
 
 const RESEARCHER_A_PROFILE = {
   id: 'researcher-a',
@@ -324,6 +421,89 @@ async function addAuthorProfile(deps, root) {
   );
 }
 
+// Two things about a real run cannot be committed: which `node` happens to be on PATH, and how
+// long the script took. The example's policy stays closed (`execution.enabled: false`) and names
+// `node` like every other workspace; the generator pins the run to this process's own executable
+// and its duration to zero, so regenerating produces the same bytes on any machine.
+const pinnedRunner = {
+  name: localRunner.name,
+  available: (runtime) => localRunner.available(runtime),
+  run: async (options) => {
+    const result = await localRunner.run({ ...options, runtime: process.execPath });
+    return { ...result, durationMs: 0 };
+  },
+};
+
+// The v0.5 half of the example: a registered dataset, an analysis run under the execution
+// policy, the two RESULTs it reported, a table over one of them and a figure drawn from the
+// other, plus the evidence that carries a result into the argument. `phdude repro check` reads
+// all of it and finds nothing to do, which is the state a finished chapter is supposed to be in.
+async function analyseTheSurvey(deps, claim) {
+  await deps.store.writeTextAtomic('data/survey.csv', SURVEY_CSV);
+  await deps.store.writeTextAtomic('analysis/describe.mjs', ANALYSIS_SCRIPT);
+
+  const { dataset } = await data.add(deps, 'data/survey.csv');
+
+  const { analysis } = await analyze.add(deps, {
+    name: 'survey descriptives',
+    runtime: 'node',
+    script: 'analysis/describe.mjs',
+    inputs: [dataset.id],
+  });
+  const run = await analyze.run(deps, { id: analysis.id, allowExec: true });
+  const byKey = (key) => run.created.find((r) => r.ext.analysis.key === key);
+  const share = byKey('daily_use_by_channel');
+  const respondents = byKey('respondents_by_channel');
+
+  const declared = await table.add(deps, {
+    name: 'daily-use-by-channel',
+    caption: 'Reported daily use of a note-taking application, by recruitment channel.',
+    source: { result: share.id },
+    columns: [
+      { key: 'key', label: 'Recruitment channel' },
+      { key: 'value', label: 'Daily use', format: 'percent:0' },
+    ],
+  });
+  await table.build(deps, declared.table.id);
+
+  const drawn = await figure.add(deps, {
+    name: 'respondents-by-channel',
+    caption: 'Respondents by recruitment channel.',
+    alt: FIGURE_ALT,
+    generator: {
+      runtime: 'node',
+      script: 'phdude:bar-chart',
+      args: [
+        '--input',
+        'analysis/out/survey-descriptives/results.json',
+        '--key',
+        'respondents_by_channel',
+        '--out',
+        'figures/out/respondents-by-channel.svg',
+        '--title',
+        'Respondents by recruitment channel',
+        '--alt',
+        FIGURE_ALT,
+      ],
+    },
+    inputs: [respondents.id],
+    outputs: [{ path: 'figures/out/respondents-by-channel.svg', format: 'svg' }],
+  });
+  await figure.build(deps, drawn.figure.id, { allowExec: true });
+
+  // The lineage spec §3.3 asks for, end to end: DATASET → ANALYSIS → RESULT → evidence → claim.
+  // The other result is deliberately left uncited, which is the `result-uncited` gap.
+  const { obj: evidence } = await addEntity(deps, 'evidence', {
+    source: share.id,
+    locator: 'daily_use_by_channel',
+    excerpt:
+      'Daily use is reported by 75% of the mailing-list sample, 50% of the campus social media ' +
+      'sample and 83% of the stratified campus sample.',
+    strength: 'moderate',
+  });
+  await link(deps, claim.id, { to: [evidence.id] });
+}
+
 export async function generate(root) {
   await rm(root, { recursive: true, force: true });
 
@@ -481,7 +661,7 @@ export async function generate(root) {
   });
   await promote(deps, claim1.id, { to: 'supported' });
 
-  await addEntity(deps, 'claim', {
+  const { obj: claimChannel } = await addEntity(deps, 'claim', {
     statement: 'Note-taking app adoption may vary by recruitment channel.',
     kind: 'empirical',
   });
@@ -562,6 +742,18 @@ export async function generate(root) {
   });
 
   await writeIntroduction(deps, claim1);
+
+  await analyseTheSurvey(
+    {
+      ...deps,
+      runner: pinnedRunner,
+      readBytes: (rel) => read(join(root, rel)),
+      realpath,
+      parseTable,
+      generatorsDir: DEFAULT_GENERATORS_DIR,
+    },
+    claimChannel,
+  );
 }
 
 async function main() {

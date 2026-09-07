@@ -182,7 +182,7 @@ block itself is checked, not the rest of the front matter.
 | `version` | yes | `1` | The only supported contract version. |
 | `reads` | yes | `string[]` | Workspace globs the skill reads. |
 | `writes` | yes | `string[]` | Workspace globs the skill writes directly. Empty for every core and pack skill (see above); non-empty is reserved for a future manuscript-writing skill. |
-| `permissions` | yes | object | `{ network: 'none'\|'allowed', workspace: string[] }`. `workspace` is one or more of `read`, `write:manuscript`, `write:knowledge`, `write:sources`, at least one entry. |
+| `permissions` | yes | object | `{ network: 'none'\|'allowed', execution?: 'none'\|'allowed', workspace: string[] }`. `workspace` is one or more of `read`, `write:manuscript`, `write:knowledge`, `write:sources`, at least one entry. `execution` is optional and defaults to `none`, so every skill written before v0.5 stays valid. |
 | `objects` | no | `string[]` | Research object types the skill works with. |
 | `artifacts` | no | `string[]` | Artifact kinds the skill produces. |
 | `evidence_requirements` | no | `string` | Free text: what evidence the skill demands before writing. |
@@ -210,6 +210,14 @@ initialize — and names the skill and the setting that would install it; re-run
 setting `skills.allow_network: false` again removes a skill installed under the earlier
 permission and reports it as `removed`. An invalid skill still stops both: nothing is copied or
 applied when one skill in the batch fails to load.
+
+**Execution permission.** The same shape, one setting along: `.phdude/research-policy.yaml`
+carries `skills.allow_execution` (default `false`), and a skill that declares
+`permissions.execution: allowed` needs it. `skills/analysis` is the one shipped skill that does,
+because it tells an agent how to declare and run an analysis. The two settings are independent —
+opening the network does not open execution — and both gate *installation* only. Whether a script
+actually runs is `execution.enabled` in the same file, checked at run time by `phdude analyze run`
+and `phdude figure build`, so a workspace can hold the analysis skill and still refuse every run.
 
 **Discovery order.** `discoverSkills` (`src/adapters/skills/loader.js`) walks a list of roots in
 order — the package's own `skills/`, each applied pack's skill directories, then
@@ -379,6 +387,103 @@ Register the adapter in `src/adapters/search/index.js` (`PROVIDER_FACTORIES`), k
 a workspace's `providers:` list in `.phdude/research-policy.yaml` would use — that key is also
 the provider's own `name` and the `provider` field on every candidate it returns, so all three
 must agree.
+
+### AnalysisRunner
+
+```js
+{
+  name: 'local',
+  available: async (runtime) => boolean,
+  run: async ({ runtime, script, args, cwd, env, timeoutMs })
+    => ({ exitCode, signal, stdout, stderr, durationMs, timedOut }),
+}
+```
+
+The one place a script in a workspace is allowed to run. `runtime` is the **resolved executable**,
+not the logical name: the application calls `runtimeCommand(policy, analysis.runtime)` first, so
+the adapter never reads a policy. `args` is an array and there is no shell, ever. `env` is what
+the caller passes plus `PATH`, `HOME` and `LANG` — nothing else of the parent's environment
+reaches the child.
+
+Three outcomes, and the caller has to tell them apart:
+
+| Result | Meaning |
+| --- | --- |
+| `exitCode: 0` | The script finished. Its output files are the contract, not its stdout. |
+| `exitCode: n` | It failed. `stderr` holds what it said. |
+| `exitCode: null, timedOut: true` | It outran `timeoutMs` and was killed. |
+| `exitCode: null, timedOut: false` | Something else killed it; `signal` names what. Never a success. |
+
+A timeout is a result, not a throw — the caller decides whether a timed-out run is worth
+recording, and both `analyze run` and `figure build` record it. `localRunner` bounds a run by its
+process group, so a script that traps `SIGTERM`, or leaves a child behind, still dies.
+
+```js
+import { analysisRunnerContract } from '../../src/ports/analysis-runner.js';
+analysisRunnerContract(test, assert, myRunner, { scriptsDir: fixtures });
+```
+
+The suite spawns `process.execPath`, so it needs no interpreter beyond the Node running the tests.
+
+Then wire the runner into `deps.runner` in `src/adapters/cli/run.js`.
+
+### The results.json contract
+
+An analysis script talks to PhDude through one file, at the path the analysis declares in
+`outputs.results` (by default `analysis/out/<name>/results.json`):
+
+```json
+{
+  "results": [
+    { "key": "daily_use_by_channel",
+      "summary": "Daily use is lowest in the social-media sample.",
+      "values": { "mailing list": 0.75, "campus social media": 0.5 },
+      "unit": "proportion" }
+  ],
+  "tables": [],
+  "notes": []
+}
+```
+
+`schemas/results-json.json` is that contract, and it is closed at both levels: an unknown key is
+a `VALIDATION` error naming it. `key` and `summary` must be non-empty and `key` unique within the
+file; `values` is an object. Each entry becomes a `RESULT-<hash of summary + analysis id>` with
+`from` set to the analysis and `ext.analysis: {key, run_at, unit?}` recording where it came from.
+
+**The summary is the identity.** Re-running with the same summary and the same values changes
+nothing; the same summary with different values rewrites that result in place; a *changed* summary
+mints a new result and marks the old one `rejected` with `superseded_by`. Put the finding in the
+summary, not only in the values, or a real change will look like an edit.
+
+A file PhDude cannot read — missing, unparseable, or off-contract — records **no run at all**, so
+a run that produced nothing can never be the successful run that makes an analysis look up to
+date. A script that exits non-zero is the opposite: the run is recorded, with the tail of its
+stderr, and no result is written.
+
+### Figure generators
+
+A generator is an ordinary script. PhDude resolves two kinds and nothing else: `phdude:<name>`
+for one the package ships in `generators/`, and a path under `figures/` for one the workspace
+holds. It is run through the AnalysisRunner like any analysis, under the same execution policy.
+
+```
+node generators/bar-chart.mjs --input <results.json|dataset.csv> --key <result key|column> \
+  --out <figures/out/name.svg> --title "<title>" --alt "<what the figure shows>"
+```
+
+The arguments come from the figure record's `generator.args`, verbatim, as an array. A generator
+gets `PHDUDE_WORKSPACE` and `PHDUDE_FIGURE`, runs with the workspace as its working directory, and
+must refuse an absolute or `..` path — its arguments come from a file a researcher can edit. It
+must write every path the figure declares under `outputs`; exiting 0 without writing them is
+treated as a failure, because hashing whatever happens to be there would record a run that did
+not happen.
+
+Determinism is the requirement that makes the rest work: the same input must produce the same
+bytes, so no timestamps, no random ids, no fonts fetched at draw time. `tests/golden/bar-chart.test.js`
+holds the shipped generator to that byte for byte.
+
+To ship another one, add it to `generators/`, register it in `SHIPPED_GENERATORS` in
+`src/domain/figures.js`, and add it to `files` in `package.json` if it needs a new directory.
 
 ### Store
 

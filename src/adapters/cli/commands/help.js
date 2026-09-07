@@ -43,6 +43,8 @@ const LINES = [
   '  figure add --json|list|show <id>|build <id>|check',
   '                                    declare a figure with alt text, build it through its',
   '         [--allow-exec]             generator, and report what has gone stale',
+  '  repro check                       what every analysis, table and figure would need re-run',
+  '                                    or rebuilt, and which input moved',
   '  prose <section> | --file <path>   academic prose quality report: six scores, located',
   '        [--lang c]                  observations, and what to do about each one',
   '  write <section> [--voice id]      assemble the writing context and the draft contract',

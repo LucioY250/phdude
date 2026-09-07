@@ -1,0 +1,20 @@
+schema: phdude.result
+version: 1
+id: RESULT-8189aa9910
+created: 2026-09-01T00:01:19.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+summary: The three recruitment channels contributed unequal numbers of respondents.
+from: ANALYSIS-a5b945f2cd
+values:
+  mailing list: 8
+  campus social media: 6
+  stratified campuses: 6
+state: candidate
+ext:
+  analysis:
+    key: respondents_by_channel
+    run_at: 2026-09-01T00:01:19.000Z
+    unit: participants

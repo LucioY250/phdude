@@ -659,3 +659,142 @@ test('recommendNext: a workspace with no manuscript recommends none of the writi
     assert.equal(rules.includes(rule), false, rule);
   }
 });
+
+function result(id, from, overrides = {}) {
+  return {
+    id,
+    schema: 'phdude.result',
+    version: 1,
+    created,
+    actor,
+    summary: `summary ${id}`,
+    from,
+    values: { n: 1 },
+    state: 'candidate',
+    ...overrides,
+  };
+}
+
+function reproItem(kind, id, status, name = 'item') {
+  return { kind, id, name, status, reasons: [] };
+}
+
+test('recommendNext: analysis-stale is medium while nothing has been said out loud yet', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    executionEnabled: true,
+    results: [result('RESULT-1', 'ANALYSIS-1')],
+    repro: [reproItem('analysis', 'ANALYSIS-1', 'stale', 'describe')],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'analysis-stale');
+  assert.ok(action);
+  assert.equal(action.impact, 'medium');
+  assert.equal(action.dependents, 1);
+  assert.equal(action.command, 'phdude analyze run ANALYSIS-1');
+  assert.match(action.why[0], /ANALYSIS-1 \(describe\) read inputs that have changed/);
+});
+
+test('recommendNext: analysis-stale is high once a supported claim rests on one of its results', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    executionEnabled: true,
+    results: [result('RESULT-1', 'ANALYSIS-1')],
+    evidence: [evidence('EVID-1', 'RESULT-1')],
+    claims: [claim('CLAIM-1', { state: 'supported', supported_by: ['EVID-1'] })],
+    repro: [reproItem('analysis', 'ANALYSIS-1', 'stale', 'describe')],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'analysis-stale');
+  assert.equal(action.impact, 'high');
+  assert.match(action.why.at(-1), /RESULT-1/);
+});
+
+test('recommendNext: analysis-stale opens the execution policy first when it is closed', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    executionEnabled: false,
+    repro: [reproItem('analysis', 'ANALYSIS-1', 'stale', 'describe')],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'analysis-stale');
+  assert.match(action.command, /^set execution\.enabled: true .*, then phdude analyze run/);
+});
+
+test('recommendNext: a table or a figure that is stale is not an analysis-stale recommendation', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    repro: [reproItem('table', 'TABLE-1', 'stale'), reproItem('figure', 'FIG-1', 'stale')],
+  });
+  assert.equal(
+    recommendNext(snapshot, []).some((a) => a.rule === 'analysis-stale'),
+    false,
+  );
+});
+
+test('recommendNext: figure-missing-alt names the figures whose alt text was edited away', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    figures: [
+      { id: 'FIG-1', schema: 'phdude.figure', name: 'bars', alt: '   ' },
+      { id: 'FIG-2', schema: 'phdude.figure', name: 'lines', alt: 'It rises.' },
+    ],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'figure-missing-alt');
+  assert.ok(action);
+  assert.equal(action.impact, 'medium');
+  assert.equal(action.dependents, 1);
+  assert.match(action.why[0], /FIG-1 \(bars\)/);
+  assert.doesNotMatch(action.why[0], /FIG-2/);
+});
+
+test('recommendNext: never-run covers what was declared and never produced, at low impact', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    repro: [
+      reproItem('analysis', 'ANALYSIS-1', 'never-run', 'describe'),
+      reproItem('figure', 'FIG-1', 'missing-output', 'bars'),
+      reproItem('table', 'TABLE-1', 'up-to-date', 'means'),
+    ],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'never-run');
+  assert.ok(action);
+  assert.equal(action.impact, 'low');
+  assert.equal(action.dependents, 2);
+  assert.equal(action.command, 'phdude analyze run ANALYSIS-1');
+  assert.match(action.why[1], /1 of them have never been run/);
+  assert.match(action.why[2], /1 of them wrote an output that is no longer there/);
+});
+
+test('recommendNext: a workspace with nothing declared recommends none of the analysis rules', () => {
+  const snapshot = emptySnapshot({ questions: [question('RQ-1')] });
+  const rules = recommendNext(snapshot, []).map((a) => a.rule);
+  for (const rule of ['analysis-stale', 'figure-missing-alt', 'never-run']) {
+    assert.equal(rules.includes(rule), false, rule);
+  }
+});
+
+test('recommendNext: analysis-stale asks for the file to be registered again when it drifted', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    executionEnabled: false,
+    datasets: [{ id: 'DATASET-1', schema: 'phdude.dataset', path: 'data/survey.csv', hash: 'a' }],
+    repro: [
+      {
+        kind: 'analysis',
+        id: 'ANALYSIS-1',
+        name: 'describe',
+        status: 'stale',
+        reasons: [
+          { kind: 'unregistered-input', input: 'DATASET-1', registered: 'a', current: 'b' },
+        ],
+      },
+    ],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'analysis-stale');
+  assert.equal(action.command, 'phdude data add data/survey.csv');
+  assert.match(action.why.at(-1), /data\/survey\.csv is not the file DATASET-1 was registered/);
+});

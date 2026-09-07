@@ -204,6 +204,23 @@ function gapsForSources(snapshot) {
   return gaps;
 }
 
+// A result nothing cites is a number the workspace computed and the argument never used. It is
+// `low` for the same reason an uncited source is: nothing is wrong with the record, the thesis
+// simply has not reached for it yet. A superseded result is skipped - a later run replaced it,
+// and asking for a citation would be asking to cite a number that is no longer current.
+function gapsForResults(snapshot) {
+  const cited = new Set((snapshot.evidence ?? []).map((e) => e.source));
+  return (snapshot.results ?? [])
+    .filter((result) => result.state !== 'rejected' && !cited.has(result.id))
+    .map((result) => ({
+      kind: 'result-uncited',
+      id: result.id,
+      why: `${result.id} is not cited by any evidence`,
+      command: `phdude add evidence --json '{"source":"${result.id}","excerpt":"…","strength":"moderate"}'`,
+      severity: 'low',
+    }));
+}
+
 function gapsForArtifacts(snapshot) {
   const artifacts = snapshot.artifacts ?? [];
   const sources = snapshot.sources ?? [];
@@ -279,8 +296,8 @@ function byseverityThenKindThenId(a, b) {
 /**
  * Pure. Explainable gap report (spec S3.4): questions without claims/method or only-candidate
  * claims, questions never searched or whose search has gone stale, claims with no or only-weak
- * evidence, untested hypotheses, uncited sources, unmined artifacts, open conflicts, and
- * disputed claim pairs.
+ * evidence, untested hypotheses, uncited sources, uncited results, unmined artifacts, open
+ * conflicts, and disputed claim pairs.
  * @param {object} snapshot
  * @param {object[]} conflicts - all fact conflicts (open and resolved), from domain/conflicts.js
  * @returns {{kind: string, id: string, why: string, command: string, severity: 'high'|'medium'|'low'}[]}
@@ -293,6 +310,7 @@ export function findGaps(snapshot, conflicts) {
     ...gapsForUnwrittenClaims(snapshot),
     ...gapsForHypotheses(snapshot),
     ...gapsForSources(snapshot),
+    ...gapsForResults(snapshot),
     ...gapsForArtifacts(snapshot),
     ...gapsForConflicts(conflicts),
     ...gapsForDisputed(snapshot),

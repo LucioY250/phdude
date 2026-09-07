@@ -1,10 +1,7 @@
-HIGH (5):
+HIGH (4):
   - [claim-without-evidence] CLAIM-3d035aa05b
     Why: CLAIM-3d035aa05b has no evidence
     Command: phdude link CLAIM-3d035aa05b --to <EVID-id>
-  - [claim-without-evidence] CLAIM-8ad284d305
-    Why: CLAIM-8ad284d305 has no evidence
-    Command: phdude link CLAIM-8ad284d305 --to <EVID-id>
   - [disputed-pair] CLAIM-84dc3cdd04/CLAIM-9f7abf99e9
     Why: CLAIM-84dc3cdd04 and CLAIM-9f7abf99e9 contradict each other and neither has been rejected
     Command: phdude decide propose --title "Resolve contradiction between CLAIM-84dc3cdd04 and CLAIM-9f7abf99e9" --rationale "…" --affects CLAIM-84dc3cdd04 CLAIM-9f7abf99e9 --change '{"resolves_contradiction":["CLAIM-84dc3cdd04","CLAIM-9f7abf99e9"],"survivor":"CLAIM-84dc3cdd04"}'
@@ -29,7 +26,7 @@ MEDIUM (4):
     Why: RQ-2 has no method addressing it
     Command: phdude add method --json '{"name":"…","design":"…","paradigm":"quantitative","questions":["RQ-2"]}'
 
-LOW (6):
+LOW (7):
   - [artifact-unmined] ART-d93aa9cdea
     Why: ART-d93aa9cdea (role: notes) is not referenced by any source, fact, or evidence
     Command: phdude add fact --json '{"key":"…","value":"…","from":{"artifact":"ART-d93aa9cdea"}}'
@@ -39,6 +36,9 @@ LOW (6):
   - [question-never-searched] RQ-3
     Why: RQ-3 has never been searched for literature
     Command: set network.enabled: true in .phdude/research-policy.yaml, then phdude research "How consistent are reported adoption rates across institutions?" --question RQ-3
+  - [result-uncited] RESULT-8189aa9910
+    Why: RESULT-8189aa9910 is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"RESULT-8189aa9910","excerpt":"…","strength":"moderate"}'
   - [stale-search] RQ-1
     Why: RQ-1's last search ran 463 day(s) ago (stale after 180)
     Command: phdude research-fresh --question RQ-1

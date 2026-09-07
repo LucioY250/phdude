@@ -563,3 +563,49 @@ test('findGaps: a supported claim is not unwritten - only canonical knowledge is
   );
   assert.equal(gaps.filter((g) => g.kind === 'claim-unwritten').length, 0);
 });
+
+function result(id, overrides = {}) {
+  return {
+    id,
+    schema: 'phdude.result',
+    version: 1,
+    created,
+    actor,
+    summary: `summary ${id}`,
+    from: 'ANALYSIS-1111111111',
+    values: { n: 1 },
+    state: 'candidate',
+    ...overrides,
+  };
+}
+
+test('findGaps: result-uncited fires for a result no evidence cites (low)', () => {
+  const gaps = findGaps(snapshot({ results: [result('RESULT-1')] }), []);
+  const gap = gaps.find((g) => g.kind === 'result-uncited');
+  assert.ok(gap);
+  assert.equal(gap.id, 'RESULT-1');
+  assert.equal(gap.severity, 'low');
+  assert.match(gap.why, /not cited by any evidence/);
+  assert.match(gap.command, /phdude add evidence .*RESULT-1/);
+});
+
+test('findGaps: a result an evidence item cites is not a gap', () => {
+  const gaps = findGaps(
+    snapshot({
+      results: [result('RESULT-1')],
+      evidence: [evidence('EVID-1', 'RESULT-1')],
+    }),
+    [],
+  );
+  assert.equal(gaps.filter((g) => g.kind === 'result-uncited').length, 0);
+});
+
+test('findGaps: a superseded result is not owed a citation', () => {
+  const gaps = findGaps(
+    snapshot({
+      results: [result('RESULT-1', { state: 'rejected', superseded_by: 'RESULT-2' })],
+    }),
+    [],
+  );
+  assert.equal(gaps.filter((g) => g.kind === 'result-uncited').length, 0);
+});

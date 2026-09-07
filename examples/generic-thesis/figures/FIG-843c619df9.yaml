@@ -1,0 +1,39 @@
+schema: phdude.figure
+version: 1
+id: FIG-843c619df9
+created: 2026-09-01T00:01:24.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: respondents-by-channel
+caption: Respondents by recruitment channel.
+alt: "Bar chart: the mailing list contributed 8 of the 20 respondents; the campus social media group and the stratified campus sample contributed 6 each."
+generator:
+  runtime: node
+  script: phdude:bar-chart
+  args:
+    - --input
+    - analysis/out/survey-descriptives/results.json
+    - --key
+    - respondents_by_channel
+    - --out
+    - figures/out/respondents-by-channel.svg
+    - --title
+    - Respondents by recruitment channel
+    - --alt
+    - "Bar chart: the mailing list contributed 8 of the 20 respondents; the campus social media group and the stratified campus sample contributed 6 each."
+inputs:
+  - RESULT-8189aa9910
+outputs:
+  - path: figures/out/respondents-by-channel.svg
+    format: svg
+runs:
+  - at: 2026-09-01T00:01:26.000Z
+    exit: 0
+    duration_ms: 0
+    input_hashes:
+      RESULT-8189aa9910: d1918abbad8bb7fde180910ef471c03e64167addec3c3fbd43b7c9c7fe86ef79
+    output_hashes:
+      figures/out/respondents-by-channel.svg: 603194b984a446bbc6610d7415698ee8b9b6194172ae71491edc3fd97077b26b
+state: candidate

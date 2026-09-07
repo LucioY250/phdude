@@ -2273,3 +2273,123 @@ test('e2e: table build and figure build through the CLI, with the execution poli
   assert.equal(events.filter((e) => e.op === 'table').length, 2, 'one declaration, one build');
   assert.equal(events.filter((e) => e.op === 'figure').length, 2, 'one declaration, one build');
 });
+
+test('e2e: data, analyze, table, figure and repro check through the binary', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-repro-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Repro e2e', '--agents', 'claude-code', '--no-git']);
+
+  const survey = ['id,channel,daily', '1,list,yes', '2,list,no', '3,social,yes'].join('\n') + '\n';
+  await writeFile(join(ws, 'data', 'survey.csv'), survey);
+  await writeFile(
+    join(ws, 'analysis', 'counts.mjs'),
+    [
+      "import { mkdir, readFile, writeFile } from 'node:fs/promises';",
+      "const rows = (await readFile('data/survey.csv', 'utf8')).trim().split('\\n').slice(1);",
+      "const yes = rows.filter((r) => r.endsWith('yes')).length;",
+      "await mkdir('analysis/out/counts', { recursive: true });",
+      "await writeFile('analysis/out/counts/results.json', JSON.stringify({ results: [",
+      "  { key: 'daily_use', summary: 'Most report daily use.', values: { yes, no: rows.length - yes } },",
+      '] }));',
+      '',
+    ].join('\n'),
+  );
+
+  const dataset = await runJson(ws, ['data', 'add', 'data/survey.csv']);
+  const analysis = await runJson(ws, [
+    'analyze',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'counts',
+      runtime: 'node',
+      script: 'analysis/counts.mjs',
+      inputs: [dataset.dataset.id],
+    }),
+  ]);
+
+  // Declared and never run: repro check says so, and still exits 0.
+  const declared = await run(ws, ['repro', 'check']);
+  assert.match(declared.stdout, /never-run/);
+  assert.match(declared.stdout, /no successful run recorded/);
+
+  const ran = await runJson(ws, ['analyze', 'run', analysis.analysis.id, '--allow-exec']);
+  const result = ran.created[0].id;
+
+  const table = await runJson(ws, [
+    'table',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'daily-use',
+      caption: 'Daily use.',
+      source: { result },
+      formats: ['md'],
+    }),
+  ]);
+  await run(ws, ['table', 'build', table.table.id]);
+
+  const alt = 'Bar chart: two respondents report daily use and one does not.';
+  const figure = await runJson(ws, [
+    'figure',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'daily-use',
+      caption: 'Daily use.',
+      alt,
+      generator: {
+        runtime: 'node',
+        script: 'phdude:bar-chart',
+        args: [
+          '--input',
+          'analysis/out/counts/results.json',
+          '--key',
+          'daily_use',
+          '--out',
+          'figures/out/daily-use.svg',
+          '--title',
+          'Daily use',
+          '--alt',
+          alt,
+        ],
+      },
+      inputs: [result],
+      outputs: [{ path: 'figures/out/daily-use.svg', format: 'svg' }],
+    }),
+  ]);
+  await run(ws, ['figure', 'build', figure.figure.id, '--allow-exec']);
+
+  const fresh = await runJson(ws, ['repro', 'check']);
+  assert.equal(fresh.attention, 0);
+  assert.equal(fresh.counts['up-to-date'], 3);
+
+  const status = await runJson(ws, ['status']);
+  assert.deepEqual(status.analysis, {
+    datasets: 1,
+    analyses: 1,
+    results: 1,
+    tables: 1,
+    figures: 1,
+    reproducible: 3,
+    stale: 0,
+  });
+
+  // Editing the file under the analysis: the report says the bytes are not the registered ones,
+  // `next` recommends registering them again, and the whole thing still exits 0.
+  await writeFile(join(ws, 'data', 'survey.csv'), survey + '4,social,no\n');
+  const drifted = await run(ws, ['repro', 'check']);
+  assert.equal(drifted.code, 0);
+  assert.match(drifted.stdout, /stale/);
+  assert.match(drifted.stdout, /bytes changed on disk/);
+
+  const next = await runJson(ws, ['next']);
+  const stale = next.actions.find((a) => a.rule === 'analysis-stale');
+  assert.ok(stale, 'next never recommended re-running the stale analysis');
+  assert.equal(stale.command, 'phdude data add data/survey.csv');
+
+  const unknown = await phdude(ws, ['repro', 'rebuild', ...ACTOR]);
+  assert.equal(unknown.code, 1);
+  assert.match(unknown.stderr, /unknown repro subcommand/);
+});

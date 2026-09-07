@@ -1,0 +1,21 @@
+respondent_id,campus,recruitment_channel,daily_use
+R01,North,mailing list,yes
+R02,North,mailing list,yes
+R03,North,mailing list,yes
+R04,South,mailing list,no
+R05,South,mailing list,yes
+R06,South,mailing list,yes
+R07,East,mailing list,no
+R08,East,mailing list,yes
+R09,North,campus social media,yes
+R10,North,campus social media,no
+R11,South,campus social media,yes
+R12,South,campus social media,no
+R13,East,campus social media,no
+R14,East,campus social media,yes
+R15,North,stratified campuses,yes
+R16,North,stratified campuses,yes
+R17,South,stratified campuses,no
+R18,South,stratified campuses,yes
+R19,East,stratified campuses,yes
+R20,East,stratified campuses,yes
