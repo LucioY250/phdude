@@ -26,10 +26,19 @@ function headingTitle(paragraphInner) {
   return true;
 }
 
+const RUN_CONTENT_RE =
+  /<w:t(?:\s[^>]*)?>([\s\S]*?)<\/w:t>|<w:t(?:\s[^>]*)?\/>|<w:tab(?:\s[^>]*)?\/>|<w:br(?:\s[^>]*)?\/>/g;
+
 function paragraphText(paragraphInner) {
-  return tags(paragraphInner, 'w:t')
-    .map((t) => textOf(t.inner))
-    .join('');
+  let text = '';
+  let m;
+  RUN_CONTENT_RE.lastIndex = 0;
+  while ((m = RUN_CONTENT_RE.exec(paragraphInner))) {
+    if (m[0].startsWith('<w:tab')) text += ' ';
+    else if (m[0].startsWith('<w:br')) text += '\n';
+    else text += textOf(m[1] ?? '');
+  }
+  return text;
 }
 
 function parseDocx(files) {
@@ -94,9 +103,13 @@ function parseSlides(files) {
 
   const sections = slideFiles.map(({ name, n }) => {
     const xml = readText(files, name);
-    const text = tags(xml, 'a:t')
-      .map((t) => textOf(t.inner))
-      .join('');
+    const text = tags(xml, 'a:p')
+      .map((p) =>
+        tags(p.inner, 'a:t')
+          .map((t) => textOf(t.inner))
+          .join(''),
+      )
+      .join('\n');
     return { title: `Slide ${n}`, text };
   });
 

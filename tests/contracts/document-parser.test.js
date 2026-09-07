@@ -29,10 +29,23 @@ test('docx yields headings, text and a table', async () => {
   assert.equal(r.sections[0].title, 'Methods');
   assert.equal(r.tables.length, 1);
 });
+test('docx renders w:tab as a space and w:br as a newline within a paragraph', async () => {
+  const r = await ooxmlParser.parse(await fx('sample.docx'), { path: 'sample.docx' });
+  assert.match(
+    r.sections[0].text,
+    /population\.\nSecond line\./,
+    'w:br between runs should become a newline inside the same paragraph',
+  );
+});
 test('pptx yields one section per slide', async () => {
   const r = await ooxmlParser.parse(await fx('sample.pptx'), { path: 'sample.pptx' });
   assert.equal(r.sections[0].title, 'Slide 1');
   assert.match(r.text, /300 participants/);
+  assert.match(
+    r.sections[0].text,
+    /\n/,
+    'a:p paragraph boundaries within a slide should join with a newline',
+  );
 });
 test('xlsx yields one table per sheet', async () => {
   const r = await ooxmlParser.parse(await fx('sample.xlsx'), { path: 'sample.xlsx' });

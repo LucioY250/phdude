@@ -26,7 +26,8 @@ export const pdfParser = {
   name: 'pdf',
   kinds: ['pdf'],
   available: checkAvailable,
-  async parse(buffer) {
+  async parse(buffer, { path } = {}) {
+    void path;
     if (!(await checkAvailable())) {
       return { text: '', sections: [], tables: [], meta: {}, warnings: [UNAVAILABLE_WARNING] };
     }

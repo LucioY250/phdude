@@ -18,9 +18,15 @@ const ROOT_RELS_XML =
   '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
   '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"/>';
 
+// DOS zip timestamps only cover 1980-2099; pin to the earliest valid date so
+// re-running this script never produces a spurious byte diff.
+const FIXED_MTIME = new Date('1980-01-01T00:00:00Z');
+
 function zipOf(files) {
   const entries = {};
-  for (const [name, content] of Object.entries(files)) entries[name] = strToU8(content);
+  for (const [name, content] of Object.entries(files)) {
+    entries[name] = [strToU8(content), { mtime: FIXED_MTIME }];
+  }
   return Buffer.from(zipSync(entries));
 }
 
@@ -30,7 +36,9 @@ function buildDocx() {
     '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
     '<w:body>' +
     '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Methods</w:t></w:r></w:p>' +
-    '<w:p><w:r><w:t>Sample size was 312 participants recruited from the general population.</w:t></w:r></w:p>' +
+    '<w:p><w:r><w:t>Sample size</w:t></w:r><w:r><w:tab/></w:r>' +
+    '<w:r><w:t>was 312 participants recruited from the general population.</w:t></w:r>' +
+    '<w:r><w:br/></w:r><w:r><w:t>Second line.</w:t></w:r></w:p>' +
     '<w:tbl>' +
     '<w:tr><w:tc><w:p><w:r><w:t>Group</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>N</w:t></w:r></w:p></w:tc></w:tr>' +
     '<w:tr><w:tc><w:p><w:r><w:t>Control</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>156</w:t></w:r></w:p></w:tc></w:tr>' +
@@ -53,6 +61,7 @@ function buildPptx() {
     '<p:cSld><p:spTree>' +
     '<p:sp><p:txBody>' +
     '<a:p><a:r><a:t>We recruited </a:t></a:r><a:r><a:t>300 participants</a:t></a:r></a:p>' +
+    '<a:p><a:r><a:t>Across two </a:t></a:r><a:r><a:t>study sites.</a:t></a:r></a:p>' +
     '</p:txBody></p:sp>' +
     '</p:spTree></p:cSld>' +
     '</p:sld>';
@@ -123,10 +132,14 @@ function buildPdf() {
   return Buffer.from(pdf, 'latin1');
 }
 
-async function main() {
-  await mkdir(outDir, { recursive: true });
-
-  const files = {
+/**
+ * Builds every fixture buffer deterministically. Pure and side-effect free so
+ * it can be re-run in a test and compared byte-for-byte against the
+ * committed fixtures on disk.
+ * @returns {Record<string, Buffer>}
+ */
+export function buildFixtures() {
+  return {
     'sample.txt': Buffer.from(
       'PhDude is a field-agnostic research co-author harness for AI coding agents.\n',
       'utf8',
@@ -145,11 +158,17 @@ async function main() {
     'sample.xlsx': buildXlsx(),
     'sample.pdf': buildPdf(),
   };
+}
 
+async function main() {
+  await mkdir(outDir, { recursive: true });
+  const files = buildFixtures();
   for (const [name, content] of Object.entries(files)) {
     await writeFile(join(outDir, name), content);
     console.log(`wrote ${name} (${content.length} bytes)`);
   }
 }
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main();
+}
