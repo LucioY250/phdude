@@ -31,6 +31,8 @@ function render(report) {
 
   lines.push(
     `parsers:           ${parsers}`,
+    `network:           ${report.network ? 'enabled' : 'disabled'}`,
+    `providers:         ${report.providers.join(', ')}`,
     `cache entries:     ${report.cacheEntries}`,
     `packs available:   ${report.packsAvailable.length ? report.packsAvailable.join(', ') : '(none)'}`,
     `schema versions:   ${versions}`,

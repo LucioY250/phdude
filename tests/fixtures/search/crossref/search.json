@@ -1,0 +1,104 @@
+{
+  "status": "ok",
+  "message-type": "work-list",
+  "message-version": "1.0.0",
+  "message": {
+    "facets": {},
+    "total-results": 3,
+    "items": [
+      {
+        "indexed": {
+          "date-parts": [[2026, 3, 31]],
+          "date-time": "2026-03-31T18:13:29Z"
+        },
+        "publisher": "Journal of Research Practice",
+        "DOI": "10.1109/ICCV48922.2021.00986",
+        "type": "journal-article",
+        "language": "en",
+        "title": ["Open Science Practices in Applied Research"],
+        "container-title": ["Journal of Research Practice"],
+        "abstract": "<jats:title>Abstract</jats:title><jats:p>Open science practices are spreading across applied fields.</jats:p>",
+        "issued": {
+          "date-parts": [[2021, 10, 1]]
+        },
+        "author": [
+          {
+            "given": "Ada",
+            "family": "Lovelace",
+            "sequence": "first",
+            "affiliation": []
+          },
+          {
+            "given": "Charles",
+            "family": "Babbage",
+            "sequence": "additional",
+            "affiliation": []
+          }
+        ],
+        "is-referenced-by-count": 128,
+        "URL": "https://doi.org/10.1109/iccv48922.2021.00986",
+        "reference-count": 41
+      },
+      {
+        "indexed": {
+          "date-parts": [[2026, 2, 2]],
+          "date-time": "2026-02-02T07:41:02Z"
+        },
+        "publisher": "Open Engineering Inc",
+        "DOI": "10.31224/7150",
+        "type": "posted-content",
+        "title": ["A Preprint on Reproducible Pipelines"],
+        "issued": {
+          "date-parts": [[2023, 4, 18]]
+        },
+        "author": [
+          {
+            "given": "Grace",
+            "family": "Hopper",
+            "sequence": "first",
+            "affiliation": []
+          },
+          {
+            "name": "Reproducibility Working Group",
+            "sequence": "additional",
+            "affiliation": []
+          }
+        ],
+        "is-referenced-by-count": 4,
+        "URL": "https://doi.org/10.31224/7150",
+        "reference-count": 0
+      },
+      {
+        "indexed": {
+          "date-parts": [[2025, 12, 19]],
+          "date-time": "2025-12-19T14:02:55Z"
+        },
+        "publisher": "Springer Science and Business Media LLC",
+        "DOI": "10.1007/978-3-030-12345-6_7",
+        "type": "book-chapter",
+        "language": "en",
+        "title": ["Measurement Error in Survey Chapters"],
+        "container-title": ["Handbook of Survey Methods"],
+        "issued": {
+          "date-parts": [[2022]]
+        },
+        "author": [
+          {
+            "given": "Rosalind",
+            "family": "Franklin",
+            "sequence": "first",
+            "affiliation": []
+          }
+        ],
+        "is-referenced-by-count": 0,
+        "URL": "https://doi.org/10.1007/978-3-030-12345-6_7",
+        "reference-count": 12
+      }
+    ],
+    "items-per-page": 3,
+    "query": {
+      "start-index": 0,
+      "search-terms": null
+    }
+  }
+}

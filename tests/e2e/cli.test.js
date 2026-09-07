@@ -225,6 +225,11 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
   assert.equal(typeof doctor.pdftotext, 'boolean');
   assert.equal(typeof doctor.git, 'boolean');
   assert.equal(doctor.schemaVersions.claim, 1);
+  assert.equal(doctor.network, false, 'a fresh workspace keeps the network closed');
+  assert.deepEqual(doctor.providers, ['openalex', 'crossref', 'arxiv']);
+  const doctorText = await run(ws, ['doctor']);
+  assert.match(doctorText.stdout, /network: +disabled/);
+  assert.match(doctorText.stdout, /providers: +openalex, crossref, arxiv/);
   assert.ok(doctor.cacheEntries >= 1);
   assert.ok(doctor.packsAvailable.includes('quantitative'));
   const bootstrapSkill = doctor.skills.find((s) => s.name === 'bootstrap');
