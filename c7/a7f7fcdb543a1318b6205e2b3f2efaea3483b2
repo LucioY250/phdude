@@ -1,0 +1,76 @@
+tests/golden/write.test.js
+  s_946fc7502759d8::t_3f8fabeccb7db8 24-26
+  s_946fc7502759d8::t_8114b02a70c3f4 28
+tests/golden/prose.test.js
+  s_946fc7502759d8::t_0ffe842403dd55 1-50
+scripts/make-example.mjs
+  s_946fc7502759d8::t_9d5967e081b419 15,20
+  s_946fc7502759d8::t_ef60b99e6f404a 236-242,247-249,254-272,274,276,279,284-289,294-309
+  s_946fc7502759d8::t_921d34b4b03485 290-293
+  s_946fc7502759d8::t_af3946f161c9f3 310
+tests/unit/skills.test.js
+  s_946fc7502759d8::t_7548006edf93d0 41-44
+  s_946fc7502759d8::t_877b02a2e7b6d1 37-39
+  s_946fc7502759d8::t_7f103e2439f857 40,45-48,54
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_7d3ea903152452 108-143
+scripts/make-diagrams.mjs
+  s_946fc7502759d8::t_e1f8ae6eb8b426 835-942
+docs/workspace.md
+  s_946fc7502759d8::t_d58ff9b00a2511 42-45,47
+  s_946fc7502759d8::t_8b3b041f69e9c8 88
+docs/adr/0008-writing-pipeline-and-no-detector-rule.md
+  s_946fc7502759d8::t_cf482cd8622dc9 1-122
+README.md
+  s_946fc7502759d8::t_b46a2aa13f5caf 408-418
+  s_946fc7502759d8::t_5a5fc5871ab2a3 487-490
+  s_946fc7502759d8::t_7443476270d14a 40,42-46
+  s_946fc7502759d8::t_84a21382a21cd7 495-503
+  s_946fc7502759d8::t_93315d1c9a97eb 77,83
+  s_946fc7502759d8::t_3a4016015eab2c 589,591
+  s_946fc7502759d8::t_c614b22a928551 12,47-73,137,143,364-407,419-486,491-494,504-535,577,668-669
+CHANGELOG.md
+  s_946fc7502759d8::t_aa20e0438c9635 9-120,354-355
+docs/assets/diagrams/writing.excalidraw
+  s_946fc7502759d8::t_3a2f7306757ea0 1-1048
+docs/assets/diagrams/writing.svg
+  s_946fc7502759d8::t_7e2f95d4bd55db 1-31
+docs/cli.md
+  s_946fc7502759d8::t_0b16d3dc1c1f27 721,855
+docs/extending.md
+  s_946fc7502759d8::t_32c74bd705f34f 26,65-134
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_dc44264605967d 38-41
+examples/generic-thesis/decisions/DEC-2567086fc6.yaml
+  s_946fc7502759d8::t_2eab056f64bb7c 1-20
+examples/generic-thesis/manuscript/introduction.md
+  s_946fc7502759d8::t_3c2438bdf3d442 3-5,12-17
+examples/generic-thesis/manuscript/manuscript.yaml
+  s_946fc7502759d8::t_227e670ee2d82f 6-7,21-22,25
+examples/generic-thesis/manuscript/reports/introduction.yaml
+  s_946fc7502759d8::t_1ad8679fd3e55e 4-5,19-21
+package.json
+  s_946fc7502759d8::t_6057511bd2afff 3
+tests/golden/expected/prose-introduction.txt
+  s_946fc7502759d8::t_d37632c474053d 1-13
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_d86f2f904affe5 39-42
+tests/golden/expected/write-context.md
+  s_946fc7502759d8::t_be04b61f67a0c8 4,47-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "c7a7f7fcdb543a1318b6205e2b3f2efaea3483b2",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
