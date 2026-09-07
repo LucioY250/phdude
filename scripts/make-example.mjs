@@ -159,12 +159,9 @@ export async function generate(root) {
     kind: 'methodological',
   });
 
-  // Fact ids are content-derived from `key + value` only (see domain/ids.js), so two facts
-  // sharing a key and value collapse to the same id regardless of their source artifact - a
-  // second `312` fact from Gamma would silently no-op onto the Alpha fact instead of creating a
-  // distinct record. A two-value conflict (Alpha 312 vs Beta 300) is the pattern the real
-  // add-entity pipeline can actually produce; it is still a fully valid conflict for
-  // `detectFactConflicts` (see most of tests/unit/domain/conflicts.test.js).
+  // Fact ids are content-derived from `key + value + from.artifact` (see domain/ids.js), so
+  // this is the PRD §38 pattern: 312 from Alpha, 300 from Beta, 312 from Gamma - three distinct
+  // FACT records, one open conflict with two distinct values.
   const { obj: fact1 } = await addEntity(deps, 'fact', {
     key: 'sample_size',
     value: 312,
@@ -177,23 +174,24 @@ export async function generate(root) {
     unit: 'participants',
     from: { artifact: artBeta, locator: 'Methods' },
   });
+  const { obj: fact3 } = await addEntity(deps, 'fact', {
+    key: 'sample_size',
+    value: 312,
+    unit: 'participants',
+    from: { artifact: artGamma, locator: 'Methods' },
+  });
   await addEntity(deps, 'fact', {
     key: 'country',
     value: 'Peru',
     from: { artifact: artCsv, locator: 'row 2' },
   });
-  await addEntity(deps, 'fact', {
-    key: 'sampling_method',
-    value: 'stratified',
-    from: { artifact: artGamma, locator: 'Methods' },
-  });
 
   await propose(deps, {
-    title: 'Resolve sample_size discrepancy between Survey Alpha and Survey Beta',
+    title: 'Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta',
     rationale:
-      'Survey Alpha reports 312 participants while Survey Beta reports 300; reconcile before ' +
-      'citing a canonical sample size.',
-    affects: [fact1.id, fact2.id],
+      'Survey Alpha and Survey Gamma report 312 participants while Survey Beta reports 300; ' +
+      'reconcile before citing a canonical sample size.',
+    affects: [fact1.id, fact2.id, fact3.id],
     change: { fact_key: 'sample_size', canonical_value: 312 },
   });
 }

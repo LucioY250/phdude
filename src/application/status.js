@@ -48,7 +48,7 @@ export async function status({ store }) {
     inventory: {
       total: artifacts.length,
       byKind: countBy(artifacts, (a) => a.kind),
-      byExtraction: countBy(artifacts, (a) => a.extracted.status),
+      byExtraction: countBy(artifacts, (a) => a.extracted?.status),
       unknownRole: artifacts.filter((a) => a.role === 'unknown').length,
     },
     knowledge: { byType },

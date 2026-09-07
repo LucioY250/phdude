@@ -160,7 +160,7 @@ export function newFact({ key, value, unit, from, tags = [], actor, created }) {
   const fact = {
     schema: 'phdude.fact',
     version: 1,
-    id: makeId('fact', `${normalizedKey} ${value}`),
+    id: makeId('fact', `${normalizedKey} ${value} ${from_.artifact}`),
     created,
     actor,
     tags,

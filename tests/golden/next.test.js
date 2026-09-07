@@ -25,14 +25,15 @@ test('next golden: examples/generic-thesis renders exactly like tests/golden/exp
   assert.equal(text, expected);
 });
 
-test('next golden: the top action is open-conflicts on sample_size with at least one dependent claim', async () => {
+test('next golden: the top action is open-conflicts on sample_size with exactly one dependent claim', async () => {
   const store = new FsStore(WORKSPACE);
   const result = await next({ store });
 
   assert.equal(result.top.rule, 'open-conflicts');
   assert.match(result.top.action, /sample_size/);
-  assert.ok(
-    result.top.dependents >= 1,
-    'a supported claim whose evidence cites a conflicting artifact should count as a dependent',
+  assert.equal(
+    result.top.dependents,
+    1,
+    'exactly the one supported claim whose evidence cites a conflicting artifact (Survey Alpha) should count',
   );
 });

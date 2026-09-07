@@ -8,8 +8,8 @@
 {"ts":"2026-09-01T00:00:16.000Z","op":"promote","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-ab73621987"],"summary":"CLAIM-ab73621987 candidate → supported"}
 {"ts":"2026-09-01T00:00:18.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-8ad284d305"],"summary":"claim added"}
 {"ts":"2026-09-01T00:00:20.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-3d035aa05b"],"summary":"claim added"}
-{"ts":"2026-09-01T00:00:22.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-3130238a7e"],"summary":"fact added"}
-{"ts":"2026-09-01T00:00:24.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-11330aa999"],"summary":"fact added"}
-{"ts":"2026-09-01T00:00:26.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-bdf6f42550"],"summary":"fact added"}
-{"ts":"2026-09-01T00:00:28.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-16634b5368"],"summary":"fact added"}
-{"ts":"2026-09-01T00:00:30.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-ad26c150fb"],"summary":"decision proposed"}
+{"ts":"2026-09-01T00:00:22.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-2bc4462edb"],"summary":"fact added"}
+{"ts":"2026-09-01T00:00:24.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-f62e1a2f34"],"summary":"fact added"}
+{"ts":"2026-09-01T00:00:26.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-54af7fa906"],"summary":"fact added"}
+{"ts":"2026-09-01T00:00:28.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-270dc9059c"],"summary":"fact added"}
+{"ts":"2026-09-01T00:00:30.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-da1a3616b6"],"summary":"decision proposed"}

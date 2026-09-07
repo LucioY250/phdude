@@ -109,6 +109,11 @@ test('recommendNext: empty snapshot -> top is no-questions', () => {
   assert.equal(actions[0].impact, 'high');
   assert.ok(actions[0].why.length > 0);
   assert.equal(actions.at(-1).rule, 'consistent');
+  assert.equal(
+    actions.at(-1).action,
+    'No further automatic recommendations; add new sources or refine claims',
+    'consistent must not claim the workspace is consistent when another action is above it',
+  );
 });
 
 test('recommendNext: RQ present + one unavailable artifact -> rule 2 top, hint in why', () => {
@@ -191,6 +196,106 @@ test('recommendNext: fully consistent workspace -> only consistent action', () =
   assert.equal(actions[0].rule, 'consistent');
   assert.equal(actions[0].impact, 'low');
   assert.ok(actions[0].why.length > 0);
+  assert.equal(actions[0].action, 'Workspace is consistent; add new sources or refine claims');
+});
+
+test('recommendNext: candidate-backlog does not fire below 5 candidates', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    claims: [
+      claim('CLAIM-0000000001'),
+      claim('CLAIM-0000000002'),
+      claim('CLAIM-0000000003'),
+      claim('CLAIM-0000000004'),
+    ],
+  });
+  const actions = recommendNext(snapshot, []);
+  assert.ok(!actions.some((a) => a.rule === 'candidate-backlog'));
+});
+
+test('recommendNext: candidate-backlog fires at exactly 5 candidates', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    claims: [
+      claim('CLAIM-0000000001'),
+      claim('CLAIM-0000000002'),
+      claim('CLAIM-0000000003'),
+      claim('CLAIM-0000000004'),
+      claim('CLAIM-0000000005'),
+    ],
+  });
+  const actions = recommendNext(snapshot, []);
+  const backlog = actions.find((a) => a.rule === 'candidate-backlog');
+  assert.ok(backlog, 'candidate-backlog should fire at the 5-candidate threshold');
+  assert.equal(backlog.impact, 'medium');
+  assert.equal(backlog.dependents, 5);
+});
+
+test('recommendNext: packs-recommended fires only for recommended packs not yet applied', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    project: {
+      title: 'T',
+      fields: ['humanities'],
+      methods: [],
+      outputs: ['thesis'],
+      mode: 'full',
+      packs_recommended: ['humanities', 'qualitative'],
+    },
+  });
+  const actions = recommendNext(snapshot, []);
+  const packsAction = actions.find((a) => a.rule === 'packs-recommended');
+  assert.ok(packsAction, 'qualitative is recommended but not applied, so the rule should fire');
+  assert.equal(packsAction.impact, 'medium');
+  assert.equal(packsAction.dependents, 1);
+  assert.ok(packsAction.why.some((w) => w.includes('qualitative')));
+  assert.ok(
+    !packsAction.why.some((w) => w.includes('humanities')),
+    'humanities is already applied',
+  );
+  assert.equal(packsAction.command, 'phdude packs apply qualitative');
+});
+
+test('recommendNext: packs-recommended does not fire once every recommendation is applied', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    project: {
+      title: 'T',
+      fields: ['humanities'],
+      methods: [],
+      outputs: ['thesis'],
+      mode: 'full',
+      packs_recommended: ['humanities'],
+    },
+  });
+  const actions = recommendNext(snapshot, []);
+  assert.ok(!actions.some((a) => a.rule === 'packs-recommended'));
+});
+
+test('recommendNext: question-gaps fires for an RQ with zero claims addressing it', () => {
+  const rq1 = question('RQ-1');
+  const rq2 = question('RQ-2');
+  const addressingClaim = claim('CLAIM-0000000001', { questions: [rq1.id] });
+
+  const snapshot = emptySnapshot({ questions: [rq1, rq2], claims: [addressingClaim] });
+  const actions = recommendNext(snapshot, []);
+  const gapAction = actions.find((a) => a.rule === 'question-gaps');
+  assert.ok(gapAction, 'RQ-2 has no addressing claim, so the rule should fire');
+  assert.equal(gapAction.dependents, 1);
+  assert.ok(gapAction.why.some((w) => w.includes('RQ-2')));
+  assert.ok(!gapAction.why.some((w) => w.includes('RQ-1')), 'RQ-1 is addressed and not a gap');
+  assert.equal(
+    gapAction.command,
+    `phdude add claim --json '{"statement":"…","questions":["RQ-2"]}'`,
+  );
+});
+
+test('recommendNext: question-gaps does not fire once every RQ is addressed', () => {
+  const rq = question('RQ-1');
+  const addressingClaim = claim('CLAIM-0000000001', { questions: [rq.id] });
+  const snapshot = emptySnapshot({ questions: [rq], claims: [addressingClaim] });
+  const actions = recommendNext(snapshot, []);
+  assert.ok(!actions.some((a) => a.rule === 'question-gaps'));
 });
 
 test('recommendNext: every action has non-empty why, valid impact, string command, numeric dependents', () => {

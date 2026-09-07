@@ -82,6 +82,48 @@ test('newFact: rejects empty key', () => {
   );
 });
 
+test('newFact: same key+value from two different artifacts get different ids', () => {
+  const a = newFact({
+    key: 'sample_size',
+    value: 312,
+    from: { artifact: 'ART-aaaaaaaaaa' },
+    actor,
+    created,
+  });
+  const b = newFact({
+    key: 'sample_size',
+    value: 312,
+    from: { artifact: 'ART-bbbbbbbbbb' },
+    actor,
+    created,
+  });
+  assert.notEqual(
+    a.id,
+    b.id,
+    'facts about the same key+value from different artifacts must not collide',
+  );
+  assertValid('fact', a);
+  assertValid('fact', b);
+});
+
+test('newFact: same key+value+artifact triple yields the same id', () => {
+  const a = newFact({
+    key: 'sample_size',
+    value: 312,
+    from: { artifact: 'ART-aaaaaaaaaa' },
+    actor,
+    created,
+  });
+  const b = newFact({
+    key: 'Sample Size',
+    value: 312,
+    from: { artifact: 'ART-aaaaaaaaaa' },
+    actor,
+    created,
+  });
+  assert.equal(a.id, b.id, 're-adding the identical fact should be idempotent');
+});
+
 test('newSource: schema-valid, id derives from title + year', () => {
   const source = newSource({ title: 'A Study of Adoption', year: 2020, actor, created });
   assertValid('source', source);

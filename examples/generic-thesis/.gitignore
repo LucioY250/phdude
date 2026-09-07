@@ -1,4 +1,5 @@
 .phdude/cache/
 .env
 .env.*
-outputs/
+outputs/*
+!outputs/.gitkeep

@@ -2,6 +2,7 @@ import { buildGraph } from './lineage.js';
 import { openConflicts } from './conflicts.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
+const CANDIDATE_BACKLOG_THRESHOLD = 5;
 const COLLECTION_KEYS = [
   'artifacts',
   'sources',
@@ -35,15 +36,18 @@ function ruleNoQuestions(snapshot) {
 }
 
 function ruleExtractionUnavailable(snapshot) {
-  const bad = (snapshot.artifacts ?? []).filter((a) =>
-    ['unavailable', 'failed'].includes(a.extracted?.status),
-  );
+  const bad = (snapshot.artifacts ?? []).filter((a) => a.extracted?.status !== 'ok');
   if (bad.length === 0) return null;
 
   const shown = bad.slice(0, 3).map((a) => `${a.id} (${a.path})`);
-  const why = [`${bad.length} artifact(s) failed extraction: ${shown.join(', ')}`];
-  const hint = bad.map((a) => a.extracted?.warnings?.[0]).find(Boolean);
-  if (hint) why.push(hint);
+  const why = [
+    `${bad.length} artifact(s) without usable text (status: partial/unavailable/failed): ${shown.join(', ')}`,
+  ];
+  const hints = [...new Set(bad.map((a) => a.extracted?.warnings?.[0]).filter(Boolean))].slice(
+    0,
+    3,
+  );
+  why.push(...hints);
 
   return {
     rule: 'extraction-unavailable',
@@ -96,6 +100,7 @@ function ruleOpenConflicts(snapshot, conflicts) {
   );
 
   const why = open.map((c) => `${c.key}: ${distinctValuesText(c)}`);
+  why.push(`${dependentClaims.size} claim(s) depend on the conflicting artifacts`);
   const primary = open[0];
   const factIds = primary.values.map((v) => v.factId);
 
@@ -105,8 +110,8 @@ function ruleOpenConflicts(snapshot, conflicts) {
     why,
     impact: 'high',
     command:
-      `phdude decide propose --title "Resolve ${primary.key}" --affects ${factIds.join(' ')} ` +
-      `--change '{"fact_key":"${primary.key}","canonical_value":…}'`,
+      `phdude decide propose --title "Resolve ${primary.key}" --rationale "…" ` +
+      `--affects ${factIds.join(' ')} --change '{"fact_key":"${primary.key}","canonical_value":…}'`,
     dependents: dependentClaims.size,
   };
 }
@@ -125,14 +130,14 @@ function ruleUnsupportedClaims(snapshot) {
       `${unsupported.length} claim(s) marked canonical/supported have no evidence: ${shown.join(', ')}`,
     ],
     impact: 'high',
-    command: 'phdude add evidence …',
+    command: `phdude add evidence --json '{"source":"SRC-…","excerpt":"…","strength":"moderate"}'`,
     dependents: unsupported.length,
   };
 }
 
 function ruleCandidateBacklog(snapshot) {
   const candidates = (snapshot.claims ?? []).filter((c) => c.state === 'candidate');
-  if (candidates.length < 5) return null;
+  if (candidates.length < CANDIDATE_BACKLOG_THRESHOLD) return null;
   return {
     rule: 'candidate-backlog',
     action: 'Review the candidate-claims backlog',
@@ -195,12 +200,22 @@ function ruleQuestionGaps(snapshot) {
       `${gaps.length} research question(s) have zero claims addressing them: ${gaps.map((q) => q.id).join(', ')}`,
     ],
     impact: 'medium',
-    command: 'phdude knowledge list --type claim',
+    command: `phdude add claim --json '{"statement":"…","questions":["${gaps[0].id}"]}'`,
     dependents: gaps.length,
   };
 }
 
-function ruleConsistent() {
+function ruleConsistent(hasOtherActions) {
+  if (hasOtherActions) {
+    return {
+      rule: 'consistent',
+      action: 'No further automatic recommendations; add new sources or refine claims',
+      why: ['all rule-based checks above are the open items'],
+      impact: 'low',
+      command: '',
+      dependents: 0,
+    };
+  }
   return {
     rule: 'consistent',
     action: 'Workspace is consistent; add new sources or refine claims',
@@ -234,7 +249,7 @@ export function recommendNext(snapshot, conflicts) {
     const action = rule(snapshot, conflicts);
     if (action) scored.push({ action, order });
   });
-  scored.push({ action: ruleConsistent(), order: RULES.length });
+  scored.push({ action: ruleConsistent(scored.length > 0), order: RULES.length });
 
   scored.sort(
     (a, b) =>
