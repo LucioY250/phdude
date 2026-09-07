@@ -118,6 +118,23 @@ test('paragraphs: front matter at the top of the file is not prose', () => {
   ]);
 });
 
+test('paragraphs: a leading --- with no closing --- is a thematic break, not front matter', () => {
+  assert.deepEqual(paragraphs('---\n\nBody text.\n\nMore of it.'), [
+    { text: 'Body text.', line: 3 },
+    { text: 'More of it.', line: 5 },
+  ]);
+  assert.deepEqual(paragraphs('---\nBody text.'), [{ text: 'Body text.', line: 2 }]);
+});
+
+test('paragraphs: an unterminated fence does not swallow the rest of the document', () => {
+  const text = ['Intro paragraph.', '', '```js', 'const x = 1;', '', 'Trailing prose.'].join('\n');
+  assert.deepEqual(paragraphs(text), [
+    { text: 'Intro paragraph.', line: 1 },
+    { text: 'const x = 1;', line: 4 },
+    { text: 'Trailing prose.', line: 6 },
+  ]);
+});
+
 test('stripMarkup: citations, markers, code and link syntax leave the prose behind', () => {
   assert.equal(
     stripMarkup('The rate rose [@lopez2023] <!-- fact: FACT-1 --> and `code` held.'),

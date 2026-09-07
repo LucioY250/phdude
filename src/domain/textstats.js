@@ -73,45 +73,54 @@ export function paragraphs(text) {
     current = [];
   };
 
-  let i = 0;
-  // YAML front matter, only when it opens on the very first line.
+  // YAML front matter, only when it opens on the very first line and a closing `---` follows.
+  // A lone `---` is a thematic break, which is ordinary Markdown and must not cost the document
+  // its prose.
+  let from = 0;
   if (lines[0] !== undefined && lines[0].trim() === '---') {
-    i = 1;
-    while (i < lines.length && lines[i].trim() !== '---') i++;
-    i++;
+    let close = 1;
+    while (close < lines.length && lines[close].trim() !== '---') close++;
+    if (close < lines.length) from = close + 1;
   }
 
-  let fence = null;
-  for (; i < lines.length; i++) {
-    const line = lines[i];
-    const fenceMatch = /^[ \t]{0,3}(```+|~~~+)/.exec(line);
-    if (fenceMatch) {
-      if (fence === null) {
-        flush();
-        fence = fenceMatch[1][0];
-      } else if (fenceMatch[1][0] === fence) {
-        fence = null;
+  for (;;) {
+    let fence = null;
+    let fenceStart = -1;
+    for (let i = from; i < lines.length; i++) {
+      const line = lines[i];
+      const fenceMatch = /^[ \t]{0,3}(```+|~~~+)/.exec(line);
+      if (fenceMatch) {
+        if (fence === null) {
+          flush();
+          fence = fenceMatch[1][0];
+          fenceStart = i;
+        } else if (fenceMatch[1][0] === fence) {
+          fence = null;
+        }
+        continue;
       }
-      continue;
+      if (fence !== null) continue;
+      if (line.trim() === '') {
+        flush();
+        continue;
+      }
+      if (/^[ \t]{0,3}#{1,6}[ \t]/.test(line)) {
+        flush();
+        continue;
+      }
+      if (/^[ \t]{0,3}(?:-{3,}|\*{3,}|_{3,})[ \t]*$/.test(line)) {
+        flush();
+        continue;
+      }
+      if (current.length === 0) startLine = i + 1;
+      current.push(line);
     }
-    if (fence !== null) continue;
-    if (line.trim() === '') {
-      flush();
-      continue;
-    }
-    if (/^[ \t]{0,3}#{1,6}[ \t]/.test(line)) {
-      flush();
-      continue;
-    }
-    if (/^[ \t]{0,3}(?:-{3,}|\*{3,}|_{3,})[ \t]*$/.test(line)) {
-      flush();
-      continue;
-    }
-    if (current.length === 0) startLine = i + 1;
-    current.push(line);
+    flush();
+    // A fence that never closes is a stray marker, not a code block running to the end of the
+    // file: everything after it is read again as prose.
+    if (fence === null) return out;
+    from = fenceStart + 1;
   }
-  flush();
-  return out;
 }
 
 /**
