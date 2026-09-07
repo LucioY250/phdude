@@ -1,0 +1,133 @@
+tests/fixtures/objects/valid/figure.1.json
+  s_946fc7502759d8::t_b81232c37a47e1 1-32
+src/application/table.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-262
+tests/golden/expected/table.csv
+  s_946fc7502759d8::t_b81232c37a47e1 1-6
+tests/fixtures/analysis/survey.csv
+  s_946fc7502759d8::t_b81232c37a47e1 1-6
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_779404fddb6b2c 156
+  s_946fc7502759d8::t_b81232c37a47e1 157-165
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_b81232c37a47e1 95-96
+src/application/figure.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-254
+src/domain/entities.js
+  s_946fc7502759d8::t_b81232c37a47e1 5-6,676-738
+  s_946fc7502759d8::t_66535359d4e4a0 674-675
+src/schemas/index.js
+  s_946fc7502759d8::t_b81232c37a47e1 31-32
+tests/fixtures/objects/valid/table.1.json
+  s_946fc7502759d8::t_b81232c37a47e1 1-31
+commands/table.md
+  s_946fc7502759d8::t_b81232c37a47e1 1-28
+docs/cli.md
+  s_946fc7502759d8::t_779404fddb6b2c 39
+  s_946fc7502759d8::t_b81232c37a47e1 800-894
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_66535359d4e4a0 567
+  s_946fc7502759d8::t_b81232c37a47e1 15-16,579-660
+  s_946fc7502759d8::t_779404fddb6b2c 568-578
+tests/unit/domain/tables.test.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-314
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_66535359d4e4a0 2146
+  s_946fc7502759d8::t_b81232c37a47e1 2147-2274
+  s_946fc7502759d8::t_8129857f0ea09f 2275
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_b81232c37a47e1 40-45,73
+schemas/common.json
+  s_946fc7502759d8::t_779404fddb6b2c 7
+tests/integration/table.test.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-8,10-34,36-475
+  s_946fc7502759d8::t_71dfdc19210f9d 9,35
+tests/unit/domain/ids.test.js
+  s_946fc7502759d8::t_b81232c37a47e1 40-41
+  s_946fc7502759d8::t_779404fddb6b2c 43
+tests/integration/analyze.test.js
+  s_946fc7502759d8::t_71dfdc19210f9d 11,40
+README.md
+  s_946fc7502759d8::t_779404fddb6b2c 173
+  s_946fc7502759d8::t_b81232c37a47e1 627-628
+examples/generic-thesis/.phdude/skills/figures/SKILL.md
+  s_946fc7502759d8::t_b81232c37a47e1 1-99
+generators/bar-chart.mjs
+  s_946fc7502759d8::t_b81232c37a47e1 1-300
+src/adapters/cli/commands/figure.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-132
+src/adapters/execution/generators.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-13
+tests/golden/expected/table.tex
+  s_946fc7502759d8::t_b81232c37a47e1 1-16
+src/domain/ids.js
+  s_946fc7502759d8::t_b81232c37a47e1 17-18
+tests/integration/figure.test.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-11,13-66,68-600
+  s_946fc7502759d8::t_71dfdc19210f9d 12,67
+tests/fixtures/objects/invalid/table.1.json
+  s_946fc7502759d8::t_b81232c37a47e1 1-16
+tests/golden/expected/table.md
+  s_946fc7502759d8::t_b81232c37a47e1 1-9
+src/domain/tables.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-284
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_b81232c37a47e1 9-10,30,49,65,83,142
+tests/fixtures/objects/invalid/figure.1.json
+  s_946fc7502759d8::t_b81232c37a47e1 1-16
+tests/golden/table.test.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-67
+tests/golden/expected/bar-chart.svg
+  s_946fc7502759d8::t_b81232c37a47e1 1-28
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_b81232c37a47e1 160-164
+schemas/table.json
+  s_946fc7502759d8::t_b81232c37a47e1 1-72
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_b81232c37a47e1 61,70,87-94
+  s_946fc7502759d8::t_779404fddb6b2c 58-60,68-69
+  s_946fc7502759d8::t_8aa047aa2b8884 95
+tests/golden/bar-chart.test.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-179
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_b81232c37a47e1 61,70,87-94
+  s_946fc7502759d8::t_779404fddb6b2c 58-60,68-69
+  s_946fc7502759d8::t_78881f4dbdc51d 95
+src/domain/figures.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-215
+skills/figures/SKILL.md
+  s_946fc7502759d8::t_b81232c37a47e1 1-99
+docs/workspace.md
+  s_946fc7502759d8::t_b81232c37a47e1 43-46
+  s_946fc7502759d8::t_2900255cb75f81 54
+schemas/figure.json
+  s_946fc7502759d8::t_b81232c37a47e1 1-63
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_b81232c37a47e1 19-20
+commands/figure.md
+  s_946fc7502759d8::t_b81232c37a47e1 1-29
+tests/golden/README.md
+  s_946fc7502759d8::t_b81232c37a47e1 13-17
+tests/unit/domain/figures.test.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-306
+src/adapters/cli/commands/table.js
+  s_946fc7502759d8::t_b81232c37a47e1 1-114
+tests/fixtures/analysis/results.json
+  s_946fc7502759d8::t_b81232c37a47e1 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "11900c2f3be7b976d9ef7f34ae06e7d2954dbf57",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
