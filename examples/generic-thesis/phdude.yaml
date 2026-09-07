@@ -1,0 +1,10 @@
+schema: phdude.project
+version: 1
+title: Generic Thesis Example
+language: en
+fields: []
+methods: []
+outputs:
+  - thesis
+mode: full
+agents: []

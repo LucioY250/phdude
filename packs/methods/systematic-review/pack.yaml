@@ -1,0 +1,39 @@
+schema: phdude.pack
+version: 1
+name: systematic-review
+kind: method
+description: >-
+  Systematic reviews and meta-analyses: structured literature synthesis and
+  quantitative pooling of study effects.
+terminology:
+  - PRISMA
+  - inclusion criteria
+  - exclusion criteria
+  - risk of bias
+  - heterogeneity
+  - forest plot
+detect:
+  keywords:
+    - systematic review
+    - meta-analysis
+    - prisma
+    - inclusion criteria
+    - exclusion criteria
+    - risk of bias
+    - heterogeneity
+    - forest plot
+    - search strategy
+    - study selection
+    - publication bias
+    - pooled effect
+reviewers:
+  - search-completeness
+  - bias-assessment
+recommended_checks:
+  - PRISMA
+  - risk-of-bias-assessment
+  - heterogeneity-analysis
+  - publication-bias-check
+skills:
+  - skills/systematic-review/SKILL.md
+schemas: []

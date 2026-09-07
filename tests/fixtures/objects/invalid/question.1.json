@@ -1,0 +1,10 @@
+{
+  "schema": "phdude.question",
+  "version": 1,
+  "id": "RQ-1",
+  "created": "2026-08-05T08:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "text": "What factors matter?",
+  "objectives": "identify barriers",
+  "state": "canonical"
+}

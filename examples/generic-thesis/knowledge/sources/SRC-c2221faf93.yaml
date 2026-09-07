@@ -1,0 +1,18 @@
+schema: phdude.source
+version: 1
+id: SRC-c2221faf93
+created: 2026-09-01T00:00:06.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: "Survey Alpha and Beta: Note-Taking App Adoption"
+authors:
+  - A. Alpha
+  - B. Beta
+type: report
+artifacts:
+  - ART-35146e2f6d
+  - ART-f7ced78004
+state: candidate
+year: 2025

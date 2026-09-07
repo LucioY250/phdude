@@ -1,0 +1,14 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-3d035aa05b
+created: 2026-09-01T00:00:19.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Stratified sampling across campuses corroborates the observed adoption rate.
+kind: methodological
+state: candidate
+supported_by: []
+questions: []
+sections: []

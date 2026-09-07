@@ -1,0 +1,57 @@
+{
+  "name": "phdude",
+  "version": "0.1.0",
+  "description": "The senior researcher in your terminal. A field-agnostic research co-author harness for AI coding agents.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LucioY250/phdude.git"
+  },
+  "homepage": "https://github.com/LucioY250/phdude#readme",
+  "bugs": {
+    "url": "https://github.com/LucioY250/phdude/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "phdude": "bin/phdude.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "schemas",
+    "defaults",
+    "skills",
+    "commands",
+    "packs",
+    "docs/cli.md",
+    "docs/workspace.md",
+    "docs/extending.md",
+    "docs/adr",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "test:unit": "node --test \"tests/unit/**/*.test.js\"",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "example": "node scripts/make-example.mjs",
+    "fixtures": "node scripts/make-fixtures.mjs",
+    "diagrams": "node scripts/make-diagrams.mjs"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "fflate": "^0.8.2",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "prettier": "^3.4.2"
+  }
+}

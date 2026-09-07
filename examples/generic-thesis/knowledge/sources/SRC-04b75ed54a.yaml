@@ -1,0 +1,16 @@
+schema: phdude.source
+version: 1
+id: SRC-04b75ed54a
+created: 2026-09-01T00:00:08.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: "Survey Gamma: Cross-Campus Replication"
+authors:
+  - C. Gamma
+type: report
+artifacts:
+  - ART-0772a215de
+state: candidate
+year: 2025

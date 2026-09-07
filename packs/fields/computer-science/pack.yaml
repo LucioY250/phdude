@@ -1,0 +1,39 @@
+schema: phdude.pack
+version: 1
+name: computer-science
+kind: field
+description: >-
+  Computer science and software engineering research: algorithms, systems, empirical
+  software engineering, and applied AI/ML studies.
+terminology:
+  - algorithm
+  - computational complexity
+  - benchmark
+  - ablation study
+  - reproducibility
+  - throughput
+  - latency
+detect:
+  keywords:
+    - algorithm
+    - computational complexity
+    - dataset
+    - benchmark
+    - neural network
+    - hyperparameter
+    - throughput
+    - latency
+    - codebase
+    - c++
+    - software architecture
+    - runtime environment
+reviewers:
+  - reproducibility
+  - benchmark-integrity
+recommended_checks:
+  - baseline-comparison
+  - ablation-analysis
+  - complexity-analysis
+skills:
+  - skills/computer-science/SKILL.md
+schemas: []

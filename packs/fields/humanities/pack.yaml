@@ -1,0 +1,38 @@
+schema: phdude.pack
+version: 1
+name: humanities
+kind: field
+description: >-
+  Humanities and interpretive research: literary, historical, philosophical, and
+  cultural studies.
+terminology:
+  - hermeneutics
+  - primary source
+  - historiography
+  - close reading
+  - discourse analysis
+  - canon
+detect:
+  keywords:
+    - hermeneutics
+    - primary source
+    - historiography
+    - close reading
+    - discourse analysis
+    - archival research
+    - textual analysis
+    - narrative
+    - interpretive framework
+    - literary criticism
+    - cultural context
+    - primary text
+reviewers:
+  - source-criticism
+  - interpretive-rigor
+recommended_checks:
+  - primary-source-verification
+  - citation-density
+  - counter-reading-considered
+skills:
+  - skills/humanities/SKILL.md
+schemas: []

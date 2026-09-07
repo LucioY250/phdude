@@ -1,0 +1,15 @@
+{
+  "schema": "phdude.claim",
+  "version": 1,
+  "id": "CLAIM-7e2d9a4c11",
+  "created": "2026-08-13T09:30:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "statement": "Firm size moderates the relationship between perceived cost and AI adoption intent among SMEs.",
+  "kind": "empirical",
+  "state": "candidate",
+  "supported_by": ["EVID-2b8d6a1f39"],
+  "questions": ["RQ-1"],
+  "sections": ["findings"],
+  "tags": ["firm-size", "moderation"],
+  "ext": { "quantitative-survey": { "reviewed_by": "stats-reviewer" } }
+}

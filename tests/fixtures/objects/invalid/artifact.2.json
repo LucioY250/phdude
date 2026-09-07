@@ -1,0 +1,25 @@
+{
+  "schema": "phdude.artifact",
+  "version": 1,
+  "id": "ART-4f2a9c1d7e",
+  "created": "2026-08-10T09:15:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "path": "sources/smit-2023-ai-adoption-smes.pdf",
+  "paths": ["sources/smit-2023-ai-adoption-smes.pdf"],
+  "hash": "3b8f1c6a9d2e4f507a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f6071",
+  "bytes": 1048576,
+  "mime": "application/pdf",
+  "kind": "pdf",
+  "role": "paper",
+  "extracted": {
+    "status": "ok",
+    "method": "pdftotext",
+    "text_chars": 42000,
+    "sections": 8,
+    "tables": 3,
+    "warnings": []
+  },
+  "latest": true,
+  "mtime": "2026-08-10T09:15:00Z",
+  "bogus": true
+}

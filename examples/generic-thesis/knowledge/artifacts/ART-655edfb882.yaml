@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-655edfb882
+created: 2026-09-01T00:00:01.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/participants.csv
+paths:
+  - sources/participants.csv
+hash: 655edfb882cf5bbed9148dfbe962c8e62585c9e2bbebe3f0691ec1e5ffd4e241
+bytes: 26
+mime: text/csv
+kind: csv
+role: unknown
+extracted:
+  status: ok
+  method: text
+  text_chars: 26
+  sections: 0
+  tables: 1
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

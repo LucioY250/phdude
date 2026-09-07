@@ -1,0 +1,10 @@
+{
+  "schema": "phdude.result",
+  "version": 1,
+  "id": "RESULT-6f1d8b3a90",
+  "created": "2026-08-20T16:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "summary": "Firm size significantly predicts AI adoption likelihood.",
+  "from": "logistic regression on survey sample (n=312)",
+  "state": "supported"
+}

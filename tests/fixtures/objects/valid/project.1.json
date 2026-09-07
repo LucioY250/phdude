@@ -1,0 +1,12 @@
+{
+  "schema": "phdude.project",
+  "version": 1,
+  "title": "AI Adoption Among SMEs: A Mixed-Methods Study",
+  "language": "en",
+  "fields": ["information-systems", "small-business-management"],
+  "methods": ["survey", "logistic-regression"],
+  "outputs": ["thesis", "journal-article"],
+  "mode": "full",
+  "agents": ["researcher", "reviewer"],
+  "packs_recommended": ["information-systems", "quantitative-survey"]
+}

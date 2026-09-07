@@ -1,0 +1,33 @@
+Project: Generic Thesis Example
+Fields: (none)
+Methods: (none)
+Outputs: thesis
+Mode: full
+
+Inventory:
+  Total artifacts: 4
+  By kind: csv=1, md=3
+  By extraction: ok=4
+  Unknown role: 4
+
+Knowledge:
+  source: total=2 (candidate=2)
+  claim: total=3 (candidate=2, supported=1)
+  evidence: total=1 (candidate=1)
+  fact: total=4 (candidate=4)
+  result: total=0 ((none))
+  question: total=1 (candidate=1)
+  hypothesis: total=0 ((none))
+
+Conflicts (1 open of 1 total):
+  - sample_size: 312 participants (FACT-2bc4462edb from ART-35146e2f6d) vs 312 participants (FACT-54af7fa906 from ART-0772a215de) vs 300 participants (FACT-f62e1a2f34 from ART-f7ced78004) [open]
+
+Pending decisions (1):
+  - DEC-7aa12a7b78: Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta
+
+Recent events:
+  add: fact added
+  add: fact added
+  add: fact added
+  add: fact added
+  decide: decision proposed

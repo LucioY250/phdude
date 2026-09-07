@@ -1,0 +1,39 @@
+{
+  "$id": "phdude://pack",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": { "const": "phdude.pack" },
+    "version": { "const": 1 },
+    "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "kind": { "enum": ["field", "method", "venue"] },
+    "description": { "type": "string" },
+    "terminology": { "type": "array", "items": { "type": "string" } },
+    "detect": {
+      "type": "object",
+      "properties": {
+        "keywords": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["keywords"],
+      "additionalProperties": false
+    },
+    "reviewers": { "type": "array", "items": { "type": "string" } },
+    "recommended_checks": { "type": "array", "items": { "type": "string" } },
+    "skills": { "type": "array", "items": { "type": "string" } },
+    "schemas": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": [
+    "schema",
+    "version",
+    "name",
+    "kind",
+    "description",
+    "terminology",
+    "detect",
+    "reviewers",
+    "recommended_checks",
+    "skills",
+    "schemas"
+  ],
+  "additionalProperties": false
+}

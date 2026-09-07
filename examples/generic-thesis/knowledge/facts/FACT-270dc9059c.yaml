@@ -1,0 +1,14 @@
+schema: phdude.fact
+version: 1
+id: FACT-270dc9059c
+created: 2026-09-01T00:00:27.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+key: country
+value: Peru
+from:
+  artifact: ART-655edfb882
+  locator: row 2
+state: candidate

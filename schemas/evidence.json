@@ -1,0 +1,19 @@
+{
+  "$id": "phdude://evidence",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.evidence" },
+        "source": { "$ref": "phdude://common#/$defs/id" },
+        "locator": { "type": "string" },
+        "excerpt": { "type": "string" },
+        "strength": { "enum": ["strong", "moderate", "weak", "unknown"] },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": ["source", "excerpt", "strength", "state"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

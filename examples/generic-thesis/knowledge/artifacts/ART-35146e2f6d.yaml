@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-35146e2f6d
+created: 2026-09-01T00:00:02.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/survey-alpha.md
+paths:
+  - sources/survey-alpha.md
+hash: 35146e2f6d7689a27d7ce1588a5eaf7c55bacbc9bffc0b1d78ac8d79fe4c7f41
+bytes: 271
+mime: text/markdown
+kind: md
+role: unknown
+extracted:
+  status: ok
+  method: text
+  text_chars: 271
+  sections: 3
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

@@ -1,0 +1,15 @@
+schema: phdude.fact
+version: 1
+id: FACT-f62e1a2f34
+created: 2026-09-01T00:00:23.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+key: sample_size
+value: 300
+from:
+  artifact: ART-f7ced78004
+  locator: Methods
+state: candidate
+unit: participants

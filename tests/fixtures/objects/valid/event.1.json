@@ -1,0 +1,7 @@
+{
+  "ts": "2026-08-22T13:05:00Z",
+  "op": "decision.approved",
+  "actor": { "researcher": "lucio.yen@yavendio.com", "agent": "phdude-reviewer" },
+  "ids": ["DEC-3e7c9a1f60", "FACT-9c4e2a7b15"],
+  "summary": "Approved decision DEC-3e7c9a1f60 setting canonical sample_size to 312."
+}

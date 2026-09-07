@@ -1,0 +1,17 @@
+{
+  "$id": "phdude://question",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.question" },
+        "text": { "type": "string" },
+        "objectives": { "type": "array", "items": { "type": "string" } },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": ["text", "objectives", "state"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

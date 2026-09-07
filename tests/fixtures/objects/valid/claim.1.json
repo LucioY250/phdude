@@ -1,0 +1,13 @@
+{
+  "schema": "phdude.claim",
+  "version": 1,
+  "id": "CLAIM-1a9f4c7e02",
+  "created": "2026-08-11T11:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "statement": "Perceived cost and lack of in-house technical expertise are the strongest barriers to AI adoption among SMEs.",
+  "kind": "literature",
+  "state": "supported",
+  "supported_by": ["EVID-2b8d6a1f39"],
+  "questions": ["RQ-1"],
+  "sections": ["literature-review", "discussion"]
+}

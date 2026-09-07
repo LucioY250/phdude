@@ -1,0 +1,38 @@
+schema: phdude.pack
+version: 1
+name: qualitative
+kind: method
+description: >-
+  Qualitative research methods: interviews, thematic analysis, grounded theory, and
+  ethnography.
+terminology:
+  - thematic analysis
+  - grounded theory
+  - saturation
+  - coding scheme
+  - triangulation
+  - reflexivity
+detect:
+  keywords:
+    - thematic analysis
+    - grounded theory
+    - saturation
+    - coding scheme
+    - triangulation
+    - reflexivity
+    - interview transcript
+    - focus group
+    - ethnography
+    - inductive coding
+    - member checking
+    - purposive sampling
+reviewers:
+  - coding-rigor
+  - trustworthiness
+recommended_checks:
+  - saturation-justification
+  - inter-coder-reliability
+  - reflexivity-statement
+skills:
+  - skills/qualitative/SKILL.md
+schemas: []

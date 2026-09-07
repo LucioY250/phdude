@@ -1,0 +1,326 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { recommendNext } from '../../../src/domain/next.js';
+import { detectFactConflicts } from '../../../src/domain/conflicts.js';
+
+const created = '2026-09-07T00:00:00Z';
+const actor = { researcher: 'test' };
+
+function emptySnapshot(overrides = {}) {
+  return {
+    project: { title: 'T', fields: [], methods: [], outputs: ['thesis'], mode: 'full' },
+    artifacts: [],
+    sources: [],
+    claims: [],
+    evidence: [],
+    facts: [],
+    results: [],
+    questions: [],
+    hypotheses: [],
+    decisions: [],
+    ...overrides,
+  };
+}
+
+function artifact(id, status, warnings = []) {
+  return {
+    id,
+    schema: 'phdude.artifact',
+    version: 1,
+    created,
+    actor,
+    path: `sources/${id}.pdf`,
+    paths: [`sources/${id}.pdf`],
+    hash: 'a'.repeat(64),
+    bytes: 10,
+    mime: 'application/pdf',
+    kind: 'pdf',
+    role: 'unknown',
+    extracted: { status, method: '', text_chars: 0, sections: 0, tables: 0, warnings },
+    mtime: created,
+  };
+}
+
+function fact(id, key, value, artifactId, unit = undefined) {
+  const from = { artifact: artifactId };
+  const obj = {
+    id,
+    schema: 'phdude.fact',
+    version: 1,
+    created,
+    actor,
+    key,
+    value,
+    from,
+    state: 'canonical',
+  };
+  if (unit !== undefined) obj.unit = unit;
+  return obj;
+}
+
+function claim(id, { state = 'candidate', supported_by = [], questions = [] } = {}) {
+  return {
+    id,
+    schema: 'phdude.claim',
+    version: 1,
+    created,
+    actor,
+    statement: `statement ${id}`,
+    kind: 'empirical',
+    state,
+    supported_by,
+    questions,
+    sections: [],
+  };
+}
+
+function evidence(id, source) {
+  return {
+    id,
+    schema: 'phdude.evidence',
+    version: 1,
+    created,
+    actor,
+    source,
+    locator: '',
+    excerpt: `excerpt ${id}`,
+    strength: 'moderate',
+    state: 'candidate',
+  };
+}
+
+function question(id) {
+  return {
+    id,
+    schema: 'phdude.question',
+    version: 1,
+    created,
+    actor,
+    text: `text ${id}`,
+    objectives: [],
+    state: 'candidate',
+  };
+}
+
+test('recommendNext: empty snapshot -> top is no-questions', () => {
+  const snapshot = emptySnapshot();
+  const actions = recommendNext(snapshot, []);
+  assert.equal(actions[0].rule, 'no-questions');
+  assert.equal(actions[0].impact, 'high');
+  assert.ok(actions[0].why.length > 0);
+  assert.equal(actions.at(-1).rule, 'consistent');
+  assert.equal(
+    actions.at(-1).action,
+    'No further automatic recommendations; add new sources or refine claims',
+    'consistent must not claim the workspace is consistent when another action is above it',
+  );
+});
+
+test('recommendNext: RQ present + one unavailable artifact -> rule 2 top, hint in why', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    artifacts: [
+      artifact('ART-aaaaaaaaaa', 'unavailable', [
+        'pdftotext parser unavailable: install poppler-utils',
+      ]),
+    ],
+  });
+  const actions = recommendNext(snapshot, []);
+  assert.equal(actions[0].rule, 'extraction-unavailable');
+  assert.equal(actions[0].impact, 'high');
+  assert.ok(
+    actions[0].why.some((w) => w.includes('install poppler-utils')),
+    'why should include the install hint from the artifact warning',
+  );
+});
+
+test('recommendNext: conflict with 3 dependent claims outranks unsupported-claims with 1 dependent', () => {
+  const facts = [
+    fact('FACT-0000000001', 'sample_size', 312, 'ART-a'),
+    fact('FACT-0000000002', 'sample_size', 300, 'ART-b'),
+  ];
+  const conflicts = detectFactConflicts(facts, []);
+  assert.equal(conflicts.length, 1);
+
+  const ev1 = evidence('EVID-0000000001', 'ART-a');
+  const ev2 = evidence('EVID-0000000002', 'ART-a');
+  const ev3 = evidence('EVID-0000000003', 'ART-b');
+
+  const dependentClaims = [
+    claim('CLAIM-0000000001', { state: 'candidate', supported_by: [ev1.id] }),
+    claim('CLAIM-0000000002', { state: 'candidate', supported_by: [ev2.id] }),
+    claim('CLAIM-0000000003', { state: 'candidate', supported_by: [ev3.id] }),
+  ];
+  const unsupportedClaim = claim('CLAIM-0000000004', { state: 'supported', supported_by: [] });
+
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    artifacts: [artifact('ART-a', 'ok'), artifact('ART-b', 'ok')],
+    facts,
+    evidence: [ev1, ev2, ev3],
+    claims: [...dependentClaims, unsupportedClaim],
+  });
+
+  const actions = recommendNext(snapshot, conflicts);
+  const openConflictAction = actions.find((a) => a.rule === 'open-conflicts');
+  const unsupportedAction = actions.find((a) => a.rule === 'unsupported-claims');
+
+  assert.ok(openConflictAction);
+  assert.ok(unsupportedAction);
+  assert.equal(openConflictAction.dependents, 3);
+  assert.equal(unsupportedAction.dependents, 1);
+  assert.equal(actions[0].rule, 'open-conflicts');
+  assert.ok(actions.indexOf(openConflictAction) < actions.indexOf(unsupportedAction));
+});
+
+test('recommendNext: unsupported-claims suggests a link command naming the claim', () => {
+  const unsupported = claim('CLAIM-0000000004', { state: 'supported', supported_by: [] });
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    claims: [unsupported],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'unsupported-claims');
+  assert.ok(action);
+  assert.equal(action.command, `phdude link ${unsupported.id} --to <EVID-id>`);
+});
+
+test('recommendNext: fully consistent workspace -> only consistent action', () => {
+  const rq = question('RQ-1');
+  const addressingClaim = claim('CLAIM-0000000001', {
+    state: 'supported',
+    supported_by: ['EVID-0000000001'],
+    questions: [rq.id],
+  });
+  const ev = evidence('EVID-0000000001', 'ART-a');
+  const art = artifact('ART-a', 'ok');
+  art.role = 'paper';
+
+  const snapshot = emptySnapshot({
+    questions: [rq],
+    claims: [addressingClaim],
+    evidence: [ev],
+    artifacts: [art],
+  });
+
+  const actions = recommendNext(snapshot, []);
+  assert.equal(actions.length, 1);
+  assert.equal(actions[0].rule, 'consistent');
+  assert.equal(actions[0].impact, 'low');
+  assert.ok(actions[0].why.length > 0);
+  assert.equal(actions[0].action, 'Workspace is consistent; add new sources or refine claims');
+});
+
+test('recommendNext: candidate-backlog does not fire below 5 candidates', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    claims: [
+      claim('CLAIM-0000000001'),
+      claim('CLAIM-0000000002'),
+      claim('CLAIM-0000000003'),
+      claim('CLAIM-0000000004'),
+    ],
+  });
+  const actions = recommendNext(snapshot, []);
+  assert.ok(!actions.some((a) => a.rule === 'candidate-backlog'));
+});
+
+test('recommendNext: candidate-backlog fires at exactly 5 candidates', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    claims: [
+      claim('CLAIM-0000000001'),
+      claim('CLAIM-0000000002'),
+      claim('CLAIM-0000000003'),
+      claim('CLAIM-0000000004'),
+      claim('CLAIM-0000000005'),
+    ],
+  });
+  const actions = recommendNext(snapshot, []);
+  const backlog = actions.find((a) => a.rule === 'candidate-backlog');
+  assert.ok(backlog, 'candidate-backlog should fire at the 5-candidate threshold');
+  assert.equal(backlog.impact, 'medium');
+  assert.equal(backlog.dependents, 5);
+});
+
+test('recommendNext: packs-recommended fires only for recommended packs not yet applied', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    project: {
+      title: 'T',
+      fields: ['humanities'],
+      methods: [],
+      outputs: ['thesis'],
+      mode: 'full',
+      packs_recommended: ['humanities', 'qualitative'],
+    },
+  });
+  const actions = recommendNext(snapshot, []);
+  const packsAction = actions.find((a) => a.rule === 'packs-recommended');
+  assert.ok(packsAction, 'qualitative is recommended but not applied, so the rule should fire');
+  assert.equal(packsAction.impact, 'medium');
+  assert.equal(packsAction.dependents, 1);
+  assert.ok(packsAction.why.some((w) => w.includes('qualitative')));
+  assert.ok(
+    !packsAction.why.some((w) => w.includes('humanities')),
+    'humanities is already applied',
+  );
+  assert.equal(packsAction.command, 'phdude packs apply qualitative');
+});
+
+test('recommendNext: packs-recommended does not fire once every recommendation is applied', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    project: {
+      title: 'T',
+      fields: ['humanities'],
+      methods: [],
+      outputs: ['thesis'],
+      mode: 'full',
+      packs_recommended: ['humanities'],
+    },
+  });
+  const actions = recommendNext(snapshot, []);
+  assert.ok(!actions.some((a) => a.rule === 'packs-recommended'));
+});
+
+test('recommendNext: question-gaps fires for an RQ with zero claims addressing it', () => {
+  const rq1 = question('RQ-1');
+  const rq2 = question('RQ-2');
+  const addressingClaim = claim('CLAIM-0000000001', { questions: [rq1.id] });
+
+  const snapshot = emptySnapshot({ questions: [rq1, rq2], claims: [addressingClaim] });
+  const actions = recommendNext(snapshot, []);
+  const gapAction = actions.find((a) => a.rule === 'question-gaps');
+  assert.ok(gapAction, 'RQ-2 has no addressing claim, so the rule should fire');
+  assert.equal(gapAction.dependents, 1);
+  assert.ok(gapAction.why.some((w) => w.includes('RQ-2')));
+  assert.ok(!gapAction.why.some((w) => w.includes('RQ-1')), 'RQ-1 is addressed and not a gap');
+  assert.equal(
+    gapAction.command,
+    `phdude add claim --json '{"statement":"…","questions":["RQ-2"]}'`,
+  );
+});
+
+test('recommendNext: question-gaps does not fire once every RQ is addressed', () => {
+  const rq = question('RQ-1');
+  const addressingClaim = claim('CLAIM-0000000001', { questions: [rq.id] });
+  const snapshot = emptySnapshot({ questions: [rq], claims: [addressingClaim] });
+  const actions = recommendNext(snapshot, []);
+  assert.ok(!actions.some((a) => a.rule === 'question-gaps'));
+});
+
+test('recommendNext: every action has non-empty why, valid impact, string command, numeric dependents', () => {
+  const snapshot = emptySnapshot({
+    questions: [],
+    artifacts: [artifact('ART-a', 'failed', ['boom'])],
+    claims: [claim('CLAIM-0000000001', { state: 'canonical', supported_by: [] })],
+  });
+  const actions = recommendNext(snapshot, []);
+  for (const a of actions) {
+    assert.ok(Array.isArray(a.why) && a.why.length > 0, `${a.rule} why must be non-empty`);
+    assert.ok(['high', 'medium', 'low'].includes(a.impact));
+    assert.equal(typeof a.command, 'string');
+    assert.equal(typeof a.dependents, 'number');
+  }
+});

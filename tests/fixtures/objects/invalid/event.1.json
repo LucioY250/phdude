@@ -1,0 +1,8 @@
+{
+  "ts": "2026-08-22T13:05:00Z",
+  "op": "decision.approved",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "ids": ["DEC-3e7c9a1f60"],
+  "summary": "Approved decision.",
+  "unexpected_field": true
+}
