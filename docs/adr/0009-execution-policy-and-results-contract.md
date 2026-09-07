@@ -80,7 +80,10 @@ the rest; `phdude packs apply` refuses the whole pack.
 - Every run costs one event and one entry in the analysis's `runs`, so `git log` and
   `.phdude/events.jsonl` show what ran, when, against which input hashes.
 - Migration 0002 takes the workspace to version 3: it adds the policy keys when they are missing
-  and creates `knowledge/datasets/`, `analysis/out/`, `tables/out/` and `figures/out/`. It writes
+  and creates `knowledge/datasets/`, `analysis/out/`, `tables/out/` and `figures/out/`. What those
+  three `out/` directories hold is regenerable — a `results.json`, a rendered table, a figure
+  image — so they are ignored the way `outputs/` is, and the migration appends the rules to a
+  `.gitignore` the workspace already has rather than writing one it chose to delete. It writes
   the policy file through the YAML parser, so comments a researcher added to that one file do not
   survive the step — `phdude migrate` refuses a dirty tree precisely so the rewrite is one
   reviewable diff. A workspace with no policy file gets none written: every key it would add
