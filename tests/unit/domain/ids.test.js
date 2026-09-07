@@ -20,6 +20,11 @@ test('makeId is stable and normalized', () => {
   assert.match(a, /^CLAIM-[0-9a-f]{10}$/);
   assert.notEqual(makeId('claim', 'x'), makeId('evidence', 'x'));
 });
+test('makeId: a method id is derived from its normalized name', () => {
+  const a = makeId('method', 'Cross-Sectional  Survey');
+  assert.equal(a, makeId('method', 'cross-sectional survey'));
+  assert.match(a, /^METH-[0-9a-f]{10}$/);
+});
 test('makeId over bytes for artifacts', () => {
   assert.match(makeId('artifact', new Uint8Array([1, 2, 3])), /^ART-[0-9a-f]{10}$/);
 });
@@ -27,8 +32,9 @@ test('makeSeqId and parseId', () => {
   assert.equal(makeSeqId('question', 3), 'RQ-3');
   assert.deepEqual(parseId('RQ-3'), { type: 'question', suffix: '3' });
   assert.deepEqual(parseId('CLAIM-0123456789'), { type: 'claim', suffix: '0123456789' });
+  assert.deepEqual(parseId('METH-0123456789'), { type: 'method', suffix: '0123456789' });
   assert.equal(parseId('nope'), null);
-  assert.equal(Object.keys(ID_PREFIXES).length, 9);
+  assert.equal(Object.keys(ID_PREFIXES).length, 10);
 });
 
 test('stableStringify sorts keys at every depth and matches JSON.stringify semantics', () => {

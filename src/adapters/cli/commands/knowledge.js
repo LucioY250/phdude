@@ -12,6 +12,7 @@ function summarize(obj) {
     obj.title ??
     obj.summary ??
     obj.text ??
+    obj.name ??
     obj.path ??
     '';
   const oneLine = String(text).replace(/\s+/g, ' ').trim();
@@ -27,8 +28,19 @@ function renderList(objs) {
   return lines.join('\n') + '\n';
 }
 
+// Claims and evidence carry where they came from; a lineage report that omitted it would
+// leave the reader to guess whether a human or an extraction put the object there.
+function renderProvenance(obj) {
+  const provenance = obj?.provenance;
+  if (!provenance) return null;
+  const derived = provenance.derived_from.length ? ` ← ${provenance.derived_from.join(', ')}` : '';
+  return `  provenance: ${provenance.method}${derived}`;
+}
+
 function renderTrace(result) {
   const lines = [result.id];
+  const provenance = renderProvenance(result.obj);
+  if (provenance) lines.push(provenance);
   for (const [label, objs] of [
     ['up (what it rests on)', result.up],
     ['down (what rests on it)', result.down],

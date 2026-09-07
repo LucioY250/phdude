@@ -1,7 +1,7 @@
 schema: phdude.claim
 version: 1
 id: CLAIM-ab73621987
-created: 2026-09-01T00:00:14.000Z
+created: 2026-09-01T00:00:36.000Z
 actor:
   researcher: example
   agent: script
@@ -11,7 +11,12 @@ kind: empirical
 state: supported
 supported_by:
   - EVID-93cd3745fc
+  - EVID-495666361d
 questions:
   - RQ-1
 sections:
   - Results
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-35146e2f6d

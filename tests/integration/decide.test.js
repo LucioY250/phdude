@@ -161,7 +161,7 @@ test('approve: superseded decisions cannot be approved', async () => {
     title: 'Replacement decision',
     rationale: 'r2',
   });
-  await supersede(deps, original.id, { by: replacement.id });
+  await supersede(deps, original.id, { by: 'Ada Lovelace', with: replacement.id });
 
   await assert.rejects(approve(deps, original.id, { by: 'b' }), (err) => {
     assert.ok(err instanceof PhdudeError);
@@ -212,9 +212,20 @@ test('supersede: marks the old decision superseded and links the new one', async
     rationale: 'r2',
   });
 
-  const superseded = await supersede(deps, original.id, { by: replacement.id });
+  const superseded = await supersede(deps, original.id, {
+    by: 'Ada Lovelace',
+    with: replacement.id,
+  });
   assert.equal(superseded.status, 'superseded');
   assert.equal(superseded.change.superseded_by, replacement.id);
+
+  const events = await deps.store.readEvents();
+  assert.equal(events.at(-1).op, 'decide');
+  assert.deepEqual(events.at(-1).ids, [original.id, replacement.id]);
+  assert.equal(
+    events.at(-1).summary,
+    `decision ${original.id} superseded by ${replacement.id}, recorded by Ada Lovelace`,
+  );
 });
 
 test('supersede: a decision cannot supersede itself', async () => {
@@ -224,11 +235,63 @@ test('supersede: a decision cannot supersede itself', async () => {
     rationale: 'r',
   });
 
-  await assert.rejects(supersede(deps, decision.id, { by: decision.id }), (err) => {
-    assert.ok(err instanceof PhdudeError);
+  await assert.rejects(
+    supersede(deps, decision.id, { by: 'Ada Lovelace', with: decision.id }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'USAGE');
+      assert.match(err.message, /cannot supersede itself/);
+      return true;
+    },
+  );
+});
+
+test('supersede: requires "by", the researcher who made the call', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: original } = await propose(deps, { title: 'Needs a name', rationale: 'r' });
+  const { obj: replacement } = await propose(deps, { title: 'The replacement', rationale: 'r2' });
+
+  await assert.rejects(supersede(deps, original.id, { with: replacement.id }), (err) => {
     assert.equal(err.code, 'USAGE');
+    assert.match(err.message, /"--by <researcher>" is required/);
     return true;
   });
+});
+
+test('supersede: the old --by <DEC-id> form errors with the new syntax', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: original } = await propose(deps, { title: 'Original path', rationale: 'r' });
+  const { obj: replacement } = await propose(deps, { title: 'Replacement', rationale: 'r2' });
+
+  await assert.rejects(supersede(deps, original.id, { by: replacement.id }), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'USAGE');
+    assert.equal(err.message, '--by is the researcher; pass the superseding decision with --with');
+    assert.match(err.hint, /--with/);
+    return true;
+  });
+
+  assert.equal((await deps.store.readEntity(original.id)).status, 'proposed');
+});
+
+test('supersede: --with is required and must name an existing decision', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: original } = await propose(deps, { title: 'Original path', rationale: 'r' });
+
+  await assert.rejects(supersede(deps, original.id, { by: 'Ada Lovelace' }), (err) => {
+    assert.equal(err.code, 'USAGE');
+    assert.match(err.message, /needs --with/);
+    return true;
+  });
+
+  await assert.rejects(
+    supersede(deps, original.id, { by: 'Ada Lovelace', with: 'DEC-0000000000' }),
+    (err) => {
+      assert.equal(err.code, 'USAGE');
+      assert.match(err.message, /not found: DEC-0000000000/);
+      return true;
+    },
+  );
 });
 
 test('promote: to "supported" needs no decision', async () => {

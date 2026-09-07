@@ -1,0 +1,12 @@
+{
+  "schema": "phdude.method",
+  "version": 1,
+  "id": "METH-0123456789",
+  "created": "2026-09-07T00:00:00Z",
+  "actor": { "researcher": "ada" },
+  "name": "Grounded theory",
+  "design": "",
+  "paradigm": "vibes",
+  "questions": [],
+  "state": "candidate"
+}

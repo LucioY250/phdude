@@ -1,0 +1,19 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-e53f6d83dc
+created: 2026-09-01T00:00:45.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Cross-institutional evidence points to consistently high adoption.
+kind: literature
+state: candidate
+supported_by:
+  - EVID-495666361d
+questions:
+  - RQ-3
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from: []

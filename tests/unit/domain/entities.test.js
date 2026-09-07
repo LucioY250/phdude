@@ -9,6 +9,7 @@ import {
   newQuestion,
   newHypothesis,
   newDecision,
+  newMethod,
 } from '../../../src/domain/entities.js';
 import { assertValid } from '../../../src/schemas/index.js';
 import { PhdudeError } from '../../../src/domain/errors.js';
@@ -318,4 +319,121 @@ test('newDecision: rejects empty rationale', () => {
       }),
     PhdudeError,
   );
+});
+
+test('newMethod: schema-valid output with defaults', () => {
+  const method = newMethod({
+    name: 'Cross-sectional survey',
+    paradigm: 'quantitative',
+    actor,
+    created,
+  });
+  assertValid('method', method);
+  assert.match(method.id, /^METH-[0-9a-f]{10}$/);
+  assert.equal(method.state, 'candidate');
+  assert.equal(method.design, '');
+  assert.deepEqual(method.instruments, []);
+  assert.deepEqual(method.analysis, []);
+  assert.deepEqual(method.limitations, []);
+  assert.deepEqual(method.questions, []);
+  assert.equal(method.sampling, undefined, 'sampling is omitted when it was not given');
+});
+
+test('newMethod: keeps the optional fields it is given', () => {
+  const method = newMethod({
+    name: 'Semi-structured interviews',
+    design: 'Twelve interviews across three faculties.',
+    paradigm: 'qualitative',
+    sampling: 'purposive',
+    instruments: ['interview guide v2'],
+    analysis: ['thematic analysis'],
+    limitations: ['single institution'],
+    questions: ['RQ-1'],
+    actor,
+    created,
+  });
+  assertValid('method', method);
+  assert.equal(method.sampling, 'purposive');
+  assert.deepEqual(method.questions, ['RQ-1']);
+});
+
+test('newMethod: the id comes from the normalized name alone', () => {
+  const a = newMethod({
+    name: 'Cross-Sectional   Survey',
+    paradigm: 'quantitative',
+    actor,
+    created,
+  });
+  const b = newMethod({
+    name: 'cross-sectional survey',
+    paradigm: 'mixed',
+    design: 'a different design',
+    actor,
+    created,
+  });
+  assert.equal(a.id, b.id, 'the name is the whole id material');
+  assert.notEqual(
+    a.id,
+    newMethod({ name: 'Field experiment', paradigm: 'mixed', actor, created }).id,
+  );
+});
+
+test('newMethod: rejects an empty name', () => {
+  assert.throws(
+    () => newMethod({ name: '   ', paradigm: 'quantitative', actor, created }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'VALIDATION');
+      return true;
+    },
+  );
+});
+
+test('newClaim: provenance defaults to manual when the CLI is the agent', () => {
+  const claim = newClaim({
+    statement: 'A claim typed by a researcher',
+    actor: { researcher: 'ada', agent: 'cli' },
+    created,
+  });
+  assertValid('claim', claim);
+  assert.deepEqual(claim.provenance, { method: 'manual', derived_from: [] });
+});
+
+test('newClaim: provenance defaults to agent-extraction for any other agent', () => {
+  const claim = newClaim({
+    statement: 'A claim extracted by an agent',
+    actor: { researcher: 'ada', agent: 'claude-code' },
+    created,
+  });
+  assert.equal(claim.provenance.method, 'agent-extraction');
+});
+
+test('newClaim: derived_from lands in provenance and an explicit provenance wins', () => {
+  const derived = newClaim({
+    statement: 'A derived claim',
+    derived_from: ['ART-1111111111'],
+    actor,
+    created,
+  });
+  assert.deepEqual(derived.provenance.derived_from, ['ART-1111111111']);
+
+  const explicit = newClaim({
+    statement: 'An imported claim',
+    derived_from: ['ART-1111111111'],
+    provenance: { method: 'imported', derived_from: ['ART-2222222222'] },
+    actor,
+    created,
+  });
+  assert.deepEqual(explicit.provenance, { method: 'imported', derived_from: ['ART-2222222222'] });
+});
+
+test('newEvidence: provenance defaults the same way and stays out of the id material', () => {
+  const base = { source: 'SRC-0000000000', excerpt: 'an excerpt', created };
+  const manual = newEvidence({ ...base, actor: { researcher: 'ada', agent: 'cli' } });
+  const extracted = newEvidence({ ...base, actor: { researcher: 'ada', agent: 'codex' } });
+
+  assertValid('evidence', manual);
+  assert.equal(manual.provenance.method, 'manual');
+  assert.equal(extracted.provenance.method, 'agent-extraction');
+  assert.equal(manual.id, extracted.id, 'provenance is not part of the id');
 });

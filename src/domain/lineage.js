@@ -7,12 +7,38 @@ const RELATIONS = {
   'phdude.fact': [{ field: 'from.artifact', rel: 'from', multi: false }],
   'phdude.source': [{ field: 'artifacts', rel: 'has_artifact', multi: true }],
   'phdude.hypothesis': [{ field: 'questions', rel: 'addresses', multi: true }],
+  'phdude.method': [{ field: 'questions', rel: 'addresses', multi: true }],
   'phdude.decision': [{ field: 'affects', rel: 'affects', multi: true }],
   'phdude.artifact': [{ field: 'versions_of', rel: 'version_of', multi: false }],
 };
 
 function readField(obj, path) {
   return path.split('.').reduce((v, key) => v?.[key], obj);
+}
+
+// `contradicts` is recorded on both claims (symmetric), but as a related object rather than a
+// dependency it must appear once per pair, not once per side. The pair is represented with the
+// lower id first regardless of which claim's field produced it, so both sides collapse to the
+// same edge and de-dupe correctly.
+function contradictsRelations(nodes) {
+  const edges = [];
+  const dangling = [];
+  const seen = new Set();
+
+  for (const obj of nodes.values()) {
+    if (obj.schema !== 'phdude.claim') continue;
+    for (const to of obj.contradicts ?? []) {
+      const [lo, hi] = obj.id < to ? [obj.id, to] : [to, obj.id];
+      const key = `${lo} ${hi}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const edge = { from: lo, to: hi, rel: 'contradicts' };
+      if (nodes.has(to)) edges.push(edge);
+      else dangling.push(edge);
+    }
+  }
+
+  return { edges, dangling };
 }
 
 /**
@@ -41,6 +67,10 @@ export function buildGraph(objects) {
     }
   }
 
+  const contradicts = contradictsRelations(nodes);
+  edges.push(...contradicts.edges);
+  dangling.push(...contradicts.dangling);
+
   return { nodes, edges, dangling };
 }
 
@@ -64,14 +94,27 @@ function bfsCollect(graph, start, neighborsOf) {
 }
 
 /**
+ * `up` is what an object depends on (outgoing edges), `down` is what depends on it (incoming
+ * edges) - except `contradicts`, which is not a dependency in either direction: it is a related
+ * object, so it is reported in `down` for both claims in the pair and never in `up`.
  * @param {{nodes: Map<string, object>, edges: {from: string, to: string, rel: string}[]}} graph
  * @param {string} id
  * @returns {{ up: string[], down: string[] }}
  */
 export function trace(graph, id) {
   if (!graph.nodes.has(id)) return { up: [], down: [] };
-  const outNeighbors = (nodeId) => graph.edges.filter((e) => e.from === nodeId).map((e) => e.to);
-  const inNeighbors = (nodeId) => graph.edges.filter((e) => e.to === nodeId).map((e) => e.from);
+
+  const directional = graph.edges.filter((e) => e.rel !== 'contradicts');
+  const symmetric = graph.edges.filter((e) => e.rel === 'contradicts');
+
+  const outNeighbors = (nodeId) => directional.filter((e) => e.from === nodeId).map((e) => e.to);
+  const inNeighbors = (nodeId) => [
+    ...directional.filter((e) => e.to === nodeId).map((e) => e.from),
+    ...symmetric
+      .filter((e) => e.from === nodeId || e.to === nodeId)
+      .map((e) => (e.from === nodeId ? e.to : e.from)),
+  ];
+
   return {
     up: bfsCollect(graph, id, outNeighbors),
     down: bfsCollect(graph, id, inNeighbors),

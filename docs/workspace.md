@@ -31,8 +31,10 @@ my-research/
 │   └── results/    RESULT-*.yaml
 ├── research/
 │   ├── questions/  RQ-*.yaml
-│   └── hypotheses/ H-*.yaml
+│   ├── hypotheses/ H-*.yaml
+│   └── methods/    METH-*.yaml
 ├── decisions/      DEC-*.yaml
+├── references.bib                # written by `phdude cite export`; derived, and gitignored
 ├── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
 └── .gitignore
 ```
@@ -42,6 +44,7 @@ my-research/
 ```yaml
 schema: phdude.project
 version: 1
+workspace_version: 2
 title: Adaptive scheduling in edge clusters
 language: en
 fields: [computer-science]
@@ -54,6 +57,18 @@ packs_recommended: [quantitative]
 
 `fields` and `methods` are applied packs. `packs_recommended` is what `phdude packs detect`
 suggested; it is a recommendation until you run `phdude packs apply`.
+
+### `workspace_version`
+
+`version: 1` is the schema of this file. `workspace_version` is the shape of the whole
+directory, and it is what `phdude migrate` moves forward. A workspace without the field is
+version 1 (everything v0.1 wrote); the current version is 2. Versioning the workspace rather
+than each object keeps an additive field — `provenance`, `contradicts` — from turning into a
+breaking change for every reader; see [ADR 6](adr/0006-workspace-versioning-and-migrations.md).
+
+Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 2)`.
+Writes stop until you run `phdude migrate`, which is deliberately a command you run rather than
+something that happens to your files while you were asking for something else.
 
 ## What is yours and what PhDude manages
 
@@ -77,13 +92,14 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Object | Id | Key fields |
 |---|---|---|
 | Artifact | `ART-<hash10>` | `path`, `paths[]`, `hash`, `bytes`, `mime`, `kind`, `extracted`, `role` |
-| Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]` |
-| Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]` |
-| Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength` |
+| Source | `SRC-<hash10>` | `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `type`, `artifacts[]`, `bibkey?`, `abstract?`, `keywords[]?`, `identifiers?{doi,isbn,arxiv,pmid,url}` |
+| Claim | `CLAIM-<hash10>` | `statement`, `kind`, `supported_by[]`, `questions[]`, `sections[]`, `provenance` |
+| Evidence | `EVID-<hash10>` | `source`, `locator`, `excerpt`, `strength`, `provenance` |
 | Fact | `FACT-<hash10>` | `key`, `value`, `unit`, `from {artifact, locator}` |
 | Result | `RESULT-<hash10>` | `summary`, `from`, `values{}` |
 | ResearchQuestion | `RQ-<n>` | `text`, `objectives[]` |
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
+| Method | `METH-<hash10>` | `name`, `design`, `paradigm`, `sampling`, `instruments[]`, `analysis[]`, `limitations[]`, `questions[]` |
 | Decision | `DEC-<hash10>` | `title`, `rationale`, `proposed_by`, `approved_by[]`, `status`, `change`, `affects[]` |
 
 Ids are derived from content, so the same claim added twice is one file. See
@@ -97,7 +113,8 @@ Ids are derived from content, so the same claim added twice is one file. See
 - **`supported`** — evidence exists and a human has looked at it.
 - **`canonical`** — established project knowledge. Only reachable through an approved
   Decision that names the object in `affects`.
-- **`disputed`** — a conflict is open; never silently pick a side.
+- **`disputed`** — a conflict is open; never silently pick a side. Claims reach this state
+  automatically via `phdude link --contradicts` (below), never by hand.
 - **`rejected`** — do not cite as knowledge.
 
 The state is not decoration. It tells the agent how strongly it is allowed to write about
@@ -115,7 +132,42 @@ resolution, so a later revision of a source can never be silently absorbed into 
 nobody made about it. `phdude next` suggests a `decide propose` command whose `--affects`
 already lists every Fact in the group.
 
+## Claim contradictions
+
+`phdude link CLAIM-a --contradicts CLAIM-b` (PRD §3.5, §38) records that two claims cannot
+both be true. The relation is symmetric - `contradicts` is written to both claims - and each
+side moves to `disputed` when its current state allows it (`candidate`/`supported`/`canonical`
+all do; `rejected` and already-`disputed` claims are left alone). A `canonical` claim can be
+disputed this way with no Decision required: surfacing a contradiction is proactive by design
+(PRD §3.3), unlike changing what a canonical claim says.
+
+`phdude status` lists a disputed pair while neither side has been `rejected`. A single
+Decision must not rehabilitate both sides of a dispute, so resolving one names a survivor: an
+approved Decision whose `change.resolves_contradiction` names both claims in the pair and
+`change.survivor` names which one wins. The survivor cannot be promoted until every other claim
+the Decision names that it still contradicts is `rejected` - reject the loser first with
+`phdude promote CLAIM-b --to rejected` (no Decision needed for that step), then
+`phdude promote CLAIM-a --to supported --decision DEC-x` moves the survivor on. Promoting the
+loser with the same Decision is refused, naming the survivor instead. The `contradicts` entry
+itself is never removed; once resolved it stays as history of the dispute.
+
 ## Provenance and the audit trail
+
+Claims and evidence carry a `provenance` block saying how the record came to exist:
+
+```yaml
+provenance:
+  method: agent-extraction # or manual, or imported
+  derived_from:
+    - ART-35146e2f6d
+```
+
+`method` is `manual` when a human typed the object at the CLI, `agent-extraction` when an
+agent host recorded it, and `imported` for objects that predate the field (`phdude migrate`
+fills those in). `derived_from` lists the artifacts behind it: for evidence, the artifact it
+cites or the artifacts of its source; for a claim, the union of its evidence's. `phdude
+knowledge trace` prints it, which is how "who says so, and from what?" gets answered without
+opening a file.
 
 `.phdude/events.jsonl` gets exactly one line per mutating command:
 
@@ -125,6 +177,19 @@ already lists every Fact in the group.
 
 It is committed, append-only, and independent of git history, so a rebase cannot erase who
 recorded what. Git history complements it with the full content of each change.
+
+## Derived files
+
+Two things in the workspace are outputs rather than knowledge, and both can be deleted and
+rebuilt: `.phdude/cache/` (below) and `references.bib` / `references.json`, written at the
+workspace root by `phdude cite export`.
+
+The default `.gitignore` covers both, since committing a file that is one command away from
+being regenerated only creates merge conflicts. The export covers every source, cited or not. It
+records no event, because nothing about the research changed when you wrote it, and it is never
+the thing you cite: a claim rests on an `EVID-` id which names a `SRC-` id, and the bibkey is
+only how that source is printed. An export older than the sources it came from is stale — re-run
+`phdude cite check`, then export again, rather than editing the `.bib` by hand.
 
 ## The cache
 

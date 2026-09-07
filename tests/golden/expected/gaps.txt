@@ -1,0 +1,38 @@
+HIGH (5):
+  - [claim-without-evidence] CLAIM-3d035aa05b
+    Why: CLAIM-3d035aa05b has no evidence
+    Command: phdude link CLAIM-3d035aa05b --to <EVID-id>
+  - [claim-without-evidence] CLAIM-8ad284d305
+    Why: CLAIM-8ad284d305 has no evidence
+    Command: phdude link CLAIM-8ad284d305 --to <EVID-id>
+  - [disputed-pair] CLAIM-84dc3cdd04/CLAIM-9f7abf99e9
+    Why: CLAIM-84dc3cdd04 and CLAIM-9f7abf99e9 contradict each other and neither has been rejected
+    Command: phdude decide propose --title "Resolve contradiction between CLAIM-84dc3cdd04 and CLAIM-9f7abf99e9" --rationale "…" --affects CLAIM-84dc3cdd04 CLAIM-9f7abf99e9 --change '{"resolves_contradiction":["CLAIM-84dc3cdd04","CLAIM-9f7abf99e9"],"survivor":"CLAIM-84dc3cdd04"}'
+  - [open-conflict] sample_size
+    Why: sample_size has an open conflict: 312 participants (ART-35146e2f6d, ART-0772a215de) vs 300 participants (ART-f7ced78004)
+    Command: phdude decide propose --title "Resolve sample_size" --rationale "…" --affects FACT-2bc4462edb FACT-54af7fa906 FACT-f62e1a2f34 --change '{"fact_key":"sample_size","canonical_value":…}'
+  - [question-without-claims] RQ-2
+    Why: RQ-2 has 0 claims addressing it
+    Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-2"]}'
+
+MEDIUM (4):
+  - [claim-weak-evidence] CLAIM-a07065ff83
+    Why: CLAIM-a07065ff83 is supported only by weak evidence: EVID-76dc191034
+    Command: phdude add evidence --json '{"source":"<SRC-id>","excerpt":"…","strength":"strong"}'
+  - [hypothesis-untested] H-1
+    Why: H-1 has no claim addressing any of its question(s): RQ-2
+    Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-2"]}'
+  - [question-only-candidates] RQ-3
+    Why: RQ-3's 1 claim(s) are all still candidate: CLAIM-e53f6d83dc
+    Command: phdude promote CLAIM-e53f6d83dc --to supported
+  - [question-without-method] RQ-2
+    Why: RQ-2 has no method addressing it
+    Command: phdude add method --json '{"name":"…","design":"…","paradigm":"quantitative","questions":["RQ-2"]}'
+
+LOW (2):
+  - [artifact-unmined] ART-d93aa9cdea
+    Why: ART-d93aa9cdea (role: notes) is not referenced by any source, fact, or evidence
+    Command: phdude add fact --json '{"key":"…","value":"…","from":{"artifact":"ART-d93aa9cdea"}}'
+  - [uncited-source] SRC-8295946d20
+    Why: SRC-8295946d20 is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"SRC-8295946d20","excerpt":"…","strength":"moderate"}'

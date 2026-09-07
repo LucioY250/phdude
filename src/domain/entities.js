@@ -25,6 +25,17 @@ export function mimeFor(kind) {
   return ARTIFACT_MIME[kind] ?? ARTIFACT_MIME.other;
 }
 
+// Who produced the record, recorded on the record itself so a reader never has to guess later.
+// Only the CLI's own actor counts as manual: anything running under an agent host is an
+// extraction until a human says otherwise, which is the safe direction to be wrong in.
+function provenanceOf(provenance, actor, derived_from) {
+  if (provenance !== undefined) return provenance;
+  return {
+    method: actor?.agent === 'cli' ? 'manual' : 'agent-extraction',
+    derived_from,
+  };
+}
+
 /**
  * @param {object} p
  * @param {string} p.id
@@ -71,6 +82,8 @@ export function newArtifact({ id, path, hash, bytes, kind, mtime, actor, created
  * @param {string[]} [p.questions]
  * @param {string[]} [p.sections]
  * @param {string[]} [p.tags]
+ * @param {object} [p.provenance]
+ * @param {string[]} [p.derived_from] - ids the provenance defaults to when none is given
  * @param {object} p.actor
  * @param {string} p.created
  * @returns {object} a schema-valid `phdude.claim`
@@ -82,6 +95,8 @@ export function newClaim({
   questions = [],
   sections = [],
   tags = [],
+  provenance,
+  derived_from = [],
   actor,
   created,
 }) {
@@ -99,6 +114,7 @@ export function newClaim({
     supported_by,
     questions,
     sections,
+    provenance: provenanceOf(provenance, actor, derived_from),
   };
 }
 
@@ -109,6 +125,8 @@ export function newClaim({
  * @param {string} p.excerpt
  * @param {string} [p.strength]
  * @param {string[]} [p.tags]
+ * @param {object} [p.provenance]
+ * @param {string[]} [p.derived_from] - ids the provenance defaults to when none is given
  * @param {object} p.actor
  * @param {string} p.created
  * @returns {object} a schema-valid `phdude.evidence`
@@ -119,6 +137,8 @@ export function newEvidence({
   excerpt,
   strength = 'unknown',
   tags = [],
+  provenance,
+  derived_from = [],
   actor,
   created,
 }) {
@@ -135,6 +155,7 @@ export function newEvidence({
     excerpt: text,
     strength,
     state: 'candidate',
+    provenance: provenanceOf(provenance, actor, derived_from),
   };
 }
 
@@ -184,6 +205,10 @@ export function newFact({ key, value, unit, from, tags = [], actor, created }) {
  * @param {string} [p.type]
  * @param {string[]} [p.artifacts]
  * @param {string[]} [p.tags]
+ * @param {string} [p.bibkey]
+ * @param {string} [p.abstract]
+ * @param {string[]} [p.keywords]
+ * @param {{doi?: string, isbn?: string, arxiv?: string, pmid?: string, url?: string}} [p.identifiers]
  * @param {object} p.actor
  * @param {string} p.created
  * @returns {object} a schema-valid `phdude.source`
@@ -198,6 +223,10 @@ export function newSource({
   type = 'article',
   artifacts = [],
   tags = [],
+  bibkey,
+  abstract,
+  keywords,
+  identifiers,
   actor,
   created,
 }) {
@@ -219,6 +248,10 @@ export function newSource({
   if (venue !== undefined) source.venue = venue;
   if (doi !== undefined) source.doi = doi;
   if (url !== undefined) source.url = url;
+  if (bibkey !== undefined) source.bibkey = bibkey;
+  if (abstract !== undefined) source.abstract = abstract;
+  if (keywords !== undefined) source.keywords = keywords;
+  if (identifiers !== undefined) source.identifiers = identifiers;
   return source;
 }
 
@@ -296,6 +329,57 @@ export function newHypothesis({ n, text, questions = [], tags = [], actor, creat
     questions,
     state: 'candidate',
   };
+}
+
+/**
+ * @param {object} p
+ * @param {string} p.name
+ * @param {string} [p.design]
+ * @param {string} [p.paradigm]
+ * @param {string} [p.sampling]
+ * @param {string[]} [p.instruments]
+ * @param {string[]} [p.analysis]
+ * @param {string[]} [p.limitations]
+ * @param {string[]} [p.questions]
+ * @param {string[]} [p.tags]
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.method`
+ */
+export function newMethod({
+  name,
+  design = '',
+  paradigm = 'other',
+  sampling,
+  instruments = [],
+  analysis = [],
+  limitations = [],
+  questions = [],
+  tags = [],
+  actor,
+  created,
+}) {
+  const text = requireText('name', name);
+  // The name alone is the identity: a study has one "cross-sectional survey", and describing
+  // its design differently later must correct that record rather than mint a second one.
+  const method = {
+    schema: 'phdude.method',
+    version: 1,
+    id: makeId('method', text),
+    created,
+    actor,
+    tags,
+    name: text,
+    design,
+    paradigm,
+    instruments,
+    analysis,
+    limitations,
+    questions,
+    state: 'candidate',
+  };
+  if (sampling !== undefined) method.sampling = sampling;
+  return method;
 }
 
 /**

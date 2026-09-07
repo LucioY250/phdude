@@ -1,0 +1,17 @@
+{
+  "schema": "phdude.method",
+  "version": 1,
+  "id": "METH-0123456789",
+  "created": "2026-09-07T00:00:00Z",
+  "actor": { "researcher": "ada", "agent": "cli" },
+  "tags": [],
+  "name": "Cross-sectional survey",
+  "design": "One wave across three campuses, self-administered online.",
+  "paradigm": "quantitative",
+  "sampling": "stratified random sample of enrolled undergraduates",
+  "instruments": ["adoption questionnaire v2"],
+  "analysis": ["descriptive statistics", "chi-squared tests"],
+  "limitations": ["single country"],
+  "questions": ["RQ-1"],
+  "state": "candidate"
+}

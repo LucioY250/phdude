@@ -1,7 +1,7 @@
 schema: phdude.claim
 version: 1
 id: CLAIM-8ad284d305
-created: 2026-09-01T00:00:17.000Z
+created: 2026-09-01T00:00:39.000Z
 actor:
   researcher: example
   agent: script
@@ -12,3 +12,6 @@ state: candidate
 supported_by: []
 questions: []
 sections: []
+provenance:
+  method: agent-extraction
+  derived_from: []

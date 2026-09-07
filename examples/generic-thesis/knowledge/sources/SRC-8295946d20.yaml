@@ -1,0 +1,15 @@
+schema: phdude.source
+version: 1
+id: SRC-8295946d20
+created: 2026-09-01T00:00:14.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Longitudinal Trends in Student Mobile Device Usage
+authors:
+  - E. Epsilon
+type: preprint
+artifacts: []
+state: candidate
+year: 2023

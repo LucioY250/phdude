@@ -6,19 +6,25 @@ import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
 import { detectKind, parserFor, PARSERS } from '../documents/index.js';
 import { DEFAULT_PACKS_DIR, discoverPacks } from '../packs/loader.js';
+import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
+import { discoverSkills, loadSkill } from '../skills/loader.js';
 import { FsStore } from '../store/fs-store.js';
-import { read, walk } from '../store/fs-walk.js';
+import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
 import { printJson } from './output.js';
 import add from './commands/add.js';
 import bootstrap from './commands/bootstrap.js';
+import cite from './commands/cite.js';
 import decide from './commands/decide.js';
 import doctor from './commands/doctor.js';
+import gaps from './commands/gaps.js';
 import help, { usage } from './commands/help.js';
 import ingest from './commands/ingest.js';
 import init from './commands/init.js';
 import knowledge from './commands/knowledge.js';
 import link from './commands/link.js';
+import matrix from './commands/matrix.js';
+import migrate from './commands/migrate.js';
 import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
@@ -30,12 +36,16 @@ const { version } = createRequire(import.meta.url)('../../../package.json');
 const COMMANDS = {
   add,
   bootstrap,
+  cite,
   decide,
   doctor,
+  gaps,
   ingest,
   init,
   knowledge,
   link,
+  matrix,
+  migrate,
   mode,
   next,
   packs,
@@ -68,10 +78,13 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
   const deps = {
     store,
     git: gitAdapter,
-    fs: { walk, read },
+    fs: { walk, read, realpath },
     parsers: { detectKind, parserFor },
     parserAdapters: PARSERS,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
+    discoverSkills,
+    loadSkill,
+    skillsDir: DEFAULT_SKILLS_DIR,
     clock: () => new Date().toISOString(),
     actor,
     schemaTypes: SCHEMA_TYPES,
@@ -155,7 +168,10 @@ export async function run(argv, { stdout, stderr, cwd, env }) {
     } else if (result.text) {
       stdout.write(result.text.endsWith('\n') ? result.text : `${result.text}\n`);
     }
-    return 0;
+    // A handler that succeeded (no PhdudeError thrown) but found something wrong - `cite
+    // check`'s failed findings - still prints its full report rather than an error shape, so
+    // it opts into a non-zero exit this way instead of throwing.
+    return result.exitCode ?? 0;
   } catch (err) {
     return writeError(err, { stderr, json, env });
   }

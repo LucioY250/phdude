@@ -4,6 +4,7 @@ import { makeId } from '../domain/ids.js';
 import { newArtifact, mimeFor } from '../domain/entities.js';
 import { linkVersions } from '../domain/versions.js';
 import { PhdudeError } from '../domain/errors.js';
+import { assertUpToDate } from './guard.js';
 
 function toRelPath(root, absPath) {
   return relative(root, absPath).split(sep).join('/');
@@ -70,24 +71,69 @@ async function writeCache(store, id, hash, kind, parsed) {
   }
 }
 
+// Everything PhDude itself writes. Ingesting these would re-import the knowledge base as
+// source material: an artifact per claim file, the extracted text of every decision, and a
+// cache of the workspace's own YAML.
+const NOT_SOURCES = new Set([
+  'knowledge',
+  'research',
+  'decisions',
+  '.phdude',
+  '.claude',
+  'authors',
+  'manuscript',
+  'outputs',
+  'phdude.yaml',
+  'AGENTS.md',
+  'CLAUDE.md',
+  '.gitignore',
+]);
+
+function outsideWorkspace(requestedPath) {
+  return new PhdudeError(
+    'USAGE',
+    `path is outside the workspace: ${requestedPath}`,
+    'copy the files into sources/ first',
+  );
+}
+
 // The slash commands hand the agent `Bash(phdude:*)` as a narrow capability, so ingest must
 // not become an arbitrary file read plus copy-into-repo: contain every requested path under
 // the workspace the way the pack loader contains skill paths.
 function resolveInsideRoot(store, requestedPath) {
   const absPath = resolve(store.root, requestedPath);
   const back = relative(store.root, absPath);
-  if (back.startsWith('..') || isAbsolute(back)) {
+  if (back.startsWith('..') || isAbsolute(back)) throw outsideWorkspace(requestedPath);
+  if (back !== '' && NOT_SOURCES.has(back.split(sep)[0])) {
     throw new PhdudeError(
       'USAGE',
-      `path is outside the workspace: ${requestedPath}`,
-      'copy the files into sources/ first',
+      `not a source path: ${requestedPath}`,
+      'put research materials under sources/',
     );
   }
   return absPath;
 }
 
+// Lexical containment cannot see through a symlink: `sources/escape` may resolve anywhere.
+// The walker refuses to follow links, and this refuses to start behind one.
+async function assertRealPathInsideRoot(fs, store, requestedPath, absPath) {
+  let realRoot;
+  let realPath;
+  try {
+    realRoot = await fs.realpath(store.root);
+    realPath = await fs.realpath(absPath);
+  } catch (err) {
+    // A path that does not exist yet is the walker's error to report, with its own hint.
+    if (err && err.code === 'ENOENT') return;
+    throw err;
+  }
+  const back = relative(realRoot, realPath);
+  if (back.startsWith('..') || isAbsolute(back)) throw outsideWorkspace(requestedPath);
+}
+
 async function collectFiles(fs, store, requestedPath) {
   const absPath = resolveInsideRoot(store, requestedPath);
+  await assertRealPathInsideRoot(fs, store, requestedPath, absPath);
   const files = [];
   const symlinks = [];
   try {
@@ -198,7 +244,7 @@ function toInventory(artifacts) {
 }
 
 /**
- * @param {{store: object, fs: {walk: Function, read: Function}, parsers: {detectKind: Function, parserFor: Function}, clock: Function, actor: object}} deps
+ * @param {{store: object, fs: {walk: Function, read: Function, realpath: Function}, parsers: {detectKind: Function, parserFor: Function}, clock: Function, actor: object}} deps
  * @param {{paths?: string[], force?: boolean}} opts
  * @returns {Promise<{artifacts: object[], inventory: object[], skipped: string[], warnings: string[]}>}
  */
@@ -206,10 +252,15 @@ export async function ingest(
   { store, fs, parsers, clock, actor },
   { paths = ['sources'], force = false } = {},
 ) {
+  assertUpToDate(await store.readProject());
+
   const discovered = [];
   const symlinks = [];
   for (const p of paths) {
-    const found = await collectFiles(fs, store, p);
+    // `phdude ingest .` means "everything I dropped in", not "read your own knowledge base
+    // back in as source material", so the root stands for sources/.
+    const requested = resolve(store.root, p) === resolve(store.root) ? 'sources' : p;
+    const found = await collectFiles(fs, store, requested);
     discovered.push(...found.files);
     symlinks.push(...found.symlinks);
   }

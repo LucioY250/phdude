@@ -51,16 +51,59 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 
 ## The only way to write
 
-Write to the workspace ONLY via `phdude add`, `phdude link`, `phdude decide`, `phdude promote`,
-`phdude packs apply`, or `phdude mode`. (`phdude init` creates the workspace and `phdude ingest`
-writes the artifact inventory and its cache — expected setup steps, not knowledge edits.) Every
-other command only reads or derives from what is already recorded. Never write YAML files
+Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude link CLAIM-a
+--contradicts CLAIM-b`), `phdude decide`, `phdude promote`, `phdude packs apply`, or
+`phdude mode`. (`phdude init` creates the workspace and `phdude ingest` writes the artifact
+inventory and its cache — expected setup steps, not knowledge edits. `phdude cite export`
+writes `references.bib` or `references.json` at the workspace root, a derived file that records
+no event and is never a substitute for the `SRC-` id itself.) Every other command —
+`phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `packs list|detect`,
+`doctor`, `help` — only reads or derives from what is already recorded. Never write YAML files
 directly, even to "fix a typo".
+
+## Contradictions are recorded, not resolved by you
+
+When two claims cannot both be true, record the contradiction rather than picking one:
+`phdude link CLAIM-a --contradicts CLAIM-b`. This moves both to `disputed` (a `canonical`
+claim included, no Decision required — surfacing a contradiction is proactive by design, PRD
+§3.3) and needs no researcher approval. A single Decision must never rehabilitate both sides:
+getting a claim back out of `disputed` needs an approved Decision naming a `survivor` in
+`change.survivor`, and the loser must be rejected (`promote … --to rejected`, no Decision
+needed) before the survivor can be promoted; see `[[decisions]]`. Never promote one side of a
+live contradiction without that Decision, and never present a `disputed` claim as settled in
+either direction.
 
 Ids are derived from content, so `phdude add` cannot correct an object that already exists:
 re-adding it returns the original record unchanged. To attach evidence, a research question
 or an artifact after the fact, use `phdude link <id> --to <id>…`. To change anything else,
 propose a Decision.
+
+## Provenance
+
+The CLI records where every claim and evidence item came from: `provenance.method`
+(`manual` when a researcher typed it, `agent-extraction` when you did, `imported` for records
+that predate the field) and `provenance.derived_from`, the artifacts behind it. You do not
+have to set it, and you must not fake it. When you already know what a record was derived from
+and the default would miss it — an excerpt you read in one artifact but attributed to a source
+that lists several — say so by passing `provenance` explicitly on `phdude add`. Read it back
+with `phdude knowledge trace <id>` before presenting a claim as established: an
+`agent-extraction` claim with an empty `derived_from` rests on nothing you can point at.
+
+## Methods are recorded, not assumed
+
+How the study was done is a `METH-*` object (`phdude add method`), not something you infer in
+prose each time it comes up. Record the design, paradigm, sampling, instruments, analysis and
+limitations the researcher confirms, link each method to the questions it addresses
+(`phdude link METH-x --to RQ-n`), and when a manuscript sentence describes the methodology,
+take it from that record instead of restating it from memory.
+
+## Migration is the researcher's command
+
+When a command reports `workspace needs migration (1 → 2)`, that message is for the researcher,
+not a problem for you to clear. Reads keep working; every write is refused until it is done.
+Tell them what you saw and ask them to run `phdude migrate` themselves — do not run it, and do
+not pass `--force`. It rewrites files in place and git is the only undo, so whether the tree is
+clean enough for that is their call, not yours.
 
 ## Never fabricate
 

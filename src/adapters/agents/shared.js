@@ -87,22 +87,46 @@ async function readSkill(skillsDir, name) {
   return parseSkill(text);
 }
 
-const COMMAND_ROWS = [
-  ['init', 'Initialize a research workspace.'],
+// The agent-facing command reference (AGENTS.md). One row per command in
+// `adapters/cli/args.js`'s COMMAND_OPTIONS; `tests/unit/cli/surface.test.js` fails when the two
+// drift apart, because an agent that cannot see a command will not run it.
+export const COMMAND_ROWS = [
+  ['init', 'Create a research workspace, or refresh an existing one.'],
   ['bootstrap', 'Ingest, classify artifacts, extract knowledge, then report status and next.'],
   ['ingest', 'Discover, hash, and extract text from files under sources/.'],
-  ['status', 'Show project, inventory, knowledge counts, conflicts, and pending decisions.'],
+  [
+    'status',
+    'Show project, inventory, knowledge counts, conflicts, disputed pairs, and pending decisions.',
+  ],
   ['next', 'Recommend the highest-impact next action.'],
-  ['knowledge list|show|trace', 'Query and trace the knowledge graph.'],
+  ['knowledge list|show|trace', 'Query and trace the knowledge graph, provenance included.'],
   [
     'add <type>',
-    'Add a candidate claim, evidence, fact, source, question, hypothesis, result, or artifact-role.',
+    'Add a candidate claim, evidence, fact, source, question, hypothesis, method, result, or artifact-role.',
   ],
-  ['decide propose|approve|reject', 'Propose a Decision; the researcher approves or rejects it.'],
+  [
+    'link <id> --to <id>...',
+    'Attach evidence, questions or artifacts to an object; --contradicts records a contradiction instead.',
+  ],
+  [
+    'decide propose|approve|reject|supersede',
+    'Propose a Decision; the researcher approves, rejects, or supersedes it.',
+  ],
   ['promote', 'Promote an object to canonical; requires an approved Decision.'],
+  [
+    'cite list|check|export',
+    'Citation registry: list sources, verify them, export BibTeX/CSL-JSON.',
+  ],
+  ['matrix', 'Literature matrix: one row per source, with the questions and claims it reaches.'],
+  [
+    'gaps',
+    'Research gaps: questions, claims, sources, artifacts, and conflicts needing attention.',
+  ],
   ['packs list|detect|apply', 'List, recommend, or apply field/method research packs.'],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
-  ['doctor', 'Report adapter availability, cache state, and schema versions.'],
+  ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
+  ['doctor', 'Report adapter availability, cache state, schema versions, and skill permissions.'],
+  ['help', 'Print the command list, the global options, and the exit codes.'],
 ];
 
 function renderCommandTable() {
@@ -112,7 +136,7 @@ function renderCommandTable() {
 }
 
 // Renders the shared AGENTS.md content: header, project title, phdude-core's operating rules
-// inlined, the v0.1 command reference, then every other skill, sorted for deterministic output.
+// inlined, the command reference, then every other skill, sorted for deterministic output.
 // `inlineSkills: true` (codex, which has no on-demand skill loading) inlines each skill's full
 // body under `## Skill: <name>`. `inlineSkills: false` (Claude Code, which loads
 // `.phdude/skills/<name>/SKILL.md` progressively) instead emits a one-line index per skill, so

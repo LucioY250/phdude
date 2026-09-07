@@ -1,4 +1,5 @@
 import { buildGraph } from '../domain/lineage.js';
+import { migrationWarning } from './guard.js';
 
 const TYPES = [
   ['artifact', 'artifacts'],
@@ -9,6 +10,7 @@ const TYPES = [
   ['result', 'results'],
   ['question', 'questions'],
   ['hypothesis', 'hypotheses'],
+  ['method', 'methods'],
   ['decision', 'decisions'],
 ];
 
@@ -21,6 +23,8 @@ export async function loadSnapshot(store) {
 
   const project = await store.readProject();
   if (project === null) warnings.push('phdude.yaml is missing');
+  const outdated = migrationWarning(project);
+  if (outdated) warnings.push(outdated);
 
   const collections = {};
   for (const [type, key] of TYPES) {

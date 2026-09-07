@@ -10,6 +10,7 @@ export const ID_PREFIXES = {
   decision: 'DEC',
   question: 'RQ',
   hypothesis: 'H',
+  method: 'METH',
 };
 const BY_PREFIX = Object.fromEntries(Object.entries(ID_PREFIXES).map(([t, p]) => [p, t]));
 export function makeId(type, input) {

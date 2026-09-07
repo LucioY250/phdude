@@ -4,7 +4,7 @@
   "$defs": {
     "id": {
       "type": "string",
-      "pattern": "^(ART|SRC|CLAIM|EVID|FACT|RESULT|DEC)-[0-9a-f]{10}$|^(RQ|H)-[0-9]+$"
+      "pattern": "^(ART|SRC|CLAIM|EVID|FACT|RESULT|DEC|METH)-[0-9a-f]{10}$|^(RQ|H)-[0-9]+$"
     },
     "actor": {
       "type": "object",
@@ -16,6 +16,15 @@
       "additionalProperties": false
     },
     "state": { "enum": ["canonical", "supported", "candidate", "disputed", "rejected"] },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "method": { "enum": ["agent-extraction", "manual", "imported"] },
+        "derived_from": { "type": "array", "items": { "$ref": "#/$defs/id" } }
+      },
+      "required": ["method", "derived_from"],
+      "additionalProperties": false
+    },
     "base": {
       "type": "object",
       "properties": {

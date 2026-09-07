@@ -1,5 +1,6 @@
 import { loadSnapshot } from './snapshot.js';
 import { detectFactConflicts } from '../domain/conflicts.js';
+import { disputedPairs } from '../domain/contradictions.js';
 
 const KNOWLEDGE_TYPES = [
   ['source', 'sources'],
@@ -9,6 +10,7 @@ const KNOWLEDGE_TYPES = [
   ['result', 'results'],
   ['question', 'questions'],
   ['hypothesis', 'hypotheses'],
+  ['method', 'methods'],
 ];
 
 function countBy(objs, keyFn) {
@@ -27,12 +29,19 @@ function countBy(objs, keyFn) {
  */
 export async function status({ store }) {
   const snapshot = await loadSnapshot(store);
-  const { project, artifacts, decisions, facts } = snapshot;
+  const { project, artifacts, decisions, facts, claims } = snapshot;
 
   const byType = {};
   for (const [type, key] of KNOWLEDGE_TYPES) {
     const objs = snapshot[key];
     byType[type] = { total: objs.length, byState: countBy(objs, (o) => o.state) };
+  }
+
+  const pairs = disputedPairs(claims);
+  const claimsById = new Map(claims.map((c) => [c.id, c]));
+  const disputedClaims = {};
+  for (const claimId of new Set(pairs.flat())) {
+    disputedClaims[claimId] = claimsById.get(claimId)?.statement ?? '';
   }
 
   return {
@@ -53,6 +62,8 @@ export async function status({ store }) {
     },
     knowledge: { byType },
     conflicts: detectFactConflicts(facts, decisions),
+    disputedPairs: pairs,
+    disputedClaims,
     pendingDecisions: decisions.filter((d) => d.status === 'proposed'),
     recentEvents: snapshot.events.slice(-5),
     warnings: snapshot.warnings,

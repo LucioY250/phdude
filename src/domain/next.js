@@ -1,5 +1,6 @@
 import { buildGraph } from './lineage.js';
 import { openConflicts } from './conflicts.js';
+import { findGaps } from './gaps.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
 const CANDIDATE_BACKLOG_THRESHOLD = 5;
@@ -205,7 +206,45 @@ function ruleQuestionGaps(snapshot) {
   };
 }
 
-function ruleConsistent(hasOtherActions) {
+const GAPS_THRESHOLD = 3;
+
+function gapSummary(gaps) {
+  const counts = { high: 0, medium: 0, low: 0 };
+  for (const g of gaps) counts[g.severity]++;
+  return `${gaps.length} gap(s) found: high=${counts.high}, medium=${counts.medium}, low=${counts.low}`;
+}
+
+// Not a plain RULES member: it reads the gap report rather than the snapshot, and recommendNext
+// shares that one report with ruleConsistent below. A single high-severity gap - a live
+// contradiction, say - outranks the count on its own; the ranking, not the rule, decides where
+// it lands next to the higher-impact rules.
+function ruleGaps(gaps) {
+  const highest = gaps.some((g) => g.severity === 'high');
+  if (!highest && gaps.length < GAPS_THRESHOLD) return null;
+
+  return {
+    rule: 'gaps',
+    action: 'Review the research gaps report',
+    why: [gapSummary(gaps)],
+    impact: 'medium',
+    command: 'phdude gaps',
+    dependents: gaps.length,
+  };
+}
+
+// The last line of a `next` run is the one an agent reads as the verdict, so it must never
+// claim consistency the gap report would contradict.
+function ruleConsistent(hasOtherActions, gaps) {
+  if (gaps.length > 0) {
+    return {
+      rule: 'consistent',
+      action: `${gaps.length} open gap(s); run phdude gaps`,
+      why: [gapSummary(gaps)],
+      impact: 'low',
+      command: '',
+      dependents: 0,
+    };
+  }
   if (hasOtherActions) {
     return {
       rule: 'consistent',
@@ -249,7 +288,12 @@ export function recommendNext(snapshot, conflicts) {
     const action = rule(snapshot, conflicts);
     if (action) scored.push({ action, order });
   });
-  scored.push({ action: ruleConsistent(scored.length > 0), order: RULES.length });
+
+  const gaps = findGaps(snapshot, conflicts);
+  const gapsAction = ruleGaps(gaps);
+  if (gapsAction) scored.push({ action: gapsAction, order: RULES.length });
+
+  scored.push({ action: ruleConsistent(scored.length > 0, gaps), order: RULES.length + 1 });
 
   scored.sort(
     (a, b) =>

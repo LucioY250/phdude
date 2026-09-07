@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
@@ -9,6 +9,7 @@ import { newArtifact } from '../../src/domain/entities.js';
 import { makeId } from '../../src/domain/ids.js';
 import { sha256 } from '../../src/domain/hash.js';
 import { discoverPacks, DEFAULT_PACKS_DIR } from '../../src/adapters/packs/loader.js';
+import { discoverSkills, loadSkill } from '../../src/adapters/skills/loader.js';
 import { list, detect, apply } from '../../src/application/packs.js';
 import { PhdudeError } from '../../src/domain/errors.js';
 
@@ -26,6 +27,7 @@ function makeDeps(root) {
     agentHosts: [],
     clock: () => new Date(Date.UTC(2026, 0, 1, 0, 0, tick++)).toISOString(),
     actor,
+    discoverSkills,
   };
 }
 
@@ -33,7 +35,10 @@ async function newWorkspace() {
   const root = await mkdtemp(join(tmpdir(), 'phdude-packs-'));
   const deps = makeDeps(root);
   await initWorkspace(deps, { title: 'Quant thesis', agents: [], noGit: true });
-  return { root, deps: { ...deps, loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR]) } };
+  return {
+    root,
+    deps: { ...deps, loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR]), loadSkill },
+  };
 }
 
 async function addArtifactWithText(store, clock, text) {
@@ -193,6 +198,53 @@ test('list reports applied: true once a pack has been applied', async () => {
   assert.equal(quantitative.applied, true);
   const qualitative = summary.find((p) => p.name === 'qualitative');
   assert.equal(qualitative.applied, false);
+});
+
+test('apply refuses a pack skill that requests network access unless the workspace policy allows it', async () => {
+  const { root, deps } = await newWorkspace();
+  const skillDir = join(root, 'fake-skill');
+  await mkdir(skillDir, { recursive: true });
+  await writeFile(
+    join(skillDir, 'SKILL.md'),
+    [
+      '---',
+      'name: fake-skill',
+      'description: wants the network',
+      'phdude:',
+      '  version: 1',
+      '  reads: []',
+      '  writes: []',
+      '  permissions:',
+      '    network: allowed',
+      '    workspace: [read]',
+      '---',
+      '# fake-skill',
+    ].join('\n'),
+  );
+  const fakePack = { name: 'fake-pack', kind: 'method', skillPaths: [join(skillDir, 'SKILL.md')] };
+  const rejectingDeps = { ...deps, loadPacks: async () => [fakePack] };
+
+  await assert.rejects(
+    () => apply(rejectingDeps, 'fake-pack'),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'POLICY');
+      assert.equal(err.message, 'skill fake-skill requests network access');
+      return true;
+    },
+  );
+  const onDisk = await deps.store.readProject();
+  assert.deepEqual(onDisk.methods, []);
+
+  const policy = await deps.store.readYaml(join('.phdude', 'research-policy.yaml'));
+  await deps.store.writeYamlAtomic(join('.phdude', 'research-policy.yaml'), {
+    ...policy,
+    skills: { allow_network: true },
+  });
+  const allowingDeps = { ...deps, loadPacks: async () => [fakePack] };
+  const result = await apply(allowingDeps, 'fake-pack');
+  assert.equal(result.applied, true);
+  assert.ok(result.project.methods.includes('fake-pack'));
 });
 
 test('packs list, detect and apply outside a workspace point at init', async () => {

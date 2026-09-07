@@ -10,7 +10,8 @@
         "locator": { "type": "string" },
         "excerpt": { "type": "string" },
         "strength": { "enum": ["strong", "moderate", "weak", "unknown"] },
-        "state": { "$ref": "phdude://common#/$defs/state" }
+        "state": { "$ref": "phdude://common#/$defs/state" },
+        "provenance": { "$ref": "phdude://common#/$defs/provenance" }
       },
       "required": ["source", "excerpt", "strength", "state"]
     }

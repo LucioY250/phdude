@@ -1,0 +1,17 @@
+schema: phdude.evidence
+version: 1
+id: EVID-6c03150777
+created: 2026-09-01T00:00:34.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: ART-f7ced78004
+locator: Results
+excerpt: Reported daily use was slightly lower than in Survey Alpha (Survey Beta).
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-f7ced78004

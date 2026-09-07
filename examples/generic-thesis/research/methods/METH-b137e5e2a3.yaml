@@ -1,0 +1,23 @@
+schema: phdude.method
+version: 1
+id: METH-b137e5e2a3
+created: 2026-09-01T00:00:24.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: Cross-sectional survey
+design: Three independently recruited undergraduate samples, one wave each.
+paradigm: quantitative
+instruments:
+  - note-taking app adoption questionnaire
+analysis:
+  - descriptive comparison of reported daily use
+limitations:
+  - self-reported use
+  - one university system
+questions:
+  - RQ-1
+  - RQ-3
+state: candidate
+sampling: Mailing list, campus social media group, and stratified campus sampling.

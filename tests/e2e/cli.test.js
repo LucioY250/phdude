@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { cp, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { appendFile, cp, mkdtemp, readFile, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const BIN = join(REPO_ROOT, 'bin', 'phdude.js');
 const FIXTURES_DIR = join(REPO_ROOT, 'tests', 'fixtures', 'docs');
+const V01_WORKSPACE = join(REPO_ROOT, 'tests', 'fixtures', 'workspaces', 'v0.1-minimal');
 const ACTOR = ['--actor', 'researcher=tester,agent=e2e'];
 
 function phdude(cwd, args) {
@@ -226,6 +227,17 @@ test('e2e: init, ingest, add, decide, promote, status, next, doctor, mode', asyn
   assert.equal(doctor.schemaVersions.claim, 1);
   assert.ok(doctor.cacheEntries >= 1);
   assert.ok(doctor.packsAvailable.includes('quantitative'));
+  const bootstrapSkill = doctor.skills.find((s) => s.name === 'bootstrap');
+  assert.ok(bootstrapSkill, 'doctor lists the bootstrap skill');
+  // `init` copied it into .phdude/skills/, but the bytes are the shipped ones, so it is still
+  // the core skill; only an edited copy is the workspace's own.
+  assert.equal(bootstrapSkill.source, 'core');
+  assert.deepEqual(bootstrapSkill.permissions, { network: 'none', workspace: ['read'] });
+  assert.deepEqual(bootstrapSkill.warnings, []);
+
+  await appendFile(join(ws, '.phdude', 'skills', 'bootstrap', 'SKILL.md'), '\nlocal note\n');
+  const doctorEdited = await runJson(ws, ['doctor']);
+  assert.equal(doctorEdited.skills.find((s) => s.name === 'bootstrap').source, 'workspace');
 
   // mode persists to phdude.yaml
   await run(ws, ['mode', 'ruthless']);
@@ -476,4 +488,602 @@ test('e2e: errors are typed, and --json reports them as structured output', asyn
   const badJson = await phdude(ws, ['add', 'claim', '--json', '{not json', ...ACTOR]);
   assert.equal(badJson.code, 2);
   assert.match(badJson.stderr, /JSON/);
+});
+
+test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-migrate-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await cp(V01_WORKSPACE, ws, { recursive: true });
+
+  // Reads work on a v0.1 workspace and say what is wrong with it.
+  const before = await runJson(ws, ['status']);
+  assert.equal(before.knowledge.byType.claim.total, 1);
+  assert.ok(before.warnings.includes('workspace needs migration (1 → 2)'));
+
+  // Writes do not, and they name the command that fixes it.
+  const refused = await phdude(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'A claim written before the migration.' }),
+    ...ACTOR,
+  ]);
+  assert.equal(refused.code, 1);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'USAGE');
+  assert.equal(refusal.message, 'workspace needs migration (1 → 2)');
+  assert.equal(refusal.hint, 'run phdude migrate');
+
+  const dryRun = await runJson(ws, ['migrate', '--dry-run']);
+  assert.equal(dryRun.applied, false);
+  assert.equal(dryRun.from, 1);
+  assert.ok(dryRun.steps[0].changed.includes('phdude.yaml'));
+  const stillBehind = await runJson(ws, ['status']);
+  assert.ok(
+    stillBehind.warnings.includes('workspace needs migration (1 → 2)'),
+    'a dry run writes nothing',
+  );
+
+  const applied = await run(ws, ['migrate']);
+  assert.match(applied.stdout, /Migrated workspace 1 → 2/);
+
+  const after = await runJson(ws, ['status']);
+  assert.deepEqual(after.warnings, []);
+  assert.ok(after.recentEvents.some((e) => e.op === 'migrate'));
+
+  const doctor = await runJson(ws, ['doctor']);
+  assert.equal(doctor.workspaceVersion, 2);
+
+  // The write that was refused now goes through.
+  await run(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'A claim written after the migration.' }),
+  ]);
+
+  const second = await run(ws, ['migrate']);
+  assert.match(second.stdout, /Workspace is up to date \(2\)/);
+});
+
+test('e2e: add artifact-role reports the update in text mode', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-role-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Role thesis', '--no-git']);
+  await cp(FIXTURES_DIR, join(ws, 'sources'), { recursive: true });
+  const ingested = await runJson(ws, ['ingest']);
+  const artifact = ingested.artifacts.find((a) => a.kind === 'md');
+
+  // --file, not --json: `--json '<obj>'` also turns on JSON output, so the text verb below is
+  // only ever seen through the file form.
+  const payload = join(ws, 'role.json');
+  await writeFile(payload, JSON.stringify({ id: artifact.id, role: 'paper' }));
+
+  const updated = await run(ws, ['add', 'artifact-role', '--file', payload]);
+  assert.equal(updated.stdout, `Updated ${artifact.id} role → paper\n`);
+
+  const unchanged = await run(ws, ['add', 'artifact-role', '--file', payload]);
+  assert.equal(unchanged.stdout, `Unchanged ${artifact.id}\n`);
+});
+
+test('e2e: a workspace newer than this phdude refuses writes and doctor says so', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-newer-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await run(ws, ['init', '--title', 'From the future', '--no-git']);
+
+  const config = join(ws, 'phdude.yaml');
+  await writeFile(
+    config,
+    (await readFile(config, 'utf8')).replace('workspace_version: 2', 'workspace_version: 3'),
+  );
+
+  const message = 'workspace version 3 is newer than this PhDude (2)';
+
+  // Reads keep working and say what is wrong, the same way an older workspace does.
+  const read = await runJson(ws, ['status']);
+  assert.ok(read.warnings.includes(message));
+
+  const refused = await phdude(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'Written by a build that is behind.' }),
+    ...ACTOR,
+  ]);
+  assert.equal(refused.code, 1);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'USAGE');
+  assert.equal(refusal.message, message);
+  assert.equal(refusal.hint, 'upgrade phdude');
+
+  const report = await runJson(ws, ['doctor']);
+  assert.equal(report.workspaceVersion, 3);
+  assert.ok(report.warnings.includes(message));
+
+  const text = await run(ws, ['doctor']);
+  assert.match(text.stdout, /workspace version: 3 \(newer than this phdude\)/);
+});
+
+test('e2e: methods, provenance and the trace line that reports them', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-method-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Method thesis', '--no-git']);
+  assert.ok(await exists(join(ws, 'research', 'methods')), 'init creates research/methods');
+
+  await cp(FIXTURES_DIR, join(ws, 'sources'), { recursive: true });
+  const ingested = await runJson(ws, ['ingest']);
+  const artifact = ingested.artifacts.find((a) => a.kind === 'md');
+
+  const question = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'Does adoption differ across campuses?' }),
+  ]);
+
+  const method = await runJson(ws, [
+    'add',
+    'method',
+    '--json',
+    JSON.stringify({
+      name: 'Cross-sectional survey',
+      design: 'One wave across three campuses.',
+      paradigm: 'quantitative',
+      sampling: 'stratified random sample',
+      instruments: ['adoption questionnaire v2'],
+      analysis: ['descriptive statistics'],
+      limitations: ['single country'],
+    }),
+  ]);
+  assert.match(method.id, /^METH-[0-9a-f]{10}$/);
+  assert.equal(method.state, 'candidate');
+  assert.ok(await exists(join(ws, 'research', 'methods', `${method.id}.yaml`)));
+
+  const linked = await runJson(ws, ['link', method.id, '--to', question.id]);
+  assert.deepEqual(linked.questions, [question.id]);
+
+  const methods = await runJson(ws, ['knowledge', 'list', '--type', 'method']);
+  assert.deepEqual(
+    methods.map((m) => m.id),
+    [method.id],
+  );
+
+  const status = await runJson(ws, ['status']);
+  assert.equal(status.knowledge.byType.method.total, 1);
+  const statusText = await run(ws, ['status']);
+  assert.match(statusText.stdout, /method: total=1 \(candidate=1\)/);
+
+  // Provenance: an agent-run add records agent-extraction and the artifacts behind it.
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({ title: 'A study of adoption', artifacts: [artifact.id] }),
+  ]);
+  const evidence = await runJson(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({ source: source.id, locator: 'p. 2', excerpt: 'Adoption rose by 14%.' }),
+  ]);
+  assert.deepEqual(evidence.provenance, {
+    method: 'agent-extraction',
+    derived_from: [artifact.id],
+  });
+
+  const claim = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({
+      statement: 'Adoption rose after the intervention.',
+      supported_by: [evidence.id],
+    }),
+  ]);
+  assert.deepEqual(claim.provenance, { method: 'agent-extraction', derived_from: [artifact.id] });
+
+  const traced = await run(ws, ['knowledge', 'trace', claim.id]);
+  assert.match(traced.stdout, new RegExp(`provenance: agent-extraction ← ${artifact.id}`));
+
+  // A researcher typing at the CLI records manual provenance instead.
+  const typed = await phdude(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'A claim the researcher typed.' }),
+    '--actor',
+    'researcher=tester,agent=cli',
+  ]);
+  assert.equal(typed.code, 0);
+  assert.equal(JSON.parse(typed.stdout).provenance.method, 'manual');
+});
+
+test('e2e: an unknown flag exits 1 and lists the flags the command accepts', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-strict-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Strict thesis', '--no-git']);
+
+  const typo = await phdude(ws, ['knowledge', 'list', '--typo', 'x', ...ACTOR]);
+  assert.equal(typo.code, 1);
+  assert.match(typo.stderr, /unknown option --typo for knowledge/);
+  assert.match(typo.stderr, /Suggested action: allowed: .*--query/);
+
+  const wrongCommand = await phdude(ws, ['status', '--rationale', 'x', '--json', ...ACTOR]);
+  assert.equal(wrongCommand.code, 1);
+  const payload = JSON.parse(wrongCommand.stderr).error;
+  assert.equal(payload.code, 'USAGE');
+  assert.equal(payload.message, 'unknown option --rationale for status');
+
+  // The flags each command does document keep working.
+  await run(ws, ['knowledge', 'list', '--type', 'claim', '--state', 'candidate', '--query', 'x']);
+});
+
+test('e2e: supersede names the researcher and the superseding decision', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-supersede-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Supersede thesis', '--no-git']);
+
+  const original = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Adopt 312 as the canonical sample size',
+    '--rationale',
+    'Two surveys agree.',
+  ]);
+  const replacement = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Adopt 300 as the canonical sample size',
+    '--rationale',
+    'The third survey corrects the count.',
+  ]);
+
+  const oldForm = await phdude(ws, [
+    'decide',
+    'supersede',
+    original.id,
+    '--by',
+    replacement.id,
+    ...ACTOR,
+  ]);
+  assert.equal(oldForm.code, 1);
+  assert.match(oldForm.stderr, /--by is the researcher; pass the superseding decision with --with/);
+
+  const superseded = await runJson(ws, [
+    'decide',
+    'supersede',
+    original.id,
+    '--by',
+    'Ada Lovelace',
+    '--with',
+    replacement.id,
+  ]);
+  assert.equal(superseded.status, 'superseded');
+  assert.equal(superseded.change.superseded_by, replacement.id);
+});
+
+test('e2e: ingest . walks sources/ only and refuses a path into the knowledge base', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-scope-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Scoped thesis', '--no-git']);
+  await cp(FIXTURES_DIR, join(ws, 'sources'), { recursive: true });
+  await writeFile(join(ws, 'manuscript', 'chapter-1.md'), '# Chapter 1\n\nDraft prose.\n');
+
+  const ingested = await runJson(ws, ['ingest', '.']);
+  assert.ok(ingested.artifacts.length > 0);
+  for (const a of ingested.inventory) {
+    assert.ok(a.path.startsWith('sources/'), `${a.path} is not under sources/`);
+  }
+
+  const refused = await phdude(ws, ['ingest', 'knowledge', ...ACTOR]);
+  assert.equal(refused.code, 1);
+  assert.match(refused.stderr, /not a source path: knowledge/);
+  assert.match(refused.stderr, /Suggested action: put research materials under sources\//);
+});
+
+test('e2e: link --contradicts disputes both claims and promote requires a resolving decision', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-contradicts-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Contradicts thesis', '--no-git']);
+
+  const claimA = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'The effect of the intervention is positive.' }),
+  ]);
+  const claimB = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({ statement: 'The effect of the intervention is negative.' }),
+  ]);
+
+  const linked = await runJson(ws, ['link', claimA.id, '--contradicts', claimB.id]);
+  assert.equal(linked.linked, true);
+  assert.equal(linked.a.state, 'disputed');
+  assert.equal(linked.b.state, 'disputed');
+
+  const status = await runJson(ws, ['status']);
+  const pair = [claimA.id, claimB.id].sort();
+  assert.deepEqual(status.disputedPairs, [pair]);
+
+  const statusText = await run(ws, ['status']);
+  assert.match(statusText.stdout, /Disputed claims \(1 pair\):/);
+  assert.match(statusText.stdout, new RegExp(`${pair[0]} ⟷ ${pair[1]}`));
+
+  // `--to` and `--contradicts` are mutually exclusive.
+  const conflictingFlags = await phdude(ws, [
+    'link',
+    claimA.id,
+    '--to',
+    claimB.id,
+    '--contradicts',
+    claimB.id,
+    ...ACTOR,
+  ]);
+  assert.equal(conflictingFlags.code, 1);
+  assert.match(conflictingFlags.stderr, /mutually exclusive/);
+
+  // A claim cannot contradict itself.
+  const selfLink = await phdude(ws, ['link', claimA.id, '--contradicts', claimA.id, ...ACTOR]);
+  assert.equal(selfLink.code, 1);
+  assert.match(selfLink.stderr, /cannot contradict itself/);
+
+  // Re-running the same contradiction changes nothing and is not an error.
+  const again = await runJson(ws, ['link', claimA.id, '--contradicts', claimB.id]);
+  assert.equal(again.linked, false);
+
+  // Promoting a disputed claim out to supported without a resolving decision is blocked.
+  const blocked = await phdude(ws, ['promote', claimA.id, '--to', 'supported', ...ACTOR]);
+  assert.equal(blocked.code, 3);
+  assert.match(blocked.stderr, /resolves_contradiction/);
+
+  const decision = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Resolve the effect-direction contradiction',
+    '--rationale',
+    'The negative-effect claim relied on a flawed measure.',
+    '--affects',
+    claimA.id,
+    claimB.id,
+    '--change',
+    JSON.stringify({ resolves_contradiction: [claimA.id, claimB.id], survivor: claimA.id }),
+  ]);
+  await run(ws, ['decide', 'approve', decision.id, '--by', 'Ada Lovelace']);
+
+  // A single decision does not rehabilitate both sides: the survivor cannot be promoted while
+  // the loser it names is still disputed, and the decision refuses to promote the loser at all.
+  const survivorBlocked = await phdude(ws, [
+    'promote',
+    claimA.id,
+    '--to',
+    'supported',
+    '--decision',
+    decision.id,
+    ...ACTOR,
+  ]);
+  assert.equal(survivorBlocked.code, 3);
+  assert.match(survivorBlocked.stderr, /rejected first/);
+
+  const loserBlocked = await phdude(ws, [
+    'promote',
+    claimB.id,
+    '--to',
+    'supported',
+    '--decision',
+    decision.id,
+    ...ACTOR,
+  ]);
+  assert.equal(loserBlocked.code, 3);
+  assert.match(loserBlocked.stderr, new RegExp(`names ${claimA.id} as the survivor`));
+
+  await run(ws, ['promote', claimB.id, '--to', 'rejected']);
+
+  const promoted = await runJson(ws, [
+    'promote',
+    claimA.id,
+    '--to',
+    'supported',
+    '--decision',
+    decision.id,
+  ]);
+  assert.equal(promoted.state, 'supported');
+
+  const finalStatus = await runJson(ws, ['status']);
+  assert.deepEqual(finalStatus.disputedPairs, []);
+});
+
+test('e2e: cite check exits 2 while a source is broken, then 0 once it is fixed', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-cite-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Cite thesis', '--no-git']);
+
+  const broken = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'A Study With A Bad DOI',
+      authors: ['A. One'],
+      year: 2024,
+      doi: 'not-a-doi',
+    }),
+  ]);
+
+  const failing = await phdude(ws, ['cite', 'check', ...ACTOR]);
+  assert.equal(failing.code, 2, 'an invalid DOI fails the check');
+  assert.match(failing.stdout, /FAILED/);
+  assert.match(failing.stdout, /invalid-doi/);
+  assert.equal(failing.stderr, '', 'a failed check is a report, not an error');
+
+  const failingJson = await phdude(ws, ['cite', 'check', '--json', ...ACTOR]);
+  assert.equal(failingJson.code, 2);
+  const report = JSON.parse(failingJson.stdout);
+  assert.equal(report.ok, false);
+  assert.ok(report.findings.some((f) => f.kind === 'invalid-doi' && f.id === broken.id));
+
+  // A source's DOI is not part of its content-derived id, so `add` cannot correct it in
+  // place (re-adding under the same title/year is a no-op, see docs/cli.md). The mistaken
+  // record is not yet cited by anything, so it is safe to remove directly and replace with a
+  // corrected one, the same recovery this workspace already uses for a corrupted YAML file.
+  await unlink(join(ws, 'knowledge', 'sources', `${broken.id}.yaml`));
+
+  const fixed = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'A Study With A Good DOI',
+      authors: ['A. One'],
+      year: 2024,
+      doi: '10.1234/xyz.2024.01',
+    }),
+  ]);
+  await run(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({ source: fixed.id, excerpt: 'A finding.' }),
+  ]);
+
+  const passing = await phdude(ws, ['cite', 'check', ...ACTOR]);
+  assert.equal(passing.code, 0, 'the check passes once the broken source is gone');
+  assert.match(passing.stdout, /^OK/);
+
+  // list reports the fixed source's bibkey and DOI.
+  const rows = await runJson(ws, ['cite', 'list']);
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].doi, '10.1234/xyz.2024.01');
+  assert.equal(rows[0].cited_by, 1);
+
+  // export writes a bibliography and records no event.
+  const beforeEvents = (await runJson(ws, ['status'])).recentEvents.length;
+  const exported = await runJson(ws, ['cite', 'export']);
+  assert.equal(exported.count, 1);
+  assert.equal(await exists(exported.path), true);
+  const afterEvents = (await runJson(ws, ['status'])).recentEvents.length;
+  assert.equal(afterEvents, beforeEvents, 'export is derived, not knowledge');
+});
+
+test('e2e: matrix (md/csv/--question) and gaps (text/--json) shapes', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-matrix-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Matrix thesis', '--no-git']);
+
+  const rq = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'Does X affect Y?', objectives: ['Assess X on Y.'] }),
+  ]);
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'A Foundational Study',
+      authors: ['A. One'],
+      year: 2022,
+      type: 'article',
+    }),
+  ]);
+  const evidence = await runJson(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({ source: source.id, excerpt: 'X strongly predicts Y.', strength: 'strong' }),
+  ]);
+  const claim = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({
+      statement: 'X affects Y.',
+      kind: 'empirical',
+      supported_by: [evidence.id],
+      questions: [rq.id],
+    }),
+  ]);
+
+  const md = await phdude(ws, ['matrix', ...ACTOR]);
+  assert.equal(md.code, 0);
+  assert.match(
+    md.stdout,
+    /\| Bibkey \| Year \| Type \| Questions \| Claims \| Strongest evidence \| Facts \| Methods \|/,
+  );
+  assert.match(md.stdout, new RegExp(rq.id));
+  assert.match(md.stdout, new RegExp(claim.id));
+
+  const csv = await runJson(ws, ['matrix', '--format', 'csv']);
+  assert.equal(csv.format, 'csv');
+  assert.equal(csv.rows.length, 1);
+  assert.equal(csv.rows[0].id, source.id);
+  assert.deepEqual(csv.rows[0].questions, [rq.id]);
+  assert.deepEqual(csv.rows[0].claims, [claim.id]);
+  assert.equal(csv.rows[0].claimCount, 1);
+  assert.equal(csv.rows[0].strongestEvidence, 'strong');
+  assert.equal(csv.rows[0].cited, true);
+
+  const csvText = await phdude(ws, ['matrix', '--format', 'csv', ...ACTOR]);
+  assert.equal(csvText.code, 0);
+  assert.match(
+    csvText.stdout,
+    /^Bibkey,Year,Type,Questions,Claims,Strongest evidence,Facts,Methods/,
+  );
+
+  const filtered = await runJson(ws, ['matrix', '--question', rq.id]);
+  assert.equal(filtered.rows.length, 1);
+
+  const unknownQuestion = await phdude(ws, ['matrix', '--question', 'RQ-999', ...ACTOR]);
+  assert.equal(unknownQuestion.code, 1);
+  assert.match(unknownQuestion.stderr, /not found: RQ-999/);
+  assert.match(unknownQuestion.stderr, /phdude knowledge list --type question/);
+
+  const unknownType = await phdude(ws, ['knowledge', 'list', '--type', 'bogus', ...ACTOR]);
+  assert.equal(unknownType.code, 1);
+  assert.match(unknownType.stderr, /unknown type: bogus/);
+  assert.match(unknownType.stderr, /valid types: /);
+
+  const unknownState = await phdude(ws, ['knowledge', 'list', '--state', 'bogus', ...ACTOR]);
+  assert.equal(unknownState.code, 1);
+  assert.match(unknownState.stderr, /unknown state: bogus/);
+  assert.match(unknownState.stderr, /valid states: /);
+
+  const badFormat = await phdude(ws, ['matrix', '--format', 'xml', ...ACTOR]);
+  assert.equal(badFormat.code, 1);
+  assert.match(badFormat.stderr, /unknown matrix format/);
+
+  const gapsReport = await runJson(ws, ['gaps']);
+  assert.ok(Array.isArray(gapsReport.gaps));
+  assert.equal(typeof gapsReport.counts.high, 'number');
+  assert.equal(typeof gapsReport.counts.medium, 'number');
+  assert.equal(typeof gapsReport.counts.low, 'number');
+  assert.ok(
+    gapsReport.gaps.some((g) => g.kind === 'question-without-method' && g.id === rq.id),
+    'no method addresses rq, so question-without-method should fire',
+  );
+  for (const g of gapsReport.gaps) {
+    assert.ok(['high', 'medium', 'low'].includes(g.severity));
+    assert.equal(typeof g.why, 'string');
+    assert.equal(typeof g.command, 'string');
+  }
+
+  const gapsText = await phdude(ws, ['gaps', ...ACTOR]);
+  assert.equal(gapsText.code, 0);
+  assert.match(gapsText.stdout, /HIGH \(\d+\):/);
+  assert.match(gapsText.stdout, /MEDIUM \(\d+\):/);
+  assert.match(gapsText.stdout, /LOW \(\d+\):/);
 });

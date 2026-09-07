@@ -6,12 +6,14 @@ import { rm, utimes } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FsStore } from '../src/adapters/store/fs-store.js';
-import { walk, read } from '../src/adapters/store/fs-walk.js';
+import { walk, read, realpath } from '../src/adapters/store/fs-walk.js';
 import { detectKind, parserFor } from '../src/adapters/documents/index.js';
+import { discoverSkills } from '../src/adapters/skills/loader.js';
 import { initWorkspace } from '../src/application/init.js';
 import { ingest } from '../src/application/ingest.js';
 import { addEntity } from '../src/application/add.js';
 import { promote, propose } from '../src/application/decide.js';
+import { link } from '../src/application/link.js';
 
 const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const ROOT = join(PACKAGE_ROOT, 'examples', 'generic-thesis');
@@ -70,6 +72,13 @@ sample size, using stratified sampling across three campuses.
 Findings are broadly consistent with Survey Alpha.
 `,
   'sources/participants.csv': `metric,value\ncountry,Peru\n`,
+  // Classified below as `notes`, and deliberately never mined: no source, fact or evidence
+  // points at it, which is the `artifact-unmined` gap.
+  'sources/lab-notebook.md': `# Reading notes
+
+Loose notes taken while reading the three surveys. Nothing here has been turned into a source,
+a fact or an evidence item yet.
+`,
 };
 
 // DOS/FAT timestamps aside, a plain fixed mtime keeps ingest's artifact.mtime field (and hence
@@ -96,14 +105,14 @@ export async function generate(root) {
   const deps = { store: new FsStore(root), clock, actor: ACTOR };
 
   await initWorkspace(
-    { ...deps, git: fakeGit, agentHosts: [] },
+    { ...deps, git: fakeGit, agentHosts: [], discoverSkills },
     { title: 'Generic Thesis Example', agents: [], noGit: false },
   );
 
   await writeSources(deps.store);
 
   const { artifacts } = await ingest(
-    { ...deps, fs: { walk, read }, parsers: { detectKind, parserFor } },
+    { ...deps, fs: { walk, read, realpath }, parsers: { detectKind, parserFor } },
     { paths: ['sources'] },
   );
 
@@ -111,25 +120,79 @@ export async function generate(root) {
   const artBeta = artifactIdFor(artifacts, 'sources/survey-beta.md');
   const artGamma = artifactIdFor(artifacts, 'sources/survey-gamma.md');
   const artCsv = artifactIdFor(artifacts, 'sources/participants.csv');
+  const artNotes = artifactIdFor(artifacts, 'sources/lab-notebook.md');
 
-  await addEntity(deps, 'source', {
+  // Classifying an artifact is bootstrap's first step, and it is what separates an unclassified
+  // file from one that is classified but never mined (`phdude gaps`' `artifact-unmined`).
+  await addEntity(deps, 'artifact-role', { id: artNotes, role: 'notes' });
+
+  const { obj: source1 } = await addEntity(deps, 'source', {
     title: 'Survey Alpha and Beta: Note-Taking App Adoption',
     authors: ['A. Alpha', 'B. Beta'],
     year: 2025,
     type: 'report',
     artifacts: [artAlpha, artBeta],
   });
-  await addEntity(deps, 'source', {
+  const { obj: source2 } = await addEntity(deps, 'source', {
     title: 'Survey Gamma: Cross-Campus Replication',
     authors: ['C. Gamma'],
     year: 2025,
     type: 'report',
     artifacts: [artGamma],
   });
+  // A second cited source, with a DOI - not backed by an ingested artifact of its own, which
+  // is a normal state for a source you know about and cite before you have ingested its file.
+  const { obj: source3 } = await addEntity(deps, 'source', {
+    title: 'Cross-Institutional Meta-Analysis of Note-Taking App Adoption',
+    authors: ['D. Delta'],
+    year: 2024,
+    venue: 'Journal of Educational Technology Research',
+    type: 'article',
+    identifiers: { doi: '10.1234/jetr.2024.0099' },
+    artifacts: [],
+  });
+  // A third source, never cited by any evidence - exercises `cite check`'s informational
+  // `uncited-source` finding (it does not fail the check on its own).
+  await addEntity(deps, 'source', {
+    title: 'Longitudinal Trends in Student Mobile Device Usage',
+    authors: ['E. Epsilon'],
+    year: 2023,
+    type: 'preprint',
+    artifacts: [],
+  });
 
   const { obj: rq } = await addEntity(deps, 'question', {
     text: 'Does mobile note-taking app adoption differ across recruitment channels and campuses?',
     objectives: ['Compare adoption rates across independently recruited student surveys.'],
+  });
+  // No claim addresses this question and no method covers it - `phdude gaps` reports both
+  // `question-without-claims` and `question-without-method` for it.
+  const { obj: rq2 } = await addEntity(deps, 'question', {
+    text: 'Does note-taking app adoption correlate with academic performance?',
+    objectives: ['Assess correlation between reported app usage and course outcomes.'],
+  });
+  // Exactly one claim addresses this question, and it is still `candidate` - the
+  // `question-only-candidates` gap. The method below covers it, so that is the only gap it has.
+  const { obj: rq3 } = await addEntity(deps, 'question', {
+    text: 'How consistent are reported adoption rates across institutions?',
+    objectives: ['Compare adoption estimates reported by independent institutions.'],
+  });
+
+  // No claim addresses RQ-2, so nothing tests this hypothesis - `hypothesis-untested`.
+  await addEntity(deps, 'hypothesis', {
+    text: 'Students who report heavier note-taking app use also report better course outcomes.',
+    questions: [rq2.id],
+  });
+
+  await addEntity(deps, 'method', {
+    name: 'Cross-sectional survey',
+    design: 'Three independently recruited undergraduate samples, one wave each.',
+    paradigm: 'quantitative',
+    sampling: 'Mailing list, campus social media group, and stratified campus sampling.',
+    instruments: ['note-taking app adoption questionnaire'],
+    analysis: ['descriptive comparison of reported daily use'],
+    limitations: ['self-reported use', 'one university system'],
+    questions: [rq.id, rq3.id],
   });
 
   const { obj: evidence1 } = await addEntity(deps, 'evidence', {
@@ -140,11 +203,51 @@ export async function generate(root) {
     strength: 'moderate',
   });
 
+  // Cites a SRC id directly (rather than an artifact) - the citation registry (`phdude cite
+  // list|check|export`) counts a source as cited only by an evidence item recorded this way.
+  await addEntity(deps, 'evidence', {
+    source: source1.id,
+    locator: 'Introduction',
+    excerpt:
+      'The combined report synthesizes note-taking app adoption findings across two independently recruited undergraduate samples.',
+    strength: 'weak',
+  });
+  const { obj: evidence3 } = await addEntity(deps, 'evidence', {
+    source: source3.id,
+    locator: 'Abstract',
+    excerpt:
+      'A cross-institutional meta-analysis corroborates high daily adoption of note-taking applications among undergraduates.',
+    strength: 'moderate',
+  });
+  // Weak-strength evidence citing source2 directly, for a claim addressing RQ-1 -
+  // `phdude gaps`' `claim-weak-evidence` gap fires once every evidence item supporting a claim
+  // is `weak`, and the matrix (`phdude matrix`) shows source2 reaching RQ-1 through evidence
+  // that is itself weak.
+  const { obj: evidenceWeak } = await addEntity(deps, 'evidence', {
+    source: source2.id,
+    locator: 'Limitations',
+    excerpt:
+      'The authors note this cross-campus replication is preliminary and has not yet been independently verified.',
+    strength: 'weak',
+  });
+
+  // Cites Survey Beta's artifact directly, so it is the second half of the contradiction below
+  // and a second claim depending on a conflicting artifact.
+  const { obj: evidenceBeta } = await addEntity(deps, 'evidence', {
+    source: artBeta,
+    locator: 'Results',
+    excerpt: 'Reported daily use was slightly lower than in Survey Alpha (Survey Beta).',
+    strength: 'moderate',
+  });
+
   const { obj: claim1 } = await addEntity(deps, 'claim', {
     statement:
       'Daily use of mobile note-taking apps is common among surveyed undergraduate students.',
     kind: 'empirical',
-    supported_by: [evidence1.id],
+    // Supported by evidence citing an artifact directly and evidence citing a formal source
+    // directly - the matrix (`phdude matrix`) attributes this claim's question to source3 via
+    // the latter, while source1's own citing evidence (above) is never attached to any claim.
+    supported_by: [evidence1.id, evidence3.id],
     questions: [rq.id],
     sections: ['Results'],
   });
@@ -158,6 +261,37 @@ export async function generate(root) {
     statement: 'Stratified sampling across campuses corroborates the observed adoption rate.',
     kind: 'methodological',
   });
+  await addEntity(deps, 'claim', {
+    statement: 'Cross-campus replication weakly corroborates the observed adoption rate.',
+    kind: 'methodological',
+    supported_by: [evidenceWeak.id],
+    questions: [rq.id],
+    sections: ['Discussion'],
+  });
+
+  // The only claim addressing RQ-3, and still `candidate` - `question-only-candidates`.
+  await addEntity(deps, 'claim', {
+    statement: 'Cross-institutional evidence points to consistently high adoption.',
+    kind: 'literature',
+    supported_by: [evidence3.id],
+    questions: [rq3.id],
+  });
+
+  // Two claims that cannot both be true, each with its own moderate evidence. Recording the
+  // contradiction moves both to `disputed` with no Decision (PRD S3.5), and they stay there:
+  // resolving one is the researcher's call, and `phdude gaps` reports the open `disputed-pair`.
+  const { obj: claimAgree } = await addEntity(deps, 'claim', {
+    statement: 'Daily note-taking app use is comparable across all three surveyed samples.',
+    kind: 'empirical',
+    supported_by: [evidence1.id],
+  });
+  const { obj: claimDisagree } = await addEntity(deps, 'claim', {
+    statement:
+      'Daily note-taking app use is materially lower in the sample recruited through social media.',
+    kind: 'empirical',
+    supported_by: [evidenceBeta.id],
+  });
+  await link(deps, claimAgree.id, { contradicts: claimDisagree.id });
 
   // Fact ids are content-derived from `key + value + from.artifact` (see domain/ids.js), so
   // this is the PRD §38 pattern: 312 from Alpha, 300 from Beta, 312 from Gamma - three distinct

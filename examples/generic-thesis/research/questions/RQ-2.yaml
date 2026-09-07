@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-2
+created: 2026-09-01T00:00:18.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Does note-taking app adoption correlate with academic performance?
+objectives:
+  - Assess correlation between reported app usage and course outcomes.
+state: candidate

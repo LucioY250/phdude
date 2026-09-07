@@ -21,6 +21,13 @@ phdude <command> [sub-command] [arguments] [options]
 `PHDUDE_DEBUG=1` prints a stack trace for unexpected internal errors; without it, users see
 the message only.
 
+## Unknown options
+
+Each command declares the options it takes, and anything else exits 1 naming the flag and
+listing what that command accepts. A mistyped filter is otherwise indistinguishable from no
+filter at all: `knowledge list --stat candidate` would return every object and read as an
+answer. The global options above are accepted everywhere.
+
 ## Exit codes
 
 | Code | Meaning | Example |
@@ -29,12 +36,12 @@ the message only.
 | 1 | Usage | unknown command, missing argument, id not found |
 | 2 | Validation | an object that fails its JSON Schema, malformed `--json` |
 | 3 | Policy | `promote` to canonical without an approved decision |
-| 4 | External tool missing | reserved; no v0.1 command requires an external tool |
+| 4 | External tool missing | reserved; no command requires an external tool yet |
 
 Errors print the message on stderr, followed by a `Suggested action:` line when the error
 carries a hint. With `--json` they print `{"error":{"code","message","hint","details"}}` on
-stderr instead. Exit code 4 exists because degradation is the rule in v0.1: a missing
-`pdftotext` produces a warning and a partial extraction, not a failed command.
+stderr instead. Exit code 4 exists but nothing raises it yet, because degradation is the rule:
+a missing `pdftotext` produces a warning and a partial extraction, not a failed command.
 
 ## Commands
 
@@ -83,9 +90,23 @@ inventoried and hashed, with `extracted.status` reporting why the text is missin
 
 Every requested path must resolve inside the workspace. `phdude ingest ../elsewhere` exits 1
 rather than recording an external path in a tracked artifact and copying the file's text into
-the cache; copy the material into `sources/` first. Symlinks are never followed, for the same
-reason; each one is reported as `skipped symlink: <path>` among the warnings rather than
-ignored in silence.
+the cache; copy the material into `sources/` first. The check runs twice, lexically and again
+on the resolved real path, so a symlink under `sources/` cannot smuggle a directory in from
+outside.
+
+Symlinks are never followed, and the two ways one turns up are treated differently. A path
+named on the command line that resolves outside the workspace exits 1, symlink or not — that is
+the containment check above, and it is an error because you asked for exactly that path. Every
+other symlink is a warning: one named on the command line that resolves *inside* the workspace,
+and every symlink found while walking a directory, is skipped and reported as
+`skipped symlink: <path>` rather than ignored in silence. A run that hits only those still
+succeeds, with the linked files simply not ingested.
+
+Ingest reads source material only. `phdude ingest .` walks `sources/`, not the whole
+workspace; an explicit path into `knowledge/`, `research/`, `decisions/`, `.phdude/`,
+`.claude/`, `authors/`, `manuscript/`, `outputs/`, or at `phdude.yaml`, `AGENTS.md`,
+`CLAUDE.md` or `.gitignore` exits 1 with `not a source path: <path>`. Re-importing the
+knowledge base as evidence for itself is not a thing anyone wants.
 
 The result carries four keys:
 
@@ -103,8 +124,14 @@ text output prints one line per inventory entry, with `+` marking the ones writt
 ### `phdude status`
 
 Project settings, artifact inventory by kind and extraction status, knowledge counts by type
-and state, open and resolved fact conflicts, pending decisions, and the last events. Every
-number is derived on read; nothing is cached.
+and state, open and resolved fact conflicts, disputed claim pairs, pending decisions, and the
+last events. Every number is derived on read; nothing is cached.
+
+Disputed claim pairs come from marking claims as contradicting each other (see `phdude link`
+below, PRD §3.5): a pair is listed while neither of the two claims has been `rejected`,
+whatever states they are in, and drops out once one side is rejected. `--json` reports them as
+`disputedPairs: [[a, b], …]`; the text renderer also shows each claim's statement, truncated to
+60 characters.
 
 ### `phdude next`
 
@@ -120,9 +147,21 @@ phdude knowledge trace <id>
 ```
 
 `list` filters by type (`artifact`, `source`, `claim`, `evidence`, `fact`, `result`,
-`question`, `hypothesis`, `decision`), by state, and by a case-insensitive substring of the
-object's primary text. `trace` walks the lineage graph in both directions: `up` is what the
-object rests on, `down` is what rests on it.
+`question`, `hypothesis`, `method`, `decision`), by state, and by a case-insensitive substring
+of the object's primary text. A `--type` or `--state` value outside those lists exits 1 naming
+the value and listing what is accepted, rather than printing an empty result that reads as "no
+such objects". `trace` walks the lineage graph in both directions: `up` is what
+the object rests on, `down` is what rests on it.
+
+`trace` prints a `provenance:` line for an object that carries one (claims and evidence):
+
+```
+CLAIM-3d035aa05b
+  provenance: agent-extraction ← ART-35146e2f6d
+```
+
+It reads "extracted by an agent from artifact ART-35146e2f6d". `manual` means a human typed it
+at the CLI, `imported` that it predates the field and was filled in by `phdude migrate`.
 
 ### `phdude add <type>`
 
@@ -131,9 +170,9 @@ phdude add claim --json '{"statement":"…","kind":"empirical","supported_by":["
 phdude add fact --file fact.json
 ```
 
-Types: `claim`, `evidence`, `fact`, `source`, `question`, `hypothesis`, `result`, and
-`artifact-role`. The object comes from `--json '<obj>'` or `--file <path>.json`. Objects are
-created in state `candidate`.
+Types: `claim`, `evidence`, `fact`, `source`, `question`, `hypothesis`, `method`, `result`,
+and `artifact-role`. The object comes from `--json '<obj>'` or `--file <path>.json`. Objects
+are created in state `candidate`.
 
 Ids are derived from content, so adding the same object twice is a no-op that returns the
 existing record and writes no event. What counts as "the same object" is the id material:
@@ -144,6 +183,7 @@ existing record and writes no event. What counts as "the same object" is the id 
 | `evidence` | `source`, `locator`, `excerpt` |
 | `fact` | `key`, `value`, `from.artifact` |
 | `source` | `title`, `year` |
+| `method` | `name` |
 | `result` | `summary` |
 | `question`, `hypothesis` | sequential `RQ-<n>` / `H-<n>`, deduplicated on normalized `text` |
 
@@ -152,7 +192,20 @@ and the same value reported by two artifacts is deliberately two facts — that 
 conflict `status` reports. See [ADR 3](adr/0003-content-derived-ids.md).
 
 `artifact-role` is the exception: it sets `role` on an existing artifact rather than
-creating a new object, and takes `{"id":"ART-…","role":"paper"}`.
+creating a new object, and takes `{"id":"ART-…","role":"paper"}`. Text mode prints
+`Updated <id> role → <role>` when the role changed and `Unchanged <id>` when it was already
+that role, which writes nothing and records no event.
+
+A method records how the study was done: `{"name":"Cross-sectional survey","design":"…",
+"paradigm":"quantitative","sampling":"…","instruments":[…],"analysis":[…],"limitations":[…],
+"questions":["RQ-1"]}`. `paradigm` is one of `quantitative`, `qualitative`, `mixed`,
+`computational`, `theoretical`, `archival`, `other`; everything but `name` is optional.
+
+Claims and evidence record where they came from. `provenance.method` defaults to `manual` when
+the actor's agent is `cli` and to `agent-extraction` otherwise, and `provenance.derived_from`
+lists the artifacts behind the object: for evidence, the artifact it cites or its source's
+artifacts; for a claim, the union of its evidence's. Pass `provenance` explicitly to override
+either, e.g. when importing records whose origin you already know.
 
 `--file` resolves relative to the working directory, not the workspace, so it works when
 `--workspace` points somewhere else.
@@ -182,6 +235,7 @@ original record unchanged.
 | claim | evidence | `supported_by` |
 | claim | question | `questions` |
 | hypothesis | question | `questions` |
+| method | question | `questions` |
 | source | artifact | `artifacts` |
 
 `--to` accepts several ids after one flag. Links are additive and idempotent: a target the
@@ -191,6 +245,27 @@ event. Every target must exist and be of a type the relation accepts, or the com
 A `canonical` object cannot be linked: it exits 3 and points at `decide propose`, because
 canonical knowledge changes only through an approved decision.
 
+### `phdude link <CLAIM-a> --contradicts <CLAIM-b>`
+
+```
+phdude link CLAIM-3d035aa05b --contradicts CLAIM-8e21a9c440
+```
+
+Records that two claims contradict each other (PRD §3.5, §38). `--contradicts` is mutually
+exclusive with `--to` and exits 1 if both are given. Both ids must exist and be claims, or the
+command exits 2; a claim contradicting itself exits 1.
+
+The relation is symmetric: `contradicts` is written to both claims, deduped and sorted, and
+each side moves to `disputed` when its current state allows the transition
+(`candidate`/`supported`/`canonical`). A `canonical` claim can be disputed this way with no
+decision required - unlike `--to`, the canonical guard does not apply, because surfacing a
+contradiction is exactly what PhDude should do proactively (PRD §3.3). A claim already
+`disputed` or `rejected` keeps its state. One `link` event is recorded; running the same
+`--contradicts` call again writes nothing and records no event.
+
+See [`decisions`](../skills/decisions/SKILL.md) for how a disputed pair gets resolved, and
+`phdude status` for where disputed pairs are reported.
+
 ### `phdude decide propose|approve|reject|supersede`
 
 ```
@@ -198,7 +273,7 @@ phdude decide propose --title "Resolve sample_size" --rationale "…" \
   --affects FACT-a FACT-b --change '{"fact_key":"sample_size","canonical_value":142}'
 phdude decide approve DEC-… --by "Ada Lovelace"
 phdude decide reject  DEC-… --by "Ada Lovelace" --reason "Evidence is too weak"
-phdude decide supersede DEC-old --by DEC-new
+phdude decide supersede DEC-old --by "Ada Lovelace" --with DEC-new
 ```
 
 `--affects` accepts several ids after one flag.
@@ -207,10 +282,13 @@ A decision's id is derived from `title`, `rationale`, `affects` and `change` tog
 re-proposing under an existing title with a new rationale creates a new proposal instead of
 silently returning the old one. Two identical proposals are still one record.
 
-**`--by` is required on `approve` and `reject`.** It records who made the call, and the
-runtime deliberately does not fall back to the resolved actor: a decision the researcher did
-not make must never end up carrying their name. An agent must never supply a name of its
-own, and must ask the researcher rather than guessing.
+**`--by` is required on `approve`, `reject` and `supersede`.** It records who made the call,
+and the runtime deliberately does not fall back to the resolved actor: a decision the
+researcher did not make must never end up carrying their name. An agent must never supply a
+name of its own, and must ask the researcher rather than guessing.
+
+`supersede` takes the replacing decision in `--with`, not in `--by`: `--by` is the researcher
+every time. The v0.1 form that passed a `DEC-` id to `--by` exits 1 with that correction.
 
 ### `phdude promote <id> --decision <DEC-id>`
 
@@ -218,24 +296,186 @@ Moves an object to `canonical` (or to another state with `--to`). Promotion to c
 requires a decision that is `approved` and lists the object in `affects`; anything else
 exits 3. This is where human authority over canonical knowledge is enforced.
 
+A claim that contradicts a claim which is not `rejected` has a live contradiction, and the gate
+keys on that relation rather than on the state the claim currently sits in: its only moves are
+`--to rejected`, or `--to supported`/`--to canonical` with the resolving decision below. Any
+other target, `candidate` included, exits 3 with `has unresolved contradiction(s) with …`, so
+neither `disputed → candidate → supported` nor rehabilitating a rejected loser can settle a
+contradiction without a decision.
+
+Promoting a contradicting claim to `supported` or `canonical` is resolving a contradiction, not
+an ordinary promotion, and a single decision must not rehabilitate both sides of a dispute. It
+requires an approved decision (see `phdude decide propose` below) whose `change` names, in
+`resolves_contradiction`, the claim being promoted and (at least) one of its `contradicts`
+partners, and in `survivor` which one of them wins; the promoted claim must be that `survivor`,
+must be in the decision's `affects`, and its `resolves_contradiction` must cover every live
+contradiction the claim has. Every other claim the decision lists that this claim
+still contradicts must already be `rejected` - promote each loser to `rejected` first (no
+decision needed for that step, same as any other `disputed → rejected` move), then promote the
+survivor. Promoting the losing claim with the same decision exits 3 naming the survivor
+instead. Resolving the pair does not touch the loser automatically beyond that manual
+rejection, and `contradicts` is kept on the survivor as history of the dispute.
+
+### `phdude cite list|check|export`
+
+```
+phdude cite list
+phdude cite check
+phdude cite export --format bibtex|csl-json
+```
+
+The citation registry (PRD §37, spec §3.3): a `bibkey`, deterministically derived unless the
+source declares its own, plus BibTeX/CSL-JSON export. **It is derived, never canonical** —
+nothing here changes a claim's or evidence item's state, and the citation itself is always the
+`SRC-…` id, not the bibkey.
+
+`list` prints every source with its `bibkey`, authors, year, DOI and `cited_by`: the number of
+evidence items whose `source` is that SRC id directly. An evidence item that cites an artifact
+instead of a formal source does not count — that gap is exactly what `check`'s `uncited-source`
+finding reports.
+
+`check` verifies the registry and exits 2 if anything but `uncited-source` is wrong:
+
+| Finding kind | Meaning |
+|---|---|
+| `uncited-source` | No evidence item cites this source directly. Informational only — it never fails the check by itself. |
+| `evidence-missing-source` | An evidence item's `source` id does not exist. |
+| `invalid-doi` | A DOI (`identifiers.doi` or the legacy top-level `doi`) does not match `^10\.\d{4,9}/\S+$`. |
+| `missing-field` | The source has no `title`, no `authors`, or no `year`. |
+| `duplicate-source` | Two sources share the same normalized title and year. |
+| `duplicate-bibkey` | Two sources declare the same explicit `bibkey`. |
+
+A source's id is derived from its `title` and `year` (see `phdude add` above), so none of these
+fields can be corrected on an existing record in place — fixing one means adding a corrected
+source and, once it is not relied on anywhere, removing the mistaken YAML file directly.
+
+`export --format bibtex|csl-json` (default `bibtex`) writes `references.bib` or
+`references.json` at the workspace root, covering every source regardless of whether it is
+cited. It records no event — a derived artifact, not knowledge — but still refuses on an
+out-of-date workspace like any other write (`phdude migrate`).
+
+A source may carry `bibkey` (`^[a-z0-9-]+$`, wins over the derived key), `abstract`, `keywords`
+(a string array), and `identifiers: { doi?, isbn?, arxiv?, pmid?, url? }`. The top-level `doi`
+and `url` fields from v0.1 still work; `identifiers.doi` takes precedence when both are set.
+
+### `phdude matrix [--format md|csv] [--question RQ-n]`
+
+```
+phdude matrix
+phdude matrix --format csv
+phdude matrix --question RQ-1
+```
+
+The literature matrix (PRD §112, spec §3.4): one row per source. Deterministic order — year
+descending, sources without a year last, then bibkey. `--format` (default `md`) chooses a
+GitHub-flavored Markdown table or CSV; `--json` returns the full row objects regardless of
+`--format`.
+
+| Column | Meaning |
+|---|---|
+| Bibkey | The source's derived or explicit bibkey (see `cite` above). |
+| Year | `-` when the source has no year. |
+| Type | The source's `type` (`article`, `book`, …). |
+| Questions | Research question ids reached via evidence → claim → question — only evidence whose `source` is this SRC id directly. `-` if none. |
+| Claims | Ids of the claims that reach the source that way. `-` if none. |
+| Strongest evidence | The strongest `strength` among evidence citing the source directly (`strong` > `moderate` > `weak` > `unknown`), or `-` if nothing cites it. |
+| Facts | Ids of facts extracted `from.artifact` any artifact in the source's own `artifacts` list. `-` if none. |
+| Methods | Pack-declared method tags from `ext.<pack>.methods`, if a pack has recorded any. `-` if none. |
+
+A row with an empty Questions column means the source is recorded, and may even be cited by
+evidence, but that evidence is not yet attached to any claim — it has not been used to support
+an argument yet. `--question RQ-n` filters to rows whose Questions column includes that id; an
+id no research question carries exits 1 with `not found: RQ-n`, since an empty table would
+otherwise read as "no source addresses this question".
+
+### `phdude gaps`
+
+```
+phdude gaps
+phdude gaps --json
+```
+
+An explainable gap report (PRD §112, spec §3.4), grouped by severity (`high`, `medium`, `low`)
+and sorted by severity, then kind, then id. Text mode prints each gap's kind and id with a
+concrete `Why:` line and a runnable `Command:` line; `--json` returns `{ gaps, counts }`.
+
+| Kind | Severity | Meaning |
+|---|---|---|
+| `question-without-claims` | high | No claim addresses this research question. |
+| `question-only-candidates` | medium | Every claim addressing this question is still `candidate`. |
+| `question-without-method` | medium | No method's `questions` includes this research question. |
+| `claim-without-evidence` | high | A non-`rejected` claim's `supported_by` is empty. |
+| `claim-weak-evidence` | medium | Every evidence item supporting the claim has `strength: weak`. |
+| `hypothesis-untested` | medium | No claim addresses any of the hypothesis's questions. |
+| `uncited-source` | low | No evidence item's `source` is this SRC id directly - the same rule, and the same name, as `cite check`'s `uncited-source` finding. |
+| `artifact-unmined` | low | The artifact's role is classified (not `unknown`), but no source, fact, or evidence references it. |
+| `open-conflict` | high | An unresolved fact conflict (see `status` above), one gap per conflict key. |
+| `disputed-pair` | high | A pair of claims that contradict each other with neither side `rejected` (same rule as `status`'s disputed pairs). |
+
+`gaps` is read-only; it writes no event. `next` recommends running it (rule `gaps`, medium)
+once one high-severity gap or 3 gaps of any severity exist; the ranking decides where that lands
+among the higher-impact rules. `next`'s closing `consistent` line reads
+`N open gap(s); run phdude gaps` whenever the report is not empty, and claims the workspace is
+consistent only when it is.
+
 ### `phdude packs list|detect|apply <name>`
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's
 keywords against the cached text and records the recommendation in `phdude.yaml` without
-applying anything. `apply` adds the pack to `fields` or `methods` and writes an event. All
-three need a workspace: outside one they exit 1 and point at `phdude init`.
+applying anything. `apply` adds the pack to `fields` or `methods` and writes an event; it first
+checks each of the pack's skills against the [skill contract](extending.md#skill-contract) and
+exits 3 with a `POLICY` error if one requests network access the workspace policy has not
+allowed. All three need a workspace: outside one they exit 1 and point at `phdude init`.
 
 ### `phdude mode lite|full|ruthless|off`
 
 Sets the review mode in `phdude.yaml`. Setting the mode it already has changes nothing and
 records no event.
 
+### `phdude migrate [--dry-run] [--force]`
+
+Upgrades a workspace written by an older PhDude to the current workspace version.
+`phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
+current version is 2. Migration steps ship with the package, one module per step, and run in
+order through the store; each applied step appends one `migrate` event.
+
+Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 2)`
+as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
+`packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
+
+A workspace written by a *newer* PhDude is the same problem from the other end, and this build
+cannot migrate its way out of it. Reads warn with
+`workspace version 3 is newer than this PhDude (2)`; the same writes exit 1 with that message
+and the hint `upgrade phdude`.
+
+`--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
+undo for an in-place rewrite, `migrate` exits 3 on a dirty git tree unless `--force` is given; a
+dry run is a read and stays available either way. Steps are idempotent, so running `migrate` on
+an up-to-date workspace prints `Workspace is up to date (2)` and records no event.
+
 ### `phdude doctor`
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
-availability, whether the current directory is a workspace, the cache entry count, the
-discoverable packs and the schema versions, plus warnings for anything missing. It is
-diagnostic only and never writes.
+availability, whether the current directory is a workspace, its workspace version and whether
+that version is `(current)`, `(needs migration → 2)` or `(newer than this phdude)`, the cache
+entry count, the discoverable packs and the schema
+versions, plus warnings for anything missing. It is diagnostic only and never writes.
+
+It also lists every discoverable skill (core, applied packs, and the workspace's own
+`.phdude/skills/`) with its source, declared network and workspace permissions, and any loader
+warnings — one line each: `<name> (<source>) network=<none|allowed> workspace=<read,...>`. See
+[Skill contract](extending.md#skill-contract). `--json` includes the same data as a `skills`
+array of `{ name, source, permissions, reads, writes, warnings }`.
+
+`source` is `workspace` only when the workspace's copy actually differs from the shipped file.
+`init` copies every core skill into `.phdude/skills/`, so an untouched workspace would otherwise
+report all of them as its own; the bytes are compared, and an unmodified copy stays `core`.
+
+Being the command you run when something is wrong, `doctor` degrades rather than fails. A skill
+whose `SKILL.md` cannot be loaded costs one warning naming that skill, and every other skill is
+still listed. A skill that declares `permissions.network: allowed` while
+`.phdude/research-policy.yaml` has not set `skills.allow_network: true` is listed with a warning
+too — `phdude packs apply` and `phdude init` are where that becomes a refusal (exit 3).
 
 ### `phdude help`
 

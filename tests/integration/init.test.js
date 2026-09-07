@@ -5,8 +5,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
 import { copySkills, initWorkspace } from '../../src/application/init.js';
+import { discoverSkills } from '../../src/adapters/skills/loader.js';
 import { codexHost } from '../../src/adapters/agents/codex.js';
 import { claudeCodeHost } from '../../src/adapters/agents/claude-code.js';
+import { PhdudeError } from '../../src/domain/errors.js';
 
 const deps = (root) => ({
   store: new FsStore(root),
@@ -18,6 +20,7 @@ const deps = (root) => ({
   agentHosts: [],
   clock: () => '2026-09-07T00:00:00Z',
   actor: { researcher: 'tester', agent: 'test' },
+  discoverSkills,
 });
 
 test('init creates layout and is idempotent', async () => {
@@ -112,28 +115,119 @@ test('copySkills classifies created, then skipped, then updated on content chang
   const store = new FsStore(root);
   const srcDir = await mkdtemp(join(tmpdir(), 'phdude-skills-src-'));
   await mkdir(join(srcDir, 'demo', 'references'), { recursive: true });
-  await writeFile(join(srcDir, 'demo', 'SKILL.md'), '# demo skill\n');
+  await writeFile(
+    join(srcDir, 'demo', 'SKILL.md'),
+    [
+      '---',
+      'name: demo',
+      'description: a demo skill for copySkills tests',
+      '---',
+      '# demo skill',
+    ].join('\n'),
+  );
   await writeFile(join(srcDir, 'demo', 'references', 'a.md'), 'reference a\n');
 
   const skillPath = join('.phdude', 'skills', 'demo', 'SKILL.md');
   const refPath = join('.phdude', 'skills', 'demo', 'references', 'a.md');
 
   const r1 = { created: [], updated: [], skipped: [] };
-  await copySkills(store, srcDir, r1.created, r1.updated, r1.skipped);
+  await copySkills(store, srcDir, r1.created, r1.updated, r1.skipped, { discoverSkills });
   assert.deepEqual(r1.created.sort(), [refPath, skillPath].sort());
   assert.equal(r1.updated.length, 0);
   assert.equal(r1.skipped.length, 0);
 
   const r2 = { created: [], updated: [], skipped: [] };
-  await copySkills(store, srcDir, r2.created, r2.updated, r2.skipped);
+  await copySkills(store, srcDir, r2.created, r2.updated, r2.skipped, { discoverSkills });
   assert.equal(r2.created.length, 0);
   assert.equal(r2.updated.length, 0);
   assert.deepEqual(r2.skipped.sort(), [refPath, skillPath].sort());
 
   await writeFile(join(srcDir, 'demo', 'references', 'a.md'), 'reference a, revised\n');
   const r3 = { created: [], updated: [], skipped: [] };
-  await copySkills(store, srcDir, r3.created, r3.updated, r3.skipped);
+  await copySkills(store, srcDir, r3.created, r3.updated, r3.skipped, { discoverSkills });
   assert.equal(r3.created.length, 0);
   assert.deepEqual(r3.updated, [refPath]);
   assert.deepEqual(r3.skipped, [skillPath]);
+});
+
+async function writeSkillFile(
+  dir,
+  name,
+  { permissions = 'network: none\n    workspace: [read]' } = {},
+) {
+  await mkdir(dir, { recursive: true });
+  await writeFile(
+    join(dir, 'SKILL.md'),
+    [
+      '---',
+      `name: ${name}`,
+      `description: a ${name} skill`,
+      'phdude:',
+      '  version: 1',
+      '  reads: []',
+      '  writes: []',
+      '  permissions:',
+      `    ${permissions}`,
+      '---',
+      `# ${name}`,
+    ].join('\n'),
+  );
+}
+
+test('copySkills validates every skill before copying and copies nothing when one is invalid', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  const srcDir = await mkdtemp(join(tmpdir(), 'phdude-skills-src-'));
+  await writeSkillFile(join(srcDir, 'good'), 'good');
+  await mkdir(join(srcDir, 'bad'), { recursive: true });
+  await writeFile(
+    join(srcDir, 'bad', 'SKILL.md'),
+    [
+      '---',
+      'name: bad',
+      'description: a bad skill',
+      'phdude:',
+      '  version: 2',
+      '---',
+      '# bad',
+    ].join('\n'),
+  );
+
+  await assert.rejects(
+    () => copySkills(store, srcDir, [], [], [], { discoverSkills }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'VALIDATION');
+      assert.match(err.message, /skill bad/);
+      return true;
+    },
+  );
+  assert.equal(await store.exists(join('.phdude', 'skills', 'good', 'SKILL.md')), false);
+});
+
+test('copySkills refuses a skill that requests network access unless the policy allows it', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  const srcDir = await mkdtemp(join(tmpdir(), 'phdude-skills-src-'));
+  await writeSkillFile(join(srcDir, 'networked'), 'networked', {
+    permissions: 'network: allowed\n    workspace: [read]',
+  });
+
+  await assert.rejects(
+    () => copySkills(store, srcDir, [], [], [], { policy: null, discoverSkills }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.equal(err.code, 'POLICY');
+      assert.equal(err.message, 'skill networked requests network access');
+      return true;
+    },
+  );
+  assert.equal(await store.exists(join('.phdude', 'skills', 'networked', 'SKILL.md')), false);
+
+  const created = [];
+  await copySkills(store, srcDir, created, [], [], {
+    policy: { skills: { allow_network: true } },
+    discoverSkills,
+  });
+  assert.ok(created.includes(join('.phdude', 'skills', 'networked', 'SKILL.md')));
 });

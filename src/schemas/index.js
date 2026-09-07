@@ -23,9 +23,11 @@ export const SCHEMA_TYPES = [
   'fact',
   'question',
   'hypothesis',
+  'method',
   'result',
   'decision',
   'pack',
+  'skill',
   'event',
 ];
 export const schemaName = (type) => `phdude.${type}`;

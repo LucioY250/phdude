@@ -1,0 +1,33 @@
+{
+  "$id": "phdude://method",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.method" },
+        "name": { "type": "string" },
+        "design": { "type": "string" },
+        "paradigm": {
+          "enum": [
+            "quantitative",
+            "qualitative",
+            "mixed",
+            "computational",
+            "theoretical",
+            "archival",
+            "other"
+          ]
+        },
+        "sampling": { "type": "string" },
+        "instruments": { "type": "array", "items": { "type": "string" } },
+        "analysis": { "type": "array", "items": { "type": "string" } },
+        "limitations": { "type": "array", "items": { "type": "string" } },
+        "questions": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+        "state": { "$ref": "phdude://common#/$defs/state" }
+      },
+      "required": ["name", "design", "paradigm", "questions", "state"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

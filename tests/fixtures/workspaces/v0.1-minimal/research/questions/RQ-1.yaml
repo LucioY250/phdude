@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-1
+created: 2026-01-15T09:00:00Z
+actor:
+  researcher: legacy
+  agent: cli
+tags: []
+text: How complete is the archived lab notebook record for the 2019 field season?
+objectives:
+  - Establish notebook coverage per field site.
+state: candidate

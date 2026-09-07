@@ -1,4 +1,5 @@
 import { PhdudeError } from '../domain/errors.js';
+import { assertUpToDate } from './guard.js';
 
 export const REVIEW_MODES = ['lite', 'full', 'ruthless', 'off'];
 
@@ -22,6 +23,7 @@ export async function setMode({ store, clock, actor }, mode) {
   if (project === null) {
     throw new PhdudeError('USAGE', 'phdude.yaml is missing', 'run phdude init first');
   }
+  assertUpToDate(project);
   if (project.mode === mode) return { mode, changed: false };
 
   await store.writeProject({ ...project, mode });

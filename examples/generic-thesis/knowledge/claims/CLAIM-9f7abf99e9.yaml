@@ -1,0 +1,21 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-9f7abf99e9
+created: 2026-09-01T00:00:47.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Daily note-taking app use is comparable across all three surveyed samples.
+kind: empirical
+state: disputed
+supported_by:
+  - EVID-93cd3745fc
+questions: []
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-35146e2f6d
+contradicts:
+  - CLAIM-84dc3cdd04

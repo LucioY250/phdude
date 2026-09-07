@@ -1,0 +1,17 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-bb244df965
+created: 2026-01-15T09:00:00Z
+actor:
+  researcher: legacy
+  agent: cli
+tags: []
+statement: Archived lab notebook coverage is uneven across the 2019 field sites.
+kind: empirical
+state: candidate
+supported_by:
+  - EVID-02756876a5
+questions:
+  - RQ-1
+sections:
+  - Results

@@ -1,7 +1,7 @@
 schema: phdude.fact
 version: 1
 id: FACT-2bc4462edb
-created: 2026-09-01T00:00:21.000Z
+created: 2026-09-01T00:00:52.000Z
 actor:
   researcher: example
   agent: script

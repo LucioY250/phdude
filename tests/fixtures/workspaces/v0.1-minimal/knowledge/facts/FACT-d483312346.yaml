@@ -1,0 +1,15 @@
+schema: phdude.fact
+version: 1
+id: FACT-d483312346
+created: 2026-01-15T09:00:00Z
+actor:
+  researcher: legacy
+  agent: cli
+tags: []
+key: notebooks_reviewed
+value: 42
+from:
+  artifact: ART-3cd69e1207
+  locator: Methods
+state: candidate
+unit: notebooks

@@ -2,18 +2,22 @@ import {
   newClaim,
   newEvidence,
   newFact,
+  newMethod,
   newSource,
   newResult,
   newQuestion,
   newHypothesis,
 } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
+import { parseId } from '../domain/ids.js';
 import { normalizeText } from '../domain/normalize.js';
+import { assertUpToDate } from './guard.js';
 
 const FACTORIES = {
   claim: newClaim,
   evidence: newEvidence,
   fact: newFact,
+  method: newMethod,
   source: newSource,
   result: newResult,
 };
@@ -27,10 +31,35 @@ const SEQ_FACTORIES = {
 // "questions") passes validation, is silently dropped, and cannot be corrected afterwards
 // because the id is already derived from the rest of the content.
 export const ALLOWED_FIELDS = {
-  claim: ['statement', 'kind', 'supported_by', 'questions', 'sections', 'tags'],
-  evidence: ['source', 'locator', 'excerpt', 'strength', 'tags'],
+  claim: ['statement', 'kind', 'supported_by', 'questions', 'sections', 'tags', 'provenance'],
+  evidence: ['source', 'locator', 'excerpt', 'strength', 'tags', 'provenance'],
   fact: ['key', 'value', 'unit', 'from', 'tags'],
-  source: ['title', 'authors', 'year', 'venue', 'doi', 'url', 'type', 'artifacts', 'tags'],
+  method: [
+    'name',
+    'design',
+    'paradigm',
+    'sampling',
+    'instruments',
+    'analysis',
+    'limitations',
+    'questions',
+    'tags',
+  ],
+  source: [
+    'title',
+    'authors',
+    'year',
+    'venue',
+    'doi',
+    'url',
+    'type',
+    'artifacts',
+    'tags',
+    'bibkey',
+    'abstract',
+    'keywords',
+    'identifiers',
+  ],
   result: ['summary', 'from', 'values', 'tags'],
   question: ['text', 'objectives', 'tags'],
   hypothesis: ['text', 'questions', 'tags'],
@@ -68,9 +97,31 @@ async function validateReferences(store, type, input) {
     if (input.from?.artifact !== undefined) await assertReferenceExists(store, input.from.artifact);
   } else if (type === 'source') {
     for (const id of input.artifacts ?? []) await assertReferenceExists(store, id);
-  } else if (type === 'hypothesis') {
+  } else if (type === 'hypothesis' || type === 'method') {
     for (const id of input.questions ?? []) await assertReferenceExists(store, id);
   }
+}
+
+// What the record was read out of, resolved from what it already references: evidence points
+// at the artifact it was read from (directly, or through its source's artifacts), and a claim
+// inherits the union from the evidence it cites. Computed here rather than in the factory
+// because only the application layer can read the referenced objects back.
+async function derivedFrom(store, type, input) {
+  if (type === 'evidence') {
+    if (input.source === undefined) return [];
+    if (parseId(input.source)?.type === 'artifact') return [input.source];
+    const source = await store.readEntity(input.source);
+    return [...new Set(source?.artifacts ?? [])].sort();
+  }
+  if (type === 'claim') {
+    const ids = new Set();
+    for (const id of input.supported_by ?? []) {
+      const evidence = await store.readEntity(id);
+      for (const derived of evidence?.provenance?.derived_from ?? []) ids.add(derived);
+    }
+    return [...ids].sort();
+  }
+  return [];
 }
 
 function nextSeq(existing) {
@@ -87,6 +138,8 @@ async function addArtifactRole({ store, clock, actor }, { id, role }) {
   if (!existing) {
     throw new PhdudeError('VALIDATION', `unknown reference ${id}`, 'run phdude knowledge list');
   }
+  if (existing.role === role) return { obj: existing, created: false, updated: false };
+
   const updated = { ...existing, role };
   await store.writeEntity(updated);
   await store.appendEvent({
@@ -96,16 +149,19 @@ async function addArtifactRole({ store, clock, actor }, { id, role }) {
     ids: [id],
     summary: `artifact role set to ${role}`,
   });
-  return { obj: updated, created: false };
+  return { obj: updated, created: false, updated: true };
 }
 
 /**
  * @param {{store: object, clock: () => string, actor: object}} deps
  * @param {string} type
  * @param {object} input
- * @returns {Promise<{obj: object, created: boolean}>}
+ * @returns {Promise<{obj: object, created: boolean, updated?: boolean}>} `updated` is reported
+ *   by `artifact-role`, the one type that changes an object instead of creating one
  */
 export async function addEntity({ store, clock, actor }, type, input) {
+  assertUpToDate(await store.readProject());
+
   if (type === 'decision') {
     throw new PhdudeError(
       'USAGE',
@@ -118,7 +174,7 @@ export async function addEntity({ store, clock, actor }, type, input) {
     throw new PhdudeError(
       'USAGE',
       `unknown entity type: ${type}`,
-      'valid types: claim, evidence, fact, source, result, question, hypothesis, artifact-role',
+      'valid types: claim, evidence, fact, method, source, result, question, hypothesis, artifact-role',
     );
   }
   assertKnownFields(type, input);
@@ -152,7 +208,12 @@ export async function addEntity({ store, clock, actor }, type, input) {
     return { obj, created: true };
   }
 
-  const candidate = factory({ ...input, actor, created: clock() });
+  const candidate = factory({
+    ...input,
+    derived_from: await derivedFrom(store, type, input),
+    actor,
+    created: clock(),
+  });
   const existing = await store.readEntity(candidate.id);
   if (existing) return { obj: existing, created: false };
 
