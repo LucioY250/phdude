@@ -162,13 +162,16 @@ phdude:
 ---
 ```
 
-`writes` stays empty for every skill that ships today, because a skill never edits the workspace
+`writes` is empty for every shipped skill but one, because a skill never edits the workspace
 directly: it runs `phdude add`, `phdude decide` and the other write commands, so the runtime
 validates, hashes, attributes and logs each change. See
-[ADR 4](adr/0004-agent-writes-through-cli.md).
+[ADR 4](adr/0004-agent-writes-through-cli.md). The exception is `academic-prose`, which declares
+`writes: [manuscript/**]` (PRD §30b) — and even there the prose reaches the workspace through
+`phdude manuscript submit`, never through a file edit.
 
 Skills in `skills/` are copied into `.phdude/skills/` by `phdude init`. `tests/unit/skills.test.js`
-checks that every shipped skill has valid front matter and declares no writes;
+checks that every shipped skill has valid front matter and declares the writes it is allowed
+(none, or `academic-prose`'s `manuscript/**`);
 `tests/contracts/skills.test.js` checks that every shipped skill (core and packs) loads and
 validates against the skill contract schema below.
 
@@ -181,7 +184,7 @@ block itself is checked, not the rest of the front matter.
 | --- | --- | --- | --- |
 | `version` | yes | `1` | The only supported contract version. |
 | `reads` | yes | `string[]` | Workspace globs the skill reads. |
-| `writes` | yes | `string[]` | Workspace globs the skill writes directly. Empty for every core and pack skill (see above); non-empty is reserved for a future manuscript-writing skill. |
+| `writes` | yes | `string[]` | Workspace globs the skill writes directly. Empty for every core and pack skill but `academic-prose`, which declares `manuscript/**` (see above). |
 | `permissions` | yes | object | `{ network: 'none'\|'allowed', execution?: 'none'\|'allowed', workspace: string[] }`. `workspace` is one or more of `read`, `write:manuscript`, `write:knowledge`, `write:sources`, at least one entry. `execution` is optional and defaults to `none`, so every skill written before v0.5 stays valid. |
 | `objects` | no | `string[]` | Research object types the skill works with. |
 | `artifacts` | no | `string[]` | Artifact kinds the skill produces. |
@@ -213,11 +216,12 @@ applied when one skill in the batch fails to load.
 
 **Execution permission.** The same shape, one setting along: `.phdude/research-policy.yaml`
 carries `skills.allow_execution` (default `false`), and a skill that declares
-`permissions.execution: allowed` needs it. `skills/analysis` is the one shipped skill that does,
-because it tells an agent how to declare and run an analysis. The two settings are independent —
-opening the network does not open execution — and both gate *installation* only. Whether a script
-actually runs is `execution.enabled` in the same file, checked at run time by `phdude analyze run`
-and `phdude figure build`, so a workspace can hold the analysis skill and still refuse every run.
+`permissions.execution: allowed` needs it. Two shipped skills do: `skills/analysis`, which tells
+an agent how to declare and run an analysis, and `skills/figures`, whose `phdude figure build`
+spawns a generator. The two settings are independent — opening the network does not open
+execution — and both gate *installation* only. Whether a script actually runs is
+`execution.enabled` in the same file, checked at run time by `phdude analyze run` and
+`phdude figure build`, so a workspace can hold both skills and still refuse every run.
 
 **Discovery order.** `discoverSkills` (`src/adapters/skills/loader.js`) walks a list of roots in
 order — the package's own `skills/`, each applied pack's skill directories, then

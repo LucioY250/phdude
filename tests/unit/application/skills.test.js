@@ -92,10 +92,12 @@ test('listSkills reports the shipped core skills with source "core" and their de
     discoverSkills,
     skillsDir: DEFAULT_SKILLS_DIR,
   });
-  // `research` declares network access and `analysis` declares script execution, so a workspace
-  // with no policy (the default, closed) reports both - and still lists every skill.
+  // `research` declares network access; `analysis` and `figures` declare script execution,
+  // because both drive a command that spawns one. A workspace with no policy (the default,
+  // closed) reports all three - and still lists every skill.
   assert.deepEqual(warnings, [
     'skill analysis requests script execution; set skills.allow_execution: true in .phdude/research-policy.yaml',
+    'skill figures requests script execution; set skills.allow_execution: true in .phdude/research-policy.yaml',
     'skill research requests network access; set skills.allow_network: true in .phdude/research-policy.yaml',
   ]);
   const bootstrap = skills.find((s) => s.name === 'bootstrap');

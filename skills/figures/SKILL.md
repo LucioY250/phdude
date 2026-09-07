@@ -7,12 +7,17 @@ phdude:
   writes: []
   permissions:
     network: none
+    execution: allowed
     workspace: [read]
 ---
 
 # Figures
 
-Follow `[[phdude-core]]`. A figure in this workspace is a record, not an image you produced: it
+Follow `[[phdude-core]]`. This skill is installed only when `.phdude/research-policy.yaml` sets
+`skills.allow_execution: true`, because `phdude figure build` spawns a generator; even then the
+build is gated separately by `execution.enabled`.
+
+A figure in this workspace is a record, not an image you produced: it
 declares what draws it, from what, and what it shows, and `phdude figure build` runs the
 generator and records the hashes. You never draw a figure yourself, never run a generator
 yourself, and never write a file under `figures/out/`.

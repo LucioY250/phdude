@@ -70,11 +70,12 @@ does any of this still hold? See
   `analysis-stale` — high once a supported or canonical claim rests on one of that analysis's
   results, medium otherwise — plus `figure-missing-alt` and `never-run`. `phdude gaps` gains
   `result-uncited`.
-- **Two skills and a section in the method packs.** `skills/analysis` (the only shipped skill
-  that declares `permissions.execution: allowed`, installed only when
-  `skills.allow_execution: true`) and `skills/figures` (dataviz rules, alt text, one message per
-  figure). The `quantitative` and `qualitative` packs gain an "Analysis" section: which scripts
-  a paradigm typically runs, and what a result from it owes a reader.
+- **Two skills and a section in the method packs.** `skills/analysis` and `skills/figures`
+  (dataviz rules, alt text, one message per figure). Both declare
+  `permissions.execution: allowed`, because both drive a command that spawns something, so both
+  are installed only when `skills.allow_execution: true`. The `quantitative` and `qualitative`
+  packs gain an "Analysis" section: which scripts a paradigm typically runs, and what a result
+  from it owes a reader.
 - **Workspace version 3**, with migration `0002-workspace-v3`: it adds the `execution` and
   `skills.allow_execution` policy keys when they are missing, creates `knowledge/datasets/`,
   `analysis/out/`, `tables/out/` and `figures/out/`, and appends the matching `.gitignore` rules.

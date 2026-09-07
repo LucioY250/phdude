@@ -84,9 +84,10 @@ directory and an environment holding `PATH`, `HOME`, `LANG`, `PHDUDE_WORKSPACE` 
 contract: what a script produces is the files it declares.
 
 `skills.allow_execution` is a different switch for a different thing. It gates whether a skill
-that declares `permissions.execution: allowed` is *installed* — `skills/analysis` is the one that
-does — and it has no effect on whether a run is permitted. A workspace can hold the analysis
-skill and still refuse every script, which is the useful default. `phdude doctor` prints both.
+that declares `permissions.execution: allowed` is *installed* — `skills/analysis` and
+`skills/figures`, the two that drive a command which spawns something — and it has no effect on
+whether a run is permitted. A workspace can hold both skills and still refuse every script, which
+is the useful default. `phdude doctor` prints both.
 
 ## Commands
 

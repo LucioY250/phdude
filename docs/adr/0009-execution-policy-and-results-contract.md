@@ -80,8 +80,10 @@ v0.4 result again after the migration still finds the record already on disk.
 
 **Skills ask for it explicitly.** The skill contract's `permissions` gains
 `execution: none|allowed`, mirroring `network`, and the workspace grants it with
-`skills.allow_execution`. `phdude init` withholds a skill the policy has not cleared and installs
-the rest; `phdude packs apply` refuses the whole pack.
+`skills.allow_execution`. Every shipped skill that drives a command which spawns something
+declares it — `analysis` for `phdude analyze run`, `figures` for `phdude figure build` — so a
+default workspace has neither. `phdude init` withholds a skill the policy has not cleared and
+installs the rest; `phdude packs apply` refuses the whole pack.
 
 ## Consequences
 
