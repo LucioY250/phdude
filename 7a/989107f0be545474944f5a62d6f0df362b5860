@@ -1,0 +1,77 @@
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_56a04d7060e40a 34-39
+src/adapters/cli/commands/manuscript.js
+  s_946fc7502759d8::t_56a04d7060e40a 1-134
+src/application/manuscript.js
+  s_946fc7502759d8::t_56a04d7060e40a 1-397
+src/domain/gates/citations.js
+  s_946fc7502759d8::t_56a04d7060e40a 1-63
+tests/fixtures/objects/valid/manuscript.1.json
+  s_946fc7502759d8::t_56a04d7060e40a 1-31
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_56a04d7060e40a 2,24-28,166-224
+  s_946fc7502759d8::t_40e14f35d2cb31 225
+tests/unit/domain/manuscript.test.js
+  s_946fc7502759d8::t_56a04d7060e40a 1-111
+src/application/init.js
+  s_946fc7502759d8::t_56a04d7060e40a 31
+commands/manuscript.md
+  s_946fc7502759d8::t_56a04d7060e40a 1-32
+schemas/decision.json
+  s_946fc7502759d8::t_56a04d7060e40a 15-23
+src/schemas/index.js
+  s_946fc7502759d8::t_56a04d7060e40a 31-32
+README.md
+  s_946fc7502759d8::t_a68375782733b9 174
+  s_946fc7502759d8::t_56a04d7060e40a 448
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_56a04d7060e40a 56-58,65-68
+src/domain/gates/index.js
+  s_946fc7502759d8::t_56a04d7060e40a 1-28
+tests/fixtures/objects/valid/section-report.1.json
+  s_946fc7502759d8::t_56a04d7060e40a 1-11
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_56a04d7060e40a 1516-1638
+schemas/section-report.json
+  s_946fc7502759d8::t_56a04d7060e40a 1-40
+src/application/decide.js
+  s_946fc7502759d8::t_56a04d7060e40a 4,8-10,12-24
+src/domain/manuscript.js
+  s_946fc7502759d8::t_56a04d7060e40a 1-152
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_56a04d7060e40a 121-123
+docs/cli.md
+  s_946fc7502759d8::t_56a04d7060e40a 711-767
+docs/workspace.md
+  s_946fc7502759d8::t_56a04d7060e40a 260-308
+tests/integration/manuscript.test.js
+  s_946fc7502759d8::t_56a04d7060e40a 1-407
+tests/unit/domain/gates/citations.test.js
+  s_946fc7502759d8::t_56a04d7060e40a 1-99
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_56a04d7060e40a 31,58
+schemas/manuscript.json
+  s_946fc7502759d8::t_56a04d7060e40a 1-51
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_56a04d7060e40a 148-149
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_56a04d7060e40a 77-83,300-302
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_56a04d7060e40a 56-58,65-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "7a989107f0be545474944f5a62d6f0df362b5860",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
