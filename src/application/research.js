@@ -543,14 +543,31 @@ export async function fresh(deps, { question = null, all = false, allowNetwork =
   const reran = [];
   const newCandidates = [];
   const warnings = [];
+  const available = new Set((deps.providers ?? []).map((provider) => provider.name));
 
   for (const record of due) {
+    // Removing a provider from the policy is an ordinary config edit, and every search recorded
+    // before it still names the provider it ran against. Re-run what is left and say what was
+    // dropped; a stored list that no longer overlaps the policy at all is one unrunnable
+    // record, not a reason to discard every other re-run in this invocation.
+    const recorded = record.providers ?? [];
+    const runnable = recorded.filter((name) => available.has(name));
+    const dropped = recorded.filter((name) => !available.has(name));
+    if (dropped.length > 0) {
+      const what = `provider(s) ${dropped.join(', ')} no longer configured`;
+      if (runnable.length === 0) {
+        warnings.push(`skipped ${record.id}: ${what}`);
+        continue;
+      }
+      warnings.push(`${record.id}: ${what}`);
+    }
+
     let result;
     try {
       result = await search(deps, {
         query: record.query,
         question: record.question,
-        providers: record.providers,
+        providers: runnable,
         from: record.filters?.from,
         limit: record.filters?.limit ?? undefined,
         allowNetwork,

@@ -504,6 +504,13 @@ A stored search can outlive what it points at — a question deleted by hand, sa
 is reported as a warning (`skipped SEARCH-…: unknown question RQ-n`) and the rest of the due
 searches still run; one unrunnable record does not discard the re-runs already done.
 
+Removing a provider from `providers:` is the other way a stored search outlives its workspace,
+and it is an ordinary config edit. A search is re-run against whatever providers it recorded
+that the policy still lists, with the rest reported as
+`SEARCH-…: provider(s) crossref no longer configured`; a search with no provider left in common
+is skipped the same way (`skipped SEARCH-…: provider(s) … no longer configured`). Neither ends
+the run.
+
 ### `phdude freshness [--json]`
 
 ```

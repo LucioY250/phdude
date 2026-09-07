@@ -762,9 +762,45 @@ test('fresh: an error that is not VALIDATION still aborts the run', async () => 
     question: 'RQ-1',
   });
 
-  const deps = makeDepsAt(root, '2026-09-07T00:00:00Z');
-  deps.providers = [];
-  await assert.rejects(() => research.fresh(deps, {}), { code: 'USAGE' });
+  // Every provider unwell is TOOL_MISSING, not VALIDATION: nothing about the record is wrong,
+  // so reporting it as a skipped search would claim the literature was checked when it was not.
+  const deps = makeDepsAt(root, '2026-09-07T00:00:00Z', [
+    { match: OPENALEX, status: 500, body: 'unwell' },
+    { match: CROSSREF, status: 500, body: 'unwell' },
+  ]);
+  await assert.rejects(() => research.fresh(deps, {}), { code: 'TOOL_MISSING' });
+});
+
+test('fresh: a search whose providers were removed from the policy is skipped, not fatal', async () => {
+  const root = await newRoot();
+  const store = new FsStore(root);
+  await addQuestion(store, 1, 'How do open science practices spread?');
+  await addQuestion(store, 2, 'What makes a pipeline reproducible?');
+
+  const both = await research.search(makeDepsAt(root, '2025-01-01T00:00:00Z'), {
+    query: 'open science',
+    question: 'RQ-1',
+  });
+  const crossrefOnly = await research.search(
+    makeDepsAt(root, '2025-01-01T00:00:00Z', successRoutes(), ['crossref']),
+    { query: 'reproducible pipelines', question: 'RQ-2', providers: ['crossref'] },
+  );
+  assert.deepEqual(crossrefOnly.search.providers, ['crossref']);
+
+  // The researcher narrowed `providers:` to openalex. One recorded search still overlaps it and
+  // one does not; neither may take the whole run down with it.
+  const now = makeDepsAt(root, '2026-09-07T00:00:00Z', successRoutes(), ['openalex']);
+  const result = await research.fresh(now, {});
+
+  assert.deepEqual(result.reran, [both.search.id], 'the search that still overlaps ran');
+  assert.deepEqual(result.warnings, [
+    `${both.search.id}: provider(s) crossref no longer configured`,
+    `skipped ${crossrefOnly.search.id}: provider(s) crossref no longer configured`,
+  ]);
+  assert.ok(
+    now.fetch.calls.every((call) => call.url.includes('api.openalex.org')),
+    'only the provider the policy still lists was called',
+  );
 });
 
 test('search: the same title and year under a different DOI is a different work', async () => {
