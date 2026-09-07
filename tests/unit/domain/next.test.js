@@ -564,3 +564,98 @@ test('recommendNext: stale-search recommends the search itself when the network 
 
   assert.equal(action.command, `phdude research "text RQ-1" --question RQ-1`);
 });
+
+// A manuscript with one section, so a case can say exactly which state it is testing.
+function manuscript(section = {}) {
+  return {
+    schema: 'phdude.manuscript',
+    version: 1,
+    title: 'T',
+    language: 'en',
+    voice: { kind: 'consensus' },
+    sections: [
+      {
+        id: 'introduction',
+        title: 'Introduction',
+        file: 'manuscript/introduction.md',
+        order: 1,
+        status: 'planned',
+        hash: null,
+        claims: [],
+        questions: [],
+        ...section,
+      },
+    ],
+  };
+}
+
+test('recommendNext: sections-planned fires when a planned section has supported claims behind it', () => {
+  const ready = claim('CLAIM-1', { state: 'supported', supported_by: ['EVID-1'] });
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    claims: [ready],
+    evidence: [evidence('EVID-1', 'SRC-1')],
+    manuscript: manuscript({ claims: ['CLAIM-1'] }),
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'sections-planned');
+  assert.ok(action);
+  assert.equal(action.impact, 'medium');
+  assert.equal(action.command, 'phdude write introduction');
+  assert.match(action.why[0], /introduction/);
+});
+
+test('recommendNext: a planned section whose claims are still candidates is not ready to write', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    claims: [claim('CLAIM-1', { state: 'candidate' })],
+    manuscript: manuscript({ claims: ['CLAIM-1'] }),
+  });
+  assert.equal(
+    recommendNext(snapshot, []).some((a) => a.rule === 'sections-planned'),
+    false,
+  );
+});
+
+test('recommendNext: draft-blocked is high and reads the last section report', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    manuscript: manuscript({ status: 'draft' }),
+    sectionReports: [{ section: 'introduction', blocks: 2, warnings: 1 }],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'draft-blocked');
+  assert.ok(action);
+  assert.equal(action.impact, 'high');
+  assert.equal(action.command, 'phdude prose introduction');
+  assert.match(action.why[0], /introduction \(2\)/);
+});
+
+test('recommendNext: approval-pending names the revised sections with no decision behind them', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    manuscript: manuscript({ status: 'revised' }),
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'approval-pending');
+  assert.ok(action);
+  assert.equal(action.impact, 'medium');
+  assert.match(action.command, /--affects manuscript:introduction/);
+
+  const approved = emptySnapshot({
+    questions: [question('RQ-1')],
+    manuscript: manuscript({ status: 'approved', approved_by: 'DEC-1' }),
+  });
+  assert.equal(
+    recommendNext(approved, []).some((a) => a.rule === 'approval-pending'),
+    false,
+  );
+});
+
+test('recommendNext: a workspace with no manuscript recommends none of the writing rules', () => {
+  const snapshot = emptySnapshot({ questions: [question('RQ-1')] });
+  const rules = recommendNext(snapshot, []).map((a) => a.rule);
+  for (const rule of ['sections-planned', 'draft-blocked', 'approval-pending']) {
+    assert.equal(rules.includes(rule), false, rule);
+  }
+});

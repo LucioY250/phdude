@@ -1,10 +1,27 @@
 import { liveContradictions } from '../domain/contradictions.js';
 import { newDecision } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
+import { manuscriptAffects } from '../domain/manuscript.js';
 import { KNOWLEDGE_STATES, canTransition } from '../domain/states.js';
 import { assertUpToDate } from './guard.js';
 
+// A decision may also name a manuscript section, which is how a section reaches `approved`
+// (spec §3.6). A section is not an entity, so it is checked against the manuscript's own
+// section list rather than the id registry.
 async function assertReferenceExists(store, id) {
+  const section = manuscriptAffects(id);
+  if (section) {
+    const manuscript = await store.readManuscript();
+    if (!manuscript?.sections.some((entry) => entry.id === section)) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `unknown manuscript section ${section}`,
+        'run phdude manuscript list',
+      );
+    }
+    return null;
+  }
+
   const obj = await store.readEntity(id);
   if (!obj) {
     throw new PhdudeError('VALIDATION', `unknown reference ${id}`, 'run phdude knowledge list');

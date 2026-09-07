@@ -2,8 +2,8 @@
 // Regenerates examples/generic-thesis/ by driving the real use cases (initWorkspace, ingest,
 // addEntity, decide.propose, promote) against a fixed clock, so the committed workspace is a
 // faithful, reproducible sample rather than hand-authored YAML.
-import { rm, utimes } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { readFile, rm, utimes, writeFile } from 'node:fs/promises';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { FsStore } from '../src/adapters/store/fs-store.js';
 import { walk, read, realpath } from '../src/adapters/store/fs-walk.js';
@@ -12,9 +12,12 @@ import { discoverSkills } from '../src/adapters/skills/loader.js';
 import { initWorkspace } from '../src/application/init.js';
 import { ingest } from '../src/application/ingest.js';
 import { addEntity } from '../src/application/add.js';
-import { promote, propose } from '../src/application/decide.js';
+import { approve as approveDecision, promote, propose } from '../src/application/decide.js';
 import { link } from '../src/application/link.js';
+import * as authors from '../src/application/authors.js';
 import * as research from '../src/application/research.js';
+import * as manuscript from '../src/application/manuscript.js';
+import * as prose from '../src/application/prose.js';
 import { buildProviders } from '../src/adapters/search/index.js';
 import { fakeFetch } from '../src/adapters/search/fake-fetch.js';
 
@@ -87,6 +90,42 @@ Loose notes taken while reading the three surveys. Nothing here has been turned 
 a fact or an evidence item yet.
 `,
 };
+
+const RESEARCHER_A_PROFILE = {
+  id: 'researcher-a',
+  name: 'Researcher A',
+  language: 'en',
+  tone: { academic: true, assertiveness: 'moderate', first_person: 'sparing' },
+  sentences: { length: 'varied', openings: 'varied' },
+  paragraphs: { density: 'medium' },
+  transitions: 'minimal',
+  terminology: {
+    preserve: ['note-taking application', 'recruitment channel'],
+    avoid: ['leverage', 'robust', 'cutting-edge'],
+  },
+};
+
+// An approved writing sample in researcher-a's voice, about the example's own topic, so
+// `phdude authors learn` has real prose to compute descriptive statistics from.
+const RESEARCHER_A_SAMPLE = `Across three independently recruited undergraduate cohorts, adoption of mobile \
+note-taking applications is remarkably consistent once recruitment channel is taken into \
+account. Participants drawn from a general mailing list reported somewhat higher daily use \
+than those recruited through a narrower campus social media group, and this pattern recurs \
+whether the comparison is limited to two samples or extended across all three.
+
+Stratified sampling across additional campuses corroborates the original estimate rather than \
+undermining it. The third survey, recruited independently of the first two, reproduces a \
+similar adoption rate under a sampling design meant specifically to test whether the earlier \
+finding generalized beyond a single recruitment channel. Prior survey work has typically \
+treated recruitment channel as incidental to note-taking application adoption; the pattern \
+observed here suggests that channel deserves more explicit attention in future study designs, \
+particularly where samples are compared across institutions rather than within one.
+
+We report these figures descriptively rather than as evidence of a causal mechanism. A survey \
+conducted at three points in time, with three distinct recruitment channels, cannot on its own \
+distinguish a channel effect from an unmeasured cohort difference. The sample sizes involved \
+here are modest, and the claim that follows from them is correspondingly narrow: recruitment \
+channel is associated with the reported adoption rate, not that it determines it.`;
 
 // DOS/FAT timestamps aside, a plain fixed mtime keeps ingest's artifact.mtime field (and hence
 // the written YAML) stable across regenerations, independent of when this script happens to run.
@@ -192,6 +231,97 @@ async function acceptOneCandidate(deps, candidateIds) {
     return research.accept(deps, id);
   }
   throw new Error('no article candidate to accept');
+}
+
+// The first paragraph asserts the one supported claim in the workspace, with the marker and
+// the citation key the writing context would have handed an agent. The middle paragraph is the
+// filler a model reaches for when it has nothing to say: an appeal to "the literature" with
+// nobody cited, an intensifier standing in for a number, and a phrase that could be deleted
+// whole. `phdude deslop introduction` reports all three.
+function draftIntroduction(claim) {
+  return [
+    'Undergraduates report using note-taking applications daily, and the pattern holds across',
+    'three independently recruited samples [@alpha2025survey].',
+    `<!-- claim: ${claim.id} -->`,
+    '',
+    'It is important to note that the literature suggests adoption of these tools is significant',
+    'across institutions.',
+    '',
+    'How far that generalises is the open question. The three surveys recruited through different',
+    'channels, and the sample sizes they report do not agree, so this thesis asks whether adoption',
+    'differs by recruitment channel and campus.',
+  ].join('\n');
+}
+
+// The revision the deslop contract asks for: the middle paragraph now says something the
+// workspace can back, and the claim marker, the citation and the negations `gate-meaning`
+// watches all survive it.
+function revisedIntroduction(claim) {
+  return [
+    'Undergraduates report using note-taking applications daily, and the pattern holds across',
+    'three independently recruited samples [@alpha2025survey].',
+    `<!-- claim: ${claim.id} -->`,
+    '',
+    'The three surveys did not recruit the same way: one used the university mailing list, one a',
+    'campus social media group, and one a stratified sample across three campuses.',
+    '',
+    'How far the pattern generalises is therefore the open question. The sample sizes the three',
+    'surveys report do not agree either, so this thesis asks whether adoption differs by',
+    'recruitment channel and campus.',
+  ].join('\n');
+}
+
+async function submitDraft(deps, body, options) {
+  const path = join(deps.store.root, 'draft-introduction.md');
+  await writeFile(path, body + '\n');
+  await manuscript.submit(
+    { ...deps, readText: () => readFile(path, 'utf8') },
+    { section: 'introduction', file: path, ...options },
+  );
+  await rm(path);
+}
+
+// The manuscript, so the example carries a section that went through the whole writing loop
+// rather than one step of it: a planned six-section plan, an introduction submitted as a draft,
+// the same section revised once with its filler removed, the prose report `phdude prose`
+// stores, and finally an approval with a decision behind it - the human-authority gate, which
+// is the only way a section reaches `approved`.
+async function writeIntroduction(deps, claim) {
+  // The manuscript names researcher-a as its voice, which is what makes the profile above more
+  // than decoration: `phdude write` reads it into the writing context, and the voice check
+  // compares a draft against its learned statistics.
+  await manuscript.init(deps, { language: 'en', voice: RESEARCHER_A_PROFILE.id });
+
+  await submitDraft(deps, draftIntroduction(claim));
+  await submitDraft(deps, revisedIntroduction(claim), { revision: true });
+
+  await prose.proseSection(deps, 'introduction');
+
+  const { obj: decision } = await propose(deps, {
+    title: 'Approve the introduction as revised',
+    rationale:
+      'The section asserts one supported claim with the evidence and citation behind it, and ' +
+      'the revision passed every writing gate with no findings.',
+    affects: ['manuscript:introduction'],
+  });
+  await approveDecision(deps, decision.id, { by: ACTOR.researcher });
+  await manuscript.approve(deps, { section: 'introduction', decision: decision.id });
+}
+
+// One author profile, learned from one approved sample - `phdude authors learn`'s paths are
+// resolved relative to the current directory, so this mirrors the CLI's own resolution rather
+// than `store.readText` (workspace-root-relative).
+async function addAuthorProfile(deps, root) {
+  await authors.add(deps, RESEARCHER_A_PROFILE);
+
+  const samplePath = join('authors', 'samples', 'researcher-a', 'intro-approved.md');
+  await deps.store.writeTextAtomic(samplePath, RESEARCHER_A_SAMPLE);
+
+  await authors.learn(
+    { ...deps, cwd: root, readText: (p) => readFile(resolve(root, p), 'utf8') },
+    RESEARCHER_A_PROFILE.id,
+    { paths: [samplePath], approved: true },
+  );
 }
 
 export async function generate(root) {
@@ -345,7 +475,9 @@ export async function generate(root) {
     // the latter, while source1's own citing evidence (above) is never attached to any claim.
     supported_by: [evidence1.id, evidence3.id],
     questions: [rq.id],
-    sections: ['Results'],
+    // Named for both sections: the introduction previews the finding, the results report it.
+    // `phdude write introduction` picks the claim up from here.
+    sections: ['Introduction', 'Results'],
   });
   await promote(deps, claim1.id, { to: 'supported' });
 
@@ -418,6 +550,8 @@ export async function generate(root) {
 
   await acceptOneCandidate(deps, await recordStaleSearch(deps, rq.id));
 
+  await addAuthorProfile(deps, root);
+
   await propose(deps, {
     title: 'Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta',
     rationale:
@@ -426,6 +560,8 @@ export async function generate(root) {
     affects: [fact1.id, fact2.id, fact3.id],
     change: { fact_key: 'sample_size', canonical_value: 312 },
   });
+
+  await writeIntroduction(deps, claim1);
 }
 
 async function main() {

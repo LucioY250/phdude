@@ -1442,3 +1442,481 @@ test('e2e: research, accept, dismiss, cite check, edit, freshness and research-f
     ['accepted', 'accepted', 'dismissed'],
   );
 });
+
+test('e2e: prose reports on any text file, in either language, and refuses detector flags', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-prose-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  const slop = join(REPO_ROOT, 'tests', 'fixtures', 'prose', 'en', 'slop.md');
+  const clean = join(REPO_ROOT, 'tests', 'fixtures', 'prose', 'en', 'clean.md');
+
+  // No workspace is needed: the report is over a text file, and the academic-prose skill's
+  // wrapper script reaches this command from anywhere.
+  const report = await runJson(ws, ['prose', '--file', slop]);
+  assert.equal(report.file, slop);
+  assert.ok(report.observations.length >= 9, 'the slop fixture trips most of the rules');
+  assert.deepEqual(Object.keys(report.scores), [
+    'specificity',
+    'evidenceAlignment',
+    'epistemicPrecision',
+    'structuralVariation',
+    'authorVoice',
+    'conciseness',
+  ]);
+  assert.equal(report.scores.evidenceAlignment, null, 'a bare file has no evidence graph');
+  assert.equal(typeof report.formulas.specificity, 'string');
+  for (const o of report.observations) {
+    assert.ok(Number.isInteger(o.line) && o.line >= 1);
+    assert.ok(['warn', 'info'].includes(o.severity), o.severity);
+  }
+
+  const text = await run(ws, ['prose', '--file', slop]);
+  assert.match(text.stdout, /^Academic Prose Quality: \d+\/100/);
+  assert.match(text.stdout, /Evidence Alignment {6}n\/a \(needs manuscript context\)/);
+  assert.match(text.stdout, /vague-literature: /);
+
+  // A report never blocks: clean prose and sloppy prose both exit 0.
+  const cleanReport = await runJson(ws, ['prose', '--file', clean]);
+  assert.deepEqual(cleanReport.observations, []);
+  assert.equal(cleanReport.scores.specificity, 100);
+
+  const spanish = await runJson(ws, [
+    'prose',
+    '--file',
+    join(REPO_ROOT, 'tests', 'fixtures', 'prose', 'es', 'slop.md'),
+    '--lang',
+    'es',
+  ]);
+  assert.equal(spanish.lang, 'es');
+  assert.ok(spanish.observations.some((o) => o.rule === 'banned-phrase'));
+
+  const german = await runJson(ws, ['prose', '--file', clean, '--lang', 'de']);
+  assert.ok(
+    german.observations.some((o) => o.rule === 'unsupported-language' && o.severity === 'info'),
+    'an unsupported language says so instead of reporting nothing',
+  );
+
+  // PRD §30c: PhDude has no AI-detector score, so the flag that asks for one is a policy error.
+  for (const flag of ['--detector', '--humanize-to', '--detector-target=0.1']) {
+    const refused = await phdude(ws, ['prose', '--file', clean, flag, '--json', ...ACTOR]);
+    assert.equal(refused.code, 3, `${flag} should exit 3`);
+    const err = JSON.parse(refused.stderr).error;
+    assert.equal(err.code, 'POLICY');
+    assert.equal(err.message, 'PhDude does not measure or target AI-detector scores');
+    assert.match(err.hint, /§30c/);
+  }
+
+  const missing = await phdude(ws, ['prose', '--json', ...ACTOR]);
+  assert.equal(missing.code, 1, 'prose without --file is a usage error');
+  assert.equal(JSON.parse(missing.stderr).error.code, 'USAGE');
+
+  const notThere = await phdude(ws, ['prose', '--file', 'nope.md', '--json', ...ACTOR]);
+  assert.equal(notThere.code, 1);
+  assert.match(JSON.parse(notThere.stderr).error.message, /^not found: /);
+});
+
+test('e2e: manuscript init, a blocked submit, a clean one, approve and reopen', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-manuscript-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Manuscript thesis', '--no-git']);
+
+  const created = await runJson(ws, ['manuscript', 'init', '--voice', 'researcher-a']);
+  assert.equal(created.title, 'Manuscript thesis');
+  assert.deepEqual(created.voice, { kind: 'author', author: 'researcher-a' });
+  assert.equal(created.sections.length, 6);
+  assert.equal(
+    await exists(join(ws, 'manuscript', 'introduction.md')),
+    false,
+    'init plans sections, it does not write them',
+  );
+
+  // A citation with nothing behind it blocks: exit 2, the finding located, and no file written.
+  const draft = join(ws, 'draft.md');
+  await writeFile(draft, '# Introduction\n\nSMEs adopt AI slowly [@nobody2000nothing].\n');
+  const blocked = await phdude(ws, [
+    'manuscript',
+    'submit',
+    'introduction',
+    '--file',
+    draft,
+    ...ACTOR,
+  ]);
+  assert.equal(blocked.code, 2);
+  assert.match(blocked.stderr, /section blocked by gate-citations: 1 finding\(s\)/);
+  assert.match(blocked.stderr, /gate-citations:3 \[@nobody2000nothing\]/);
+  assert.equal(await exists(join(ws, 'manuscript', 'introduction.md')), false);
+
+  await run(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'A Study of Cognitive Load',
+      authors: ['Z. Zeta'],
+      year: 2020,
+      type: 'article',
+    }),
+  ]);
+
+  await writeFile(draft, '# Introduction\n\nSMEs adopt AI slowly [@zeta2020study].\n');
+  const submitted = await runJson(ws, ['manuscript', 'submit', 'introduction', '--file', draft]);
+  assert.equal(submitted.section.status, 'draft');
+  assert.equal(submitted.report.blocks, 0);
+  const sectionText = await readFile(join(ws, 'manuscript', 'introduction.md'), 'utf8');
+  assert.match(sectionText, /^---\nsection: introduction\nstatus: draft\n/);
+  assert.match(sectionText, /SMEs adopt AI slowly \[@zeta2020study\]\./);
+
+  const report = await readFile(join(ws, 'manuscript', 'reports', 'introduction.yaml'), 'utf8');
+  assert.match(report, /gate: gate-citations/);
+
+  // Approving needs an approved decision that names the section.
+  const notYet = await phdude(ws, ['manuscript', 'approve', 'introduction', ...ACTOR]);
+  assert.equal(notYet.code, 1);
+
+  const decision = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Approve the introduction',
+    '--rationale',
+    'Read end to end by the supervisor.',
+    '--affects',
+    'manuscript:introduction',
+  ]);
+  const unapproved = await phdude(ws, [
+    'manuscript',
+    'approve',
+    'introduction',
+    '--decision',
+    decision.id,
+    ...ACTOR,
+  ]);
+  assert.equal(unapproved.code, 3, 'a proposed decision does not approve a section');
+
+  await run(ws, ['decide', 'approve', decision.id, '--by', 'A Supervisor']);
+  const approved = await runJson(ws, [
+    'manuscript',
+    'approve',
+    'introduction',
+    '--decision',
+    decision.id,
+  ]);
+  assert.equal(approved.section.status, 'approved');
+  assert.equal(approved.section.approved_by, decision.id);
+
+  const overwrite = await phdude(ws, [
+    'manuscript',
+    'submit',
+    'introduction',
+    '--file',
+    draft,
+    ...ACTOR,
+  ]);
+  assert.equal(overwrite.code, 3, 'approved text is not overwritten');
+
+  const reopened = await runJson(ws, ['manuscript', 'reopen', 'introduction']);
+  assert.equal(reopened.section.status, 'revised');
+
+  const status = await runJson(ws, ['manuscript', 'status']);
+  assert.deepEqual(status.counts, { planned: 5, draft: 0, revised: 1, approved: 0 });
+
+  const statusText = await run(ws, ['manuscript', 'status']);
+  assert.match(statusText.stdout, /voice researcher-a/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'manuscript');
+  assert.deepEqual(
+    events.map((e) => e.summary),
+    [
+      'manuscript initialized (6 sections)',
+      'submitted introduction (draft)',
+      `approved introduction (${decision.id})`,
+      'reopened introduction (revised)',
+    ],
+  );
+});
+
+test('e2e: write, submit, deslop and prose over one section', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-writing-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Writing thesis', '--no-git']);
+
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'Adoption of AI in Small Firms',
+      authors: ['Z. Zeta'],
+      year: 2020,
+      type: 'article',
+    }),
+  ]);
+  const question = await runJson(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'How fast do small firms adopt AI?', objectives: ['Measure the lag'] }),
+  ]);
+  const evidence = await runJson(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({
+      source: source.id,
+      locator: 'p. 3',
+      excerpt: 'Adoption is slower among firms below fifty employees.',
+      strength: 'moderate',
+    }),
+  ]);
+  const claim = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({
+      statement: 'Small firms adopt AI more slowly than large ones.',
+      kind: 'empirical',
+      supported_by: [evidence.id],
+      questions: [question.id],
+      sections: ['Introduction'],
+    }),
+  ]);
+  await run(ws, ['promote', claim.id, '--to', 'supported']);
+  await run(ws, ['manuscript', 'init']);
+
+  // next recommends drafting the section whose evidence is already in.
+  const planned = await runJson(ws, ['next']);
+  const ready = planned.actions.find((a) => a.rule === 'sections-planned');
+  assert.ok(ready, 'sections-planned is recommended');
+  assert.equal(ready.command, 'phdude write introduction');
+
+  // write assembles the context and prints the contract; it writes no section file.
+  const context = await runJson(ws, ['write', 'introduction']);
+  assert.deepEqual(
+    context.included.map((item) => item.kind),
+    ['instruction', 'facts', 'claim', 'bibkeys', 'policy', 'voice', 'epistemic'],
+  );
+  const contextFile = await readFile(
+    join(ws, '.phdude', 'cache', 'writing', 'introduction', 'context.md'),
+    'utf8',
+  );
+  assert.match(contextFile, new RegExp(`<!-- claim: ${claim.id} -->`));
+  assert.equal(await exists(join(ws, 'manuscript', 'introduction.md')), false);
+
+  const text = await run(ws, ['write', 'introduction']);
+  assert.match(text.stdout, /Draft contract:/);
+  assert.match(text.stdout, /phdude manuscript submit introduction --file/);
+
+  // A verb the claim's state does not allow blocks: exit 2, the finding printed first, and no
+  // section file written.
+  const bad = join(ws, 'bad.md');
+  await writeFile(
+    bad,
+    `Adoption demonstrates a clear lag [@zeta2020adoption].\n<!-- claim: ${claim.id} -->\n`,
+  );
+  const blocked = await phdude(ws, [
+    'manuscript',
+    'submit',
+    'introduction',
+    '--file',
+    bad,
+    ...ACTOR,
+  ]);
+  assert.equal(blocked.code, 2);
+  assert.match(blocked.stderr, /^ {2}- gate-evidence:1 "demonstrates" claims more than/m);
+  assert.ok(
+    blocked.stderr.indexOf('gate-evidence:1') < blocked.stderr.indexOf('section blocked by'),
+    'the findings are printed before the error line',
+  );
+  assert.equal(await exists(join(ws, 'manuscript', 'introduction.md')), false);
+
+  // The clean draft passes every gate.
+  const draft = join(ws, 'draft.md');
+  const body = [
+    'Small firms move toward automated tooling at their own pace, and the surveyed population',
+    'shows the same lag in every recruitment channel we examined [@zeta2020adoption].',
+    `<!-- claim: ${claim.id} -->`,
+    '',
+    'The gap matters because the firms that lag have the least slack to recover it. This section',
+    'sets out the question the rest of the thesis answers.',
+  ].join('\n');
+  await writeFile(draft, body + '\n');
+
+  const submitted = await runJson(ws, ['manuscript', 'submit', 'introduction', '--file', draft]);
+  assert.equal(submitted.section.status, 'draft');
+  assert.deepEqual(
+    submitted.report.gates.map((row) => row.gate),
+    ['gate-citations', 'gate-evidence', 'gate-prose', 'gate-voice', 'gate-profile'],
+  );
+
+  // deslop without a file: the observations and the revision contract, and no event.
+  const contract = await run(ws, ['deslop', 'introduction']);
+  assert.match(contract.stdout, /Revision contract for introduction \(draft\)/);
+  assert.match(contract.stdout, /Preserve exactly/);
+  assert.match(contract.stdout, /Every number, exactly as written\./);
+
+  // A revision that drops the citation is refused, and the section stays a draft.
+  const dropped = join(ws, 'dropped.md');
+  await writeFile(dropped, body.replace(' [@zeta2020adoption]', '') + '\n');
+  const refused = await phdude(ws, ['deslop', 'introduction', '--file', dropped, ...ACTOR]);
+  assert.equal(refused.code, 2);
+  assert.match(refused.stderr, /gate-meaning:1 the revision drops the citation zeta2020adoption/);
+
+  const stillDraft = await runJson(ws, ['manuscript', 'show', 'introduction']);
+  assert.equal(stillDraft.status, 'draft');
+
+  // A revision that keeps every claim, citation, number and negation is recorded.
+  const revision = join(ws, 'revision.md');
+  await writeFile(
+    revision,
+    [
+      'Across every recruitment channel we examined, small firms move toward automated tooling at',
+      'their own pace [@zeta2020adoption].',
+      `<!-- claim: ${claim.id} -->`,
+      '',
+      'The firms that lag have the least slack to recover it, which is why the gap matters. This',
+      'section sets out the question the rest of the thesis answers.',
+    ].join('\n') + '\n',
+  );
+  const revised = await runJson(ws, ['deslop', 'introduction', '--file', revision]);
+  assert.equal(revised.revised, true);
+  assert.equal(revised.section.status, 'revised');
+
+  // The prose report scores the section against the evidence graph and stores the scores.
+  const report = await runJson(ws, ['prose', 'introduction']);
+  assert.equal(typeof report.scores.evidenceAlignment, 'number');
+  assert.equal(report.scores.authorVoice, null);
+  const stored = await readFile(join(ws, 'manuscript', 'reports', 'introduction.yaml'), 'utf8');
+  assert.match(stored, /evidenceAlignment: \d+/);
+
+  const proseText = await run(ws, ['prose', 'introduction']);
+  assert.match(proseText.stdout, /^introduction \(revised\) {2}Introduction/m);
+  assert.match(proseText.stdout, /Academic Prose Quality: \d+\/100/);
+
+  // The researcher approves it with a decision; next then has nothing pending.
+  const decision = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Approve the introduction',
+    '--rationale',
+    'It reads as intended and every claim resolves.',
+    '--affects',
+    'manuscript:introduction',
+  ]);
+  await run(ws, ['decide', 'approve', decision.id, '--by', 'the researcher']);
+
+  const pending = await runJson(ws, ['next']);
+  assert.ok(pending.actions.some((a) => a.rule === 'approval-pending'));
+
+  await run(ws, ['manuscript', 'approve', 'introduction', '--decision', decision.id]);
+  const approved = await runJson(ws, ['manuscript', 'show', 'introduction']);
+  assert.equal(approved.status, 'approved');
+
+  // An approved section is not deslopped in place.
+  const locked = await phdude(ws, ['deslop', 'introduction', ...ACTOR]);
+  assert.equal(locked.code, 3);
+  assert.match(locked.stderr, /reopen/);
+
+  const events = JSON.parse(
+    `[${(await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+      .trim()
+      .split('\n')
+      .join(',')}]`,
+  );
+  assert.deepEqual(
+    events.filter((e) => e.op === 'manuscript').map((e) => e.summary),
+    [
+      'manuscript initialized (6 sections)',
+      'submitted introduction (draft)',
+      'deslop introduction (revised)',
+      `approved introduction (${decision.id})`,
+    ],
+    'one event per mutation, and none for write, deslop --no-file or prose',
+  );
+});
+
+test('e2e: authors add, learn (paths relative to cwd), consensus', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-authors-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Author voice profiles', '--no-git']);
+
+  assert.deepEqual(await runJson(ws, ['authors', 'list']), []);
+
+  const addFields = {
+    id: 'researcher-a',
+    language: 'en',
+    tone: { academic: true, assertiveness: 'moderate', first_person: 'sparing' },
+    sentences: { length: 'varied', openings: 'varied' },
+    paragraphs: { density: 'medium' },
+    transitions: 'minimal',
+    terminology: { preserve: ['decision process'], avoid: ['leverage'] },
+  };
+  const added = await runJson(ws, ['authors', 'add', '--json', JSON.stringify(addFields)]);
+  assert.equal(added.id, 'researcher-a');
+  assert.ok(await exists(join(ws, 'authors', 'researcher-a.yaml')));
+
+  await run(ws, ['authors', 'add', '--json', JSON.stringify({ ...addFields, id: 'researcher-b' })]);
+
+  // `learn`'s paths are relative to the CLI's working directory, not the workspace, so a
+  // sample living entirely outside the workspace is still readable, and is recorded as an
+  // absolute path since it has no path relative to the workspace.
+  const outsideDir = await mkdtemp(join(tmpdir(), 'phdude-e2e-authors-sample-'));
+  t.after(() => rm(outsideDir, { recursive: true, force: true }));
+  const samplePath = join(outsideDir, 'sample-a.md');
+  await writeFile(
+    samplePath,
+    'We surveyed 312 undergraduate students. However, adoption varies across recruitment channels.',
+  );
+
+  const learned = await runJson(ws, [
+    'authors',
+    'learn',
+    'researcher-a',
+    '--from',
+    samplePath,
+    '--approved',
+  ]);
+  assert.equal(learned.learned.sample_count, 1);
+  assert.equal(learned.samples.length, 1);
+  assert.equal(learned.samples[0].path, samplePath);
+  assert.equal(learned.samples[0].approved, true);
+
+  const shown = await runJson(ws, ['authors', 'show', 'researcher-a']);
+  assert.deepEqual(shown, learned);
+
+  const list = await runJson(ws, ['authors', 'list']);
+  assert.deepEqual(
+    list.map((p) => p.id),
+    ['researcher-a', 'researcher-b'],
+  );
+
+  const consensusResult = await runJson(ws, ['authors', 'consensus']);
+  assert.equal(consensusResult.changed, true);
+  assert.equal(consensusResult.decision.title, 'Update project-consensus voice');
+  assert.ok(await exists(join(ws, 'authors', 'project-consensus.yaml')));
+
+  const again = await runJson(ws, ['authors', 'consensus']);
+  assert.equal(again.changed, false);
+  assert.equal(again.decision, null);
+
+  const missingFrom = await phdude(ws, ['authors', 'learn', 'researcher-a', '--json', ...ACTOR]);
+  assert.equal(missingFrom.code, 1);
+  assert.match(JSON.parse(missingFrom.stderr).error.message, /--from/);
+
+  const badId = await phdude(ws, [
+    'authors',
+    'add',
+    '--json',
+    JSON.stringify({ ...addFields, id: 'Not_Valid' }),
+    '--json',
+    ...ACTOR,
+  ]);
+  assert.equal(badId.code, 2);
+});

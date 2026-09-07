@@ -1,5 +1,5 @@
 import { readFile, appendFile, mkdir, readdir, stat } from 'node:fs/promises';
-import { join, sep } from 'node:path';
+import { isAbsolute, join, normalize, sep } from 'node:path';
 import { parse, stringify } from 'yaml';
 import { parseId } from '../../domain/ids.js';
 import { PhdudeError } from '../../domain/errors.js';
@@ -20,6 +20,11 @@ const ENTITY_DIRS = {
   search: join('research', 'searches'),
   decision: 'decisions',
 };
+
+const MANUSCRIPT_DIR = 'manuscript';
+const MANUSCRIPT_FILE = join(MANUSCRIPT_DIR, 'manuscript.yaml');
+const REPORTS_DIR = join(MANUSCRIPT_DIR, 'reports');
+const SECTION_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export class FsStore {
   constructor(root) {
@@ -156,6 +161,107 @@ export class FsStore {
       files.filter((f) => f.endsWith('.yaml')).map((f) => this.readEntityYaml(join(dir, f))),
     );
     return objs.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  }
+
+  async readManuscript() {
+    const obj = await this.readYaml(MANUSCRIPT_FILE);
+    if (obj !== null) assertValid('manuscript', obj);
+    return obj;
+  }
+
+  async writeManuscript(manuscript) {
+    assertValid('manuscript', manuscript);
+    await this.writeYamlAtomic(MANUSCRIPT_FILE, manuscript);
+    return join(this.root, MANUSCRIPT_FILE);
+  }
+
+  // A section's `file` is workspace-relative and must stay inside `manuscript/`: the path comes
+  // out of a YAML file a researcher can edit, so a `../` in it would otherwise let a submit
+  // write anywhere in the workspace.
+  sectionPath(file) {
+    const rel = normalize(String(file ?? ''));
+    const inside = !isAbsolute(rel) && rel.startsWith(MANUSCRIPT_DIR + sep) && !rel.includes('..');
+    if (!inside) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `section file outside manuscript/: ${file}`,
+        'a section file looks like manuscript/<section>.md',
+      );
+    }
+    return rel;
+  }
+
+  async readSection(file) {
+    return this.readText(this.sectionPath(file));
+  }
+
+  async writeSection(file, text) {
+    const rel = this.sectionPath(file);
+    await this.writeTextAtomic(rel, text);
+    return join(this.root, rel);
+  }
+
+  reportPath(section) {
+    if (!SECTION_ID_RE.test(String(section ?? ''))) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `invalid section id: ${section}`,
+        'section ids are lowercase words joined by "-"',
+      );
+    }
+    return join(REPORTS_DIR, `${section}.yaml`);
+  }
+
+  async listReports() {
+    let files;
+    try {
+      files = await readdir(join(this.root, REPORTS_DIR));
+    } catch (err) {
+      if (err.code === 'ENOENT') return [];
+      throw err;
+    }
+    const reports = await Promise.all(
+      files.filter((f) => f.endsWith('.yaml')).map((f) => this.readYaml(join(REPORTS_DIR, f))),
+    );
+    return reports
+      .filter((report) => report !== null && typeof report === 'object')
+      .sort((a, b) => (a.section < b.section ? -1 : a.section > b.section ? 1 : 0));
+  }
+
+  // Where `phdude write` leaves the assembled context and `submit` the full gate report. It is
+  // cache, not record: gitignored, rebuildable, and never what a decision rests on.
+  writingDir(section) {
+    if (!SECTION_ID_RE.test(String(section ?? ''))) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `invalid section id: ${section}`,
+        'section ids are lowercase words joined by "-"',
+      );
+    }
+    return join('.phdude', 'cache', 'writing', section);
+  }
+
+  async writeWritingContext(section, text) {
+    const rel = join(this.writingDir(section), 'context.md');
+    await this.writeTextAtomic(rel, text);
+    return join(this.root, rel);
+  }
+
+  async writeWritingReport(section, report) {
+    const rel = join(this.writingDir(section), 'report.json');
+    await this.writeTextAtomic(rel, JSON.stringify(report, null, 2) + '\n');
+    return join(this.root, rel);
+  }
+
+  async writeReport(section, report) {
+    const rel = this.reportPath(section);
+    assertValid('section-report', report);
+    await this.writeYamlAtomic(rel, report);
+    return join(this.root, rel);
+  }
+
+  async readReport(section) {
+    return this.readYaml(this.reportPath(section));
   }
 
   async appendEvent(evt) {

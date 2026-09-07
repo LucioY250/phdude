@@ -74,12 +74,59 @@ export const COMMAND_OPTIONS = {
   freshness: {},
   edit: {},
   matrix: { format: { type: 'string' }, question: { type: 'string' } },
+  manuscript: {
+    title: { type: 'string' },
+    language: { type: 'string' },
+    voice: { type: 'string' },
+    revision: { type: 'boolean' },
+    'allow-additions': { type: 'boolean' },
+    decision: { type: 'string' },
+  },
+  write: {
+    voice: { type: 'string' },
+    budget: { type: 'string' },
+  },
+  deslop: {
+    'allow-additions': { type: 'boolean' },
+  },
   gaps: {},
+  authors: {
+    from: { type: 'string', multiple: true },
+    approved: { type: 'boolean' },
+  },
   mode: {},
   migrate: {},
   doctor: {},
+  prose: { lang: { type: 'string' } },
   help: {},
 };
+
+// PhDude never measures, reports or targets an AI-detector score (PRD §30c), so no command may
+// take a flag that names one. The guard is global and matches on the option name alone, before
+// any command-specific parsing: refusing `--humanize-to` only where it was expected would leave
+// every other command to answer for it.
+const DETECTOR_OPTION = /detect|humaniz/i;
+
+function optionName(arg) {
+  if (typeof arg !== 'string' || !arg.startsWith('--') || arg === '--') return null;
+  return arg.slice(2).split('=')[0];
+}
+
+/**
+ * @param {string[]} argv
+ * @throws {PhdudeError} POLICY, when an option names an AI detector or a humanizer
+ */
+export function assertNoDetectorOptions(argv) {
+  for (const arg of argv) {
+    const name = optionName(arg);
+    if (name === null || !DETECTOR_OPTION.test(name)) continue;
+    throw new PhdudeError(
+      'POLICY',
+      'PhDude does not measure or target AI-detector scores',
+      'see PRD §30c: the goal is better academic prose, not detector evasion',
+    );
+  }
+}
 
 /**
  * @param {string|null} command
@@ -105,11 +152,14 @@ function looksLikeJson(token) {
 // `phdude decide propose`. node:util.parseArgs cannot express that, so it and the variadic
 // `--affects ID…` form are lifted out before parseArgs runs. `phdude link` takes `--to ID…`
 // the same way; every other command's `--to` is a single value (`promote --to <state>`) and
-// must stay one, or the flag swallows the id that follows it.
-function preprocess(argv, variadicTo) {
+// must stay one, or the flag swallows the id that follows it. `phdude authors learn` takes
+// `--from <path…>` the same way `link` takes `--to`; every other command's `--from` (`research
+// --from YYYY`) is a single value.
+function preprocess(argv, { variadicTo = false, variadicFrom = false } = {}) {
   const rest = [];
   const affects = [];
   const to = [];
+  const from = [];
   let json = false;
   let jsonPayload = null;
 
@@ -126,8 +176,12 @@ function preprocess(argv, variadicTo) {
       json = true;
       const value = arg.slice('--json='.length);
       if (looksLikeJson(value)) jsonPayload = value;
-    } else if (arg === '--affects' || (variadicTo && arg === '--to')) {
-      const target = arg === '--to' ? to : affects;
+    } else if (
+      arg === '--affects' ||
+      (variadicTo && arg === '--to') ||
+      (variadicFrom && arg === '--from')
+    ) {
+      const target = arg === '--to' ? to : arg === '--from' ? from : affects;
       let j = i + 1;
       while (j < argv.length && !argv[j].startsWith('-')) {
         target.push(argv[j]);
@@ -138,12 +192,14 @@ function preprocess(argv, variadicTo) {
       affects.push(arg.slice('--affects='.length));
     } else if (variadicTo && arg.startsWith('--to=')) {
       to.push(arg.slice('--to='.length));
+    } else if (variadicFrom && arg.startsWith('--from=')) {
+      from.push(arg.slice('--from='.length));
     } else {
       rest.push(arg);
     }
   }
 
-  return { rest, json, jsonPayload, affects, to };
+  return { rest, json, jsonPayload, affects, to, from };
 }
 
 function parseActor(value) {
@@ -207,8 +263,14 @@ function usageError(err, command, options) {
   throw new PhdudeError('USAGE', err.message, 'run phdude help');
 }
 
-function build(argv, { variadicTo = false, command = null, strict = false } = {}) {
-  const { rest, json, jsonPayload, affects, to } = preprocess(argv, variadicTo);
+function build(
+  argv,
+  { variadicTo = false, variadicFrom = false, command = null, strict = false } = {},
+) {
+  const { rest, json, jsonPayload, affects, to, from } = preprocess(argv, {
+    variadicTo,
+    variadicFrom,
+  });
   const options = strict ? optionsFor(command) : EVERY_OPTION;
 
   let parsed;
@@ -219,7 +281,10 @@ function build(argv, { variadicTo = false, command = null, strict = false } = {}
       // the table so the "allowed" hint lists every flag the command really takes.
       options: Object.fromEntries(
         Object.entries(options).filter(
-          ([name]) => name !== 'affects' && !(variadicTo && name === 'to'),
+          ([name]) =>
+            name !== 'affects' &&
+            !(variadicTo && name === 'to') &&
+            !(variadicFrom && name === 'from'),
         ),
       ),
       allowPositionals: true,
@@ -242,7 +307,8 @@ function build(argv, { variadicTo = false, command = null, strict = false } = {}
       actor: parseActor(values.actor),
       agents: parseList(values.agents),
       provider: parseList(values.provider),
-      from: values.from,
+      from: variadicFrom ? from : values.from,
+      approved: values.approved === true,
       limit: values.limit,
       allowNetwork: values['allow-network'] === true,
       approvePreprint: values['approve-preprint'] === true,
@@ -260,7 +326,13 @@ function build(argv, { variadicTo = false, command = null, strict = false } = {}
       to: variadicTo ? to : values.to,
       contradicts: values.contradicts,
       format: values.format,
+      lang: values.lang,
       question: values.question,
+      language: values.language,
+      voice: values.voice,
+      budget: values.budget,
+      revision: values.revision === true,
+      allowAdditions: values['allow-additions'] === true,
       file: values.file,
       rationale: values.rationale,
       reason: values.reason,
@@ -279,12 +351,18 @@ function build(argv, { variadicTo = false, command = null, strict = false } = {}
  * @returns {{command: string|null, sub: string|null, positionals: string[], flags: object}}
  */
 export function parseCli(argv) {
-  // Which command it is decides both how `--to` is parsed and which options are legal, and
-  // only parsing tells us the command, so a lenient pass runs first and the real one follows.
-  // An unrecognised command is parsed leniently too, so `phdude frobnicate --x` reports the
-  // command rather than the flag.
+  assertNoDetectorOptions(argv);
+  // Which command it is decides both how `--to`/`--from` are parsed and which options are
+  // legal, and only parsing tells us the command, so a lenient pass runs first and the real one
+  // follows. An unrecognised command is parsed leniently too, so `phdude frobnicate --x` reports
+  // the command rather than the flag.
   const detected = build(argv);
   const command = detected.command;
   if (!Object.hasOwn(COMMAND_OPTIONS, command)) return detected;
-  return build(argv, { variadicTo: command === 'link', command, strict: true });
+  return build(argv, {
+    variadicTo: command === 'link',
+    variadicFrom: command === 'authors',
+    command,
+    strict: true,
+  });
 }

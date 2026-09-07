@@ -20,7 +20,10 @@ my-research/
 │   ├── skills/<name>/SKILL.md    # installed agent skills (PhDude-managed)
 │   ├── events.jsonl              # append-only audit log (committed)
 │   └── cache/                    # extracted text, gitignored and disposable
-├── authors/                      # per-researcher voice profiles (populated in v0.4)
+├── authors/                      # per-researcher voice profiles (phdude authors)
+│   ├── <id>.yaml                 # schema phdude.author-profile v1
+│   ├── project-consensus.yaml    # written by `phdude authors consensus`
+│   └── samples/<id>/*.md         # approved writing samples `learn` reads from
 ├── sources/                      # raw materials you drop in
 ├── knowledge/
 │   ├── artifacts/  ART-*.yaml    # one per distinct file hash
@@ -36,8 +39,12 @@ my-research/
 │   ├── methods/    METH-*.yaml
 │   └── searches/   SEARCH-*.yaml # what was asked, of whom, and when
 ├── decisions/      DEC-*.yaml
+├── manuscript/
+│   ├── manuscript.yaml           # schema phdude.manuscript v1: the plan and every section
+│   ├── <section>.md              # the prose, front matter + Markdown body
+│   └── reports/<section>.yaml    # schema phdude.section-report v1: the last gate run
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
-├── data/ analysis/ figures/ tables/ manuscript/ templates/ outputs/
+├── data/ analysis/ figures/ tables/ templates/ outputs/
 └── .gitignore
 ```
 
@@ -78,7 +85,7 @@ something that happens to your files while you were asking for something else.
 
 | Path | On re-run |
 |---|---|
-| `phdude.yaml`, `.phdude/*.yaml`, and everything under `knowledge/`, `research/`, `decisions/`, `sources/` | yours; never overwritten |
+| `phdude.yaml`, `.phdude/*.yaml`, and everything under `knowledge/`, `research/`, `decisions/`, `sources/`, `authors/`, `manuscript/` | yours; never overwritten |
 | `.gitignore` | yours; only the missing default lines are appended |
 | `AGENTS.md`, `CLAUDE.md`, `.claude/commands/*` | rewritten only while they carry the `phdude:managed` marker on the first line or in their front matter |
 | the installed skills under `.phdude/skills/` | PhDude-managed; refreshed every time, and a changed file is reported under `updated` |
@@ -170,6 +177,33 @@ from a provider, not from a document in `sources/`. The candidate moves to `acce
 records `accepted_as`. If the workspace already records that Source — the same normalized title
 and year — the candidate is linked to it and the existing record is left exactly as it is.
 
+## Author voice profiles
+
+`authors/<id>.yaml` (`schema: phdude.author-profile`, PRD §30) is not a canonical object: its
+id is a researcher-chosen slug (`researcher-a`, `^[a-z0-9-]+$`), not content-derived, so
+`phdude authors add` refuses to overwrite an existing one rather than treating a repeat as a
+no-op. It records style preferences by hand (`tone`, `sentences`, `paragraphs`, `transitions`,
+`terminology.{preserve,avoid}`) and, once `phdude authors learn <id> --from <path…>` has run
+against approved writing samples, a `learned` block of explicit descriptive statistics —
+sentence-length mean and SD, opening diversity, transition rate, first-person rate, hedge rate,
+paragraph density, and the most frequent preserved terminology. Every `learned` field is a
+plain number or word list, never an opaque embedding: a researcher can read what PhDude
+inferred and correct it by editing the profile or running `learn` again. Each sample path
+`learn` reads is appended to `samples[]`, relative to the workspace when it lives inside it and
+absolute otherwise, with `approved: true` only when `--approved` was passed.
+
+`phdude authors consensus` merges every profile except `project-consensus` itself: categorical
+fields (tone, sentence style, transitions, language) by majority vote — a tie keeps whichever
+profile was read first — `terminology.preserve` by union, `terminology.avoid` by intersection,
+and every numeric `learned` field by median across the profiles that have actually run `learn`.
+It writes `authors/project-consensus.yaml` only when the merged content differs from what is
+already there, and proposes a Decision titled "Update project-consensus voice" with it, naming
+the participating author ids so the researcher can see whose profiles moved the result. A rerun
+with nothing new to merge leaves the file exactly as it was and proposes nothing. A manuscript names its active
+voice with `writing.primary_voice: <id>` or `writing.voice: project-consensus` (PRD §30.2); the
+Author Voice Check gate (v0.4's writing pipeline) compares a draft's own statistics against
+that profile's `learned` fields and reports deviations rather than silently rewriting.
+
 ## Knowledge states
 
 `candidate` → `supported` → `canonical`, with `disputed` and `rejected` alongside.
@@ -257,6 +291,65 @@ machine, so the log still says so.
 It is committed, append-only, and independent of git history, so a rebase cannot erase who
 recorded what. Git history complements it with the full content of each change.
 
+## The manuscript
+
+`manuscript/` holds the prose and the plan behind it (PRD §33):
+
+```text
+manuscript/
+├── manuscript.yaml     # title, language, voice, one entry per section
+├── introduction.md     # the prose, with a small front matter block
+├── methods.md
+└── reports/
+    └── introduction.yaml   # the gate report behind the last accepted submit
+```
+
+`phdude manuscript init` writes `manuscript.yaml` with the six standard sections — abstract,
+introduction, methods, results, discussion, conclusions — all `planned`. Each entry carries its
+`id`, `title`, `file`, `order`, `status`, `hash`, the `claims` and `questions` it covers, and
+`approved_by` once a decision approves it. A section file is written the first time a draft
+passes `phdude manuscript submit`, never by `init`.
+
+Every section file starts with four flat keys:
+
+```markdown
+---
+section: introduction
+status: draft
+hash: 3a7bd3e2…
+updated: 2026-09-07T10:00:00.000Z
+---
+
+# Introduction
+
+SMEs adopt AI slowly [@zeta2020study].
+```
+
+The `hash` is the sha256 of the body with the front matter removed, line endings normalized and
+trailing whitespace dropped, so reformatting a file does not look like a rewrite. It is what
+tells `phdude manuscript show`, `phdude prose <section>` and `phdude doctor` that a section file
+has been edited outside PhDude since its last submit; each of them says so plainly, naming the
+section, rather than presenting the new text under the old record.
+
+`manuscript/reports/<section>.yaml` records what the gates found on the submit that was
+accepted: the section, the hash it applies to, the timestamp, one row per gate with its finding
+count, the prose scores, and the warning and block counts. It carries counts, never prose. The
+next accepted submit rewrites it, and so does `phdude prose <section>`, which recomputes every
+field together so the numbers always describe the body the hash names.
+
+Everything under `manuscript/` is yours, but it is not hand-edited: prose reaches a section
+through `phdude manuscript submit <section> --file <draft.md>`, which runs the writing gates
+first and writes nothing when one blocks. A section that has been approved is only editable
+after `phdude manuscript reopen`, which is the approval being withdrawn on the record rather
+than quietly overwritten.
+
+Drafting a section starts one step earlier, with `phdude write <section>`. It assembles the
+writing context — the section's claims with their evidence, the citation keys, the policy, the
+voice profile and the verb table — into `.phdude/cache/writing/<section>/context.md` and prints
+the contract the draft has to meet. `phdude deslop <section>` is the revision half: it reports
+what to change, and takes the revision back through the gates with meaning preservation on.
+Neither writes prose; both leave that to `submit` and to `deslop --file`.
+
 ## Derived files
 
 Two things in the workspace are outputs rather than knowledge, and both can be deleted and
@@ -275,6 +368,11 @@ only how that source is printed. An export older than the sources it came from i
 `.phdude/cache/ART-<id>/` holds `manifest.json`, `text.md`, `sections/*.md` and
 `tables/*.csv` extracted from the source file. It is gitignored and disposable: delete it
 and `phdude ingest --force` rebuilds it.
+
+`.phdude/cache/writing/<section>/` holds `context.md`, the writing context `phdude write`
+assembled, and `report.json`, the full gate report behind the last accepted `submit` or
+`deslop` — every finding, warnings included, where `manuscript/reports/<section>.yaml` keeps
+only the canonical summary. A blocked run writes neither: it leaves the workspace as it was.
 
 Agents read the cache section by section rather than loading whole documents, which is how
 PhDude stays inside a context budget on projects with hundreds of sources (PRD §70).

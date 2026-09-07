@@ -660,6 +660,258 @@ among the higher-impact rules. `next`'s closing `consistent` line reads
 `N open gap(s); run phdude gaps` whenever the report is not empty, and claims the workspace is
 consistent only when it is.
 
+### `phdude prose <section> | --file <path>`
+
+```
+phdude prose introduction
+phdude prose introduction --json
+phdude prose --file draft.md
+phdude prose --file borrador.md --lang es
+```
+
+The Academic Prose Quality report of PRD §39.1: six sub-scores, each derived from located
+observations a researcher can open and dispute, followed by every observation with its line, the
+sentence it names, what is wrong and what to do about it. It reports; it never blocks, and it
+always exits 0.
+
+With a section id it reports on that manuscript section with the evidence graph behind it, so
+Evidence Alignment and Epistemic Precision are real numbers, and it rewrites
+`manuscript/reports/<section>.yaml`. The whole record is recomputed together — the hash of the
+body it measured, the timestamp, one row per gate from a run of all six, the scores and the
+warning and block counts — so no number is ever stamped with a hash that does not describe it.
+That report is a derived file, like `references.bib`: it records no event, and neither the prose
+nor `manuscript.yaml` is touched. A section written under a voice profile also lists, under
+`Voice`, the `gate-voice` comparisons its Author Voice score came from, so the screen shows the
+same findings the stored report counted. A section whose file no longer hashes to the record in
+`manuscript.yaml` is reported as drifted, on the line under the heading and as `drift` under
+`--json`.
+
+With `--file` it reports on any text file and needs no workspace at all. `--lang` picks the
+language resources (`en` and `es` ship). A language with no resources runs only the structural
+rules and says so as an `info` observation.
+
+| Sub-score | Built from |
+|---|---|
+| Specificity | vague-literature, banned-phrase and empty-phrase findings per 100 words |
+| Evidence Alignment | markers that resolve to nothing, claims with missing or weak-only evidence, unmarked numerals — `n/a (needs manuscript context)` for a bare file |
+| Epistemic Precision | asserted rejected claims, verbs stronger than the claim state allows, stacked hedges — `n/a` for a bare file |
+| Structural Variation | sentence-length SD, opening diversity, transition rate |
+| Author Voice | the active voice profile — `n/a` for a bare file |
+| Conciseness | empty-phrase and intensifier density, plus mean sentence length above 30 words |
+
+The exact formula behind every sub-score is in the report's `formulas` object under `--json`,
+and the aggregate is their weighted mean over the sub-scores that could be computed.
+
+| Rule | Fires when |
+|---|---|
+| `transition-density` | Over 40% of a paragraph's sentences open with a connective (paragraphs of 3+ sentences). |
+| `sentence-monotony` | 5+ sentences in a paragraph whose lengths vary by under 3 words. |
+| `repeated-openings` | 3+ sentences in a paragraph open with the same two words. |
+| `banned-phrase` | A phrase from the language's generic-register list. |
+| `empty-phrase` | Filler that can be deleted without losing meaning. |
+| `unsupported-intensifier` | An intensifier in a sentence with no citation and no `fact:`/`result:` marker. |
+| `vague-literature` | A claim about a body of work with no citation in the sentence. |
+| `symmetrical-lists` | 3+ consecutive list items open with the same word. |
+| `excessive-hedging` | 3+ hedges in one sentence. |
+
+Every rule is a `warn`, except the empty phrases a careful academic writer does use (`in order
+to`, `in terms of`, and their Spanish equivalents), which are `info` and never score against the
+text. The `ruthless` review mode turns every warning into a block inside the writing pipeline and
+leaves `info` alone; `lite` reports the prose gate's findings as `info`; `off` runs the rules for
+the scores and reports none of them (PRD §40). The same rules run as the writing pipeline's prose gate, and the
+`academic-prose` skill's `scripts/prose-lint.mjs` reaches them through this command, so there is
+one implementation of every rule.
+
+**No detector scores, ever.** PhDude does not compute, accept or target an AI-detection score
+(PRD §30c). Any option whose name contains "detect" or "humaniz" — on this or any other command —
+is refused with a policy error and exit 3.
+
+### `phdude write <section>`
+
+```
+phdude write introduction
+phdude write introduction --voice a-researcher --budget 6000
+phdude write introduction --json
+```
+
+Assembles the writing context of PRD §70 for one section and prints the draft contract. It
+writes `.phdude/cache/writing/<section>/context.md` and nothing else: no section file, no
+manuscript entry, no event. The prose is the agent's; the record is `manuscript submit`'s.
+
+The context is built in this priority order, and the budget is spent in it:
+
+| # | Item | What it carries |
+|---|---|---|
+| 1 | Task instruction | The section's purpose, the manuscript title and language. Always included. |
+| 2 | Canonical facts | The project title, the research questions, the methods, the established values. |
+| 3 | The section's claims | One item per claim: its state, the marker to assert it with, and its strongest evidence (excerpt, locator, citation key). |
+| 4 | Citation keys | Every source with the key to cite it by. |
+| 5 | Writing policy | `.phdude/writing-policy.yaml`. |
+| 6 | Voice profile | The learned fields and the preserve/avoid lists, or a line saying no profile is recorded. |
+| 7 | Verb table | The epistemic verbs, filtered to the states the section's claims are in. |
+
+`--budget` is a character count (12000 by default). Items are taken in priority order while they
+fit; the first one that does not fit, and everything after it, is reported under `truncated`
+rather than shortened — half an excerpt is worse than no excerpt.
+
+The section's claims are the ones the plan lists in `manuscript.yaml`. When the plan lists none,
+the context falls back to every supported or canonical claim addressing one of the section's
+questions.
+
+`--voice` names an author profile, read from `authors/<id>.yaml`; without it the manuscript's own
+voice is used. A workspace with no profile recorded is not an error: the context says so, and the
+agent writes plainly rather than in an invented voice.
+
+### `phdude deslop <section>`
+
+```
+phdude deslop introduction
+phdude deslop introduction --file revised.md
+phdude deslop introduction --file revised.md --allow-additions
+```
+
+The revision half of the writing pipeline (spec §3.5). Without `--file` it prints the section's
+current prose report and the revision contract: what to change, and what must be preserved
+exactly — every claim marker, every citation, every number, every negation.
+
+With `--file` it runs every gate over the revision, `gate-meaning` included, comparing it against
+the section as it stands. A revision that drops a claim marker, a citation, a number or a
+negation is blocked and nothing is written. A revision that adds a claim or a citation is blocked
+too, unless `--allow-additions` says the researcher meant it: new assertions belong to a draft,
+not to a cleanup pass. A clean revision is recorded as `revised`, with its report and exactly one
+event, `deslop <section> (revised)`.
+
+An approved section is refused: reopen it first.
+
+**No detector scores, ever.** "Deslop" means clearer, more specific, better-evidenced prose. It
+does not mean evading a classifier, and PhDude has no number for that (PRD §30c).
+
+### `phdude manuscript init|list|show <s>|status|submit <s>|approve <s>|reopen <s>`
+
+```
+phdude manuscript init [--title "…"] [--language en] [--voice <author-id>|consensus]
+phdude manuscript list
+phdude manuscript show <section>
+phdude manuscript status
+phdude manuscript submit <section> --file <draft.md> [--revision] [--allow-additions]
+phdude manuscript approve <section> --decision <DEC-id>
+phdude manuscript reopen <section>
+```
+
+The manuscript model of PRD §33 and spec §3.1: `manuscript/manuscript.yaml` holds the title,
+the language, the voice and one entry per section; the prose lives in `manuscript/<section>.md`
+next to it. See [the workspace guide](workspace.md#the-manuscript) for the file layout.
+
+`init` writes `manuscript.yaml` with the six standard sections — abstract, introduction,
+methods, results, discussion, conclusions — all `planned`, and writes no section file: a section
+file appears the first time a draft passes `submit`. `--title` defaults to the project title and
+`--language` to the project language. `--voice` takes an author profile id or `consensus` (the
+default), which is the project voice of PRD §30.2. A workspace holds one manuscript: `init`
+exits 3 rather than overwriting an existing one.
+
+`list` prints the sections in order; `status` adds the counts by status; `show <section>` prints
+the entry and the body of the section file. When the body on disk no longer hashes to the
+`hash` in `manuscript.yaml`, `show` adds a `drift:` line saying the section was edited outside
+PhDude since its last submit; `--json` carries the same as `drift: { recorded, actual,
+drifted }`. Only a submit moves the recorded hash, so the notice stays until the text goes back
+through the gates.
+
+`submit` is the only way prose enters `manuscript/`. It reads the draft at `--file` (a path
+relative to your shell, not to the workspace), strips any front matter it carries, and runs the
+deterministic writing gates over the body. A gate finding of severity `block` means **nothing is
+written**: the command prints each finding as `<gate>:<line> <message>` and exits 2. When the
+draft is clean, `submit` writes the section file with its front matter, updates the section's
+status and hash in `manuscript.yaml`, stores the gate report at
+`manuscript/reports/<section>.yaml`, and appends one `manuscript` event.
+
+The gates, in the order they report:
+
+| Gate | Blocks on | Warns on |
+|---|---|---|
+| `gate-citations` | a `[@key]` that resolves to no recorded source, or one whose accepting candidate was dismissed | — |
+| `gate-evidence` | a `<!-- claim:/fact:/result: -->` marker naming nothing, a paragraph asserting a `rejected` claim, a verb stronger than the claim's state or its evidence allows | a numeral of two digits or more with neither a marker nor a citation in its sentence |
+| `gate-prose` | every prose rule, in `ruthless` mode | every prose rule, in `full` mode |
+| `gate-voice` | — (voice never blocks, `ruthless` mode included: a learned baseline describes a habit, not a defect) | with an author profile that has run `learn`: any of mean sentence length, its spread, opening diversity, transition rate and first-person rate outside its tolerance, named with the observed value, the learned value and the band (`mean sentence length 31.2 vs learned 18.4 ± 4.6`); a word the profile's `terminology.avoid` lists. A term the section's claims use and the profile preserves, missing from the draft, is `info`. Author Voice scores 100 − 25 × the mean deviation across those five metrics, each in multiples of its own tolerance |
+| `gate-meaning` | on `--revision` only: a claim, citation, number or negation the revision dropped, or a claim or citation it added without `--allow-additions`; a bare single digit ("3 waves" → "three waves") is not a number for this purpose | — |
+| `gate-profile` | with `target_profile` set: a section over the venue's word limit | a section the venue does not list, or one out of the venue's order |
+
+Citations follow Pandoc: `[@key]`, `[@a; @b]`, `[@a, p. 3]` and `[see @a]` all cite, and every
+`@key` inside the brackets is audited.
+
+When the draft is accepted, the full report — findings included — is written to
+`.phdude/cache/writing/<section>/report.json`, and `manuscript/reports/<section>.yaml` records
+the canonical summary: the gates, the six scores and the counts, never prose. A blocked submit
+writes neither, and nothing else either: the workspace is left exactly as it was and the
+findings reach you through the error.
+
+The section's status becomes `draft`, or `revised` with `--revision`. The transitions are
+`planned → draft`, `draft → revised|approved` and `revised → revised|approved`; `--revision` on a
+`planned` section is a policy error, because there is no draft to revise.
+
+`approve` records the researcher's approval of a section. It requires an **approved** Decision
+whose `affects` lists `manuscript:<section>` — the one place the decision schema accepts a
+string that is not an object id. Propose that decision and let the researcher approve it (see
+[`phdude decide`](#phdude-decide-proposeapproverejectsupersede)), then run
+`phdude manuscript approve introduction --decision DEC-…`.
+
+Anything less exits 3: no decision, a decision that is still proposed, or one that affects a
+different section. The section's hash is frozen at that point.
+
+`reopen` takes an approved section back to `revised` and drops its `approved_by`, which is the
+only way out of `approved`: a `submit` over an approved section exits 3 instead of overwriting
+it (PRD §3.4 — approved manuscript text is the researcher's).
+
+Every mutation records exactly one event: `manuscript initialized (N sections)`,
+`submitted <section> (<status>)`, `approved <section> (<DEC-id>)`, `reopened <section> (revised)`.
+
+### `phdude authors list|show <id>|add --json|learn <id> --from <path…>|consensus`
+
+```
+phdude authors list
+phdude authors show researcher-a
+phdude authors add --json '{
+  "id": "researcher-a",
+  "language": "en",
+  "tone": { "academic": true, "assertiveness": "moderate", "first_person": "sparing" },
+  "sentences": { "length": "varied", "openings": "varied" },
+  "paragraphs": { "density": "medium" },
+  "transitions": "minimal",
+  "terminology": { "preserve": ["decision process"], "avoid": ["leverage", "robust"] }
+}'
+phdude authors learn researcher-a --from chapter-2.md chapter-3.md --approved
+phdude authors consensus
+```
+
+Author voice profiles (PRD §30) live at `authors/<id>.yaml`, one per researcher. `add` writes a
+new profile; the id must be `^[a-z0-9-]+$` and refuses to overwrite an existing file (`id` is a
+researcher-chosen name, not content-derived like a knowledge object's). `project-consensus` is
+reserved and cannot be created with `add`.
+
+`learn` reads each `--from` path (relative to the current directory, not the workspace) and
+recomputes the profile's `learned` block from exactly those texts: sentence-length mean and SD,
+opening diversity, transition rate, first-person rate, hedge rate, paragraph density, and the
+15 most frequent non-stopword terms of 6+ letters. Every field is an explicit, human-readable
+number - never an opaque embedding (PRD §30). Learning again with more samples recomputes
+`learned` from the new set; it does not average against the old one. Each path is merged into
+`samples[]` by path - one entry per file, never a second copy on a rerun - recorded relative to
+the workspace when it lives inside it and as an absolute path otherwise; `approved: true` is set
+when `--approved` is passed and an entry already marked approved keeps it, so a sample can be
+tracked before the researcher has actually signed off on it. Learning again from samples that
+have not changed rewrites nothing at all, `learned_at` included, exactly as `consensus` does; it
+records one event saying the voice was unchanged.
+
+`consensus` merges every profile except `project-consensus` itself: categorical fields (tone,
+sentence style, transitions, language) by majority vote, ties won by whichever profile was
+read first; `terminology.preserve` by union; `terminology.avoid` by intersection (a word every
+participant wants avoided); every numeric `learned` field by median across the profiles that
+have run `learn`. It rewrites `authors/project-consensus.yaml` only when the merged content
+differs from what is already there (`learned.learned_at` aside, since a timestamp is not
+content), and proposes a Decision titled "Update project-consensus voice" with it - running it
+again with nothing new to learn from leaves the file byte for byte as it was and proposes
+nothing. The Decision's id is keyed on the voice it proposes, so recomputing a consensus you
+have already been offered finds that same Decision instead of a second copy of it. Never approve that
+Decision on the researcher's behalf.
+
 ### `phdude packs list|detect|apply <name>`
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's
@@ -718,6 +970,12 @@ A policy file that is not valid YAML replaces both lines with
 built-in defaults there would answer the question with a fiction. Every other command that
 reads the policy (`status`, `gaps`, `next`, `freshness`, `cite check`, `research`,
 `research-fresh`) exits 2 with that same message and the hint `fix the file`.
+
+A workspace with a manuscript also gets a `Manuscript:` block: the sections by status, the
+sections that have a report in `manuscript/reports/`, and the sections whose file has been
+edited outside PhDude since its last submit (`drift: none` when none has). Each drifted section
+is a warning too. `--json` carries the same as `manuscript: { counts, reports[], drifted[] }`,
+and `null` for a workspace with no manuscript.
 
 It also lists every discoverable skill (core, applied packs, and the workspace's own
 `.phdude/skills/`) with its source, declared network and workspace permissions, and any loader

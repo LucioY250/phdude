@@ -1,9 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { basename, dirname, join } from 'node:path';
 import { parse } from 'yaml';
-import { loadPack, discoverPacks, DEFAULT_PACKS_DIR } from '../../src/adapters/packs/loader.js';
+import {
+  loadPack,
+  loadProfile,
+  discoverPacks,
+  DEFAULT_PACKS_DIR,
+} from '../../src/adapters/packs/loader.js';
 
 const KIND_DIRS = ['fields', 'methods', 'venues'];
 const FRONT_MATTER_RE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
@@ -19,7 +24,11 @@ function packDirs() {
       throw err;
     }
     for (const entry of entries) {
-      if (entry.isDirectory()) dirs.push(join(DEFAULT_PACKS_DIR, kindDir, entry.name));
+      if (!entry.isDirectory()) continue;
+      const dir = join(DEFAULT_PACKS_DIR, kindDir, entry.name);
+      // A venue may ship only a `profile.yaml` (spec §3.4, gate 6); that is a validation
+      // profile, not a pack, and `discoverPacks` skips it for the same reason.
+      if (existsSync(join(dir, 'pack.yaml'))) dirs.push(dir);
     }
   }
   return dirs;
@@ -144,4 +153,21 @@ test('a later root overrides a built-in pack with the same name', async (t) => {
   const packs = await discoverPacks([DEFAULT_PACKS_DIR, workspaceRoot]);
   const humanities = packs.find((p) => p.name === 'humanities');
   assert.equal(humanities.description, 'overridden');
+});
+
+test('the generic-thesis venue profile loads, lists the six standard sections in order', async () => {
+  const profile = await loadProfile('generic-thesis');
+  assert.equal(profile.name, 'generic-thesis');
+  assert.deepEqual(
+    profile.sections.map((s) => s.id),
+    ['abstract', 'introduction', 'methods', 'results', 'discussion', 'conclusions'],
+  );
+  for (const section of profile.sections) {
+    assert.ok(section.max_words > 0, `${section.id} has a word limit`);
+  }
+});
+
+test('a venue with no profile loads as null, and a bad name is refused', async () => {
+  assert.equal(await loadProfile('nature-neuroscience'), null);
+  await assert.rejects(() => loadProfile('../etc/passwd'), /invalid venue profile name/);
 });

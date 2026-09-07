@@ -1,4 +1,5 @@
 import { buildGraph } from './lineage.js';
+import { sectionClaims } from './context-budget.js';
 import { openConflicts } from './conflicts.js';
 import { questionFreshness } from './freshness.js';
 import { findGaps } from './gaps.js';
@@ -273,6 +274,82 @@ function ruleCandidatesPending(snapshot) {
   };
 }
 
+// A section is ready to write when the plan attached claims to it and every one of them is
+// already supported or canonical: the prose would have something to say and the evidence to say
+// it with. A section whose claims are still candidates is not ready, it is research.
+function ruleSectionsPlanned(snapshot) {
+  const manuscript = snapshot.manuscript;
+  if (!manuscript) return null;
+
+  const ready = manuscript.sections
+    .filter((section) => section.status === 'planned')
+    .map((section) => ({ section, claims: sectionClaims(section, snapshot) }))
+    .filter(
+      ({ claims }) =>
+        claims.length > 0 &&
+        claims.every((claim) => ['supported', 'canonical'].includes(claim.state)),
+    )
+    .map(({ section }) => section)
+    .sort((a, b) => a.order - b.order);
+  if (ready.length === 0) return null;
+
+  return {
+    rule: 'sections-planned',
+    action: 'Draft the manuscript sections whose evidence is already in',
+    why: [
+      `${ready.length} planned section(s) have supported or canonical claims behind them: ${ready.map((s) => s.id).join(', ')}`,
+    ],
+    impact: 'medium',
+    command: `phdude write ${ready[0].id}`,
+    dependents: ready.length,
+  };
+}
+
+// A blocked submit is the writing pipeline refusing prose that outran its evidence. Nothing
+// downstream of it can happen until the draft is fixed, which is why it outranks the rest of
+// the manuscript rules.
+function ruleDraftBlocked(snapshot) {
+  const blocked = (snapshot.sectionReports ?? [])
+    .filter((report) => (report.blocks ?? 0) > 0)
+    .sort((a, b) => (a.section < b.section ? -1 : 1));
+  if (blocked.length === 0) return null;
+
+  const total = blocked.reduce((sum, report) => sum + report.blocks, 0);
+  return {
+    rule: 'draft-blocked',
+    action: 'Fix the draft the writing gates refused',
+    why: [
+      `${blocked.length} section(s) have blocking findings in their last report: ${blocked.map((r) => `${r.section} (${r.blocks})`).join(', ')}`,
+      `${total} blocking finding(s) in total`,
+    ],
+    impact: 'high',
+    command: `phdude prose ${blocked[0].section}`,
+    dependents: blocked.length,
+  };
+}
+
+// Revised prose is prose nobody has signed. The approval is the researcher's, never the
+// agent's, so the recommendation is to decide - not to approve.
+function ruleApprovalPending(snapshot) {
+  const manuscript = snapshot.manuscript;
+  if (!manuscript) return null;
+  const pending = manuscript.sections
+    .filter((section) => section.status === 'revised' && !section.approved_by)
+    .sort((a, b) => a.order - b.order);
+  if (pending.length === 0) return null;
+
+  return {
+    rule: 'approval-pending',
+    action: 'Decide on the revised manuscript sections',
+    why: [
+      `${pending.length} revised section(s) have no approving decision: ${pending.map((s) => s.id).join(', ')}`,
+    ],
+    impact: 'medium',
+    command: `phdude decide propose --title "Approve ${pending[0].id}" --rationale "…" --affects manuscript:${pending[0].id}`,
+    dependents: pending.length,
+  };
+}
+
 const GAPS_THRESHOLD = 3;
 
 function gapSummary(gaps) {
@@ -344,6 +421,9 @@ const RULES = [
   ruleQuestionGaps,
   ruleStaleSearch,
   ruleCandidatesPending,
+  ruleDraftBlocked,
+  ruleSectionsPlanned,
+  ruleApprovalPending,
 ];
 
 /**

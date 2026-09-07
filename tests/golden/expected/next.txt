@@ -18,4 +18,5 @@ Other candidates:
 3. (medium) Refresh the literature behind the research questions
 4. (medium) Approve or reject pending decisions
 5. (medium) Close the evidence gap for unaddressed research questions
-6. (low) 15 open gap(s); run phdude gaps
+6. (medium) Draft the manuscript sections whose evidence is already in
+7. (low) 15 open gap(s); run phdude gaps

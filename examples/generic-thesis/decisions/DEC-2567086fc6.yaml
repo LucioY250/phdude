@@ -1,0 +1,20 @@
+schema: phdude.decision
+version: 1
+id: DEC-2567086fc6
+created: 2026-09-01T00:01:10.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Approve the introduction as revised
+rationale: The section asserts one supported claim with the evidence and citation behind it, and the revision passed every writing gate with no findings.
+proposed_by:
+  researcher: example
+  agent: script
+approved_by:
+  - example
+status: approved
+change: {}
+affects:
+  - manuscript:introduction
+resolved: 2026-09-01T00:01:12.000Z

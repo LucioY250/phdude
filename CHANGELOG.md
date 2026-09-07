@@ -6,6 +6,129 @@ All notable changes to PhDude are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-09-07
+
+The Co-Author. PhDude does not write prose — the agent still does that — but a draft now has to
+get past the workspace before it becomes a section of the manuscript. Six deterministic gates run
+on every submit, a blocking finding writes nothing at all, and a section reaches `approved` only
+through a Decision a researcher approved by name. **Nothing here computes, accepts or optimizes
+for an AI-detector score, and nothing ever will** (PRD §30c). See
+[ADR 8](docs/adr/0008-writing-pipeline-and-no-detector-rule.md).
+
+### Added
+
+- **The manuscript model.** `phdude manuscript init|list|show <s>|status|submit <s> --file f
+  [--revision] [--allow-additions]|approve <s> --decision DEC-id|reopen <s>` writes
+  `manuscript/manuscript.yaml` (`phdude.manuscript` v1) with the six standard sections as
+  `planned`, and moves each one `planned → draft → revised → approved`. A section file carries a
+  four-key front matter and the sha256 of its body with line endings normalized and trailing
+  whitespace dropped, so reformatting a file does not read as a rewrite.
+- **The recorded hash is checked.** `manuscript show`, `phdude prose <section>` and
+  `phdude doctor` compare the hash in `manuscript.yaml` with the body on disk and say plainly
+  when they differ: `section introduction was edited outside PhDude since its last submit`. Only
+  a submit moves the recorded hash, so a hand-edit stays visible until the text goes back through
+  the gates.
+- **`phdude doctor` sees the manuscript.** A `Manuscript:` block reports the sections by status,
+  the sections that have a report on file, and the drifted ones, with a warning for each.
+- **Six writing gates**, each returning findings located to a line. `gate-citations`: every
+  `[@key]` resolves to a recorded source, and a dismissed candidate may not be cited.
+  `gate-evidence`: every marker names something real, a `rejected` claim may not be asserted, a
+  verb may not outrun the claim's state or its evidence strength, and an unmarked numeral of two
+  or more digits warns. `gate-prose`: nine rules over the text, reporting in `full` mode and
+  blocking in `ruthless`. `gate-voice`: the draft's statistics against the active profile.
+  `gate-meaning`: on a revision only. `gate-profile`: the venue's sections and word limits.
+- **Meaning preservation.** `gate-meaning` extracts three multisets from the old and the new text
+  — claim ids, citation keys, numerals — and counts the negations each carries, and blocks a
+  revision that dropped any of them. A count rather than the cues themselves, so a negated
+  sentence can be reworded, "did not" can become "failed to", and neither can quietly lose the
+  negation. An added claim or citation blocks too, unless `--allow-additions`.
+- **A blocked submit writes nothing.** Not the section file, not the manuscript entry, not the
+  cache report, not an event. The findings reach the researcher through the error with their line
+  numbers, and exit code 2.
+- **`phdude write <section> [--voice id] [--budget chars]`** assembles the writing context of
+  PRD §70 into `.phdude/cache/writing/<section>/context.md`, in priority order and within a
+  character budget: the section's purpose, the canonical project facts, its claims with state and
+  strongest evidence, the citation keys that resolve, the writing policy, the voice profile, and
+  the verb table for the states present. It prints what was left out for budget and the contract
+  the draft must meet. It writes cache and records no event.
+- **`phdude deslop <section> [--file f] [--allow-additions]`.** Without a file, the section's
+  prose observations plus the revision contract: what to change, and the explicit list of what a
+  rewrite may not touch. With a file, the revision through every gate, recorded as `revised` only
+  when the meaning survived.
+- **`phdude prose <section> | --file <path> [--lang c]`** — the Academic Prose Quality report of
+  PRD §39.1: six sub-scores from documented formulas over counted observations, the aggregate as
+  their weighted mean, and every observation with its line and what to do about it. With a section
+  it reads the evidence graph, so Evidence Alignment and Epistemic Precision are real numbers, and
+  it rewrites `manuscript/reports/<section>.yaml` whole — hash, timestamp, gate rows, scores and
+  counts recomputed together, so no number is stamped with a hash that does not describe it. With
+  `--file` it needs no workspace. It reports and never blocks; the exit code is always 0.
+- **Author voice profiles.** `phdude authors list|show <id>|add --json|learn <id> --from <path…>
+  [--approved]|consensus` writes `authors/<id>.yaml` (`phdude.author-profile` v1). `learn`
+  computes descriptive statistics from approved samples — sentence-length mean and SD, opening
+  diversity, paragraph density, transition rate, first-person rate, hedge rate, frequent
+  terminology — as plain numbers and word lists a researcher can read and correct. Never an
+  embedding. `samples[]` holds one entry per path, and an approved sample stays approved.
+  Relearning from unchanged samples rewrites nothing, `learned_at` included. `consensus` merges
+  the profiles (median, union of `preserve`, intersection of `avoid`) into
+  `authors/project-consensus.yaml` and proposes a Decision when the merge changed.
+- **Human approval on sections.** `phdude manuscript approve <s> --decision DEC-id` requires a
+  decision that is approved and lists `manuscript:<section>` in `affects`; anything less exits 3.
+  An approved section is not overwritten — a later submit is refused until `manuscript reopen`,
+  which records the withdrawal.
+- **Text statistics and the prose lint core.** `src/domain/textstats.js` and
+  `src/domain/prose-lint.js` are the single implementation of every rule; the `academic-prose`
+  skill's `scripts/prose-lint.mjs` shells out to `phdude prose --file`, so the skill and the gate
+  can never disagree. Language tables for `en` and `es`; an unknown language runs the structural
+  rules only and says so as an `info` observation.
+- **Two new skills**, `academic-prose` (the drafting and revision contract, with references on
+  AI writing patterns, epistemic language, academic style, voice matching and worked examples,
+  plus YAML fixture tests) and `write` (the drafting loop). `academic-prose` is the one skill in
+  the repository that declares a write, `manuscript/**`, and even that goes through
+  `phdude manuscript submit`.
+- **Three schemas** — `manuscript.json`, `author-profile.json`, `section-report.json` — and one
+  venue profile schema behind `packs/venues/generic-thesis/profile.yaml`.
+- **Slash commands** `/phdude-manuscript`, `/phdude-write`, `/phdude-deslop`, `/phdude-prose` and
+  `/phdude-authors`.
+
+### Changed
+
+- `phdude next` gains three rules: `sections-planned` (medium — a section is planned and its
+  claims are supported or canonical), `draft-blocked` (high — the last submit had blocks) and
+  `approval-pending` (medium — a revised section with no decision behind it).
+- `phdude gaps` gains `claim-unwritten` (low — a canonical claim no section references).
+- `schemas/decision.json` accepts `manuscript:<section-id>` as an `affects` entry alongside an
+  object id. Decisions only; a section is not an entity, so it is checked against the
+  manuscript's own section list rather than the id registry.
+- `loadSnapshot` reads the manuscript, its section bodies and its reports, so `status`, `next`,
+  `gaps` and `matrix` all reason about the same manuscript.
+- The example workspace gains an author profile learned from one approved sample, a manuscript
+  whose voice is that profile, and an introduction that went through the whole loop: submitted as
+  a draft, revised once with its filler removed, reported on by `phdude prose`, and approved by a
+  decision. `write-context.md` and `prose-introduction.txt` join the golden files.
+- `phdude init` creates `manuscript/reports/`.
+
+### Fixed
+
+- **A decision affecting a manuscript section was reported as a dangling reference.**
+  `manuscript:<section>` is a valid `affects` entry, but the lineage graph treated it as a
+  missing entity, so every command that reads a snapshot printed
+  `DEC-… references missing manuscript:introduction` as a warning. A section is not a node in
+  that graph, and its absence from it is not a dangling reference.
+
+### Notes
+
+- **No AI-detector score, on any command.** The guard runs before command parsing and matches
+  option names only: `--detector`, `--humanize-to` and `--ai-detection-score` exit 3 everywhere,
+  including on commands that do not exist, while `--file notes-on-detection.md` and
+  `phdude packs detect` keep working.
+- Author Voice reports `n/a` until a voice profile is active for the section being scored, and
+  the aggregate renormalizes over the sub-scores that could be computed. A sub-score with no
+  input is `null`, never `0`.
+- The workspace version is unchanged at 2. `manuscript/` and `authors/` have existed since v0.1
+  and everything added is additive, so no migration is needed.
+- Still no runtime dependency beyond `yaml`, `ajv` and `fflate`, and still nothing in the writing
+  pipeline that reaches the network.
+
 ## [0.3.0] — 2026-09-07
 
 The Research Engine. PhDude can go and find current literature for each research question, and
@@ -239,7 +362,8 @@ First release: the deterministic harness. No model is involved in anything below
 - Requires Node 22 or newer. `pdftotext` (poppler-utils) is optional.
 - No network access and no shell interpolation anywhere in the runtime.
 
-[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/LucioY250/phdude/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/LucioY250/phdude/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/LucioY250/phdude/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/LucioY250/phdude/releases/tag/v0.1.0

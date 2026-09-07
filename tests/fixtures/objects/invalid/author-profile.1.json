@@ -1,0 +1,25 @@
+{
+  "schema": "phdude.author-profile",
+  "version": 1,
+  "id": "Researcher_A",
+  "language": "en",
+  "tone": {
+    "academic": true,
+    "assertiveness": "extreme",
+    "first_person": "sparing"
+  },
+  "sentences": {
+    "length": "varied",
+    "openings": "varied"
+  },
+  "paragraphs": {
+    "density": "medium"
+  },
+  "transitions": "minimal",
+  "terminology": {
+    "preserve": [],
+    "avoid": []
+  },
+  "samples": [],
+  "opaque_embedding": [0.1, 0.2, 0.3]
+}

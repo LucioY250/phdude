@@ -1,0 +1,19 @@
+schema: phdude.venue-profile
+version: 1
+name: generic-thesis
+description: >-
+  The default venue profile: the six standard sections in the usual order, with limits generous
+  enough that only a runaway section trips them. Real venue profiles arrive with v0.6.
+sections:
+  - id: abstract
+    max_words: 500
+  - id: introduction
+    max_words: 6000
+  - id: methods
+    max_words: 8000
+  - id: results
+    max_words: 8000
+  - id: discussion
+    max_words: 8000
+  - id: conclusions
+    max_words: 3000

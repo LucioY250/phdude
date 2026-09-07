@@ -7,6 +7,7 @@ import { questionFreshness } from './freshness.js';
 import { DEFAULT_FILTERS, ENABLE_NETWORK } from './policy.js';
 
 const SEVERITY_RANK = { high: 0, medium: 1, low: 2 };
+const CLAIM_MARKER_RE = /<!--\s*claim\s*:\s*([A-Za-z0-9][A-Za-z0-9_-]*)\s*-->/gi;
 
 function claimsAddressing(claims, questionId) {
   return claims.filter((c) => (c.questions ?? []).includes(questionId));
@@ -128,6 +129,32 @@ function gapsForClaims(snapshot) {
   }
 
   return gaps;
+}
+
+// A canonical claim the manuscript never reaches is knowledge the thesis does not yet say out
+// loud. It is `low`: nothing is wrong with the record, the writing simply has not caught up.
+// A claim counts as written when a section plans it or a paragraph asserts it with a marker.
+function gapsForUnwrittenClaims(snapshot) {
+  const manuscript = snapshot.manuscript;
+  if (!manuscript) return [];
+
+  const written = new Set();
+  for (const section of manuscript.sections) {
+    for (const id of section.claims ?? []) written.add(id);
+  }
+  for (const body of Object.values(snapshot.sectionBodies ?? {})) {
+    for (const match of body.matchAll(CLAIM_MARKER_RE)) written.add(match[1]);
+  }
+
+  return (snapshot.claims ?? [])
+    .filter((claim) => claim.state === 'canonical' && !written.has(claim.id))
+    .map((claim) => ({
+      kind: 'claim-unwritten',
+      id: claim.id,
+      why: `${claim.id} is canonical but no manuscript section references it`,
+      command: `phdude write ${manuscript.sections[0]?.id ?? 'introduction'}`,
+      severity: 'low',
+    }));
 }
 
 function gapsForHypotheses(snapshot) {
@@ -263,6 +290,7 @@ export function findGaps(snapshot, conflicts) {
     ...gapsForQuestions(snapshot),
     ...gapsForSearches(snapshot),
     ...gapsForClaims(snapshot),
+    ...gapsForUnwrittenClaims(snapshot),
     ...gapsForHypotheses(snapshot),
     ...gapsForSources(snapshot),
     ...gapsForArtifacts(snapshot),

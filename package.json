@@ -1,6 +1,6 @@
 {
   "name": "phdude",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "The senior researcher in your terminal. A field-agnostic research co-author harness for AI coding agents.",
   "license": "MIT",
   "repository": {
@@ -31,6 +31,9 @@
     "docs/workspace.md",
     "docs/extending.md",
     "docs/adr",
+    "docs/assets",
+    "!docs/assets/diagrams/*.excalidraw",
+    "!docs/assets/fonts",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"

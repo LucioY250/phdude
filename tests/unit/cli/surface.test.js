@@ -105,6 +105,42 @@ test("CLAUDE.md's slash-command list names every command", async () => {
   }
 });
 
+// The writing commands are the ones a researcher meets as a workflow rather than one at a time,
+// so the README owes them a worked section and not only a table row.
+test("the README's writing section walks through every writing command", () => {
+  const readme = read('README.md');
+  const start = readme.indexOf('## Writing with PhDude');
+  assert.notEqual(start, -1, 'README.md has no "Writing with PhDude" section');
+  const section = readme.slice(start, readme.indexOf('\n## ', start + 1));
+
+  for (const command of ['manuscript', 'write', 'deslop', 'prose', 'authors']) {
+    assert.ok(
+      section.includes(`phdude ${command}`),
+      `README.md's writing section never runs \`phdude ${command}\``,
+    );
+  }
+});
+
+// PRD §30c makes optimizing for an AI-detector score a prohibited goal. `args.js` enforces it and
+// `args.test.js` proves the enforcement; what this checks is that a researcher is told, in the
+// places they actually read, rather than only finding out when a command exits 3.
+test('the no-detector rule is stated on every surface a researcher reads', () => {
+  const surfaces = [
+    ['README.md'],
+    ['docs', 'cli.md'],
+    ['docs', 'adr', '0008-writing-pipeline-and-no-detector-rule.md'],
+    ['skills', 'academic-prose', 'SKILL.md'],
+  ];
+  for (const parts of surfaces) {
+    const text = read(...parts);
+    assert.match(
+      text,
+      /detector score/i,
+      `${parts.join('/')} never states that PhDude has no detector score`,
+    );
+  }
+});
+
 test('the phdude-core skill lists every write command as CLI-only', () => {
   // Only these commands mutate recorded research state; the skill's "the only way to write"
   // section has to name each of them, or an agent will reach for a file edit instead.
@@ -118,6 +154,14 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'research dismiss',
     'packs apply',
     'mode',
+    'authors add',
+    'authors learn',
+    'authors consensus',
+    'manuscript init',
+    'manuscript submit',
+    'manuscript approve',
+    'manuscript reopen',
+    'deslop',
   ];
   const skill = read('skills', 'phdude-core', 'SKILL.md');
   const section = skill.slice(skill.indexOf('## The only way to write'));

@@ -5,7 +5,7 @@ import { PhdudeError, exitCodeFor } from '../../domain/errors.js';
 import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
 import { detectKind, parserFor, PARSERS } from '../documents/index.js';
-import { DEFAULT_PACKS_DIR, discoverPacks } from '../packs/loader.js';
+import { DEFAULT_PACKS_DIR, discoverPacks, loadProfile } from '../packs/loader.js';
 import { buildProviders } from '../search/index.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
@@ -16,9 +16,11 @@ import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
 import { printJson } from './output.js';
 import add from './commands/add.js';
+import authors from './commands/authors.js';
 import bootstrap from './commands/bootstrap.js';
 import cite from './commands/cite.js';
 import decide from './commands/decide.js';
+import deslop from './commands/deslop.js';
 import doctor from './commands/doctor.js';
 import edit from './commands/edit.js';
 import freshness from './commands/freshness.js';
@@ -28,23 +30,28 @@ import ingest from './commands/ingest.js';
 import init from './commands/init.js';
 import knowledge from './commands/knowledge.js';
 import link from './commands/link.js';
+import manuscript from './commands/manuscript.js';
 import matrix from './commands/matrix.js';
 import migrate from './commands/migrate.js';
 import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
 import promote from './commands/promote.js';
+import prose from './commands/prose.js';
 import research from './commands/research.js';
 import researchFresh from './commands/research-fresh.js';
 import status from './commands/status.js';
+import write from './commands/write.js';
 
 const { version } = createRequire(import.meta.url)('../../../package.json');
 
 const COMMANDS = {
   add,
+  authors,
   bootstrap,
   cite,
   decide,
+  deslop,
   doctor,
   edit,
   freshness,
@@ -53,15 +60,18 @@ const COMMANDS = {
   init,
   knowledge,
   link,
+  manuscript,
   matrix,
   migrate,
   mode,
   next,
   packs,
   promote,
+  prose,
   research,
   'research-fresh': researchFresh,
   status,
+  write,
 };
 
 // The commands allowed to reach a search provider. Only these pay for reading the research
@@ -117,6 +127,8 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     parsers: { detectKind, parserFor },
     parserAdapters: PARSERS,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
+    loadProfile: (name) =>
+      loadProfile(name, [DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     discoverSkills,
     loadSkill,
     skillsDir: DEFAULT_SKILLS_DIR,
@@ -145,9 +157,11 @@ function writeError(err, { stderr, json, env }) {
         }) + '\n',
       );
     } else {
+      // The details come first: when they are a gate's findings, the researcher needs the
+      // located list before the sentence that says how many there were (spec §3.4).
+      for (const detail of err.details ?? []) stderr.write(`  - ${detail}\n`);
       stderr.write(`${err.message}\n`);
       if (err.hint) stderr.write(`Suggested action: ${err.hint}\n`);
-      for (const detail of err.details ?? []) stderr.write(`  - ${detail}\n`);
     }
     return exitCodeFor(err);
   }

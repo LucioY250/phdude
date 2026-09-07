@@ -23,7 +23,7 @@ workspace pack with the same name overrides the built-in one.
 schema: phdude.pack
 version: 1
 name: quantitative
-kind: method                # field | method (venue is reserved for v0.6)
+kind: method                # field | method | venue
 description: >-
   Quantitative research methods: statistical hypothesis testing, surveys, and
   experimental design.
@@ -61,6 +61,76 @@ node --test "tests/contracts/packs.test.js"
 ```
 
 It validates every discovered pack and checks that each referenced skill file exists.
+
+### Venue profiles
+
+A venue pack carries one more file, `profile.yaml`, and it is the extension point the writing
+pipeline actually reads. `gate-profile` loads it when a manuscript sets `target_profile`, and
+checks a draft against the sections the venue expects.
+
+```yaml
+schema: phdude.venue-profile
+version: 1
+name: generic-thesis
+description: >-
+  The default venue profile: the six standard sections in the usual order.
+sections:
+  - id: abstract
+    max_words: 500
+  - id: introduction
+    max_words: 6000
+```
+
+A section the venue does not list, or one out of order, is a `warn`. Exceeding `max_words`
+blocks: a word limit that stops nothing is not a limit. A profile lives beside the pack rather
+than inside `pack.yaml` because it is validation data, not a skill bundle. The loader looks in
+`packs/venues/<name>/profile.yaml` and then `.phdude/packs/venues/<name>/profile.yaml`, so a
+workspace profile overrides a built-in one of the same name. v0.4 ships one profile,
+`generic-thesis`, with limits generous enough that only a runaway section trips them; the real
+venue profiles arrive with v0.6.
+
+A venue directory holding only a `profile.yaml` is not a pack, and `phdude packs list` will not
+show it. Give it a `pack.yaml` and a skill if you also want it detected and applied.
+
+## Writing gates
+
+A gate is a pure function over the draft text and a context the application layer assembled:
+
+```js
+{
+  name: 'gate-citations',
+  run(text, ctx) {
+    return [{ gate: 'gate-citations', severity: 'block', line: 12, message: '…', hint: '…' }];
+  },
+}
+```
+
+`severity` is `block`, `warn` or `info`. A gate may instead return `{ findings, scores }` when it
+also measures something; only `gate-prose` does. Gates never reach the store: `gateContext` in
+`src/application/manuscript.js` gathers the sources, claims, evidence, facts, results, bibkeys,
+language, review mode and venue profile once and hands the same object to every gate. That is
+what lets `submit`, `deslop` and `prose` give identical answers about the same text.
+
+The registry is `GATES` in `src/domain/gates/index.js`. Adding one in-tree is an entry there plus
+a fixture-driven unit test under `tests/unit/domain/gates/`. The runner reports gates in
+registration order, so put a gate where its findings belong in the reading order: what the prose
+rests on first, how it reads second, what a revision must not lose last.
+
+**What a pack can extend today.** A venue profile, as above. Everything else a discipline brings
+to writing reaches the agent as prose: a pack's `SKILL.md` carries the epistemic norms of its
+field, and the `academic-prose` skill's `references/epistemic-language.md` carries the general
+ones. The banned-phrase, transition and hedge inventories `gate-prose` uses are per-language
+tables in `src/domain/lang/<code>.js`, and the verb table `gate-evidence` enforces is a built-in
+table in `src/domain/gates/markers.js`. Neither is pack-extensible yet.
+
+**What is planned.** PRD section 8 describes a `writing.epistemic_norms` list in `pack.yaml`, so
+that a machine-learning pack can say "report results as observed on the evaluated benchmarks; do
+not generalize beyond them" and have `gate-evidence` enforce it rather than merely suggest it.
+`schemas/pack.json` sets `additionalProperties: false` and has no `writing` key, so a pack
+carrying one fails validation today. Wiring it up is three changes that have to land together:
+the schema key, a loader that merges every applied pack's norms into `gateContext`, and a rule in
+`gate-evidence` that reads them. It is scheduled with venue adaptation in v0.6. Until then, put
+your field's epistemic norms in the pack's skill, where the agent will read them.
 
 ## Skills
 

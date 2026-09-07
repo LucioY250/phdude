@@ -55,9 +55,25 @@ export async function loadSnapshot(store, clock = () => new Date().toISOString()
   const events = await store.readEvents(20);
   const policy = await store.readYaml(POLICY_PATH);
 
+  // The manuscript is part of the workspace the reports reason about (spec §3.8): `next` asks
+  // which sections are ready to write and which are waiting for approval, `gaps` asks which
+  // canonical claim has never reached the prose. Its section bodies are read because a claim
+  // can be referenced by a `<!-- claim: -->` marker rather than by the plan.
+  const manuscript = await store.readManuscript();
+  const sections = manuscript?.sections ?? [];
+  const sectionBodies = {};
+  for (const entry of sections) {
+    if (entry.status === 'planned') continue;
+    const text = await store.readSection(entry.file);
+    if (text !== null) sectionBodies[entry.id] = text;
+  }
+
   return {
     project,
     ...collections,
+    manuscript,
+    sectionBodies,
+    sectionReports: manuscript === null ? [] : await store.listReports(),
     events,
     graph,
     warnings,

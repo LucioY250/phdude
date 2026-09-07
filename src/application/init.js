@@ -28,6 +28,7 @@ const DIRS = [
   'figures',
   'tables',
   'manuscript',
+  'manuscript/reports',
   'templates',
   'outputs',
   '.phdude/skills',

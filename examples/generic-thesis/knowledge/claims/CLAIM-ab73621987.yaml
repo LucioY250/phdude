@@ -15,6 +15,7 @@ supported_by:
 questions:
   - RQ-1
 sections:
+  - Introduction
   - Results
 provenance:
   method: agent-extraction

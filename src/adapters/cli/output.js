@@ -281,6 +281,111 @@ export function renderFreshness(report) {
   return lines.join('\n') + '\n';
 }
 
+const PROSE_SCORES = [
+  ['specificity', 'Specificity'],
+  ['evidenceAlignment', 'Evidence Alignment'],
+  ['epistemicPrecision', 'Epistemic Precision'],
+  ['structuralVariation', 'Structural Variation'],
+  ['authorVoice', 'Author Voice'],
+  ['conciseness', 'Conciseness'],
+];
+
+const PROSE_SEVERITIES = ['block', 'warn', 'info'];
+
+// Three of the six sub-scores are computed against the evidence graph and the voice profile
+// (PRD §39.1), which a bare text file does not carry. Saying so beats printing a bare `n/a`,
+// and beats inventing a number from the prose alone.
+const NEEDS_CONTEXT = 'n/a (needs manuscript context)';
+
+/**
+ * @param {object} report - an Academic Prose Quality report, see application/prose.js
+ * @returns {string}
+ */
+export function renderProse(report) {
+  const aggregate = report.aggregate === null ? 'n/a' : `${report.aggregate}/100`;
+  const lines = [`Academic Prose Quality: ${aggregate}`, ''];
+
+  for (const [key, label] of PROSE_SCORES) {
+    const score = report.scores[key];
+    lines.push(`${label.padEnd(24)}${score === null ? NEEDS_CONTEXT : score}`);
+  }
+
+  const voice = report.voice ?? [];
+  if (voice.length > 0) {
+    lines.push('', `Voice (${voice.length}):`);
+    for (const finding of voice) {
+      lines.push(`  - ${finding.message}`);
+      if (finding.hint) lines.push(`    Hint: ${finding.hint}`);
+    }
+  }
+
+  lines.push('', `Observations (${report.observations.length}):`);
+  if (report.observations.length === 0) {
+    lines.push('  (none)');
+    return lines.join('\n') + '\n';
+  }
+
+  for (const severity of PROSE_SEVERITIES) {
+    const group = report.observations.filter((o) => o.severity === severity);
+    if (group.length === 0) continue;
+    lines.push('', `${severity.toUpperCase()} (${group.length}):`);
+    for (const o of group) {
+      lines.push(o.excerpt === '' ? `  - ${o.line}: ${o.message}` : `  - ${o.line}: ${o.excerpt}`);
+      if (o.excerpt !== '') lines.push(`    ${o.rule}: ${o.message}`);
+      if (o.hint) lines.push(`    Hint: ${o.hint}`);
+    }
+  }
+
+  return lines.join('\n') + '\n';
+}
+
+/**
+ * The writing context report of `phdude write`: where the context is, what went into it, what
+ * did not fit, and the contract the draft has to meet (spec §3.3).
+ * @param {object} result - see application/write.js
+ * @returns {string}
+ */
+export function renderWriteContext(result) {
+  const lines = [
+    `Writing context for ${result.section.id} (${result.section.status}): ${result.path}`,
+    '',
+    `Budget: ${result.budget} characters, ${result.included.reduce((sum, item) => sum + item.chars, 0)} used`,
+    `Voice: ${result.voice.id}${result.voice.found ? '' : ' (no profile recorded; writing plainly)'}`,
+    '',
+    `Included (${result.included.length}):`,
+  ];
+  for (const item of result.included) {
+    lines.push(`  ${item.kind.padEnd(12)} ${item.id.padEnd(18)} ${item.chars} chars`);
+  }
+  if (result.truncated.length > 0) {
+    lines.push('', `Left out for budget (${result.truncated.length}):`);
+    for (const item of result.truncated) lines.push(`  ${item.kind.padEnd(12)} ${item.id}`);
+  }
+  lines.push('', 'Draft contract:');
+  for (const rule of result.contract) lines.push(`  - ${rule}`);
+  return lines.join('\n') + '\n';
+}
+
+/**
+ * The revision contract of `phdude deslop <section>` with no file: what the prose is doing now,
+ * and what a revision may and may not change (spec §3.5).
+ * @param {object} result - see application/deslop.js
+ * @returns {string}
+ */
+export function renderDeslop(result) {
+  const lines = [`Revision contract for ${result.section.id} (${result.section.status})`, ''];
+  lines.push(renderProse({ ...result, observations: result.observations }).trimEnd(), '');
+  lines.push('Change:');
+  for (const rule of result.contract.change) lines.push(`  - ${rule}`);
+  lines.push('', 'Preserve exactly (the meaning gate blocks a revision that loses one):');
+  for (const rule of result.contract.preserve) lines.push(`  - ${rule}`);
+  lines.push(
+    '',
+    `Submit the revision with: phdude deslop ${result.section.id} --file <revised.md>`,
+  );
+  return lines.join('\n') + '\n';
+}
+
 /**
  * @param {object} obj
  * @returns {string}
