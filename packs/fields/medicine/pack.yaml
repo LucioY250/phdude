@@ -1,0 +1,40 @@
+schema: phdude.pack
+version: 1
+name: medicine
+kind: field
+description: >-
+  Clinical and biomedical research: randomized trials, cohort studies, and public
+  health investigations.
+terminology:
+  - randomized controlled trial
+  - cohort study
+  - confidence interval
+  - adverse event
+  - clinical significance
+  - odds ratio
+detect:
+  keywords:
+    - randomized controlled trial
+    - cohort study
+    - confidence interval
+    - adverse event
+    - odds ratio
+    - hazard ratio
+    - placebo
+    - clinical trial
+    - patient outcome
+    - inclusion criteria
+    - exclusion criteria
+    - blinding
+    - intention-to-treat
+reviewers:
+  - clinical-validity
+  - statistical-rigor
+  - reporting-standards
+recommended_checks:
+  - CONSORT
+  - STROBE
+  - PRISMA
+skills:
+  - skills/medicine/SKILL.md
+schemas: []

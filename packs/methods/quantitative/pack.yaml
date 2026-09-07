@@ -1,0 +1,36 @@
+schema: phdude.pack
+version: 1
+name: quantitative
+kind: method
+description: >-
+  Quantitative research methods: statistical hypothesis testing, surveys, and
+  experimental design.
+terminology:
+  - p-value
+  - regression
+  - sample size
+  - effect size
+  - confidence interval
+  - variance
+detect:
+  keywords:
+    - regression
+    - p-value
+    - anova
+    - sample
+    - survey
+    - likert
+    - cronbach
+    - variance
+    - correlation
+    - significance
+reviewers:
+  - statistical-validity
+  - measurement-reliability
+recommended_checks:
+  - power-analysis
+  - assumption-checks
+  - effect-size-reporting
+skills:
+  - skills/quantitative/SKILL.md
+schemas: []

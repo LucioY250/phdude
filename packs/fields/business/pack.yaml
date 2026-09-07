@@ -1,0 +1,38 @@
+schema: phdude.pack
+version: 1
+name: business
+kind: field
+description: >-
+  Business, management, and organizational research: strategy, operations, marketing,
+  and organizational behavior studies.
+terminology:
+  - stakeholder
+  - value proposition
+  - market segment
+  - competitive advantage
+  - return on investment
+  - organizational culture
+detect:
+  keywords:
+    - stakeholder
+    - value proposition
+    - market segment
+    - competitive advantage
+    - return on investment
+    - organizational culture
+    - business model
+    - customer acquisition
+    - supply chain
+    - profit margin
+    - key performance indicator
+    - corporate strategy
+reviewers:
+  - business-relevance
+  - practitioner-validity
+recommended_checks:
+  - managerial-implications
+  - generalizability-to-industry
+  - construct-validity
+skills:
+  - skills/business/SKILL.md
+schemas: []
