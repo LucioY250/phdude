@@ -17,7 +17,7 @@ const SCHEMA_VERSION = 1;
  *   skillsDir: string}} deps
  * @returns {Promise<{node: string, pdftotext: boolean, git: boolean, workspace: boolean,
  *   workspaceVersion: number|null, workspaceVersionCurrent: number, parsers: object,
- *   network: boolean, providers: string[],
+ *   policyError: string|null, network: boolean|null, providers: string[],
  *   schemaVersions: object, cacheEntries: number, packsAvailable: string[],
  *   skills: object[], warnings: string[]}>}
  */
@@ -65,11 +65,15 @@ export async function doctor({
   }
 
   // Reported, never exercised: doctor says what the network policy allows without making a
-  // single call. An unreadable policy reads as closed, like a missing one.
+  // single call. A policy it cannot read is reported as unreadable rather than answered with the
+  // built-in defaults - "what does this workspace's policy say" is the question doctor exists
+  // to answer, so presenting a fiction here is worse than presenting nothing.
   let policy = null;
+  let policyError = null;
   try {
     policy = await store.readYaml(POLICY_PATH);
   } catch (err) {
+    policyError = err.message;
     warnings.push(`research-policy.yaml could not be read: ${err.message}`);
   }
 
@@ -99,8 +103,9 @@ export async function doctor({
     workspaceVersion,
     workspaceVersionCurrent: CURRENT_WORKSPACE_VERSION,
     parsers: parserAvailability,
-    network: networkAllowed(policy, {}),
-    providers: providerNames(policy),
+    policyError,
+    network: policyError === null ? networkAllowed(policy, {}) : null,
+    providers: policyError === null ? providerNames(policy) : [],
     schemaVersions: Object.fromEntries(schemaTypes.map((t) => [t, SCHEMA_VERSION])),
     cacheEntries: (await store.listCacheEntries()).length,
     packsAvailable,

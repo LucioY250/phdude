@@ -68,7 +68,15 @@ export async function listSkills({ store, loadPacks, discoverSkills, skillsDir }
 
   roots.push({ dir: join(store.root, '.phdude', 'skills'), source: 'workspace' });
 
-  const policy = await store.readYaml(POLICY_PATH);
+  // A policy this cannot parse reads as closed, like a missing one. Its own caller, `doctor`,
+  // reads the same file and reports that it is unreadable, so raising here would only turn one
+  // clear line into an unrelated "skills could not be loaded".
+  let policy = null;
+  try {
+    policy = await store.readYaml(POLICY_PATH);
+  } catch {
+    policy = null;
+  }
   const skills = await discoverSkills(roots, { onError });
 
   return {

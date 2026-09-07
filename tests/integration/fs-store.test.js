@@ -123,3 +123,28 @@ test('readEntity names a file whose YAML does not parse, such as a merge conflic
   await assert.rejects(store.readEntity('FACT-0123456789'), expected);
   await assert.rejects(store.listEntities('fact'), expected);
 });
+
+test('readYaml names a policy file whose YAML does not parse', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const store = new FsStore(root);
+  await mkdir(join(root, '.phdude'), { recursive: true });
+  await writeFile(
+    join(root, '.phdude', 'research-policy.yaml'),
+    'network:\n  enabled: true\n  providers\n',
+  );
+
+  await assert.rejects(store.readYaml(join('.phdude', 'research-policy.yaml')), (err) => {
+    assert.ok(err instanceof PhdudeError);
+    assert.equal(err.code, 'VALIDATION');
+    // The path is workspace-relative and slash-separated, so the message names the file the
+    // researcher would open regardless of the platform.
+    assert.equal(err.message, 'malformed YAML: .phdude/research-policy.yaml');
+    assert.equal(err.hint, 'fix the file');
+    return true;
+  });
+});
+
+test('readYaml still returns null for a file that is simply absent', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  assert.equal(await new FsStore(root).readYaml(join('.phdude', 'research-policy.yaml')), null);
+});

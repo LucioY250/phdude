@@ -29,10 +29,20 @@ function render(report) {
     lines.push(`workspace version: ${report.workspaceVersion} ${note}`);
   }
 
+  lines.push(`parsers:           ${parsers}`);
+
+  // A policy that could not be read has no network setting and no provider list to report, and
+  // printing the built-in defaults here would answer the question with a fiction.
+  if (report.policyError) {
+    lines.push(`policy:            unreadable (${report.policyError})`);
+  } else {
+    lines.push(
+      `network:           ${report.network ? 'enabled' : 'disabled'}`,
+      `providers:         ${report.providers.join(', ')}`,
+    );
+  }
+
   lines.push(
-    `parsers:           ${parsers}`,
-    `network:           ${report.network ? 'enabled' : 'disabled'}`,
-    `providers:         ${report.providers.join(', ')}`,
     `cache entries:     ${report.cacheEntries}`,
     `packs available:   ${report.packsAvailable.length ? report.packsAvailable.join(', ') : '(none)'}`,
     `schema versions:   ${versions}`,

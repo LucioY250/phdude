@@ -39,18 +39,30 @@ test('doctor: reports the policy network setting and provider list', async () =>
   assert.deepEqual(report.providers, ['openalex', 'crossref']);
 });
 
-test('doctor: an unreadable policy is a warning, not a crash', async () => {
+test('doctor: an unreadable policy is reported as unreadable, never as the defaults', async () => {
   const report = await doctor(
     depsWith(null, {
       readYaml: async (path) => {
-        if (path === POLICY_PATH) throw new Error('bad yaml');
+        if (path === POLICY_PATH) throw new Error('malformed YAML: .phdude/research-policy.yaml');
         return null;
       },
     }),
   );
-  assert.equal(report.network, false);
-  assert.deepEqual(report.providers, DEFAULT_PROVIDERS);
+  // What the policy says is exactly the question doctor exists to answer, so a file it cannot
+  // parse must not be answered with the built-in defaults.
+  assert.equal(report.policyError, 'malformed YAML: .phdude/research-policy.yaml');
+  assert.equal(report.network, null);
+  assert.deepEqual(report.providers, []);
   assert.ok(
-    report.warnings.some((w) => w.includes('research-policy.yaml could not be read: bad yaml')),
+    report.warnings.some((w) =>
+      w.includes('research-policy.yaml could not be read: malformed YAML'),
+    ),
   );
+});
+
+test('doctor: a policy it can read carries no policy error', async () => {
+  const report = await doctor(depsWith({ providers: ['openalex'] }));
+  assert.equal(report.policyError, null);
+  assert.deepEqual(report.providers, ['openalex']);
+  assert.notDeepEqual(report.providers, DEFAULT_PROVIDERS);
 });

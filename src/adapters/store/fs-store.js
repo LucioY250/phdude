@@ -40,13 +40,25 @@ export class FsStore {
     return ENTITY_DIRS[type];
   }
 
+  // A policy file the researcher hand-edited into invalid YAML is the same class of problem as
+  // a merge-conflicted entity file (see readEntityYaml): the fix is to name the file, not to
+  // let a YAMLParseError reach the researcher untyped.
   async readYaml(relPath) {
+    let text;
     try {
-      const text = await readFile(join(this.root, relPath), 'utf8');
-      return parse(text);
+      text = await readFile(join(this.root, relPath), 'utf8');
     } catch (err) {
       if (err.code === 'ENOENT') return null;
       throw err;
+    }
+    try {
+      return parse(text);
+    } catch {
+      throw new PhdudeError(
+        'VALIDATION',
+        `malformed YAML: ${relPath.split(sep).join('/')}`,
+        'fix the file',
+      );
     }
   }
 

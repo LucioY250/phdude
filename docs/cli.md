@@ -692,6 +692,13 @@ provider PhDude can search — `openalex`, `crossref`, `arxiv`, `semantic-schola
 are all registered in `src/adapters/search/index.js` and can be added to `providers:` to enable
 them. See [SearchProvider](extending.md#searchprovider).
 
+A policy file that is not valid YAML replaces both lines with
+`policy: unreadable (malformed YAML: .phdude/research-policy.yaml)`, and `--json` reports it as
+`policyError` with `network: null` and `providers: []`. `doctor` still exits 0 — printing the
+built-in defaults there would answer the question with a fiction. Every other command that
+reads the policy (`status`, `gaps`, `next`, `freshness`, `cite check`, `research`,
+`research-fresh`) exits 2 with that same message and the hint `fix the file`.
+
 It also lists every discoverable skill (core, applied packs, and the workspace's own
 `.phdude/skills/`) with its source, declared network and workspace permissions, and any loader
 warnings — one line each: `<name> (<source>) network=<none|allowed> workspace=<read,...>`. See

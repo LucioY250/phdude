@@ -396,6 +396,51 @@ test('e2e: a malformed entity file makes status exit 2 and names the file', asyn
   assert.equal(payload.hint, 'fix or delete the file');
 });
 
+test('e2e: a malformed research policy is typed, and doctor says so instead of guessing', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-badpolicy-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Broken policy', '--no-git']);
+  // The README sends every researcher to hand-edit this file, so a two-line syntax error in it
+  // is an ordinary accident rather than an exotic one.
+  await writeFile(
+    join(ws, '.phdude', 'research-policy.yaml'),
+    'network:\n  enabled: true\n  providers\n',
+  );
+
+  for (const command of [
+    ['status'],
+    ['gaps'],
+    ['next'],
+    ['freshness'],
+    ['cite', 'check'],
+    ['research', 'open science'],
+  ]) {
+    const result = await phdude(ws, [...command, '--json', ...ACTOR]);
+    assert.equal(result.code, 2, `phdude ${command.join(' ')} should exit 2`);
+    const payload = JSON.parse(result.stderr).error;
+    assert.equal(payload.code, 'VALIDATION');
+    assert.equal(payload.message, 'malformed YAML: .phdude/research-policy.yaml');
+    assert.equal(payload.hint, 'fix the file');
+  }
+
+  // doctor is the command you run when something is off, so it survives - but it must not
+  // present the built-in defaults as though they were this workspace's policy.
+  const report = await phdude(ws, ['doctor', ...ACTOR]);
+  assert.equal(report.code, 0);
+  assert.match(
+    report.stdout,
+    /policy: +unreadable \(malformed YAML: \.phdude\/research-policy\.yaml\)/,
+  );
+  assert.doesNotMatch(report.stdout, /^providers:/m);
+  assert.doesNotMatch(report.stdout, /^network:/m);
+
+  const json = JSON.parse((await phdude(ws, ['doctor', '--json', ...ACTOR])).stdout);
+  assert.equal(json.policyError, 'malformed YAML: .phdude/research-policy.yaml');
+  assert.equal(json.network, null);
+  assert.deepEqual(json.providers, []);
+});
+
 test('e2e: packs outside a workspace point at init instead of crashing', async (t) => {
   const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-nopacks-'));
   t.after(() => rm(ws, { recursive: true, force: true }));
