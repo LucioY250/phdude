@@ -1,0 +1,48 @@
+src/adapters/cli/commands/promote.js
+  s_946fc7502759d8::t_09d657a795c4ea 15
+tests/integration/ingest.test.js
+  s_946fc7502759d8::t_27b089106fbc38 11,264-312
+src/application/ingest.js
+  s_946fc7502759d8::t_badb1802d577a1 92,95-98,115,210,212-214,233
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_70b03f4818abae 367-379
+  s_946fc7502759d8::t_10dc8e931dd500 282-286
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_10dc8e931dd500 149,165-175
+src/adapters/store/fs-walk.js
+  s_946fc7502759d8::t_5aac6bc237076e 1,14-18,21-25,35-37
+tests/unit/domain/ids.test.js
+  s_946fc7502759d8::t_a36473a4b05e91 4,33-45
+  s_946fc7502759d8::t_a131db940bc782 46
+tests/integration/fs-store.test.js
+  s_946fc7502759d8::t_70b03f4818abae 100-125
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_a36473a4b05e91 261-292
+src/domain/entities.js
+  s_946fc7502759d8::t_a5d2501069c8c1 2,329
+docs/cli.md
+  s_946fc7502759d8::t_be17b7728356fe 86-88
+src/domain/normalize.js
+  s_946fc7502759d8::t_a5d2501069c8c1 9-27
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_09d657a795c4ea 15,33-37,57,67,119-120,155,168-177
+  s_946fc7502759d8::t_6a42496f04b169 178
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_b086eabc698af7 94-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "041452bb116b20f1481ba9a5bf90b495062fbca0",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
