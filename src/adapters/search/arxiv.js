@@ -4,7 +4,7 @@ import { tags, textOf } from '../documents/xml.js';
 import { fetchWithPolicy, userAgent } from './http.js';
 
 const NAME = 'arxiv';
-const ENDPOINT = 'http://export.arxiv.org/api/query';
+const ENDPOINT = 'https://export.arxiv.org/api/query';
 const ABS_PREFIX = /^https?:\/\/arxiv\.org\/abs\//;
 
 /**

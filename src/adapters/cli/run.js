@@ -76,13 +76,14 @@ async function fetchFor(env) {
   return globalThis.fetch;
 }
 
-// The providers this run may call: what `--provider` asked for, else what the policy lists.
-// `mailto` is the polite contact OpenAlex and Crossref ask for, taken from the author profile
-// when the researcher recorded one (spec §3.1).
-async function searchDeps(store, cli, env, fetch) {
+// The providers this run may call: exactly what the policy lists. `--provider` is applied
+// downstream, where it can only narrow this list - building it from the flag would let a flag
+// reach a provider the workspace never named. `mailto` is the polite contact OpenAlex and
+// Crossref ask for, taken from the author profile when the researcher recorded one (spec §3.1).
+async function searchDeps(store, env, fetch) {
   const policy = await store.readYaml(join('.phdude', 'research-policy.yaml'));
   const profile = await store.readYaml(join('.phdude', 'author-profile.yaml'));
-  const names = cli.flags.provider ?? providerNames(policy);
+  const names = providerNames(policy);
   const mailto = typeof profile?.email === 'string' && profile.email.trim() ? profile.email : null;
   return buildProviders(names, { fetch, env, version, mailto });
 }
@@ -129,7 +130,7 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
 
   if (NETWORK_COMMANDS.has(cli.command)) {
     deps.fetch = await fetchFor(env);
-    deps.providers = await searchDeps(store, cli, env, deps.fetch);
+    deps.providers = await searchDeps(store, env, deps.fetch);
   }
 
   return { ...cli, deps, workspace, cwd, env, stdout, stderr };

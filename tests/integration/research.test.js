@@ -664,6 +664,57 @@ test('fresh: re-runs a search with the providers and filters it was recorded wit
   assert.match(now.fetch.calls[0].url, /rows=5/);
 });
 
+test('search: a provider API key never reaches a warning or an event summary', async () => {
+  const root = await newRoot();
+  const keys = { PHDUDE_S2_API_KEY: 's2-secret-key', PHDUDE_NCBI_API_KEY: 'ncbi-secret-key' };
+  const fetch = fakeFetch([
+    { match: OPENALEX, body: fixture('openalex/search.json') },
+    { match: 'eutils.ncbi.nlm.nih.gov', status: 500, body: 'unwell' },
+  ]);
+  const deps = {
+    store: new FsStore(root),
+    clock: () => '2026-09-07T10:00:00Z',
+    actor,
+    fetch,
+    providers: buildProviders(['openalex', 'pubmed'], { fetch, env: keys, version: '0.3.0' }),
+  };
+
+  // NCBI's key travels as a query parameter, so a provider error that echoed its request would
+  // put the key in the event log the researcher reads and commits.
+  const result = await research.search(deps, { query: 'open science' });
+  assert.deepEqual(result.warnings, ['pubmed: HTTP 500']);
+
+  const events = await deps.store.readEvents();
+  assert.ok(events.some((e) => e.summary === 'pubmed: "open science" \u2192 failed'));
+
+  const shown = JSON.stringify([result.warnings, events]);
+  for (const key of Object.values(keys)) {
+    assert.ok(!shown.includes(key), `the API key reached the researcher: ${shown}`);
+  }
+});
+
+test('search: --provider can only narrow, never widen, the policy list', async () => {
+  const root = await newRoot();
+  const deps = makeDeps(root, successRoutes(), ['openalex']);
+
+  await assert.rejects(
+    () => research.search(deps, { query: 'open science', providers: ['semantic-scholar'] }),
+    (err) => {
+      assert.equal(err.code, 'USAGE');
+      assert.equal(err.message, 'provider semantic-scholar is not in the workspace policy');
+      assert.match(err.hint, /research-policy\.yaml/);
+      return true;
+    },
+  );
+  assert.equal(deps.fetch.calls.length, 0, 'nothing was dispatched');
+
+  // The same flag naming a provider the policy does list still narrows to it.
+  const narrowed = makeDeps(root, successRoutes(), ['openalex', 'crossref']);
+  await research.search(narrowed, { query: 'open science', providers: ['crossref'] });
+  assert.equal(narrowed.fetch.calls.length, 1);
+  assert.match(narrowed.fetch.calls[0].url, /api\.crossref\.org/);
+});
+
 test('fresh: refuses to touch the network when the policy has not opened it', async () => {
   const root = await newRoot({ network: false });
   const deps = makeDepsAt(root, '2026-09-07T00:00:00Z');

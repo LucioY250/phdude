@@ -53,9 +53,9 @@ function requireQuery(query) {
   return text;
 }
 
-// The providers a run will actually call. `deps.providers` is what the workspace configured
-// (or what `--provider` asked for, resolved in the CLI); the option narrows that list without
-// ever widening it, so a command can never reach a provider the policy did not name.
+// The providers a run will actually call. `deps.providers` is what the workspace policy
+// configured; a name asked for here - by `--provider`, or by a stored search being re-run - can
+// only narrow that list, so a command can never reach a provider the policy did not name.
 function selectProviders(available, names) {
   if (!Array.isArray(available) || available.length === 0) {
     throw new PhdudeError(
@@ -72,8 +72,8 @@ function selectProviders(available, names) {
     if (!provider) {
       throw new PhdudeError(
         'USAGE',
-        `unknown provider ${name}`,
-        `configured: ${[...byName.keys()].join(', ')}`,
+        `provider ${name} is not in the workspace policy`,
+        'add it to providers: in .phdude/research-policy.yaml',
       );
     }
     return provider;

@@ -556,3 +556,82 @@ test('fakeFetchFromFile: routes load their bodies from files beside the routes f
 
   await assert.rejects(fetch('https://example.org/nothing'), /no route matches/);
 });
+
+// The host every provider is allowed to reach, and the only protocol it may use. A provider
+// that reaches anywhere else, or reaches its own host over plain HTTP, would put the
+// researcher's query - the shape of an unpublished thesis direction - on the wire in the clear.
+const PROVIDER_HOSTS = {
+  openalex: ['api.openalex.org'],
+  crossref: ['api.crossref.org'],
+  arxiv: ['export.arxiv.org'],
+  'semantic-scholar': ['api.semanticscholar.org'],
+  pubmed: ['eutils.ncbi.nlm.nih.gov'],
+};
+
+const PROVIDER_ROUTES = {
+  openalex: [{ match: 'api.openalex.org', body: fx('openalex/search.json') }],
+  crossref: [{ match: 'api.crossref.org', body: fx('crossref/search.json') }],
+  arxiv: [{ match: 'export.arxiv.org', body: fx('arxiv/search.xml') }],
+  'semantic-scholar': [
+    { match: 'api.semanticscholar.org', body: fx('semantic-scholar/search.json') },
+  ],
+  pubmed: [
+    { match: 'esearch.fcgi', body: fx('pubmed/esearch.json') },
+    { match: 'esummary.fcgi', body: fx('pubmed/esummary.json') },
+  ],
+};
+
+test('every provider talks https, and only to the host it is allowed', async () => {
+  assert.deepEqual(
+    Object.keys(PROVIDER_HOSTS).sort(),
+    Object.keys(PROVIDER_FACTORIES).sort(),
+    'a new provider needs its host allowlisted here',
+  );
+
+  for (const [name, factory] of Object.entries(PROVIDER_FACTORIES)) {
+    const fetch = fakeFetch(PROVIDER_ROUTES[name]);
+    const provider = factory({
+      fetch,
+      env: {},
+      version: '0.3.0',
+      mailto: 'researcher@example.org',
+    });
+    await provider.search('open science', { from: 2021, limit: 3 });
+
+    assert.ok(fetch.calls.length > 0, `${name} made no request`);
+    for (const call of fetch.calls) {
+      const url = new URL(call.url);
+      assert.equal(url.protocol, 'https:', `${name} used ${url.protocol} for ${call.url}`);
+      assert.ok(
+        PROVIDER_HOSTS[name].includes(url.host),
+        `${name} reached ${url.host}, which is not in its allowlist`,
+      );
+    }
+  }
+});
+
+test('a provider API key never reaches an error the researcher sees', async () => {
+  const keys = { PHDUDE_S2_API_KEY: 's2-secret-key', PHDUDE_NCBI_API_KEY: 'ncbi-secret-key' };
+  const providers = [
+    semanticScholar({
+      fetch: fakeFetch([{ match: 'api.semanticscholar.org', status: 500, body: 'nope' }]),
+      env: keys,
+      version: '0.3.0',
+    }),
+    pubmed({
+      fetch: fakeFetch([{ match: 'eutils.ncbi.nlm.nih.gov', status: 500, body: 'nope' }]),
+      env: keys,
+      version: '0.3.0',
+    }),
+  ];
+
+  for (const provider of providers) {
+    await assert.rejects(provider.search('open science', { limit: 3 }), (err) => {
+      const shown = JSON.stringify([err.message, err.hint, err.details]);
+      for (const key of Object.values(keys)) {
+        assert.ok(!shown.includes(key), `${provider.name} leaked its API key: ${shown}`);
+      }
+      return true;
+    });
+  }
+});

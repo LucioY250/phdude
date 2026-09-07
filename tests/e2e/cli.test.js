@@ -1211,6 +1211,27 @@ test('e2e: research refuses without network, then searches, records and lists ca
   );
   assert.equal(narrowed.candidates.existing.length, 3);
 
+  // A provider the policy never listed is refused before anything is dispatched: `--provider`
+  // narrows the policy's list, it does not replace it.
+  const widened = await phdude(
+    ws,
+    [
+      'research',
+      'open science',
+      '--provider',
+      'semantic-scholar',
+      '--allow-network',
+      '--json',
+      ...ACTOR,
+    ],
+    env,
+  );
+  assert.equal(widened.code, 1);
+  const rejected = JSON.parse(widened.stderr).error;
+  assert.equal(rejected.code, 'USAGE');
+  assert.equal(rejected.message, 'provider semantic-scholar is not in the workspace policy');
+  assert.match(rejected.hint, /research-policy\.yaml/);
+
   // Opening the policy installs the research skill on the next init.
   const policyPath = join(ws, '.phdude', 'research-policy.yaml');
   await writeFile(
