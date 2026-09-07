@@ -1,0 +1,134 @@
+CHANGELOG.md
+  s_946fc7502759d8::t_b2d71dea4e1577 9-103,460-461
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_f68c1810ca6b07 166-170
+docs/workspace.md
+  s_946fc7502759d8::t_1f09e4fcf61f03 54-55,59-63,69,87,91,123-125
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_93e96d0093e045 46-47
+tests/unit/domain/repro.test.js
+  s_946fc7502759d8::t_11734c5958ccf6 1-304
+  s_946fc7502759d8::t_726b11ec302f04 305-327
+examples/generic-thesis/knowledge/datasets/DATASET-bc43bf3439.yaml
+  s_946fc7502759d8::t_65632a2f66cb3a 1-54
+examples/generic-thesis/analysis/describe.mjs
+  s_946fc7502759d8::t_f0cf83b1e0bb42 1-54
+tests/golden/expected/gaps.txt
+  s_946fc7502759d8::t_35bfc47da3488c 1,29,39-41
+scripts/make-diagrams.mjs
+  s_946fc7502759d8::t_8a51f82aea094e 833-940
+tests/integration/repro.test.js
+  s_946fc7502759d8::t_e88d4fa122a8cb 1-315
+  s_946fc7502759d8::t_6f16ba21cfe915 316-339
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_842e42657c4720 2276-2395
+README.md
+  s_946fc7502759d8::t_fef6087d08d070 48-77,103,109,200,391-493,685-686,721-722,729-733,736-738,768,819-820
+package.json
+  s_946fc7502759d8::t_f3a575cd23c6da 3,30
+src/ports/store.js
+  s_946fc7502759d8::t_738db2e8747624 9
+src/application/snapshot.js
+  s_946fc7502759d8::t_8327443f0b62ca 2,4-5,17-20,29-56,108-110,122-124
+src/adapters/cli/commands/repro.js
+  s_946fc7502759d8::t_c643795f800076 1-15
+examples/generic-thesis/knowledge/evidence/EVID-7b4227f9fe.yaml
+  s_946fc7502759d8::t_f5eb96fe52ad89 1-16
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_205e274354e954 97
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_74ccb381c7dbf2 46,81
+examples/generic-thesis/analysis/ANALYSIS-a5b945f2cd.yaml
+  s_946fc7502759d8::t_1dd25e101206f0 1-30
+examples/generic-thesis/knowledge/results/RESULT-d09b2158fb.yaml
+  s_946fc7502759d8::t_dffd0cdfec7a50 1-20
+docs/assets/diagrams/analysis.svg
+  s_946fc7502759d8::t_cab5ef81b5b596 1-29
+examples/generic-thesis/figures/out/respondents-by-channel.svg
+  s_946fc7502759d8::t_addb1129f5503a 1-28
+src/application/status.js
+  s_946fc7502759d8::t_182bc3a553feb7 28-30,49-61,86
+tests/golden/README.md
+  s_946fc7502759d8::t_272deb33242192 21-28
+examples/generic-thesis/figures/FIG-843c619df9.yaml
+  s_946fc7502759d8::t_6f000b86bd4cfd 1-39
+examples/generic-thesis/knowledge/results/RESULT-8189aa9910.yaml
+  s_946fc7502759d8::t_e00df603e6e6ac 1-20
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_cf463bc5ff78d4 96-106
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_0c6700c48e8399 59-68,248-283
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_1c317adac3ccfd 42-50
+tests/golden/gaps.test.js
+  s_946fc7502759d8::t_7cfa5a4da8aba1 48
+docs/extending.md
+  s_946fc7502759d8::t_98572bb3d76f0e 185,214-221,391-487
+tests/golden/expected/repro.txt
+  s_946fc7502759d8::t_84612760a9d042 1-5
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_f6480597933441 69-70,97-101
+docs/cli.md
+  s_946fc7502759d8::t_359ebb3afef3dd 50-90,176-182,207-216,700,955-1002,1273,1276,1282,1288
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_7618217361d187 662-800
+examples/generic-thesis/analysis/out/survey-descriptives/results.json
+  s_946fc7502759d8::t_b9517d05002994 1-24
+examples/generic-thesis/knowledge/claims/CLAIM-8ad284d305.yaml
+  s_946fc7502759d8::t_7aec05c3ba9bda 12-13
+src/domain/next.js
+  s_946fc7502759d8::t_1e4dabeb659994 6,19-22,357-472,547-549
+commands/repro.md
+  s_946fc7502759d8::t_6f576fb32f62d6 1-19
+packs/methods/quantitative/skills/quantitative/SKILL.md
+  s_946fc7502759d8::t_706276f81a2c57 38-68
+src/domain/repro.js
+  s_946fc7502759d8::t_261ca4b9782349 1-162
+  s_946fc7502759d8::t_3cb93b3bc231c4 163-193
+tests/unit/domain/gaps.test.js
+  s_946fc7502759d8::t_42af3ad7199794 566-611
+examples/generic-thesis/data/survey.csv
+  s_946fc7502759d8::t_7d7905ef2d079b 1-21
+tests/golden/repro.test.js
+  s_946fc7502759d8::t_5cc1d1297fbe70 1-41
+src/application/repro.js
+  s_946fc7502759d8::t_a63a8ffd4f2bb5 1-18
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_7f6f12eb338fe1 16,18,23-30,46-50
+examples/generic-thesis/tables/TABLE-49db8343a8.yaml
+  s_946fc7502759d8::t_0e38347106a157 1-34
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_98a7dba9e118fe 144-157
+src/domain/gaps.js
+  s_946fc7502759d8::t_366b25dc4b19b6 207-223,299-300,313
+examples/generic-thesis/tables/out/daily-use-by-channel.md
+  s_946fc7502759d8::t_69eb02d9330cc1 1-7
+examples/generic-thesis/tables/out/daily-use-by-channel.tex
+  s_946fc7502759d8::t_33c7e771c62e8d 1-14
+packs/methods/qualitative/skills/qualitative/SKILL.md
+  s_946fc7502759d8::t_f036de12cfbfe2 35-62
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_ef92ab5b73e3ac 69-70,97-101
+examples/generic-thesis/tables/out/daily-use-by-channel.csv
+  s_946fc7502759d8::t_29d8a5b5450d95 1-4
+docs/assets/diagrams/analysis.excalidraw
+  s_946fc7502759d8::t_f8b50e0ef55310 1-1112
+scripts/make-example.mjs
+  s_946fc7502759d8::t_c4bf5a64d5b247 10,12-13,19,21-22,26,100-190,424-506,664,745-756
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "4111a2b16ac300f87ef6e3b83654638c0e41eb41",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
