@@ -26,7 +26,7 @@ function csvField(v) {
   return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
-function toCsv(rows) {
+export function toCsv(rows) {
   return rows.map((row) => row.map(csvField).join(',')).join('\n') + (rows.length ? '\n' : '');
 }
 
@@ -267,7 +267,7 @@ export async function ingest(
     const before = combined.get(after.id);
     const isTouched = touched.has(after.id);
     const versionChanged =
-      before.versions_of !== after.versions_of || Boolean(before.latest) !== Boolean(after.latest);
+      before.versions_of !== after.versions_of || before.latest !== after.latest;
 
     if (isTouched) {
       if (versionChanged) await store.writeEntity(after);

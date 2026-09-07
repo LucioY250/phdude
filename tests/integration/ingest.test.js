@@ -1,6 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cp, mkdir, mkdtemp, copyFile, readFile, readdir } from 'node:fs/promises';
+import {
+  cp,
+  mkdir,
+  mkdtemp,
+  copyFile,
+  readFile,
+  readdir,
+  stat,
+  utimes,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -91,6 +101,117 @@ test('ingest: discover, dedup, extract, cache, and version-link', async () => {
     .trim()
     .split('\n');
   assert.equal(events3.length, 3);
+});
+
+test('ingest: version-links same-stem, same-kind artifacts and persists latest:false on disk', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-'));
+  await mkdir(join(root, 'sources'), { recursive: true });
+  const oldPath = join(root, 'sources', 'report_v1.txt');
+  const newPath = join(root, 'sources', 'report_v2.txt');
+  await writeFile(oldPath, 'report content v1');
+  await writeFile(newPath, 'report content v2, longer');
+  const oldTime = new Date('2026-01-01T00:00:00Z');
+  const newTime = new Date('2026-02-01T00:00:00Z');
+  await utimes(oldPath, oldTime, oldTime);
+  await utimes(newPath, newTime, newTime);
+
+  const deps = makeDeps(root);
+  const r1 = await ingest(deps, {});
+  assert.equal(r1.artifacts.length, 2);
+
+  const oldEntity = r1.artifacts.find((a) => a.path === 'sources/report_v1.txt');
+  const newEntity = r1.artifacts.find((a) => a.path === 'sources/report_v2.txt');
+  assert.ok(oldEntity && newEntity);
+
+  const onDiskOld1 = await deps.store.readEntity(oldEntity.id);
+  const onDiskNew1 = await deps.store.readEntity(newEntity.id);
+  assert.equal(onDiskOld1.latest, false);
+  assert.equal('versions_of' in onDiskOld1, false);
+  assert.equal(onDiskNew1.latest, true);
+  assert.equal(onDiskNew1.versions_of, oldEntity.id);
+
+  // second run: nothing changed -> both skipped, and the persisted values are unchanged
+  const r2 = await ingest(deps, {});
+  assert.deepEqual([...r2.skipped].sort(), [oldEntity.id, newEntity.id].sort());
+  assert.equal(r2.artifacts.length, 0);
+
+  const onDiskOld2 = await deps.store.readEntity(oldEntity.id);
+  const onDiskNew2 = await deps.store.readEntity(newEntity.id);
+  assert.equal(onDiskOld2.latest, false);
+  assert.equal('versions_of' in onDiskOld2, false);
+  assert.equal(onDiskNew2.latest, true);
+  assert.equal(onDiskNew2.versions_of, oldEntity.id);
+});
+
+test('ingest: a newly discovered duplicate path merges into the existing artifact without re-extraction', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-'));
+  await mkdir(join(root, 'sources'), { recursive: true });
+  await copyFile(join(FIXTURES_DIR, 'sample.md'), join(root, 'sources', 'sample.md'));
+  const deps = makeDeps(root);
+
+  const r1 = await ingest(deps, {});
+  assert.equal(r1.artifacts.length, 1);
+  const id = r1.artifacts[0].id;
+  assert.equal(r1.artifacts[0].paths.length, 1);
+
+  const cachePath = join(root, '.phdude', 'cache', id, 'text.md');
+  const textBefore = await readFile(cachePath, 'utf8');
+  const statBefore = await stat(cachePath);
+
+  await mkdir(join(root, 'sources', 'another'), { recursive: true });
+  await copyFile(
+    join(FIXTURES_DIR, 'sample.md'),
+    join(root, 'sources', 'another', 'sample-again.md'),
+  );
+
+  const r2 = await ingest(deps, {});
+  assert.ok(!r2.skipped.includes(id), 'the merged artifact should not be reported as skipped');
+  const merged = r2.artifacts.find((a) => a.id === id);
+  assert.ok(merged, 'the merged artifact should be reported in artifacts');
+  assert.equal(merged.paths.length, 2);
+
+  const textAfter = await readFile(cachePath, 'utf8');
+  const statAfter = await stat(cachePath);
+  assert.equal(textAfter, textBefore);
+  assert.equal(statAfter.mtimeMs, statBefore.mtimeMs);
+});
+
+test('ingest: a parser that throws yields status failed with a warning, and does not block other files', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-ingest-'));
+  await mkdir(join(root, 'sources'), { recursive: true });
+  await writeFile(join(root, 'sources', 'broken.txt'), 'anything');
+  await writeFile(join(root, 'sources', 'fine.txt'), 'ok content');
+
+  const deps = makeDeps(root);
+  deps.parsers = {
+    detectKind,
+    parserFor: (kind) => {
+      if (kind !== 'txt') return parserFor(kind);
+      return {
+        name: 'boom',
+        kinds: ['txt'],
+        available: async () => true,
+        async parse(buffer, { path }) {
+          if (path.endsWith('broken.txt')) throw new Error('boom: cannot parse');
+          return {
+            text: buffer.toString('utf8'),
+            sections: [],
+            tables: [],
+            meta: {},
+            warnings: [],
+          };
+        },
+      };
+    },
+  };
+
+  const r = await ingest(deps, {});
+  const broken = r.artifacts.find((a) => a.path === 'sources/broken.txt');
+  const fine = r.artifacts.find((a) => a.path === 'sources/fine.txt');
+  assert.equal(broken.extracted.status, 'failed');
+  assert.ok(broken.extracted.warnings[0].includes('boom: cannot parse'));
+  assert.ok(r.warnings.some((w) => w.includes('boom: cannot parse')));
+  assert.equal(fine.extracted.status, 'ok');
 });
 
 test('ingest: unknown path rejects with a USAGE PhdudeError', async () => {

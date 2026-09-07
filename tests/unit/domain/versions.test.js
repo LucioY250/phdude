@@ -44,6 +44,49 @@ test('stem normalization strips trailing version/final/draft/copy/date markers',
   assert.equal(out.find((x) => x.id === 'ART-c').latest, true);
 });
 
+test('same stem but different kind are not linked', () => {
+  const a = {
+    id: 'ART-a',
+    path: 'x/report.pdf',
+    kind: 'pdf',
+    hash: '1',
+    mtime: '2026-01-01T00:00:00Z',
+  };
+  const b = {
+    id: 'ART-b',
+    path: 'x/report.xlsx',
+    kind: 'xlsx',
+    hash: '2',
+    mtime: '2026-02-01T00:00:00Z',
+  };
+  const out = linkVersions([a, b]);
+  assert.equal('versions_of' in out.find((x) => x.id === 'ART-a'), false);
+  assert.equal('versions_of' in out.find((x) => x.id === 'ART-b'), false);
+  assert.equal('latest' in out.find((x) => x.id === 'ART-a'), false);
+  assert.equal('latest' in out.find((x) => x.id === 'ART-b'), false);
+});
+
+test('same stem and same kind link as versions', () => {
+  const a = {
+    id: 'ART-a',
+    path: 'sources/thesis_v1.docx',
+    kind: 'docx',
+    hash: '1',
+    mtime: '2026-01-01T00:00:00Z',
+  };
+  const b = {
+    id: 'ART-b',
+    path: 'sources/thesis_v2.docx',
+    kind: 'docx',
+    hash: '2',
+    mtime: '2026-02-01T00:00:00Z',
+  };
+  const out = linkVersions([a, b]);
+  assert.equal(out.find((x) => x.id === 'ART-b').versions_of, 'ART-a');
+  assert.equal(out.find((x) => x.id === 'ART-b').latest, true);
+  assert.equal(out.find((x) => x.id === 'ART-a').latest, false);
+});
+
 test('does not mutate its input', () => {
   const a = {
     id: 'ART-a',
