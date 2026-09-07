@@ -1,5 +1,6 @@
 import { PhdudeError } from '../domain/errors.js';
 import { parseSectionFile } from '../domain/manuscript.js';
+import { voiceGate } from '../domain/gates/voice.js';
 import { lint } from '../domain/prose-lint.js';
 import { markerCounts, markerInventory } from '../domain/gates/markers.js';
 import { findSection, gateContext, loadManuscript, recordSection } from './manuscript.js';
@@ -87,6 +88,7 @@ export async function deslop(
       section: entry,
       revised: false,
       observations: report.observations,
+      voice: voiceGate.run(current, ctx).findings,
       scores: report.scores,
       aggregate: report.aggregate,
       contract: REVISION_CONTRACT,

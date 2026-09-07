@@ -224,6 +224,10 @@ test('deslop without a file prints the observations and the revision contract', 
   const result = await deslop(deps, { section: 'introduction' });
   assert.equal(result.revised, false);
   assert.ok(Array.isArray(result.observations));
+  assert.ok(
+    Array.isArray(result.voice),
+    'the contract view carries the voice findings prose prints',
+  );
   assert.equal(typeof result.scores.specificity, 'number');
   assert.ok(result.contract.preserve.some((rule) => rule.includes('negation')));
 

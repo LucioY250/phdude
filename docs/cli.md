@@ -823,7 +823,7 @@ The gates, in the order they report:
 | `gate-evidence` | a `<!-- claim:/fact:/result: -->` marker naming nothing, a paragraph asserting a `rejected` claim, a verb stronger than the claim's state or its evidence allows | a numeral of two digits or more with neither a marker nor a citation in its sentence |
 | `gate-prose` | every prose rule, in `ruthless` mode | every prose rule, in `full` mode |
 | `gate-voice` | — (voice never blocks, `ruthless` mode included: a learned baseline describes a habit, not a defect) | with an author profile that has run `learn`: any of mean sentence length, its spread, opening diversity, transition rate and first-person rate outside its tolerance, named with the observed value, the learned value and the band (`mean sentence length 31.2 vs learned 18.4 ± 4.6`); a word the profile's `terminology.avoid` lists. A term the section's claims use and the profile preserves, missing from the draft, is `info`. Author Voice scores 100 − 25 × the mean deviation across those five metrics, each in multiples of its own tolerance |
-| `gate-meaning` | on `--revision` only: a claim, citation, number or negation the revision dropped, or a claim or citation it added without `--allow-additions` | — |
+| `gate-meaning` | on `--revision` only: a claim, citation, number or negation the revision dropped, or a claim or citation it added without `--allow-additions`; a bare single digit ("3 waves" → "three waves") is not a number for this purpose | — |
 | `gate-profile` | with `target_profile` set: a section over the venue's word limit | a section the venue does not list, or one out of the venue's order |
 
 Citations follow Pandoc: `[@key]`, `[@a; @b]`, `[@a, p. 3]` and `[see @a]` all cite, and every
