@@ -1,0 +1,117 @@
+src/adapters/cli/commands/profile.js
+  s_946fc7502759d8::t_82ba1228af4eba 1-20,23,28-86
+  s_946fc7502759d8::t_84cc25979080e8 21-22,24-27
+src/schemas/index.js
+  s_946fc7502759d8::t_9a3e3e97f44187 67-80
+packs/venues/README.md
+  s_946fc7502759d8::t_be6462168f942e 1-40
+schemas/profile.json
+  s_946fc7502759d8::t_2da98c59e98743 1-96
+migrations/0003-workspace-v4.mjs
+  s_946fc7502759d8::t_4dca08b4daf620 1-60
+src/domain/profiles.js
+  s_946fc7502759d8::t_5a058df2b3cc09 1-228
+  s_946fc7502759d8::t_18d7a3f7562926 229-232
+src/application/profile.js
+  s_946fc7502759d8::t_34bc6604fb2dcf 1-156
+tests/unit/adapters/profile-loader.test.js
+  s_946fc7502759d8::t_667acfe1febf47 1-154
+  s_946fc7502759d8::t_7d484448018549 155-157
+src/adapters/packs/loader.js
+  s_946fc7502759d8::t_fb02e6ffcacb2f 69-72,79,81-91,93-114,116-125,127,130-131,134-198
+  s_946fc7502759d8::t_3533bc71250ed7 5
+src/domain/gates/profile.js
+  s_946fc7502759d8::t_e2fcb33591ae7b 3-7,9,19,26-30
+tests/unit/domain/profiles.test.js
+  s_946fc7502759d8::t_80bdfda90aa590 1-241
+tests/integration/profile.test.js
+  s_946fc7502759d8::t_3e5826816eca1b 1-286
+README.md
+  s_946fc7502759d8::t_88fcd7fe671603 204,787-788
+commands/profile.md
+  s_946fc7502759d8::t_e21d99c4e8dcc2 1-25
+docs/cli.md
+  s_946fc7502759d8::t_03e0484777f0dc 1304-1361,1372,1375,1381,1387,1393
+docs/extending.md
+  s_946fc7502759d8::t_b37d57ab503b99 17-21,66,68-79,82,84-85,87-90,92-94,96-116,119,121-165
+docs/workspace.md
+  s_946fc7502759d8::t_8bfe4237254be1 20,70,75,82-85,91,95
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_faff49613b4a3a 56-57
+examples/generic-thesis/.phdude/templates.yaml
+  s_946fc7502759d8::t_db015c7e1a70dd 1-3
+examples/generic-thesis/phdude.yaml
+  s_946fc7502759d8::t_ab75d68ac5ad2e 3,8
+packs/venues/acm/csl/acm-sig-proceedings.csl
+  s_946fc7502759d8::t_010eb9354bfccb 1-172
+packs/venues/acm/pack.yaml
+  s_946fc7502759d8::t_67bcb65bc7b056 1-22
+packs/venues/acm/profile.yaml
+  s_946fc7502759d8::t_d47d08e0a00dff 1-56
+packs/venues/acm/templates/acmart.tex
+  s_946fc7502759d8::t_0819327ad32115 1-55
+packs/venues/generic-thesis/csl/apa.csl
+  s_946fc7502759d8::t_0e6ef99194f70b 1-2273
+packs/venues/generic-thesis/pack.yaml
+  s_946fc7502759d8::t_681a9c53c0af70 1-21
+packs/venues/generic-thesis/profile.yaml
+  s_946fc7502759d8::t_c3df4b17b2eb93 1,4,6-10,13-15,17-19,22-24,27-29,32-34,37-39,41-54
+packs/venues/generic-thesis/templates/report.tex
+  s_946fc7502759d8::t_178e5415aefc50 1-60
+packs/venues/ieee/csl/ieee.csl
+  s_946fc7502759d8::t_f161a36d562ce8 1-519
+packs/venues/ieee/pack.yaml
+  s_946fc7502759d8::t_4fe54faa08009d 1-22
+packs/venues/ieee/profile.yaml
+  s_946fc7502759d8::t_4fcc931c49bb40 1-56
+packs/venues/ieee/templates/IEEEtran.tex
+  s_946fc7502759d8::t_a2e7ffe12be232 1-62
+schemas/project.json
+  s_946fc7502759d8::t_df08100cb9f24e 13
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_9ee6838b777798 56-57
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_d75a366f069ada 192-200
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_61a38cdddea25f 57,336
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_d9df2854191706 63-66
+src/adapters/cli/commands/packs.js
+  s_946fc7502759d8::t_b66e33fc1cf60d 67
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_ddf2e294de2d4b 8-13,49,85,155
+src/application/init.js
+  s_946fc7502759d8::t_10d8862c9c1b6d 42-47,202,223-229
+src/application/packs.js
+  s_946fc7502759d8::t_448c535b8213c6 7,19-21,75-80,82,85-86,90,98-119,128
+src/domain/versioning.js
+  s_946fc7502759d8::t_b85d1c1c58baf2 6
+tests/contracts/packs.test.js
+  s_946fc7502759d8::t_835574389d9ac2 4,10,13-14,32-33,41-45,48,56,82-83,104,166,168-169,171-236
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_127371e3e4f5fc 551,564,573,578,585,596,628,631,651,655,2447-2514
+tests/integration/migrate.test.js
+  s_946fc7502759d8::t_05eb2cb10a4764 14,20,85,87,99-100,117-118,133,136,148,151,178,182,197,211,224,233,243,295-296,307,323,325-357
+tests/integration/write.test.js
+  s_946fc7502759d8::t_f3eff02c6585da 155
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_c76747d1203764 170
+tests/unit/domain/versioning.test.js
+  s_946fc7502759d8::t_f5e1c229e16a74 13-14,32,34,38-39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "917584f162ed4a747d0c82ce79c2b3354c7e8f99",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
