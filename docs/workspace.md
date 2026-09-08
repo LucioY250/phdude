@@ -371,7 +371,7 @@ Neither writes prose; both leave that to `submit` and to `deslop --file`.
 
 ## The templates registry
 
-`.phdude/templates.yaml` (schema `phdude.templates-registry` v1) is the list of document
+`.phdude/templates.yaml` (schema `phdude.templates` v1) is the list of document
 templates the workspace holds: one entry per template with its `name`, its `kind` (`docx`,
 `pptx` or `latex`), the `path` of the copy under `templates/<kind>/`, the `hash` of its bytes,
 and the profile it is bound `for` once `phdude template use` says so. A build and

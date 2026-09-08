@@ -59,7 +59,7 @@ test('a template is stored under its kind, keeping the extension it arrived with
 
 test('an empty registry is a registry, not a missing file', () => {
   const registry = emptyRegistry();
-  assert.equal(registry.schema, 'phdude.templates-registry');
+  assert.equal(registry.schema, 'phdude.templates');
   assert.deepEqual(registry.templates, []);
   assert.equal(findTemplate(registry, 'thesis'), null);
 });

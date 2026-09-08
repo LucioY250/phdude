@@ -15,7 +15,7 @@ const TEMPLATES_DIR = 'templates';
 // silently loses that formatting, so `template check` names it before a build does.
 export const REQUIRED_DOCX_STYLES = ['Heading 1', 'Heading 2', 'Heading 3', 'Body Text', 'Caption'];
 
-export const REGISTRY_SCHEMA = 'phdude.templates-registry';
+export const REGISTRY_SCHEMA = 'phdude.templates';
 
 function extensionOf(path) {
   const base = String(path ?? '').replace(/\\/g, '/');

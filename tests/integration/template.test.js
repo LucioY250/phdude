@@ -99,7 +99,7 @@ test('add copies the file under its kind, records name, kind, path and hash, and
   );
 
   const registry = await deps.store.readYaml(join('.phdude', 'templates.yaml'));
-  assert.equal(registry.schema, 'phdude.templates-registry');
+  assert.equal(registry.schema, 'phdude.templates');
   assert.deepEqual(registry.templates, [result.template]);
 
   const events = await deps.store.readEvents();
