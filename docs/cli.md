@@ -112,13 +112,14 @@ phdude init --title "Adaptive scheduling in edge clusters" --agents claude-code,
 | Option | Meaning |
 |---|---|
 | `--title <text>` | Project title. Defaults to the directory name. |
-| `--agents <list>` | Comma-separated agent hosts to install. Default `claude-code,codex`. |
+| `--agents <list>` | Comma-separated agent hosts to install: `claude-code`, `codex`, `opencode`. Default `claude-code,codex`. See [agents.md](agents.md). |
 | `--no-git` | Skip `git init` even when the directory is not already in a repository. |
 
 `phdude.yaml` and the policy files under `.phdude/` are yours: once they exist, `init` leaves
 them alone. An existing `.gitignore` only gains the default lines it is missing.
-`AGENTS.md`, `CLAUDE.md` and `.claude/commands/*` are rewritten only while they still carry
-the `phdude:managed` marker; delete the marker to take ownership of the file.
+`AGENTS.md`, `CLAUDE.md`, `.claude/commands/*` and `.opencode/command/*` are rewritten only
+while they still carry the `phdude:managed` marker; delete the marker to take ownership of the
+file.
 
 **The installed skills are PhDude-managed.** Every file under `.phdude/skills/` is refreshed
 on each `init`: one whose content differs from the shipped version is overwritten and reported

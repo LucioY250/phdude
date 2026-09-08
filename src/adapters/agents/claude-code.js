@@ -1,9 +1,10 @@
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import {
   DEFAULT_COMMANDS_DIR,
   DEFAULT_SKILLS_DIR,
   MANAGED_MARKER,
+  listCommandFiles,
   renderAgentsMd,
   writeManagedFile,
 } from './shared.js';
@@ -59,15 +60,6 @@ function renderClaudeMd(commandFiles) {
     'when its command or task is actually active, not up front.',
     '',
   ].join('\n');
-}
-
-async function listCommandFiles(commandsDir) {
-  try {
-    return (await readdir(commandsDir)).filter((f) => f.endsWith('.md')).sort();
-  } catch (err) {
-    if (err.code === 'ENOENT') return [];
-    throw err;
-  }
 }
 
 export const claudeCodeHost = {

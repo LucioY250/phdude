@@ -12,7 +12,7 @@ Your AI can write. PhDude helps make the research worth publishing.
 [![version](https://img.shields.io/badge/version-0.7.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
-[![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
+[![works with Claude Code, Codex and OpenCode](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20OpenCode-8A2BE2)](#set-up-your-agent)
 
 </div>
 
@@ -109,7 +109,7 @@ See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
 - [What's new in 0.7](#whats-new-in-07)
 - [How it works](#how-it-works)
 - [Install](#install)
-- [Set up your agent](#set-up-your-agent) (Claude Code, Codex, anything else)
+- [Set up your agent](#set-up-your-agent) (Claude Code, Codex, OpenCode, anything else)
 - [A first session](#a-first-session)
 - [Finding literature](#finding-literature)
 - [Analysis and figures](#analysis-and-figures)
@@ -236,19 +236,41 @@ Open Codex in the directory and ask it to bootstrap the research workspace. It w
 known, what conflicts, and what to do next. From then on ask it for status, the next action, or
 any `phdude` command by name.
 
-### Both, or another agent
+### OpenCode
+
+```
+mkdir my-research && cd my-research
+phdude init --title "Adaptive scheduling in edge clusters" --agents opencode
+```
+
+OpenCode reads `AGENTS.md` and takes its custom commands from `.opencode/command/`, so it gets
+both:
+
+| File | Purpose |
+|---|---|
+| `AGENTS.md` | Operating rules, the command reference, and an *index* of skills, the same file Claude Code gets. |
+| `.opencode/command/phdude*.md` | The same commands as Claude Code, under the same names: `/phdude` and `/phdude-<command>`. |
+
+The command bodies are identical; only the `allowed-tools` line is dropped, since that
+permission key is Claude Code's. Start with `/phdude bootstrap`.
+
+### Several at once, or another agent
 
 ```
 phdude init --title "…" --agents claude-code,codex
 ```
 
-is the default, and gives you both sets of files; the compact skills index wins for `AGENTS.md`, since Claude Code
-loads skills on demand and Codex still finds them by path. Any other agent that reads
-`AGENTS.md` (OpenCode, Gemini CLI, and most others) works the same way as Codex. If yours reads
-nothing by default, point it at `.phdude/skills/phdude-core/SKILL.md` and it has the rules.
+is the default, and gives you both sets of files; add `opencode` for a third. The compact skills
+index wins for `AGENTS.md`, since Claude Code and OpenCode load skills on demand and Codex still
+finds them by path. Any other agent that reads `AGENTS.md` (Gemini CLI, and most others) works
+the same way as Codex. If yours reads nothing by default, point it at
+`.phdude/skills/phdude-core/SKILL.md` and it has the rules.
 
 `init` never overwrites a `CLAUDE.md` or `AGENTS.md` you wrote yourself; it only manages files
 that carry its own marker, and it tells you which ones it skipped.
+
+Per-host setup, the two shapes of `AGENTS.md`, and what has and has not been smoke-tested are in
+[docs/agents.md](docs/agents.md).
 
 ## A first session
 
@@ -1079,6 +1101,7 @@ my-research/
 ├── AGENTS.md            # shared agent instructions
 ├── CLAUDE.md            # Claude Code entry point
 ├── .claude/commands/    # slash commands (Claude Code)
+├── .opencode/command/   # the same commands (OpenCode)
 ├── .phdude/
 │   ├── constitution.yaml, research-policy.yaml, writing-policy.yaml, …
 │   ├── skills/          # installed skills

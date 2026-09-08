@@ -28,6 +28,7 @@
     "commands",
     "packs",
     "generators",
+    "docs/agents.md",
     "docs/cli.md",
     "docs/workspace.md",
     "docs/extending.md",

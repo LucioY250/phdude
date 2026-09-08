@@ -7,7 +7,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { COMMAND_OPTIONS } from '../../../src/adapters/cli/args.js';
 import { usage } from '../../../src/adapters/cli/commands/help.js';
-import { COMMAND_ROWS } from '../../../src/adapters/agents/shared.js';
+import { COMMAND_ROWS, parseFrontMatter } from '../../../src/adapters/agents/shared.js';
 import { claudeCodeHost } from '../../../src/adapters/agents/claude-code.js';
 
 // Every surface that names a command drifted at least once during v0.1 and v0.2: the AGENTS.md
@@ -62,6 +62,18 @@ test('every slash-command template carries the front matter Claude Code needs', 
     assert.ok(text.startsWith('---\n'), `commands/${file}: front matter must start at line 1`);
     assert.match(text, /\ndescription: \S/, `commands/${file}: no description`);
     assert.match(text, /\nphdude-managed: true\n/, `commands/${file}: not marked managed`);
+  }
+});
+
+// Textual front matter is not enough: a description with an unquoted colon in it parses as
+// nothing, which makes `isPhdudeManaged` false, and a template PhDude does not recognize as its
+// own is one `init` will never refresh again. The opencode host also reads `description` here.
+test('every slash-command template has front matter that actually parses', () => {
+  for (const file of readdirSync(join(REPO_ROOT, 'commands'))) {
+    const { meta } = parseFrontMatter(read('commands', file));
+    assert.notEqual(meta, null, `commands/${file}: front matter is not valid YAML`);
+    assert.match(meta.description ?? '', /\S/, `commands/${file}: no description`);
+    assert.equal(meta['phdude-managed'], true, `commands/${file}: not marked managed`);
   }
 });
 

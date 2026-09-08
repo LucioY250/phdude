@@ -466,7 +466,8 @@ import { agentHostContract } from '../../src/ports/agent-host.js';
 agentHostContract(test, assert, { mkdtemp: mkroot, readFile }, myHost);
 ```
 
-Then register the host in `src/adapters/cli/commands/init.js` so `--agents` accepts its name.
+Then register the host in `HOSTS` in `src/adapters/agents/hosts.js` so `--agents` accepts its
+name. The three shipped hosts are documented in [agents.md](agents.md).
 
 ### SearchProvider
 
