@@ -1,0 +1,68 @@
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_1a82e16b3d5700 32-33
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_1a82e16b3d5700 94,131,375-376
+commands/health.md
+  s_946fc7502759d8::t_1a82e16b3d5700 1-29
+src/application/cite.js
+  s_946fc7502759d8::t_1a82e16b3d5700 27-28,68-69,73-74
+src/application/health.js
+  s_946fc7502759d8::t_1a82e16b3d5700 1-89
+src/domain/health.js
+  s_946fc7502759d8::t_1a82e16b3d5700 1-415
+src/domain/prose-lint.js
+  s_946fc7502759d8::t_1a82e16b3d5700 348-356,360,455
+tests/unit/domain/health.test.js
+  s_946fc7502759d8::t_1a82e16b3d5700 1-499
+defaults/research-policy.yaml
+  s_946fc7502759d8::t_1a82e16b3d5700 40-50
+tests/golden/expected/health.txt
+  s_946fc7502759d8::t_1a82e16b3d5700 1-25
+docs/workspace.md
+  s_946fc7502759d8::t_1a82e16b3d5700 54,350-371
+  s_946fc7502759d8::t_8cbca7d1b34654 372
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_1a82e16b3d5700 386-388
+docs/cli.md
+  s_946fc7502759d8::t_1a82e16b3d5700 738-794
+src/adapters/cli/commands/health.js
+  s_946fc7502759d8::t_1a82e16b3d5700 1-10
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_1a82e16b3d5700 45,88
+docs/adr/0011-research-health-formulas.md
+  s_946fc7502759d8::t_1a82e16b3d5700 1-99
+tests/golden/health.test.js
+  s_946fc7502759d8::t_1a82e16b3d5700 1-47
+tests/integration/health.test.js
+  s_946fc7502759d8::t_1a82e16b3d5700 1-224
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_1a82e16b3d5700 146-151
+  s_946fc7502759d8::t_ed1be1f9d9baba 145
+examples/generic-thesis/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_1a82e16b3d5700 40-50
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_1a82e16b3d5700 340-407
+README.md
+  s_946fc7502759d8::t_1a82e16b3d5700 954
+  s_946fc7502759d8::t_d31cb197257fc3 211
+migrations/0004-workspace-v5.mjs
+  s_946fc7502759d8::t_ae385dfd5a3ff0 9-10,12-19
+tests/integration/migrate.test.js
+  s_946fc7502759d8::t_529e69c068fe7d 387,389,391-393,396-399
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "2bf79988a59c80be8ae632dfdbc6a6de9d2da817",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
