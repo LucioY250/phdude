@@ -35,6 +35,7 @@ export const SCHEMA_TYPES = [
   'manuscript',
   'section-report',
   'templates-registry',
+  'skills-lock',
   'author-profile',
   'pack',
   'skill',

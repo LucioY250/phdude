@@ -1557,6 +1557,55 @@ style. `manuscript.<venue>.yaml` is the record of the mapping and the work list 
 Sets the review mode in `phdude.yaml`. Setting the mode it already has changes nothing and
 records no event.
 
+### `phdude skills list|install <path|git-url>|remove <name>`
+
+The agent skills this workspace loads, and where each of them came from.
+
+```
+phdude skills list
+phdude skills install ../lab-skills/prisma-screening
+phdude skills install https://example.org/lab/prisma-screening.git --allow-network
+phdude skills remove prisma-screening
+```
+
+`list` names every skill discovery would find - the shipped set, each applied pack's, and
+everything under `.phdude/skills/` - with its source. A skill installed from outside is listed as
+`external` with the path or URL it came from, and marked `(edited)` when its files no longer hash
+to what was recorded.
+
+`install <path>` copies a directory holding `SKILL.md` into `.phdude/skills/<name>/`, where
+`<name>` is the front matter's `name`. Nothing in a skill is ever executed: PhDude reads the files
+and writes copies of them.
+
+The tree is staged and validated outside the workspace first, so a skill that fails any of these
+leaves nothing behind:
+
+- Its `phdude:` block must validate against the [skill contract](extending.md#skill-contract).
+- Its `name` and `description` must not describe a detector-evasion or humanizer purpose. One that
+  does exits 3 with a `POLICY` error naming the phrase — PhDude has no detector score and will not
+  install a skill that offers one (PRD §30c).
+- Its declared permissions go through the same gate as a shipped skill's: a skill asking for
+  network access or script execution the research policy has not opened exits 3 and names the
+  setting that would install it, rather than being installed and then withheld.
+- A name PhDude already ships is refused: `phdude init` mirrors the shipped skills into
+  `.phdude/skills/`, so the copy would not survive. A name already installed is refused too,
+  unless `--force` replaces it.
+- A symlink anywhere in the source directory is refused, because following it would copy bytes
+  from outside the directory you named.
+
+`install <git-url>` clones first — a shallow clone of one commit, run through `execFile` with an
+argument array and never a shell — and installs from the clone. It needs `network.enabled: true` in
+`.phdude/research-policy.yaml` or `--allow-network`, and the URL must be `https` without
+credentials; every other transport exits 2. The clone's `.git` is not copied.
+
+Each install records `{ name, source, hash, installed_at }` in `.phdude/skills-lock.yaml` (schema
+`phdude.skills-lock` v1) and writes one `skills` event. The `hash` is one sha256 over the tree's
+sorted `<path> <sha256>` lines, so an edited byte and a renamed file both move it and
+`phdude doctor` can report a skill that changed after it was reviewed.
+
+`remove <name>` deletes `.phdude/skills/<name>/` and its lock entry, and writes one `skills`
+event. A skill PhDude ships is refused: `phdude init` would put it straight back.
+
 ### `phdude migrate [--dry-run] [--force]`
 
 Upgrades a workspace written by an older PhDude to the current workspace version.
@@ -1641,6 +1690,13 @@ array of `{ name, source, permissions, reads, writes, warnings }`.
 `source` is `workspace` only when the workspace's copy actually differs from the shipped file.
 `init` copies every core skill into `.phdude/skills/`, so an untouched workspace would otherwise
 report all of them as its own; the bytes are compared, and an unmodified copy stays `core`.
+
+An `External skills:` block follows for anything `phdude skills install` brought in, read from
+`.phdude/skills-lock.yaml`: one line per entry with the source it came from, when it was
+installed, and whether its files still hash to what was recorded — `ok`, `edited since install`,
+or `missing` when the lock names a skill that is no longer on disk. The last two are warnings too.
+`--json` carries it as an `externalSkills` array of
+`{ name, source, hash, installed_at, present, drifted }`.
 
 Being the command you run when something is wrong, `doctor` degrades rather than fails. A skill
 whose `SKILL.md` cannot be loaded costs one warning naming that skill, and every other skill is

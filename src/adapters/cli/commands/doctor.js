@@ -83,6 +83,14 @@ function render(report) {
     }
   }
 
+  if (report.externalSkills.length > 0) {
+    lines.push('', 'External skills:');
+    for (const skill of report.externalSkills) {
+      const state = !skill.present ? 'missing' : skill.drifted ? 'edited since install' : 'ok';
+      lines.push(`  ${skill.name} (${skill.source}) installed ${skill.installed_at} - ${state}`);
+    }
+  }
+
   if (report.warnings.length > 0) {
     lines.push('', 'Warnings:');
     for (const w of report.warnings) lines.push(`  - ${w}`);
@@ -102,6 +110,7 @@ export default async function doctorCommand({ deps }) {
     node: deps.node,
     discoverSkills: deps.discoverSkills,
     skillsDir: deps.skillsDir,
+    readSkillSource: deps.readSkillSource,
   });
   return { text: render(report), json: report };
 }

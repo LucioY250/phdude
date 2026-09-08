@@ -19,6 +19,7 @@ my-research/
 │   ├── author-profile.yaml
 │   ├── templates.yaml            # the registered document templates
 │   ├── skills/<name>/SKILL.md    # installed agent skills (PhDude-managed)
+│   ├── skills-lock.yaml          # where every externally installed skill came from
 │   ├── events.jsonl              # append-only audit log (committed)
 │   └── cache/                    # extracted text, gitignored and disposable
 ├── authors/                      # per-researcher voice profiles (phdude authors)
@@ -307,6 +308,9 @@ Accepting or dismissing a candidate writes one `research` event
 (`accepted CAND-… as SRC-…`, or `dismissed CAND-…: <reason>`), and `phdude edit` writes one
 `edit` event naming the fields that changed.
 
+Installing or removing an external skill writes one `skills` event
+(`installed <name> from <source>`, or `removed <name>`).
+
 A network call is audited the same way, one `search` event per provider call:
 
 ```json
@@ -390,6 +394,20 @@ and the profile it is bound `for` once `phdude template use` says so. A build an
 The registry is a record, not a cache: it is committed, and `phdude template check` reports a
 template whose bytes no longer hash to what was registered. The templates themselves are yours —
 a university's thesis DOCX, a conference's LaTeX class — and PhDude never edits one.
+
+## The skills lock
+
+`.phdude/skills-lock.yaml` (schema `phdude.skills-lock` v1) records the provenance of every skill
+`phdude skills install` brought in from outside the workspace: its `name`, the `source` it came
+from (an absolute directory or an https URL), the `hash` of its files, and `installed_at`. The
+shipped skills and the ones a pack carries are not in it — those come with PhDude and with the
+pack, and `phdude init` and `phdude packs apply` keep them in step.
+
+The `hash` is one sha256 over the tree's sorted `<path> <sha256>` lines, so an edited byte and a
+renamed file both move it. `phdude doctor` and `phdude skills list` compare it against what is on
+disk and report a skill that changed after it was installed — an edited skill is not the skill
+that was reviewed. Like the templates registry, the lock is a record rather than a cache: it is
+committed, and PhDude never runs anything inside a skill it copied.
 
 ## Adapted manuscripts
 
