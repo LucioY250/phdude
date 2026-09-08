@@ -2915,3 +2915,112 @@ test('e2e: a review context, a findings file, and the verdicts the researcher gi
   assert.equal(events.length, 4, 'one submit, one accept, one resolve, one dismiss');
   assert.deepEqual(events[0].ids.sort(), submitted.created.map((item) => item.id).sort());
 });
+
+test('e2e: skills list, install from a directory, the detector refusal, and remove', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-skills-'));
+  const src = await mkdtemp(join(tmpdir(), 'phdude-e2e-src-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  t.after(() => rm(src, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Skills', '--no-git']);
+
+  const skill = (name, description) =>
+    [
+      '---',
+      `name: ${name}`,
+      `description: ${description}`,
+      'phdude:',
+      '  version: 1',
+      '  reads: []',
+      '  writes: []',
+      '  permissions:',
+      '    network: none',
+      '    workspace: [read]',
+      '---',
+      '',
+      `# ${name}`,
+      '',
+    ].join('\n');
+
+  await writeFile(join(src, 'SKILL.md'), skill('lab-checklist', 'The lab reporting checklist.'));
+
+  const before = await runJson(ws, ['skills', 'list']);
+  assert.ok(before.skills.every((s) => s.external === false));
+
+  const installed = await runJson(ws, ['skills', 'install', src]);
+  assert.equal(installed.name, 'lab-checklist');
+  assert.equal(installed.source, src);
+  assert.ok(await exists(join(ws, '.phdude', 'skills', 'lab-checklist', 'SKILL.md')));
+  assert.ok(await exists(join(ws, '.phdude', 'skills-lock.yaml')));
+
+  const listed = await runJson(ws, ['skills', 'list']);
+  const entry = listed.skills.find((s) => s.name === 'lab-checklist');
+  assert.equal(entry.external, true);
+  assert.equal(entry.origin, src);
+
+  const doctorReport = await runJson(ws, ['doctor']);
+  assert.deepEqual(
+    doctorReport.externalSkills.map((s) => [s.name, s.source, s.drifted]),
+    [['lab-checklist', src, false]],
+  );
+
+  // A second install of the same name is refused; --force replaces it.
+  const twice = await phdude(ws, ['skills', 'install', src, '--json', ...ACTOR]);
+  assert.equal(twice.code, 2);
+  assert.match(JSON.parse(twice.stderr).error.message, /already installed/);
+  await run(ws, ['skills', 'install', src, '--force']);
+
+  // A git URL without the network policy is a policy refusal, and never reaches git.
+  const remote = await phdude(ws, [
+    'skills',
+    'install',
+    'https://example.org/lab/x.git',
+    '--json',
+    ...ACTOR,
+  ]);
+  assert.equal(remote.code, 3);
+  assert.equal(JSON.parse(remote.stderr).error.message, 'network access is disabled');
+
+  // Anything but https is refused before the policy is even consulted.
+  const scp = await phdude(ws, [
+    'skills',
+    'install',
+    'git@example.org:lab/x.git',
+    '--json',
+    ...ACTOR,
+  ]);
+  assert.equal(scp.code, 2);
+  assert.match(JSON.parse(scp.stderr).error.message, /unsupported skill source/);
+
+  // PRD §30c: a skill that says it is a humanizer is refused, and nothing is copied.
+  const banned = await mkdtemp(join(tmpdir(), 'phdude-e2e-banned-'));
+  t.after(() => rm(banned, { recursive: true, force: true }));
+  await writeFile(
+    join(banned, 'SKILL.md'),
+    skill('polisher', 'Humanize a draft before you submit it.'),
+  );
+  const refused = await phdude(ws, ['skills', 'install', banned, '--json', ...ACTOR]);
+  assert.equal(refused.code, 3);
+  assert.match(JSON.parse(refused.stderr).error.hint, /§30c/);
+  assert.equal(await exists(join(ws, '.phdude', 'skills', 'polisher')), false);
+
+  const shipped = await phdude(ws, ['skills', 'remove', 'literature', '--json', ...ACTOR]);
+  assert.equal(shipped.code, 2);
+
+  await run(ws, ['skills', 'remove', 'lab-checklist']);
+  assert.equal(await exists(join(ws, '.phdude', 'skills', 'lab-checklist')), false);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'skills');
+  assert.deepEqual(
+    events.map((event) => event.summary),
+    [
+      `installed lab-checklist from ${src}`,
+      `installed lab-checklist from ${src}`,
+      'removed lab-checklist',
+    ],
+  );
+});

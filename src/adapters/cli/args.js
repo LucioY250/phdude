@@ -111,6 +111,7 @@ export const COMMAND_OPTIONS = {
     approved: { type: 'boolean' },
   },
   mode: {},
+  skills: { 'allow-network': { type: 'boolean' } },
   migrate: {},
   doctor: {},
   prose: { lang: { type: 'string' } },

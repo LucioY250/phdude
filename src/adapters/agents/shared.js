@@ -237,6 +237,12 @@ export const COMMAND_ROWS = [
       'Every finding names the ids it rests on; you never accept your own findings.',
   ],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
+  [
+    'skills list|install|remove',
+    'The agent skills this workspace loads, and where each came from. `install <path|https url>` ' +
+      'copies an external skill in under the same permission gating as a shipped one and records ' +
+      'its provenance in `.phdude/skills-lock.yaml`; nothing in a skill is ever executed.',
+  ],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
   ['doctor', 'Report adapter availability, cache state, schema versions, and skill permissions.'],
   ['help', 'Print the command list, the global options, and the exit codes.'],

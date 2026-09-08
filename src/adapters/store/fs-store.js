@@ -27,6 +27,7 @@ const ENTITY_DIRS = {
 };
 
 const TEMPLATES_FILE = join('.phdude', 'templates.yaml');
+const SKILLS_LOCK_FILE = join('.phdude', 'skills-lock.yaml');
 const MANUSCRIPT_DIR = 'manuscript';
 const MANUSCRIPT_FILE = join(MANUSCRIPT_DIR, 'manuscript.yaml');
 const REPORTS_DIR = join(MANUSCRIPT_DIR, 'reports');
@@ -129,6 +130,18 @@ export class FsStore {
     assertValid('templates-registry', registry);
     await this.writeYamlAtomic(TEMPLATES_FILE, registry);
     return join(this.root, TEMPLATES_FILE);
+  }
+
+  async readSkillsLock() {
+    const obj = await this.readYaml(SKILLS_LOCK_FILE);
+    if (obj !== null) assertValid('skills-lock', obj);
+    return obj;
+  }
+
+  async writeSkillsLock(lock) {
+    assertValid('skills-lock', lock);
+    await this.writeYamlAtomic(SKILLS_LOCK_FILE, lock);
+    return join(this.root, SKILLS_LOCK_FILE);
   }
 
   async readProject() {

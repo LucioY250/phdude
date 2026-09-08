@@ -22,6 +22,13 @@ import { buildProviders } from '../search/index.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
 import { discoverSkills, loadSkill } from '../skills/loader.js';
+import {
+  gitCloner,
+  readSkillSource,
+  removeSkillDir,
+  tempSkillDir,
+  writeSkillTree,
+} from '../skills/install.js';
 import { providerNames } from '../../domain/policy.js';
 import { FsStore } from '../store/fs-store.js';
 import { read, realpath, walk } from '../store/fs-walk.js';
@@ -62,6 +69,7 @@ import repro from './commands/repro.js';
 import research from './commands/research.js';
 import researchFresh from './commands/research-fresh.js';
 import review from './commands/review.js';
+import skillsCommand from './commands/skills.js';
 import status from './commands/status.js';
 import table from './commands/table.js';
 import template from './commands/template.js';
@@ -104,6 +112,7 @@ const COMMANDS = {
   research,
   'research-fresh': researchFresh,
   review,
+  skills: skillsCommand,
   status,
   table,
   template,
@@ -177,6 +186,11 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     discoverSkills,
     loadSkill,
     skillsDir: DEFAULT_SKILLS_DIR,
+    readSkillSource,
+    writeSkillTree,
+    tempSkillDir,
+    removeSkillDir,
+    cloneSkill: gitCloner({ execFile }),
     clock: () => new Date().toISOString(),
     actor,
     env,
