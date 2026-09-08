@@ -1,0 +1,25 @@
+README.md
+  s_946fc7502759d8::t_79f406ef69831b 165
+docs/assets/diagrams/next.excalidraw
+  s_946fc7502759d8::t_724b312103bed3 135-136
+docs/assets/diagrams/next.svg
+  s_946fc7502759d8::t_724b312103bed3 1-2,8
+scripts/make-diagrams.mjs
+  s_946fc7502759d8::t_79f406ef69831b 755,778
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "5f8e9ab6458ab9d0a96c0c8d517260e6e5d262e5",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
