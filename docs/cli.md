@@ -8,6 +8,11 @@ code that says what kind of thing went wrong.
 phdude <command> [sub-command] [arguments] [options]
 ```
 
+Each command below carries a stability line. `Stability: stable` means the command's name, the
+options it takes, its exit codes and its `--json` shape are frozen for the whole 1.x series:
+they change only in a major release, and only after a deprecation. What that promise covers, and
+what it deliberately does not, is [docs/versioning.md](versioning.md).
+
 ## Global options
 
 | Option | Meaning |
@@ -55,6 +60,13 @@ and so does an analysis whose script exited non-zero or was killed by a signal (
 or ran past `execution.timeout_seconds` (`TOOL_MISSING`) - PhDude did its part, and the thing it
 called did not come back.
 
+Both the codes and the envelope are frozen. `hint` and `details` are always present, as `null`
+when there is nothing to say, so a caller reads `error.details` and gets `null` or an array of
+strings, never `undefined`. In text mode the details print first, one `  - ` line each, then the
+message, then `Suggested action:` — the located list before the sentence that counts it.
+`tests/contracts/cli-json-shape.test.js` runs the binary once per code and holds all of it in
+place.
+
 ## Script execution
 
 `phdude analyze run` and `phdude figure build` are the only commands that run code. Both read
@@ -101,6 +113,8 @@ is the useful default. `phdude doctor` prints both.
 
 ### `phdude init [dir]`
 
+Stability: stable
+
 Creates a workspace in `dir` (default: the current directory) and is safe to re-run: your
 own files are never overwritten, missing ones are added, and the result reports every path
 as `created`, `updated` or `skipped`.
@@ -132,11 +146,15 @@ went, and the text output adds a `removed:` line when there were any.
 
 ### `phdude bootstrap`
 
+Stability: stable
+
 The command to run on a messy existing project. It ingests `sources/`, scores pack
 recommendations, prints `status` and `next`, and finishes with the handoff line that points
 the agent at `.phdude/skills/bootstrap/SKILL.md`. It is re-runnable.
 
 ### `phdude ingest [paths…]`
+
+Stability: stable
 
 Walks the given paths (default `sources/`), hashes every file, detects its kind, extracts
 text and tables into `.phdude/cache/ART-<id>/`, links versions, and records one Artifact per
@@ -181,6 +199,8 @@ text output prints one line per inventory entry, with `+` marking the ones writt
 
 ### `phdude status`
 
+Stability: stable
+
 Project settings, artifact inventory by kind and extraction status, knowledge counts by type
 and state, an Analysis block, a Literature block, open and resolved fact conflicts, disputed
 claim pairs, pending decisions, and the last events. Every number is derived on read; nothing is
@@ -207,6 +227,8 @@ whatever states they are in, and drops out once one side is rejected. `--json` r
 
 ### `phdude next`
 
+Stability: stable
+
 The highest-impact next action, always with the reasons behind it, the expected impact, and
 the exact command to run. Other candidates follow. See PRD §45.
 
@@ -227,6 +249,8 @@ record was changed by hand. `never-run` (low) covers everything declared and nev
 including an output that has been deleted since.
 
 ### `phdude knowledge list|show|trace`
+
+Stability: stable
 
 ```
 phdude knowledge list [--type <type>] [--state <state>] [--query <text>]
@@ -252,6 +276,8 @@ It reads "extracted by an agent from artifact ART-35146e2f6d". `manual` means a 
 at the CLI, `imported` that it predates the field and was filled in by `phdude migrate`.
 
 ### `phdude add <type>`
+
+Stability: stable
 
 ```
 phdude add claim --json '{"statement":"…","kind":"empirical","supported_by":["EVID-…"]}'
@@ -313,6 +339,8 @@ be corrected afterwards.
 
 ### `phdude link <id> --to <id> [<id>…]`
 
+Stability: stable
+
 ```
 phdude link CLAIM-3d035aa05b --to EVID-93cd3745fc RQ-1
 phdude link SRC-04b75ed54a --to ART-35146e2f6d
@@ -339,6 +367,8 @@ canonical knowledge changes only through an approved decision.
 
 ### `phdude link <CLAIM-a> --contradicts <CLAIM-b>`
 
+Stability: stable
+
 ```
 phdude link CLAIM-3d035aa05b --contradicts CLAIM-8e21a9c440
 ```
@@ -359,6 +389,8 @@ See [`decisions`](../skills/decisions/SKILL.md) for how a disputed pair gets res
 `phdude status` for where disputed pairs are reported.
 
 ### `phdude decide propose|approve|reject|supersede`
+
+Stability: stable
 
 ```
 phdude decide propose --title "Resolve sample_size" --rationale "…" \
@@ -383,6 +415,8 @@ name of its own, and must ask the researcher rather than guessing.
 every time. The v0.1 form that passed a `DEC-` id to `--by` exits 1 with that correction.
 
 ### `phdude promote <id> --decision <DEC-id>`
+
+Stability: stable
 
 Moves an object to `canonical` (or to another state with `--to`). Promotion to canonical
 requires a decision that is `approved` and lists the object in `affects`; anything else
@@ -409,6 +443,8 @@ instead. Resolving the pair does not touch the loser automatically beyond that m
 rejection, and `contradicts` is kept on the survivor as history of the dispute.
 
 ### `phdude cite list|check|export`
+
+Stability: stable
 
 ```
 phdude cite list
@@ -451,6 +487,8 @@ A source may carry `bibkey` (`^[a-z0-9-]+$`, wins over the derived key), `abstra
 and `url` fields from v0.1 still work; `identifiers.doi` takes precedence when both are set.
 
 ### `phdude audit citations [--allow-network] [--json]`
+
+Stability: stable
 
 ```
 phdude audit citations
@@ -497,6 +535,8 @@ dismissed is never reopened. Rule on them with `phdude review accept|dismiss|res
 (see `phdude review`); `phdude health` charges the open ones against Citation Quality.
 
 ### `phdude research "<query>" | list | show | accept | dismiss`
+
+Stability: stable
 
 ```
 phdude research "open science practices adoption" --question RQ-1
@@ -614,6 +654,8 @@ accepted one would orphan the source it created. Each writes exactly one `resear
 
 ### `phdude research-fresh [--question RQ-n] [--all] [--allow-network]`
 
+Stability: stable
+
 ```
 phdude research-fresh
 phdude research-fresh --question RQ-1
@@ -646,6 +688,8 @@ the run.
 
 ### `phdude freshness [--json]`
 
+Stability: stable
+
 ```
 phdude freshness
 phdude freshness --json
@@ -665,6 +709,8 @@ as freshly searched.
 Read-only: no network, no event, nothing written.
 
 ### `phdude edit <id> --json '<fields>'`
+
+Stability: stable
 
 ```
 phdude edit CLAIM-… --json '{"tags":["method"],"sections":["methods"]}'
@@ -709,6 +755,8 @@ the wrong shape exits 2 naming the field rather than leaving a broken file on di
 
 ### `phdude matrix [--format md|csv] [--question RQ-n]`
 
+Stability: stable
+
 ```
 phdude matrix
 phdude matrix --format csv
@@ -738,6 +786,8 @@ id no research question carries exits 1 with `not found: RQ-n`, since an empty t
 otherwise read as "no source addresses this question".
 
 ### `phdude gaps`
+
+Stability: stable
 
 ```
 phdude gaps
@@ -782,6 +832,8 @@ among the higher-impact rules. `next`'s closing `consistent` line reads
 consistent only when it is.
 
 ### `phdude health [--save] [--trend] [--json]`
+
+Stability: stable
 
 ```
 phdude health
@@ -840,6 +892,8 @@ See ADR 0011 for the formulas and that rule.
 
 ### `phdude data add <path> | list | show <id> | profile <id>`
 
+Stability: stable
+
 ```
 phdude data add data/survey.csv
 phdude data add data/interviews.csv --json '{"description":"Round 1","license":"CC-BY-4.0","sensitive":true}'
@@ -891,6 +945,8 @@ Only `data add` writes: one `data` event per registration, naming the new datase
 version it superseded. The three readers write nothing.
 
 ### `phdude analyze add --json | list | show <id> | run <id> | runs <id>`
+
+Stability: stable
 
 ```
 phdude analyze add --json '{"name":"describe survey","runtime":"node","script":"analysis/describe.mjs","inputs":["DATASET-8f0a1c2b3d"]}'
@@ -984,6 +1040,8 @@ every result the run wrote.
 list` and `analyze show` write nothing; `analyze add` and `analyze run` do.
 ### `phdude table add --json '<declaration>' | list | show <id> | build <id>`
 
+Stability: stable
+
 ```
 phdude table add --json '{"name":"mean-weight","caption":"Mean weight by group.","source":{"result":"RESULT-…"}}'
 phdude table add --file table.json
@@ -1042,6 +1100,8 @@ built from it stale, and nothing watches the file for that to happen.
 
 ### `phdude present outline [--from manuscript|claims] [--profile <venue>] [--force]`
 
+Stability: stable
+
 ```
 phdude present outline
 phdude present outline --from claims
@@ -1069,6 +1129,8 @@ Exits 2 when there is nothing approved to outline, and says whether to approve a
 outline the claims instead.
 
 ### `phdude template list | add <path> [--kind docx|pptx|latex] | use <name> --for <profile> | check <name>`
+
+Stability: stable
 
 ```
 phdude template list
@@ -1103,6 +1165,8 @@ rather than passing it silently.
 One `template` event per registration and per binding; `list` and `check` write nothing.
 
 ### `phdude figure add --json '<declaration>' | list | show <id> | build <id> | check`
+
+Stability: stable
 
 ```
 phdude figure add --json '{"name":"mean-weight","caption":"…","alt":"…","generator":{…},"inputs":["RESULT-…"],"outputs":[{"path":"figures/out/mean-weight.svg","format":"svg"}]}'
@@ -1166,6 +1230,8 @@ failure.
 
 ### `phdude repro check [--json]`
 
+Stability: stable
+
 ```
 phdude repro check
 phdude repro check --json
@@ -1219,6 +1285,8 @@ its `analysis-stale`, `figure-missing-alt` and `never-run` recommendations, and 
 counts them in its `Analysis:` block.
 
 ### `phdude prose <section> | --file <path>`
+
+Stability: stable
 
 ```
 phdude prose introduction
@@ -1286,6 +1354,8 @@ is refused with a policy error and exit 3.
 
 ### `phdude write <section>`
 
+Stability: stable
+
 ```
 phdude write introduction
 phdude write introduction --voice a-researcher --budget 6000
@@ -1322,6 +1392,8 @@ agent writes plainly rather than in an invented voice.
 
 ### `phdude deslop <section>`
 
+Stability: stable
+
 ```
 phdude deslop introduction
 phdude deslop introduction --file revised.md
@@ -1345,6 +1417,8 @@ An approved section is refused: reopen it first.
 does not mean evading a classifier, and PhDude has no number for that (PRD §30c).
 
 ### `phdude manuscript init|list|show <s>|status|submit <s>|approve <s>|reopen <s>`
+
+Stability: stable
 
 ```
 phdude manuscript init [--title "…"] [--language en] [--voice <author-id>|consensus]
@@ -1424,6 +1498,8 @@ Every mutation records exactly one event: `manuscript initialized (N sections)`,
 
 ### `phdude authors list|show <id>|add --json|learn <id> --from <path…>|consensus`
 
+Stability: stable
+
 ```
 phdude authors list
 phdude authors show researcher-a
@@ -1472,6 +1548,8 @@ Decision on the researcher's behalf.
 
 ### `phdude packs list|detect|apply <name>`
 
+Stability: stable
+
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's
 keywords against the cached text and records the recommendation in `phdude.yaml` without
 applying anything. Venue packs declare no keywords, so `detect` never scores or recommends one:
@@ -1488,6 +1566,8 @@ target it - `phdude profile use <venue>` does that, and the two are separate bec
 can be shopping a paper at three venues while one manuscript targets one of them.
 
 ### `phdude profile list|show|check|use <venue>`
+
+Stability: stable
 
 The venue side of the manuscript: what the venue expects, and what the manuscript does not meet
 yet. Three venues ship with PhDude - `generic-thesis`, `ieee` and `acm` - each a pack under
@@ -1534,6 +1614,8 @@ nothing can check. Setting the venue the manuscript already targets changes noth
 no event.
 
 ### `phdude build [--format md|docx|pdf|latex|html] [--profile <venue>] [--sections a,b] [--include-drafts] [--force]`
+
+Stability: stable
 
 ```
 phdude build
@@ -1609,6 +1691,8 @@ sections are that command's report, and a build refuses nothing on their account
 
 ### `phdude adapt --to <venue> [--apply]`
 
+Stability: stable
+
 ```
 phdude adapt --to ieee
 phdude adapt --to acm --json
@@ -1656,6 +1740,8 @@ for IEEE puts the canonical sections in IEEE's order, under IEEE's headings, in 
 style. `manuscript.<venue>.yaml` is the record of the mapping and the work list it implies.
 
 ### `phdude review <kind> | submit | list | show <id> | accept|dismiss|resolve <id>`
+
+Stability: stable
 
 ```
 phdude review methodology
@@ -1738,6 +1824,8 @@ lowering it again restores the old reading.
 
 ### `phdude ready [--profile <venue>] [--json]`
 
+Stability: stable
+
 ```
 phdude ready
 phdude ready --profile ieee
@@ -1796,10 +1884,14 @@ reads. A finding the researcher dismissed stops blocking, which is the point of 
 
 ### `phdude mode lite|full|ruthless|off`
 
+Stability: stable
+
 Sets the review mode in `phdude.yaml`. Setting the mode it already has changes nothing and
 records no event.
 
 ### `phdude skills list|install <path|git-url>|remove <name>`
+
+Stability: stable
 
 The agent skills this workspace loads, and where each of them came from.
 
@@ -1854,6 +1946,8 @@ rest of those files is left as it was.
 
 ### `phdude migrate [--dry-run] [--force]`
 
+Stability: stable
+
 Upgrades a workspace written by an older PhDude to the current workspace version.
 `phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
 current version is 5. Migration steps ship with the package, one module per step, and run in
@@ -1874,6 +1968,8 @@ dry run is a read and stays available either way. Steps are idempotent, so runni
 an up-to-date workspace prints `Workspace is up to date (4)` and records no event.
 
 ### `phdude doctor`
+
+Stability: stable
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
@@ -1952,6 +2048,8 @@ too. `phdude packs apply` turns that into a refusal (exit 3); `phdude init` inst
 the skill, naming it and the setting that would install it, and installs everything else.
 
 ### `phdude help`
+
+Stability: stable
 
 Prints the usage summary and exits 0. `phdude --help` and `phdude -h` do the same. With
 `--json` the summary comes back as `{"usage": "…"}`.

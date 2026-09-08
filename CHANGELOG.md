@@ -6,6 +6,67 @@ All notable changes to PhDude are recorded here. The format follows
 
 ## [Unreleased]
 
+### Breaking changes since 0.1
+
+Everything below happened between 0.1.0 and 1.0.0, while the surface was still being built. It
+is collected here because a workspace started on an early release has to cross all of it at once,
+and because from 1.0 on none of it may happen again outside a major release —
+[docs/versioning.md](docs/versioning.md) says what is now frozen and what a deprecation costs.
+
+**The workspace format moved four times, and one command carries every step.** `phdude migrate`
+walks a workspace from wherever it is to version 5. Since 0.2.0 a read on an out-of-date
+workspace still works and warns `workspace needs migration (n → 5)`; a write exits 1 with the
+same message and the hint `run phdude migrate`.
+
+| Step | Release | What the workspace gains |
+|---|---|---|
+| 1 → 2 | 0.2.0 | `provenance` on claims and evidence, `contradicts` on claims (`migrations/0001-workspace-v2.mjs`). |
+| 2 → 3 | 0.5.0 | The `execution` block in `.phdude/research-policy.yaml`, the `analysis/` directories, and the derived-output `.gitignore` rules (`migrations/0002-workspace-v3.mjs`). |
+| 3 → 4 | 0.6.0 | The venue list in `phdude.yaml` and the empty `.phdude/templates.yaml` registry (`migrations/0003-workspace-v4.mjs`). |
+| 4 → 5 | 0.7.0 | `reviews/`, and the `health.weights` and `ready` blocks in the research policy (`migrations/0004-workspace-v5.mjs`). |
+
+Every step is idempotent, writes through the store, appends one `migrate` event, and previews
+itself under `--dry-run`. None of them renames an id.
+
+**One object type changed its identity.** In 0.5.0 a `RESULT-` id became derived from its summary
+*and* the analysis that produced it, so two analyses can reach the same finding and each keep its
+own record. `from` is id material only when it names an analysis: a 0.4.0 result whose `from` held
+prose keeps the id computed from its summary alone, migration 0002 rewrites no ids, and re-adding
+such a result after migrating finds the record already on disk rather than minting a duplicate.
+Every other type's material is unchanged from 0.1.0 — a claim from its statement, evidence from
+its source, locator and excerpt, a fact from its key, value and artifact, a decision from its
+title, rationale, sorted `affects` and stable `change`.
+
+**Flags renamed, removed or made strict.**
+
+- `phdude decide supersede` takes the replacing decision in `--with`, not `--by` (0.2.0). `--by`
+  is the researcher on every subcommand. The old form exits 1 naming the correction rather than
+  reporting a missing decision.
+- An unrecognised option is refused (0.2.0). `phdude knowledge list --stat candidate` used to
+  return the unfiltered list, which reads as an answer; it now exits 1 naming the flag and listing
+  what that command accepts.
+- `phdude ingest .` walks `sources/` only (0.2.0). An explicit path into `knowledge/`,
+  `research/`, `decisions/` or `.phdude/` exits 1 with `not a source path`.
+- `phdude edit` treats a result's `from` as an identity field and refuses it (0.5.0). It was
+  editable in 0.4.0, when `from` was not part of the id.
+- `phdude table build` with no `--format` builds every format the table declares (0.6.0). It used
+  to intersect the declaration with the three text defaults, so a table declaring only `xlsx`
+  built nothing.
+- The venue profile's whole-profile `max_words` fallback is gone (0.6.0). An abstract's limit is
+  written once, under `abstract.max_words`, and `schemas/profile.json` is strict about it.
+
+**Reports that changed what they say.** `gate-profile` stopped reporting section order on
+`phdude manuscript submit` (0.6.0) — a gate that sees one section cannot tell a reordered
+manuscript from an incomplete one, so it warned about sections that were merely absent.
+`phdude profile check` reports order and is the only reporter of it.
+
+**What did not change.** Every object schema is still `version: 1`, and every field added since
+0.1.0 is optional or carries a default, so a document written by 0.1.0 still validates. No exit
+code was renumbered or given a new meaning: 0.5.0 added `EXECUTION`, which shares exit 4 with
+`TOOL_MISSING` because both mean PhDude did its part and the thing it called did not come back.
+The `--json` error envelope — `{"error":{"code","message","hint","details"}}` — has been the same
+since 0.1.0 and is now held there by `tests/contracts/cli-json-shape.test.js`.
+
 ## [0.7.0] — 2026-09-08
 
 The Reviewer. Every release until now helped build the argument; this one argues back, and then

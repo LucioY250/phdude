@@ -1,6 +1,7 @@
 {
   "$id": "phdude://skills-lock",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "x-phdude": { "stability": "stable", "since": "0.7" },
   "type": "object",
   "properties": {
     "schema": { "const": "phdude.skills-lock" },

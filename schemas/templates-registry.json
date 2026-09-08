@@ -1,6 +1,7 @@
 {
   "$id": "phdude://templates-registry",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "x-phdude": { "stability": "stable", "since": "0.6" },
   "type": "object",
   "properties": {
     "schema": { "const": "phdude.templates" },
