@@ -338,6 +338,9 @@ phdude skills list
 phdude skills remove prisma-screening
 ```
 
+Installing or removing a skill also rewrites the skill index in `AGENTS.md` and `CLAUDE.md`, so
+an external skill reaches the agent through the same file the shipped ones do.
+
 The tree is staged and validated outside the workspace before anything lands in
 `.phdude/skills/`, so a refusal leaves nothing behind. Four rules decide whether a skill is
 installed at all:

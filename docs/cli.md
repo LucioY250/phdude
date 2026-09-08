@@ -1848,6 +1848,10 @@ sorted `<path> <sha256>` lines, so an edited byte and a renamed file both move i
 `remove <name>` deletes `.phdude/skills/<name>/` and its lock entry, and writes one `skills`
 event. A skill PhDude ships is refused: `phdude init` would put it straight back.
 
+Both `install` and `remove` rewrite the skill index in `AGENTS.md` and `CLAUDE.md`, so the agent
+sees an installed skill the next time it reads the workspace and stops seeing a removed one; the
+rest of those files is left as it was.
+
 ### `phdude migrate [--dry-run] [--force]`
 
 Upgrades a workspace written by an older PhDude to the current workspace version.
