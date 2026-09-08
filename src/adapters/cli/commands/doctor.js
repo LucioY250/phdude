@@ -63,6 +63,16 @@ function render(report) {
     );
   }
 
+  if (report.renderers.length > 0) {
+    lines.push('', 'Renderers:');
+    for (const renderer of report.renderers) {
+      const state = renderer.available
+        ? `available: ${renderer.version}`
+        : `unavailable: ${renderer.hint ?? 'the probe could not be run'}`;
+      lines.push(`  ${renderer.name} (${renderer.formats.join(', ')}) ${state}`);
+    }
+  }
+
   if (report.skills.length > 0) {
     lines.push('', 'Skills:');
     for (const skill of report.skills) {
@@ -86,6 +96,7 @@ export default async function doctorCommand({ deps }) {
     store: deps.store,
     git: deps.git,
     parsers: deps.parserAdapters,
+    renderers: deps.renderers,
     loadPacks: deps.loadPacks,
     schemaTypes: deps.schemaTypes,
     node: deps.node,

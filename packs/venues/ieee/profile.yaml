@@ -1,0 +1,61 @@
+schema: phdude.profile
+version: 1
+name: ieee
+display: IEEE conference paper
+description: >-
+  The IEEE conference template: IEEEtran, numbered references in IEEE style, and a word budget
+  that fits the eight two-column pages most IEEE conferences allow.
+document_class: IEEEtran
+citation_style: csl/ieee.csl
+sections:
+  - id: abstract
+    title: Abstract
+    required: true
+    order: 1
+    synonyms: [summary]
+  - id: introduction
+    title: Introduction
+    required: true
+    order: 2
+    max_words: 1200
+    synonyms: [intro, background, related-work, literature-review]
+  - id: methods
+    title: Method
+    required: true
+    order: 3
+    max_words: 2000
+    synonyms: [method, methodology, materials-and-methods, approach]
+  - id: results
+    title: Results
+    required: true
+    order: 4
+    max_words: 1800
+    synonyms: [result, findings, evaluation, experiments]
+  - id: discussion
+    title: Discussion
+    required: true
+    order: 5
+    max_words: 1200
+  - id: conclusions
+    title: Conclusion
+    required: true
+    order: 6
+    max_words: 500
+    synonyms: [conclusion, concluding-remarks, closing, future-work]
+abstract:
+  max_words: 250
+page_limit: 8
+figures:
+  formats: [pdf, png]
+  min_dpi: 300
+tables:
+  style: ieeetran
+references:
+  style: IEEE
+templates:
+  latex: templates/IEEEtran.tex
+writing:
+  first_person: sparing
+  tense_abstract: past
+  terminology_map:
+    Figure: Fig.

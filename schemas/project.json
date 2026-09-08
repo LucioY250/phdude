@@ -10,6 +10,7 @@
     "language": { "type": "string" },
     "fields": { "type": "array", "items": { "type": "string" } },
     "methods": { "type": "array", "items": { "type": "string" } },
+    "venues": { "type": "array", "items": { "type": "string" } },
     "outputs": { "type": "array", "items": { "type": "string" } },
     "mode": { "enum": ["lite", "full", "ruthless", "off"] },
     "agents": { "type": "array", "items": { "type": "string" } },

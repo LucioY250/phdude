@@ -8,7 +8,8 @@ import { fileURLToPath } from 'node:url';
 import { FsStore } from '../src/adapters/store/fs-store.js';
 import { walk, read, realpath } from '../src/adapters/store/fs-walk.js';
 import { detectKind, parseTable, parserFor } from '../src/adapters/documents/index.js';
-import { discoverSkills } from '../src/adapters/skills/loader.js';
+import { DEFAULT_PACKS_DIR, discoverPacks, loadProfile } from '../src/adapters/packs/loader.js';
+import { discoverSkills, loadSkill } from '../src/adapters/skills/loader.js';
 import { localRunner } from '../src/adapters/execution/local.js';
 import { DEFAULT_GENERATORS_DIR } from '../src/adapters/execution/generators.js';
 import { initWorkspace } from '../src/application/init.js';
@@ -22,6 +23,8 @@ import * as data from '../src/application/data.js';
 import * as figure from '../src/application/figure.js';
 import * as research from '../src/application/research.js';
 import * as manuscript from '../src/application/manuscript.js';
+import * as packs from '../src/application/packs.js';
+import * as profile from '../src/application/profile.js';
 import * as prose from '../src/application/prose.js';
 import * as table from '../src/application/table.js';
 import { buildProviders } from '../src/adapters/search/index.js';
@@ -508,7 +511,14 @@ export async function generate(root) {
   await rm(root, { recursive: true, force: true });
 
   const clock = makeClock();
-  const deps = { store: new FsStore(root), clock, actor: ACTOR };
+  const deps = {
+    store: new FsStore(root),
+    clock,
+    actor: ACTOR,
+    loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR]),
+    loadProfile: (name) => loadProfile(name),
+    loadSkill,
+  };
 
   await initWorkspace(
     { ...deps, git: fakeGit, agentHosts: [], discoverSkills },
@@ -754,6 +764,12 @@ export async function generate(root) {
     },
     claimChannel,
   );
+
+  // The venue, last: choosing where the work goes is a decision, and it is the one that makes
+  // `phdude profile check`, `phdude build` and `phdude adapt --to ieee` mean something on this
+  // workspace. The project adopts the thesis venue pack; the manuscript targets it.
+  await packs.apply(deps, 'generic-thesis');
+  await profile.use(deps, 'generic-thesis');
 }
 
 async function main() {

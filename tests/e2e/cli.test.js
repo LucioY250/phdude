@@ -548,7 +548,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   // Reads work on a v0.1 workspace and say what is wrong with it.
   const before = await runJson(ws, ['status']);
   assert.equal(before.knowledge.byType.claim.total, 1);
-  assert.ok(before.warnings.includes('workspace needs migration (1 → 3)'));
+  assert.ok(before.warnings.includes('workspace needs migration (1 → 4)'));
 
   // Writes do not, and they name the command that fixes it.
   const refused = await phdude(ws, [
@@ -561,7 +561,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.equal(refused.code, 1);
   const refusal = JSON.parse(refused.stderr).error;
   assert.equal(refusal.code, 'USAGE');
-  assert.equal(refusal.message, 'workspace needs migration (1 → 3)');
+  assert.equal(refusal.message, 'workspace needs migration (1 → 4)');
   assert.equal(refusal.hint, 'run phdude migrate');
 
   const dryRun = await runJson(ws, ['migrate', '--dry-run']);
@@ -570,19 +570,19 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.ok(dryRun.steps[0].changed.includes('phdude.yaml'));
   const stillBehind = await runJson(ws, ['status']);
   assert.ok(
-    stillBehind.warnings.includes('workspace needs migration (1 → 3)'),
+    stillBehind.warnings.includes('workspace needs migration (1 → 4)'),
     'a dry run writes nothing',
   );
 
   const applied = await run(ws, ['migrate']);
-  assert.match(applied.stdout, /Migrated workspace 1 → 3/);
+  assert.match(applied.stdout, /Migrated workspace 1 → 4/);
 
   const after = await runJson(ws, ['status']);
   assert.deepEqual(after.warnings, []);
   assert.ok(after.recentEvents.some((e) => e.op === 'migrate'));
 
   const doctor = await runJson(ws, ['doctor']);
-  assert.equal(doctor.workspaceVersion, 3);
+  assert.equal(doctor.workspaceVersion, 4);
 
   // The write that was refused now goes through.
   await run(ws, [
@@ -593,7 +593,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   ]);
 
   const second = await run(ws, ['migrate']);
-  assert.match(second.stdout, /Workspace is up to date \(3\)/);
+  assert.match(second.stdout, /Workspace is up to date \(4\)/);
 });
 
 test('e2e: add artifact-role reports the update in text mode', async (t) => {
@@ -625,10 +625,10 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   const config = join(ws, 'phdude.yaml');
   await writeFile(
     config,
-    (await readFile(config, 'utf8')).replace('workspace_version: 3', 'workspace_version: 4'),
+    (await readFile(config, 'utf8')).replace('workspace_version: 4', 'workspace_version: 5'),
   );
 
-  const message = 'workspace version 4 is newer than this PhDude (3)';
+  const message = 'workspace version 5 is newer than this PhDude (4)';
 
   // Reads keep working and say what is wrong, the same way an older workspace does.
   const read = await runJson(ws, ['status']);
@@ -648,11 +648,11 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   assert.equal(refusal.hint, 'upgrade phdude');
 
   const report = await runJson(ws, ['doctor']);
-  assert.equal(report.workspaceVersion, 4);
+  assert.equal(report.workspaceVersion, 5);
   assert.ok(report.warnings.includes(message));
 
   const text = await run(ws, ['doctor']);
-  assert.match(text.stdout, /workspace version: 4 \(newer than this phdude\)/);
+  assert.match(text.stdout, /workspace version: 5 \(newer than this phdude\)/);
 });
 
 test('e2e: methods, provenance and the trace line that reports them', async (t) => {
@@ -2443,4 +2443,325 @@ test('e2e: data, analyze, table, figure and repro check through the binary', asy
   const unknown = await phdude(ws, ['repro', 'rebuild', ...ACTOR]);
   assert.equal(unknown.code, 1);
   assert.match(unknown.stderr, /unknown repro subcommand/);
+});
+
+test('e2e: packs apply a venue, profile list, show, use and a blocking check', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-profile-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Venue thesis', '--no-git']);
+  await run(ws, ['manuscript', 'init', '--title', 'Venue thesis']);
+
+  const before = await runJson(ws, ['profile', 'list']);
+  assert.deepEqual(
+    before.map((venue) => venue.name),
+    ['acm', 'generic-thesis', 'ieee'],
+  );
+  assert.equal(
+    before.every((venue) => venue.applied === false && venue.active === false),
+    true,
+  );
+
+  const applied = await run(ws, ['packs', 'apply', 'ieee']);
+  assert.equal(applied.stdout, 'Applied ieee\n');
+  assert.match(await readFile(join(ws, 'phdude.yaml'), 'utf8'), /venues:\n {2}- ieee/);
+
+  // Applying a venue does not target it; `profile use` does, and without either there is
+  // nothing to report on.
+  const beforeUse = await phdude(ws, ['profile', 'check', '--json', ...ACTOR]);
+  assert.equal(beforeUse.code, 1);
+  assert.equal(JSON.parse(beforeUse.stderr).error.code, 'USAGE');
+
+  // A 300-word abstract is written under the thesis profile, which allows 500.
+  await run(ws, ['profile', 'use', 'generic-thesis']);
+  const draft = join(ws, 'abstract.md');
+  await writeFile(draft, `${'word '.repeat(300)}\n`);
+  await run(ws, ['manuscript', 'submit', 'abstract', '--file', draft]);
+  assert.equal((await phdude(ws, ['profile', 'check', ...ACTOR])).code, 0);
+
+  const used = await run(ws, ['profile', 'use', 'ieee']);
+  assert.equal(used.stdout, 'The manuscript now targets ieee\n');
+  assert.match(
+    await readFile(join(ws, 'manuscript', 'manuscript.yaml'), 'utf8'),
+    /target_profile: ieee/,
+  );
+
+  const shown = await runJson(ws, ['profile', 'show']);
+  assert.equal(shown.document_class, 'IEEEtran');
+  assert.equal(shown.active, true);
+  assert.equal(shown.applied, true);
+
+  const text = await run(ws, ['profile', 'show', '--profile', 'acm']);
+  assert.match(text.stdout, /document_class: acmart/);
+  assert.equal(text.stdout.includes('cslPath'), false, 'the human view hides resolved paths');
+
+  // The prose the thesis profile allowed is over IEEE's 250-word limit, which is exactly what
+  // `profile check` is for: the gates never saw this section against this venue.
+  const blocked = await phdude(ws, ['profile', 'check', ...ACTOR]);
+  assert.equal(blocked.code, 2);
+  assert.match(blocked.stdout, /300 words exceeds the 250-word limit/);
+  assert.match(blocked.stdout, /1 block,/);
+
+  const stillFine = await phdude(ws, ['profile', 'check', '--profile', 'generic-thesis', ...ACTOR]);
+  assert.equal(stillFine.code, 0);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.filter((event) => event.op === 'profile').length, 2);
+  assert.equal(events.filter((event) => event.op === 'packs').length, 1);
+});
+
+test('e2e: build through the binary — drafts, approval, up to date, and a missing tool', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-build-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Build thesis', '--no-git']);
+  await run(ws, ['manuscript', 'init', '--title', 'Build Thesis']);
+
+  // Nothing approved yet: the command says which two ways forward there are.
+  const nothing = await phdude(ws, ['build', '--json', ...ACTOR]);
+  assert.equal(nothing.code, 2);
+  const refused = JSON.parse(nothing.stderr).error;
+  assert.equal(refused.code, 'VALIDATION');
+  assert.match(refused.hint, /--include-drafts/);
+
+  const draft = join(ws, 'introduction.md');
+  await writeFile(draft, 'Scheduling under load is the problem this thesis takes up.\n');
+  await run(ws, ['manuscript', 'submit', 'introduction', '--file', draft]);
+
+  const drafted = await runJson(ws, ['build', '--include-drafts']);
+  assert.equal(drafted.built, true);
+  assert.equal(drafted.output.path, 'outputs/build-thesis/manuscript.md');
+  const draftedText = await readFile(join(ws, drafted.output.path), 'utf8');
+  assert.match(draftedText, /^draft: true$/m);
+  assert.match(draftedText, /^# Introduction$/m);
+  assert.ok(await exists(join(ws, 'outputs', 'build-thesis', 'references.bib')));
+
+  const again = await run(ws, ['build', '--include-drafts']);
+  assert.match(again.stdout, /outputs\/build-thesis\/manuscript\.md is up to date/);
+
+  const decision = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Approve the introduction',
+    '--rationale',
+    'Read end to end by the supervisor.',
+    '--affects',
+    'manuscript:introduction',
+  ]);
+  await run(ws, ['decide', 'approve', decision.id, '--by', 'A Supervisor']);
+  await run(ws, ['manuscript', 'approve', 'introduction', '--decision', decision.id]);
+
+  // The approved build is a different document: no draft marker, and a date taken from the
+  // approval rather than from the clock.
+  const approved = await runJson(ws, ['build']);
+  assert.equal(approved.built, true);
+  assert.ok(approved.changed.includes('include-drafts'));
+  const approvedText = await readFile(join(ws, approved.output.path), 'utf8');
+  assert.doesNotMatch(approvedText, /^draft: true$/m);
+  assert.match(approvedText, /^date: \d{4}-\d{2}-\d{2}$/m);
+
+  const text = await run(ws, ['build']);
+  assert.match(text.stdout, /is up to date/);
+
+  const forced = await runJson(ws, ['build', '--force']);
+  assert.equal(forced.built, true);
+
+  // The assembled Markdown is cache, and outputs/ holds only what the build delivers.
+  assert.ok(await exists(join(ws, '.phdude', 'cache', 'build', 'build-thesis', 'md.json')));
+  assert.ok(await exists(join(ws, '.phdude', 'cache', 'build', 'build-thesis', 'md.md')));
+
+  const unknown = await phdude(ws, ['build', '--format', 'epub', ...ACTOR]);
+  assert.equal(unknown.code, 2);
+
+  // A format whose tool is missing exits 4 and names it. PATH is emptied so this holds on a
+  // machine that does have Pandoc.
+  const noTool = await phdude(ws, ['build', '--format', 'docx', '--json', ...ACTOR], {
+    PATH: join(ws, 'no-such-bin'),
+    PHDUDE_PANDOC: join(ws, 'no-such-bin', 'pandoc'),
+  });
+  assert.equal(noTool.code, 4);
+  const missing = JSON.parse(noTool.stderr).error;
+  assert.equal(missing.code, 'TOOL_MISSING');
+  assert.match(missing.hint, /install pandoc/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'build');
+  assert.equal(events.length, 3, 'one event per render, and none for the up-to-date runs');
+  assert.match(events[0].summary, /manuscript built: outputs\/build-thesis\/manuscript\.md \(md,/);
+});
+
+test('e2e: xlsx tables, the templates registry and the presentation outline', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-outputs-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await run(ws, ['init', '--title', 'Coffee and Sleep', '--no-git']);
+
+  const survey = ['group,weight', 'a,71.4', 'b,75.5'].join('\n') + '\n';
+  await writeFile(join(ws, 'data', 'survey.csv'), survey);
+  const dataset = (await runJson(ws, ['data', 'add', 'data/survey.csv'])).dataset;
+
+  // A spreadsheet needs no external tool, so it is built by the binary itself.
+  const declared = await runJson(ws, [
+    'table',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'mean-weight',
+      caption: 'Mean weight by group.',
+      source: { dataset: dataset.id },
+      formats: ['md', 'xlsx'],
+    }),
+  ]);
+  const built = await runJson(ws, ['table', 'build', declared.table.id]);
+  assert.deepEqual(
+    built.outputs.map((o) => o.format),
+    ['md', 'xlsx'],
+  );
+
+  const { ooxmlParser } = await import('../../src/adapters/documents/ooxml.js');
+  const workbook = await ooxmlParser.parse(
+    await readFile(join(ws, 'tables', 'out', 'mean-weight.xlsx')),
+    { path: 'mean-weight.xlsx' },
+  );
+  assert.deepEqual(workbook.tables[0].rows, [
+    ['group', 'weight'],
+    ['a', '71.4'],
+    ['b', '75.5'],
+  ]);
+  assert.match((await run(ws, ['table', 'build', declared.table.id])).stdout, /is up to date/);
+
+  // A docx table needs a renderer, and says so rather than writing nothing quietly.
+  const noRenderer = await phdude(ws, ['table', 'build', declared.table.id, '--format', 'docx']);
+  assert.equal(noRenderer.code, 2);
+  assert.match(noRenderer.stderr, /does not declare format\(s\): docx/);
+
+  // The templates registry.
+  assert.match((await run(ws, ['template', 'list'])).stdout, /\(no templates\)/);
+  await writeFile(join(ws, 'templates', 'slides.pptx'), 'not really a deck');
+  const added = await runJson(ws, ['template', 'add', 'templates/slides.pptx']);
+  assert.equal(added.template.name, 'slides');
+  assert.equal(added.template.path, 'templates/pptx/slides.pptx');
+  assert.ok(await exists(join(ws, 'templates', 'pptx', 'slides.pptx')));
+
+  await run(ws, ['template', 'use', 'slides', '--for', 'generic-thesis']);
+  assert.match((await run(ws, ['template', 'list'])).stdout, /for generic-thesis/);
+
+  const check = await phdude(ws, ['template', 'check', 'slides']);
+  assert.equal(check.code, 0);
+  assert.match(check.stdout, /declares no Word styles/);
+
+  const outside = await phdude(ws, ['template', 'add', '../escape.docx']);
+  assert.equal(outside.code, 1);
+  assert.match(outside.stderr, /outside the workspace/);
+
+  // The outline, once a section is approved.
+  const noManuscript = await phdude(ws, ['present', 'outline']);
+  assert.equal(noManuscript.code, 2);
+  assert.match(noManuscript.stderr, /manuscript init/);
+
+  await run(ws, ['manuscript', 'init']);
+  const nothingApproved = await phdude(ws, ['present', 'outline']);
+  assert.equal(nothingApproved.code, 2);
+  assert.match(nothingApproved.stderr, /--from claims/);
+
+  const manuscriptPath = join(ws, 'manuscript', 'manuscript.yaml');
+  await writeFile(
+    manuscriptPath,
+    (await readFile(manuscriptPath, 'utf8')).replace('status: planned', 'status: approved'),
+  );
+
+  const outline = await runJson(ws, ['present', 'outline']);
+  assert.equal(outline.written, true);
+  const outlinePaths = outline.outputs.map((o) => o.path);
+  assert.equal(outlinePaths[0], 'outputs/coffee-and-sleep/outline.md');
+  // With Pandoc on PATH the outline is also rendered to PPTX; without it only the Markdown lands.
+  assert.ok(
+    outlinePaths.length === 1 || outlinePaths[1] === 'outputs/coffee-and-sleep/outline.pptx',
+    `unexpected outline outputs: ${outlinePaths.join(', ')}`,
+  );
+  assert.match(
+    await readFile(join(ws, 'outputs', 'coffee-and-sleep', 'outline.md'), 'utf8'),
+    /^# Coffee and Sleep$/m,
+  );
+  assert.match((await run(ws, ['present', 'outline'])).stdout, /up to date/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.filter((e) => e.op === 'present').length, 1);
+  assert.equal(events.filter((e) => e.op === 'template').length, 2);
+});
+
+test('e2e: adapt plans a venue move, then --apply writes a manuscript for it', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-adapt-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Adapt thesis', '--no-git']);
+  await run(ws, ['manuscript', 'init', '--title', 'Adapt thesis']);
+
+  // A 300-word abstract is fine under the thesis profile, which allows 500. IEEE allows 250.
+  const draft = join(ws, 'abstract.md');
+  await writeFile(draft, `${'word '.repeat(300)}\n`);
+  await run(ws, ['manuscript', 'submit', 'abstract', '--file', draft]);
+
+  const plan = await runJson(ws, ['adapt', '--to', 'ieee']);
+  assert.equal(plan.from, 'generic-thesis');
+  assert.equal(plan.to, 'ieee');
+  assert.equal(plan.applied, false);
+  assert.deepEqual(plan.plan.abstract, {
+    section: 'abstract',
+    words: 300,
+    from: 500,
+    to: 250,
+    delta: 50,
+  });
+  assert.deepEqual(plan.plan.citation_style, { from: 'APA 7th edition', to: 'IEEE' });
+  assert.equal(
+    plan.plan.mapping.every((row) => row.from === row.to),
+    true,
+    'the standard sections map onto IEEE by id',
+  );
+  assert.equal(await exists(join(ws, 'manuscript', 'manuscript.ieee.yaml')), false);
+
+  const text = await run(ws, ['adapt', '--to', 'ieee']);
+  assert.match(text.stdout, /generic-thesis → ieee/);
+  assert.match(text.stdout, /Nothing was written/);
+
+  const applied = await runJson(ws, ['adapt', '--to', 'ieee', '--apply']);
+  assert.equal(applied.applied, true);
+  assert.equal(applied.path, 'manuscript/manuscript.ieee.yaml');
+  assert.deepEqual(applied.revised, ['abstract']);
+
+  const adapted = await readFile(join(ws, 'manuscript', 'manuscript.ieee.yaml'), 'utf8');
+  assert.match(adapted, /target_profile: ieee/);
+  assert.match(adapted, /status: revised/);
+  assert.match(adapted, /title: Conclusion\n/, "IEEE's section titles are the adapted ones");
+
+  // The canonical manuscript is untouched: no target profile, and the abstract still a draft.
+  const canonical = await readFile(join(ws, 'manuscript', 'manuscript.yaml'), 'utf8');
+  assert.equal(canonical.includes('target_profile'), false);
+  assert.match(canonical, /title: Conclusions\n/);
+
+  const again = await runJson(ws, ['adapt', '--to', 'ieee', '--apply']);
+  assert.equal(again.applied, false);
+  assert.equal(again.reason, 'up to date');
+
+  // The venue the manuscript already targets has nothing to adapt to.
+  await run(ws, ['profile', 'use', 'ieee']);
+  const same = await phdude(ws, ['adapt', '--to', 'ieee', '--json', ...ACTOR]);
+  assert.equal(same.code, 1);
+  assert.match(JSON.parse(same.stderr).error.message, /already targets ieee/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.filter((event) => event.op === 'adapt').length, 1);
 });

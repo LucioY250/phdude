@@ -1,0 +1,26 @@
+{
+  "$id": "phdude://templates-registry",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": { "const": "phdude.templates" },
+    "version": { "const": 1 },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "kind": { "enum": ["docx", "pptx", "latex"] },
+          "path": { "type": "string", "pattern": "^templates/[A-Za-z0-9._/-]+$" },
+          "hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "for": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" }
+        },
+        "required": ["name", "kind", "path", "hash"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema", "version", "templates"],
+  "additionalProperties": false
+}

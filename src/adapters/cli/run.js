@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
@@ -5,9 +6,18 @@ import { PhdudeError, exitCodeFor } from '../../domain/errors.js';
 import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
 import { detectKind, parseTable, parserFor, PARSERS } from '../documents/index.js';
-import { DEFAULT_PACKS_DIR, discoverPacks, loadProfile } from '../packs/loader.js';
+import { ooxmlStyleNames } from '../documents/ooxml.js';
+import { writeXlsx } from '../render/xlsx.js';
+import {
+  DEFAULT_PACKS_DIR,
+  discoverPacks,
+  discoverProfiles,
+  loadProfile,
+} from '../packs/loader.js';
 import { localRunner } from '../execution/local.js';
 import { DEFAULT_GENERATORS_DIR } from '../execution/generators.js';
+import { buildRenderers } from '../render/index.js';
+import { svgConverter } from '../render/svg.js';
 import { buildProviders } from '../search/index.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
@@ -17,10 +27,12 @@ import { FsStore } from '../store/fs-store.js';
 import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
 import { printJson } from './output.js';
+import adapt from './commands/adapt.js';
 import add from './commands/add.js';
 import analyze from './commands/analyze.js';
 import authors from './commands/authors.js';
 import bootstrap from './commands/bootstrap.js';
+import buildCommand from './commands/build.js';
 import cite from './commands/cite.js';
 import data from './commands/data.js';
 import decide from './commands/decide.js';
@@ -41,6 +53,8 @@ import migrate from './commands/migrate.js';
 import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
+import profileCommand from './commands/profile.js';
+import present from './commands/present.js';
 import promote from './commands/promote.js';
 import prose from './commands/prose.js';
 import repro from './commands/repro.js';
@@ -48,15 +62,18 @@ import research from './commands/research.js';
 import researchFresh from './commands/research-fresh.js';
 import status from './commands/status.js';
 import table from './commands/table.js';
+import template from './commands/template.js';
 import write from './commands/write.js';
 
 const { version } = createRequire(import.meta.url)('../../../package.json');
 
 const COMMANDS = {
+  adapt,
   add,
   analyze,
   authors,
   bootstrap,
+  build: buildCommand,
   cite,
   data,
   decide,
@@ -76,6 +93,8 @@ const COMMANDS = {
   mode,
   next,
   packs,
+  profile: profileCommand,
+  present,
   promote,
   prose,
   repro,
@@ -83,6 +102,7 @@ const COMMANDS = {
   'research-fresh': researchFresh,
   status,
   table,
+  template,
   write,
 };
 
@@ -138,13 +158,18 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     fs: { walk, read, realpath },
     parsers: { detectKind, parserFor },
     parserAdapters: PARSERS,
+    ooxmlStyles: ooxmlStyleNames,
+    writeXlsx,
     readBytes: (rel) => read(join(workspace, rel)),
     parseTable,
     runner: localRunner,
+    renderers: buildRenderers({ execFile, env, version }),
+    svgConvert: svgConverter({ execFile, env }),
     generatorsDir: DEFAULT_GENERATORS_DIR,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     loadProfile: (name) =>
       loadProfile(name, [DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
+    loadProfiles: () => discoverProfiles([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     discoverSkills,
     loadSkill,
     skillsDir: DEFAULT_SKILLS_DIR,

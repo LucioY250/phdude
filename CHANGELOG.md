@@ -6,6 +6,127 @@ All notable changes to PhDude are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-09-08
+
+The Document Factory. Until now a manuscript was a set of Markdown files and a YAML plan; now it
+comes out the other end as the file somebody asked for — DOCX, PDF, LaTeX, HTML or Markdown —
+built from the approved sections against the venue the work is going to, with the bibliography
+regenerated from the citation registry. Two builds with nothing between them produce nothing the
+second time, and two builds of the same inputs produce the same bytes. External tools are
+optional adapters throughout: Markdown is built in, everything else says what to install. See
+[ADR 10](docs/adr/0010-renderer-adapters-and-reproducible-builds.md).
+
+### Added
+
+- **The `DocumentRenderer` port and three adapters.** `available() → {ok, version?, hint?}` and
+  `render({input: {markdownPath, bibPath?, cslPath?, referenceDoc?, template?, metadata},
+  output: {path, format}, cwd}) → {path, warnings}`, with a contract suite that runs against every
+  adapter. `render/markdown.js` is built in and always available: it writes the front matter and
+  resolves `[@key]` into a plain author-year reference list from the citation registry.
+  `render/pandoc.js` covers docx, pptx, html, latex and md with `--citeproc`, `--csl`,
+  `--reference-doc` and `--template`; `render/latex.js` covers pdf through `latexmk -pdf`, falling
+  back to `pdflatex` twice plus `bibtex` when the run needs it. `execFile` with argument arrays
+  only, never a shell. `phdude doctor` reports each renderer and its version.
+- **Venue packs.** `generic-thesis`, `ieee` and `acm` ship under `packs/venues/<name>/`: a
+  `profile.yaml` (`schema: phdude.profile` v1) with the sections the venue expects and their word
+  limits, its CSL citation style vendored with its CC BY-SA 3.0 notice intact, and a minimal
+  pandoc LaTeX template for its document class. A workspace adds its own under
+  `.phdude/packs/venues/<name>/`, and a workspace venue overrides a shipped one of the same name.
+  `phdude packs apply <venue>` records it in `phdude.yaml`'s new `venues` list; a venue pack that
+  ships no profile is refused rather than recorded.
+- **`phdude profile list|show|check|use <venue>`.** `check` reports the manuscript against the
+  venue: a required section that is missing, a section or abstract over its word limit, two
+  sections the venue orders the other way round, a figure in a format the venue does not take, the
+  reference style in force. Findings carry a severity and `check` exits 2 while anything blocks.
+  `use <venue>` sets `manuscript.yaml`'s `target_profile` and records one `profile` event.
+  Word counts strip Markdown, citations and evidence markers first, exactly as `gate-profile` does,
+  so a section the gate lets through is one `profile check` lets through.
+- **`phdude build [--format md|docx|pdf|latex|html] [--profile <venue>] [--sections a,b]
+  [--include-drafts] [--force]`.** Assembles the approved sections in the venue's order, under the
+  venue's headings, with `references.bib` regenerated through `cite export`, the figures the prose
+  shows copied in beside the document (SVG converted to PDF with `rsvg-convert` when the venue asks
+  for it and the tool is there, a warning naming the file when it is not), and a table linked on a
+  line of its own spliced in from `tables/out/`. Everything lands in `outputs/<slug>/`.
+- **Builds that skip themselves, and produce the same bytes twice.** Every input is hashed into
+  `.phdude/cache/build/<slug>/<format>.json`: each section body, the bibliography, each figure and
+  table, the venue profile, the CSL, the template and the renderer's own name and version. A build
+  whose inputs all match, and whose output file still holds the bytes the record claims, reports
+  `up to date`, renders nothing and appends no event; `--force` builds anyway, and `--json`'s
+  `changed` names what moved. A build never reads the clock — the date comes from
+  `manuscript.yaml`'s `date` or from the last approval the workspace recorded — so identical inputs
+  and an identical Pandoc give identical Markdown, LaTeX and HTML. DOCX and PDF are containers with
+  timestamps inside and are best-effort.
+- **`phdude present outline [--from manuscript|claims] [--profile <venue>] [--force]`.** One slide
+  per approved section, or per claim the evidence supports with its strongest excerpts as bullets,
+  written to `outputs/<slug>/outline.md` and to `outline.pptx` when Pandoc is installed, through a
+  registered PPTX template when one is bound.
+- **XLSX and DOCX tables.** `phdude table build --format xlsx` writes a real spreadsheet through a
+  built-in minimal SpreadsheetML writer (`fflate`, shared strings, a fixed timestamp so the bytes
+  are deterministic, numbers typed as numbers) with no external tool at all; `--format docx` goes
+  through Pandoc. Both are opt-in: a table that declares neither still builds md, latex and csv.
+- **A templates registry.** `templates/` in the workspace and `.phdude/templates.yaml`
+  (`schema: phdude.templates` v1). `phdude template add <path> [--kind docx|pptx|latex]` files a
+  copy by kind and records its hash, `template use <name> --for <venue>` binds it to a venue,
+  `template list` shows the registry, and `template check <name>` unzips a DOCX to report whether
+  it declares the styles Pandoc writes with (Heading 1–3, Body Text, Caption), exiting 2 when it
+  does not. A registered template outranks the one the venue pack ships.
+- **`phdude adapt --to <venue> [--apply]`.** What moving the manuscript to another venue would
+  take, computed before anything changes: the section mapping (by id, then by a `synonyms` entry the
+  target venue declares, then by a shared title; anything left is `needs decision`), the word-limit
+  delta per section, the abstract against the venue's limit, the figures whose format the venue does
+  not take, the terminology the venue renames with the hits actually in the prose, and the citation
+  style that takes over. `--apply` writes `manuscript/manuscript.<venue>.yaml`, whose sections point
+  at the same `.md` files under the venue's ids, titles and order, marking anything over a limit
+  `revised` and dropping its `approved_by`. It records one `adapt` event, never touches
+  `manuscript/manuscript.yaml`, and never rewrites a line of prose — that goes back through
+  `phdude deslop` and the same gates as every other revision.
+- **Two agent skills, `build` and `venue-adapt`**, plus a `phdude build` walkthrough in the README
+  ("Building documents"), the renderer port and venue-pack authoring in `docs/extending.md`, and a
+  new `write` rule for how prose reaches a built figure or table.
+- **Migration 0003 → workspace version 4:** an empty `venues` list in `phdude.yaml` and an empty
+  template registry at `.phdude/templates.yaml`. Idempotent, and what it writes is what a fresh
+  `phdude init` writes.
+
+### Changed
+
+- `phdude table build` with no `--format` now builds every format the table declares, rather than
+  intersecting the declaration with the three text defaults — a table declaring only `xlsx` used to
+  build nothing.
+- `gate-profile` no longer reports section order on `manuscript submit`. A gate that sees one
+  section cannot tell a reordered manuscript from one that is missing a section, which made it warn
+  about sections that were merely absent. `phdude profile check` reports order, comparing the
+  relative order of the sections the manuscript and the venue both have, and it is now the only
+  reporter.
+- The venue profile's whole-profile `max_words` fallback is gone; `schemas/profile.json` is strict
+  and the abstract's limit is written once, under `abstract.max_words`, which the abstract section
+  inherits.
+- `phdude doctor` grows a `Renderers:` block, which means one warning line per renderer this
+  machine cannot run.
+- `phdude cite export` gained an optional path and now returns the text it wrote, so `build` can
+  hash the bibliography before deciding whether to render.
+- `src/domain/bibtex.js` gained `parseBibtex`, deliberately lenient: it recovers the fields a
+  renderer needs and skips what it cannot read. It is not a general BibTeX parser.
+- CI installs Pandoc, so DOCX, HTML, LaTeX and PPTX renders are exercised there. No TeX
+  distribution: the PDF paths are asserted through their `TOOL_MISSING` branch rather than skipped
+  silently.
+
+### Notes
+
+- Still three runtime dependencies (`yaml`, `ajv`, `fflate`) and still no network anywhere outside
+  `phdude research`. Pandoc, a TeX engine and `rsvg-convert` are optional, probed with `execFile`,
+  and never assumed present.
+- Everything under `outputs/` is derived: gitignored, never read back as knowledge, rebuilt from the
+  manuscript, the citation registry and the venue profile. The Markdown a build hands the renderer
+  lives in `.phdude/cache/build/` instead, so nothing a build delivers is scratch.
+- `build` does not enforce the venue. It renders what the manuscript is; the word limits and
+  required sections are `phdude profile check`'s report, and the full readiness verdict is v0.7's.
+- `build` does not read `manuscript/manuscript.<venue>.yaml` either. It reads the canonical
+  manuscript and takes its venue from `--profile` or `target_profile`, so building for a venue
+  applies that venue's order, headings, citation style and template to the canonical section list.
+  The adapted file is the record of the mapping and the work list it implies.
+- The PDF path and the shipped LaTeX templates have no compile coverage in CI, because installing a
+  TeX distribution costs more than the release is willing to spend on every push.
+
 ## [0.5.0] — 2026-09-07
 
 Analysis & Visualization. A number in a thesis now has a chain behind it that anyone can follow:
@@ -483,7 +604,8 @@ First release: the deterministic harness. No model is involved in anything below
 - Requires Node 22 or newer. `pdftotext` (poppler-utils) is optional.
 - No network access and no shell interpolation anywhere in the runtime.
 
-[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/LucioY250/phdude/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/LucioY250/phdude/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/LucioY250/phdude/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/LucioY250/phdude/compare/v0.2.0...v0.3.0

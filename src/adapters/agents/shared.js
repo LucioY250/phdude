@@ -156,7 +156,19 @@ export const COMMAND_ROWS = [
   [
     'table add|list|show|build',
     'Render a RESULT or a DATASET as a Markdown, LaTeX and CSV table under tables/out/; each ' +
-      'build records the hash of what it read and what it wrote.',
+      'build records the hash of what it read and what it wrote. A table that declares them ' +
+      'also builds xlsx (no tool needed) and docx (through pandoc).',
+  ],
+  [
+    'present outline',
+    'Write the presentation outline under outputs/: one slide per approved section, or per ' +
+      'claim the evidence supports, with its strongest excerpts as bullets. PPTX too, when ' +
+      'pandoc is installed.',
+  ],
+  [
+    'template list|add|use|check',
+    'Register the DOCX, PPTX and LaTeX templates a build renders through, bind one to a ' +
+      'publication profile, and check that a DOCX declares the styles Pandoc writes with.',
   ],
   [
     'figure add|list|show|build|check',
@@ -189,7 +201,28 @@ export const COMMAND_ROWS = [
     'Per-researcher voice profiles: tone, sentence style, and terminology, learned from ' +
       'approved samples; consensus merges them for collaborative projects.',
   ],
-  ['packs list|detect|apply', 'List, recommend, or apply field/method research packs.'],
+  [
+    'packs list|detect|apply',
+    'List, recommend, or apply field, method and venue packs; applying a venue records it in phdude.yaml.',
+  ],
+  [
+    'profile list|show|check|use',
+    'Venue profiles: what a venue expects of the manuscript, which of its rules the manuscript ' +
+      'does not meet yet, and which venue it targets. `check` exits 2 on a blocking finding.',
+  ],
+  [
+    'build',
+    'Build the manuscript into md, docx, pdf, latex or html from its approved sections, in the ' +
+      'venue profile order, with the bibliography regenerated from the citation registry. A ' +
+      'build whose inputs have not moved renders nothing and records nothing.',
+  ],
+  [
+    'adapt --to <venue>',
+    'What moving the manuscript to another venue would take: which section becomes which, ' +
+      'which ones no longer fit its word limits, which figures need another format, which ' +
+      'words it renames, and which citation style takes over. `--apply` writes ' +
+      '`manuscript/manuscript.<venue>.yaml`; it never rewrites prose.',
+  ],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
   ['doctor', 'Report adapter availability, cache state, schema versions, and skill permissions.'],

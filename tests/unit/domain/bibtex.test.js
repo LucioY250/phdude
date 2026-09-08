@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { toBibtex, toCslJson } from '../../../src/domain/bibtex.js';
+import { parseBibtex, toBibtex, toCslJson } from '../../../src/domain/bibtex.js';
 
 function keysFor(sources) {
   return new Map(sources.map((s) => [s.id, s.bibkey]));
@@ -221,4 +221,102 @@ test('toCslJson: entries are sorted by bibkey', () => {
     csl.map((e) => e.id),
     ['alpha', 'zeta'],
   );
+});
+
+test('parseBibtex: round-trips what toBibtex writes', () => {
+  const sources = [
+    {
+      id: 'SRC-a',
+      bibkey: 'lovelace2020survey',
+      title: 'A Survey of Machines',
+      authors: ['Ada Lovelace', 'Charles Babbage'],
+      year: 2020,
+      venue: 'Journal of Computing',
+      type: 'article',
+      identifiers: { doi: '10.1234/jc.2020.01' },
+      url: 'https://example.org/paper',
+    },
+  ];
+  assert.deepEqual(parseBibtex(toBibtex(sources, keysFor(sources))), [
+    {
+      key: 'lovelace2020survey',
+      type: 'article',
+      authors: ['Ada Lovelace', 'Charles Babbage'],
+      title: 'A Survey of Machines',
+      year: 2020,
+      venue: 'Journal of Computing',
+      doi: '10.1234/jc.2020.01',
+      url: 'https://example.org/paper',
+    },
+  ]);
+});
+
+test('parseBibtex: unescapes the characters toBibtex escaped', () => {
+  const sources = [
+    {
+      id: 'SRC-a',
+      bibkey: 'k',
+      title: 'Cost & benefit: 50% of #1 in one_step',
+      authors: ['Ada Lovelace'],
+      year: 2020,
+      type: 'article',
+    },
+  ];
+  const [entry] = parseBibtex(toBibtex(sources, keysFor(sources)));
+  assert.equal(entry.title, 'Cost & benefit: 50% of #1 in one_step');
+});
+
+test('parseBibtex: venue comes from journal, booktitle or howpublished', () => {
+  const bib = [
+    '@article{a, journal = {Journal of Computing}}',
+    '@incollection{b, booktitle = {A Handbook}}',
+    '@misc{c, howpublished = {arXiv}}',
+    '@misc{d, title = {{No venue}}}',
+  ].join('\n\n');
+  assert.deepEqual(
+    parseBibtex(bib).map((e) => e.venue),
+    ['Journal of Computing', 'A Handbook', 'arXiv', null],
+  );
+});
+
+test('parseBibtex: "Family, Given" authors survive the split on " and "', () => {
+  const [entry] = parseBibtex('@book{k, author = {Hopper, Grace M. and de la Cruz, Ana}}');
+  assert.deepEqual(entry.authors, ['Hopper, Grace M.', 'de la Cruz, Ana']);
+});
+
+test('parseBibtex: quoted values and nested braces are read as one value', () => {
+  const [entry] = parseBibtex('@article{k, title = "The {RNA} World", journal = {A {B} C}}');
+  assert.equal(entry.title, 'The {RNA} World');
+  assert.equal(entry.venue, 'A {B} C');
+});
+
+test('parseBibtex: a non-numeric year is null rather than NaN', () => {
+  const [entry] = parseBibtex('@misc{k, year = {in press}}');
+  assert.equal(entry.year, null);
+});
+
+test('parseBibtex: @comment, @string and trailing junk are skipped, not thrown on', () => {
+  const bib = [
+    '@string{jc = "Journal of Computing"}',
+    '@comment{this file was written by hand}',
+    '@article{good, title = {{Kept}}, year = {2020}}',
+    '@article{unterminated, title = {{Dropped}}',
+  ].join('\n\n');
+  assert.deepEqual(
+    parseBibtex(bib).map((e) => e.key),
+    ['good'],
+  );
+});
+
+test('parseBibtex: entries come back in file order', () => {
+  const bib = '@misc{zeta, year = {2001}}\n\n@misc{alpha, year = {2002}}';
+  assert.deepEqual(
+    parseBibtex(bib).map((e) => e.key),
+    ['zeta', 'alpha'],
+  );
+});
+
+test('parseBibtex: an empty bibliography is an empty list', () => {
+  assert.deepEqual(parseBibtex(''), []);
+  assert.deepEqual(parseBibtex('   \n\n'), []);
 });

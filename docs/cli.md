@@ -900,7 +900,7 @@ reader months later can tell which numbers a table in the manuscript came from.
 | `caption` | The sentence under the table. Required. |
 | `source` | Exactly one of `{"result":"RESULT-…"}` or `{"dataset":"DATASET-…","columns":["…"],"limit":n}`. |
 | `columns` | `[{"key":…,"label":…,"format":…}]`. Omit it and every key the source has becomes a column. |
-| `formats` | Any of `md`, `latex`, `csv`. All three when omitted. |
+| `formats` | Any of `md`, `latex`, `csv`, `xlsx`, `docx`. The three text formats when omitted. |
 
 `format` is `text`, `number:<0-9>` or `percent:<0-9>`. `number:2` prints `71.40`; `percent:1`
 reads the value as a fraction and prints `42.4%`. A cell the format cannot read as a number is
@@ -922,12 +922,82 @@ and a declaration identical to the recorded one writes nothing and records no ev
 `build` is up to date, and writes nothing, when the source hashes to what the last run recorded
 *and* every output file already holds exactly the bytes this build would write. `--force` builds
 anyway. `--format` narrows the build to some of the formats the table declares; a format it does
-not declare exits 2. One `table` event per declaration and per build; `list` and `show` write
-nothing.
+not declare exits 2. A bare `build` renders every format the table declares. One `table` event per
+declaration and per build; `list` and `show` write nothing.
+
+`xlsx` and `docx` are the two formats a declaration has to ask for by name. `xlsx` is written by
+PhDude itself - a minimal SpreadsheetML workbook with one sheet named after the table, the column
+labels as its first row, and numeric columns written as numbers so a spreadsheet can compute with
+them (a percent column carries the number without the sign, and the caption is not a row). The
+same rows always produce the same bytes. `docx` is the Markdown table put through Pandoc; without
+it the build exits 4 and says what to install. A DOCX build compares the file on disk against the
+hash the last run recorded rather than re-rendering to find out whether anything changed.
 
 The recorded `source_hash` is the source as it is now: a dataset hashes to the bytes on disk, not
 to the bytes registered with `phdude data add`. Editing the file is what has to make everything
 built from it stale, and nothing watches the file for that to happen.
+
+### `phdude present outline [--from manuscript|claims] [--profile <venue>] [--force]`
+
+```
+phdude present outline
+phdude present outline --from claims
+phdude present outline --profile ieee --force
+```
+
+The talk, from what the research already says. `--from manuscript` (the default) writes one slide
+per **approved** section, in manuscript order; `--from claims` writes one slide per supported or
+canonical claim. The bullets are the claim's strongest evidence: up to three excerpts, strongest
+first, each with its locator, ties broken by id so the same research always produces the same
+file. A section with nothing linked to it gets one bullet saying so rather than an empty slide.
+
+The outline is written to `outputs/<slug>/outline.md`, where `<slug>` is the manuscript title. With
+a document renderer installed it is also rendered to `outputs/<slug>/outline.pptx`, through the
+PPTX template registered for `--profile` (see `phdude template use`). Without one, the Markdown is
+still written and the missing tool is named in the output - PhDude never pretends a slide deck was
+produced.
+
+An outline whose Markdown already says exactly this, and whose PPTX is on disk when one is
+expected, reports `up to date`, writes nothing and records no event. `--force` writes anyway. One
+`present` event per write. Nothing under `outputs/` is canonical: it is rebuilt from the
+manuscript and the knowledge graph, never read back as knowledge, and never edited by hand.
+
+Exits 2 when there is nothing approved to outline, and says whether to approve a section or to
+outline the claims instead.
+
+### `phdude template list | add <path> [--kind docx|pptx|latex] | use <name> --for <profile> | check <name>`
+
+```
+phdude template list
+phdude template add templates/university/Thesis Template.docx
+phdude template add templates/ieee.tex --kind latex
+phdude template use thesis-template --for generic-thesis
+phdude template check thesis-template
+```
+
+The templates a build renders through. `add` copies the file into `templates/<kind>/` and records
+it in `.phdude/templates.yaml` by `name`, `kind`, `path` and `hash`. The name is the slug of the
+file it came from and it is the identity: adding a changed file under the same name corrects the
+entry in place and keeps the profile it was bound to, and adding the same bytes again writes
+nothing and records no event. The kind is read from the extension (`.docx`, `.pptx`, `.tex` or
+`.latex`) unless `--kind` says otherwise, and a `--kind` that disagrees with the file exits 2.
+
+The path must be inside the workspace - copy the template under `templates/` first. A path that
+leaves the workspace, or a symlink that points out of it, exits 1.
+
+`use <name> --for <profile>` records which publication profile the template belongs to, and that
+is what a build and `phdude present outline` look for. With nothing bound, a single registered
+template of the right kind is used; with two, none is - choosing between them would be PhDude
+deciding which template you meant.
+
+`check <name>` unzips `word/styles.xml` and reports the styles Pandoc writes with - `Heading 1`,
+`Heading 2`, `Heading 3`, `Body Text` and `Caption` - that the template does not declare, matching
+a style under either its Word name (`heading 1`) or its style id (`Heading1`). It also reports a
+registered file whose bytes have changed since it was registered. It exits 2 when the template is
+not ready to render with. A PPTX or LaTeX template declares no Word styles, so `check` says that
+rather than passing it silently.
+
+One `template` event per registration and per binding; `list` and `check` write nothing.
 
 ### `phdude figure add --json '<declaration>' | list | show <id> | build <id> | check`
 
@@ -1218,7 +1288,7 @@ The gates, in the order they report:
 | `gate-prose` | every prose rule, in `ruthless` mode | every prose rule, in `full` mode |
 | `gate-voice` | — (voice never blocks, `ruthless` mode included: a learned baseline describes a habit, not a defect) | with an author profile that has run `learn`: any of mean sentence length, its spread, opening diversity, transition rate and first-person rate outside its tolerance, named with the observed value, the learned value and the band (`mean sentence length 31.2 vs learned 18.4 ± 4.6`); a word the profile's `terminology.avoid` lists. A term the section's claims use and the profile preserves, missing from the draft, is `info`. Author Voice scores 100 − 25 × the mean deviation across those five metrics, each in multiples of its own tolerance |
 | `gate-meaning` | on `--revision` only: a claim, citation, number or negation the revision dropped, or a claim or citation it added without `--allow-additions`; a bare single digit ("3 waves" → "three waves") is not a number for this purpose | — |
-| `gate-profile` | with `target_profile` set: a section over the venue's word limit | a section the venue does not list, or one out of the venue's order |
+| `gate-profile` | with `target_profile` set: a section over the venue's word limit | a section the venue does not list. Where the venue puts a section is a fact about the whole manuscript, which a gate reading one section cannot see: `phdude profile check` reports the order |
 
 Citations follow Pandoc: `[@key]`, `[@a; @b]`, `[@a, p. 3]` and `[see @a]` all cite, and every
 `@key` inside the brackets is audited.
@@ -1301,10 +1371,186 @@ Decision on the researcher's behalf.
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's
 keywords against the cached text and records the recommendation in `phdude.yaml` without
-applying anything. `apply` adds the pack to `fields` or `methods` and writes an event; it first
-checks each of the pack's skills against the [skill contract](extending.md#skill-contract) and
-exits 3 with a `POLICY` error if one requests network access the workspace policy has not
-allowed. All three need a workspace: outside one they exit 1 and point at `phdude init`.
+applying anything. Venue packs declare no keywords, so `detect` never scores or recommends one:
+a venue is a decision about where the work is going, not something to read off the corpus.
+`apply` adds the pack to `fields`, `methods` or `venues` and writes an event; it first checks
+each of the pack's skills against the [skill contract](extending.md#skill-contract) and exits 3
+with a `POLICY` error if one requests network access the workspace policy has not allowed. A
+venue pack that ships no `profile.yaml` is refused with a `VALIDATION` error, because there
+would be nothing to check the manuscript against. All three need a workspace: outside one they
+exit 1 and point at `phdude init`.
+
+Applying a venue records that the project is aiming at it. It does not make the manuscript
+target it - `phdude profile use <venue>` does that, and the two are separate because a project
+can be shopping a paper at three venues while one manuscript targets one of them.
+
+### `phdude profile list|show|check|use <venue>`
+
+The venue side of the manuscript: what the venue expects, and what the manuscript does not meet
+yet. Three venues ship with PhDude - `generic-thesis`, `ieee` and `acm` - each a pack under
+`packs/venues/<name>/` carrying its profile, its CSL citation style and a minimal LaTeX
+template. A workspace adds its own under `.phdude/packs/venues/<name>/`, and a workspace venue
+of the same name overrides the shipped one.
+
+```
+phdude profile list
+phdude profile show --profile ieee
+phdude profile check
+phdude profile check --profile acm --json
+phdude profile use ieee
+```
+
+`list` names every venue that ships a profile, whether the project has applied it (`phdude packs
+apply`) and whether the manuscript targets it. `show` prints the profile: the document class,
+the citation style, the sections with their word limits, the abstract limit, the page limit, the
+figure formats and the writing preferences. `check` reports the manuscript against it.
+
+Both `show` and `check` take `--profile <venue>` to report against a venue the manuscript does
+not target - which is how you find out what adapting to it would cost before committing. Without
+the flag they use `manuscript.yaml`'s `target_profile`, and a workspace with neither exits 1.
+
+`check` reports findings with a severity:
+
+| Severity | What it means | Example |
+|---|---|---|
+| `block` | The manuscript cannot go to this venue as it stands | a section over its word limit; a required section the manuscript does not have |
+| `warn` | Something the venue would notice | a section the venue does not list, or lists elsewhere; a figure in a format the venue does not take |
+| `info` | Reported so the number is on the record | a section with no prose yet; the reference style in force |
+
+`check` exits 2 when anything blocks, and 0 otherwise. It reads and reports; it never edits the
+manuscript and never relaxes a limit to fit the prose.
+
+Word counts are taken from the section body with its citations, evidence markers and Markdown
+stripped, the same reading `gate-profile` uses on every `manuscript submit` - so a section the
+gate lets through is a section `profile check` lets through. The abstract's limit comes from the
+profile's `abstract.max_words` unless the abstract section states its own.
+
+`use <venue>` sets `target_profile` in `manuscript.yaml` and records one `profile` event. It
+needs a manuscript, and it refuses a venue that ships no profile rather than recording a target
+nothing can check. Setting the venue the manuscript already targets changes nothing and records
+no event.
+
+### `phdude build [--format md|docx|pdf|latex|html] [--profile <venue>] [--sections a,b] [--include-drafts] [--force]`
+
+```
+phdude build
+phdude build --format docx
+phdude build --format latex --profile ieee
+phdude build --sections introduction,conclusions --include-drafts
+phdude build --force --json
+```
+
+Turns the approved manuscript into the file somebody asked for. The sections go in the order the
+venue profile puts them, under the headings the venue calls them, with the bibliography
+regenerated from the citation registry and the figures the prose shows copied in beside the
+document.
+
+Everything a build produces lands in one directory, `outputs/<slug>/`, named after the
+manuscript title:
+
+| File | What it is |
+|---|---|
+| `manuscript.<ext>` | the document — `.md`, `.docx`, `.pdf`, `.tex` or `.html` |
+| `references.bib` | the citation registry, exactly as `phdude cite export` writes it |
+| `figures/` | the figures the prose shows, converted where the venue asks for another format |
+
+`outputs/` is derived, never canonical: it is gitignored, it is never read back as knowledge, and
+editing a file there is editing something the next build overwrites. The Markdown the renderer is
+given is kept under `.phdude/cache/build/<slug>/`, so nothing in `outputs/` is scratch.
+
+**Formats.** `md` is built in and always works. `docx`, `html` and `latex` go through Pandoc, and
+`pdf` through Pandoc plus a TeX engine; when the tool is missing the command exits 4 and names
+what to install. It never renders a different format under the name of the one that was asked
+for. `phdude doctor` lists what this machine has.
+
+**The venue.** `--profile <venue>` overrides `manuscript.yaml`'s `target_profile`, and a
+workspace with neither builds against `generic-thesis`. The profile decides the section order and
+titles, the CSL citation style, and the LaTeX template. A template the workspace has registered against this venue outranks the one
+the venue pack ships.
+
+**Front matter.** The renderer writes the metadata, so the document body starts at the first
+section heading. The title comes from the manuscript, the authors from the profiles under
+`authors/` (or from `.phdude/author-profile.yaml` when there are none), and the abstract section
+becomes the `abstract` metadata rather than a chapter of its own — which is where every venue
+template puts it. The date is `manuscript.yaml`'s `date`, or the last approval the workspace
+recorded, and never the clock: a build has to produce the same bytes tomorrow as today.
+
+**Which sections.** Approved ones. `--include-drafts` adds `draft` and `revised` sections and
+marks the document a draft in its own front matter, so a draft cannot travel as the finished
+thing. `--sections a,b` narrows the build; a section named there that is not approved is a
+validation error rather than a silent omission, and a manuscript with nothing approved exits 2
+pointing at `phdude manuscript approve`.
+
+**Figures and tables.** An image the prose shows from `figures/out/` is copied to
+`outputs/<slug>/figures/` and its link rewritten. An SVG is converted to PDF with `rsvg-convert`
+when the venue takes PDF and not SVG; without that tool the SVG is copied across and the build
+warns, naming the file. A link to a `tables/out/*.md` file **on a line of its own** is replaced
+by the table itself; the same link inside a sentence is left alone, because it is a reference to
+the table and not an include of it. An asset that is not on disk is a warning, and the prose is
+left exactly as it was written.
+
+**Incremental.** Every input is hashed into `.phdude/cache/build/<slug>/<format>.json`: each
+section body, the bibliography, each figure and table, the venue profile, the CSL, the template,
+and the renderer's name and version. A build whose inputs all match, and whose output file still
+holds the bytes the record claims, reports `up to date` — it renders nothing and appends no
+event. `--force` builds anyway. The `changed` list in `--json` names what moved.
+
+**Reproducible.** Identical inputs and an identical renderer version produce identical bytes for
+`md`, `latex` and `html`. DOCX and PDF are best-effort: they are containers with timestamps
+inside, and the build fixes what it can. See
+[ADR 10](adr/0010-renderer-adapters-and-reproducible-builds.md).
+
+One `build` event per render, carrying the output's hash. A build that was up to date records
+nothing. `build` does not run `phdude profile check`: the venue's word limits and required
+sections are that command's report, and a build refuses nothing on their account.
+
+### `phdude adapt --to <venue> [--apply]`
+
+```
+phdude adapt --to ieee
+phdude adapt --to acm --json
+phdude adapt --to ieee --apply
+```
+
+What moving this manuscript to another venue would take. Without `--apply` it writes nothing and
+records nothing: it is a plan, and every line of it is a question for the researcher.
+
+The manuscript is read from the venue it targets today (`manuscript.yaml`'s `target_profile`, or
+`generic-thesis`), so `--to` is the only argument. Adapting to the venue already in force is a
+usage error rather than a second copy of the same manuscript under another name.
+
+| Key | What it reports |
+|---|---|
+| `mapping` | one row per section: `{from, to, reason}`. `to: null` is a section the venue has no place for; `from: null` is a section the venue requires that the manuscript does not have |
+| `limits` | `{section, words, max, delta}` per mapped section that has prose and a limit at the target. A positive `delta` is words that have to go |
+| `abstract` | `{section, words, from, to, delta}` — the abstract has one limit, written once in the profile, so it is reported once and never among `limits` |
+| `figures` | `{id, from, to}` for a figure whose formats the venue does not take |
+| `terminology` | `{from, to, hits}` for each word in the venue's `writing.terminology_map` the prose actually uses |
+| `citation_style` | `{from, to}`, naming the two reference styles rather than the CSL files behind them |
+
+**How a section is mapped.** By id first, then by a `synonyms` entry the target venue declares,
+then by a title the two sections share. A target section an earlier manuscript section already
+took is not offered twice, and the row that missed it says which section holds it. Anything left
+is `needs decision`: PhDude does not guess what a chapter becomes at a venue that never heard of
+it. Venue packs carry their own synonym lists — see
+[docs/extending.md](extending.md#venue-packs).
+
+**`--apply`** writes one file, `manuscript/manuscript.<venue>.yaml`, and records one `adapt`
+event. Its sections point at the same `.md` files as the canonical manuscript, under the venue's
+ids, titles and order; a section the venue does not list is carried over after the ones it names.
+Sections over the venue's word limit come out `revised` and lose their `approved_by`, because an
+approval was for text at a length this venue will not take. **`manuscript/manuscript.yaml` is not
+touched, and no prose is rewritten** — cutting a section to a limit is `phdude deslop`'s job, and
+it goes through the writing gates like every other revision.
+
+Applying the same adaptation twice writes nothing the second time and records no second event.
+`phdude profile check` against that venue is what says whether the manuscript now meets it;
+`adapt` states the plan, never the verdict.
+
+`phdude build` does not read the adapted file. It reads `manuscript/manuscript.yaml`, and the
+venue it renders against is the one that build was given or the manuscript targets — so building
+for IEEE puts the canonical sections in IEEE's order, under IEEE's headings, in IEEE's citation
+style. `manuscript.<venue>.yaml` is the record of the mapping and the work list it implies.
 
 ### `phdude mode lite|full|ruthless|off`
 
@@ -1315,30 +1561,30 @@ records no event.
 
 Upgrades a workspace written by an older PhDude to the current workspace version.
 `phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
-current version is 3. Migration steps ship with the package, one module per step, and run in
+current version is 4. Migration steps ship with the package, one module per step, and run in
 order through the store; each applied step appends one `migrate` event.
 
-Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 3)`
+Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 4)`
 as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
 `packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
 
 A workspace written by a *newer* PhDude is the same problem from the other end, and this build
 cannot migrate its way out of it. Reads warn with
-`workspace version 4 is newer than this PhDude (3)`; the same writes exit 1 with that message
+`workspace version 5 is newer than this PhDude (4)`; the same writes exit 1 with that message
 and the hint `upgrade phdude`.
 
 `--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
 undo for an in-place rewrite, `migrate` exits 3 on a dirty git tree unless `--force` is given; a
 dry run is a read and stays available either way. Steps are idempotent, so running `migrate` on
-an up-to-date workspace prints `Workspace is up to date (3)` and records no event.
+an up-to-date workspace prints `Workspace is up to date (4)` and records no event.
 
 ### `phdude doctor`
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
-that version is `(current)`, `(needs migration → 3)` or `(newer than this phdude)`, whether
+that version is `(current)`, `(needs migration → 4)` or `(newer than this phdude)`, whether
 network access is enabled and the configured search providers, whether script execution is
-enabled and under what limits, the cache
+enabled and under what limits, which document formats this machine can render, the cache
 entry count, the discoverable packs and the schema
 versions, plus warnings for anything missing. It is diagnostic only and never writes.
 
@@ -1368,6 +1614,23 @@ sections that have a report in `manuscript/reports/`, and the sections whose fil
 edited outside PhDude since its last submit (`drift: none` when none has). Each drifted section
 is a warning too. `--json` carries the same as `manuscript: { counts, reports[], drifted[] }`,
 and `null` for a workspace with no manuscript.
+
+A `Renderers:` block says which deliverables this machine can actually produce — one line per
+renderer with the formats it covers and either the version behind the bytes or the command that
+would install it:
+
+```
+Renderers:
+  markdown (md) available: phdude 0.6.0
+  pandoc (docx, html, latex, md, pptx) available: 3.6.4
+  latex (pdf) unavailable: install a TeX distribution (apt install texlive-latex-base latexmk, or MacTeX on macOS) to build PDF
+```
+
+The built-in Markdown renderer is always available, which is what makes a Markdown build a
+promise rather than a hope; every other format degrades to that hint and to one warning per
+unavailable renderer, rather than to a build that fails halfway. `--json` carries the same as a
+`renderers` array of `{ name, formats, available, version, hint }`. See
+[DocumentRenderer](extending.md#documentrenderer).
 
 It also lists every discoverable skill (core, applied packs, and the workspace's own
 `.phdude/skills/`) with its source, declared network and workspace permissions, and any loader

@@ -34,6 +34,7 @@ export const SCHEMA_TYPES = [
   'decision',
   'manuscript',
   'section-report',
+  'templates-registry',
   'author-profile',
   'pack',
   'skill',
@@ -62,6 +63,20 @@ export function assertValid(type, obj) {
       'fix the listed fields',
       r.errors,
     );
+}
+
+// A venue profile ships inside a pack rather than being an object PhDude stores, so like
+// `results.json` it has a schema and no place in SCHEMA_TYPES. The loader turns a failure here
+// into a typed error naming the file (adapters/packs/loader.js).
+let profileValidator;
+export function validateProfile(profile) {
+  profileValidator ??= ajv.getSchema('phdude://profile');
+  return profileValidator(profile)
+    ? { ok: true }
+    : {
+        ok: false,
+        errors: profileValidator.errors.map((e) => `${e.instancePath || '/'} ${e.message}`),
+      };
 }
 
 // `results.json` is a file a researcher's script writes, not an entity PhDude stores, so it has

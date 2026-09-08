@@ -64,6 +64,7 @@ export default async function packsCommand(ctx) {
         clock: deps.clock,
         actor: deps.actor,
         loadSkill: deps.loadSkill,
+        loadProfile: deps.loadProfile,
       },
       name,
     );

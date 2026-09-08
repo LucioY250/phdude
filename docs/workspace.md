@@ -17,6 +17,7 @@ my-research/
 │   ├── methodology-policy.yaml
 │   ├── publication-policy.yaml
 │   ├── author-profile.yaml
+│   ├── templates.yaml            # the registered document templates
 │   ├── skills/<name>/SKILL.md    # installed agent skills (PhDude-managed)
 │   ├── events.jsonl              # append-only audit log (committed)
 │   └── cache/                    # extracted text, gitignored and disposable
@@ -46,17 +47,25 @@ my-research/
 │   └── out/                      # what the generators wrote, generated
 ├── manuscript/
 │   ├── manuscript.yaml           # schema phdude.manuscript v1: the plan and every section
+│   ├── manuscript.<venue>.yaml   # the same sections adapted to a venue, by `phdude adapt --apply`
 │   ├── <section>.md              # the prose, front matter + Markdown body
 │   └── reports/<section>.yaml    # schema phdude.section-report v1: the last gate run
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
 ├── analysis/       ANALYSIS-*.yaml # declared analysis scripts and their runs
 │   └── out/                      # where a run's results.json and files land
 ├── data/                         # your data files; registered ones become DATASET records
-├── templates/ outputs/
+├── templates/                    # document templates; `phdude template add` files them by kind
+│   └── docx|pptx|latex/          #   the copies the registry made, named after the template
+├── outputs/<slug>/               # what `phdude build` and `phdude present outline` deliver, generated
+│   ├── manuscript.<ext>          # the document: .md, .docx, .pdf, .tex or .html
+│   ├── references.bib            # the citation registry, regenerated for this build
+│   ├── figures/                  # the figures the prose shows, converted where the venue asks
+│   └── outline.md|.pptx          # the presentation outline
 └── .gitignore
 ```
 
-`analysis/out/`, `tables/out/` and `figures/out/` are gitignored, and so is `.phdude/cache/`.
+`analysis/out/`, `tables/out/`, `figures/out/` and `outputs/` are gitignored, and so is
+`.phdude/cache/`.
 What lands in them is reproducible from the record next to it — the run already carries the hash
 of every file it wrote — so committing them would be committing the same thing twice. Everything
 else in the tree is meant to be read in a diff.
@@ -66,29 +75,32 @@ else in the tree is meant to be read in a diff.
 ```yaml
 schema: phdude.project
 version: 1
-workspace_version: 3
+workspace_version: 4
 title: Adaptive scheduling in edge clusters
 language: en
 fields: [computer-science]
 methods: [quantitative]
+venues: [ieee]
 outputs: [thesis]
 mode: full
 agents: [claude-code, codex]
 packs_recommended: [quantitative]
 ```
 
-`fields` and `methods` are applied packs. `packs_recommended` is what `phdude packs detect`
-suggested; it is a recommendation until you run `phdude packs apply`.
+`fields`, `methods` and `venues` are applied packs. `packs_recommended` is what `phdude packs
+detect` suggested; it is a recommendation until you run `phdude packs apply`. A venue in
+`venues` is one the project is aiming at; which one the manuscript actually targets is
+`target_profile` in `manuscript.yaml`, set by `phdude profile use`.
 
 ### `workspace_version`
 
 `version: 1` is the schema of this file. `workspace_version` is the shape of the whole
 directory, and it is what `phdude migrate` moves forward. A workspace without the field is
-version 1 (everything v0.1 wrote); the current version is 3. Versioning the workspace rather
+version 1 (everything v0.1 wrote); the current version is 4. Versioning the workspace rather
 than each object keeps an additive field — `provenance`, `contradicts` — from turning into a
 breaking change for every reader; see [ADR 6](adr/0006-workspace-versioning-and-migrations.md).
 
-Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 3)`.
+Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 4)`.
 Writes stop until you run `phdude migrate`, which is deliberately a command you run rather than
 something that happens to your files while you were asking for something else.
 
@@ -121,7 +133,7 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Result | `RESULT-<hash10>` | `summary`, `from`, `values{}`, `ext.analysis?{key,run_at,unit}`, `superseded_by?` |
 | Analysis | `ANALYSIS-<hash10>` | `name`, `runtime`, `script`, `args[]`, `inputs[]`, `outputs{results,files[]}`, `params`, `runs[]` |
 | Dataset | `DATASET-<hash10>` | `path`, `hash`, `bytes`, `format`, `profile{rows,columns[]}`, `description?`, `license?`, `sensitive`, `versions_of?`, `latest` |
-| Table | `TABLE-<hash10>` | `name`, `caption`, `source{result}\|{dataset,columns?,limit?}`, `columns[]`, `formats[]`, `outputs{md,latex,csv}`, `runs[]` |
+| Table | `TABLE-<hash10>` | `name`, `caption`, `source{result}\|{dataset,columns?,limit?}`, `columns[]`, `formats[]`, `outputs{md,latex,csv,xlsx,docx}`, `runs[]` |
 | Figure | `FIG-<hash10>` | `name`, `caption`, `alt`, `generator{runtime,script,args[]}`, `inputs[]`, `outputs[{path,format}]`, `runs[]` |
 | ResearchQuestion | `RQ-<n>` | `text`, `objectives[]` |
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
@@ -367,11 +379,44 @@ the contract the draft has to meet. `phdude deslop <section>` is the revision ha
 what to change, and takes the revision back through the gates with meaning preservation on.
 Neither writes prose; both leave that to `submit` and to `deslop --file`.
 
+## The templates registry
+
+`.phdude/templates.yaml` (schema `phdude.templates` v1) is the list of document
+templates the workspace holds: one entry per template with its `name`, its `kind` (`docx`,
+`pptx` or `latex`), the `path` of the copy under `templates/<kind>/`, the `hash` of its bytes,
+and the profile it is bound `for` once `phdude template use` says so. A build and
+`phdude present outline` read it to decide which file to hand the renderer.
+
+The registry is a record, not a cache: it is committed, and `phdude template check` reports a
+template whose bytes no longer hash to what was registered. The templates themselves are yours —
+a university's thesis DOCX, a conference's LaTeX class — and PhDude never edits one.
+
+## Adapted manuscripts
+
+`phdude adapt --to <venue> --apply` writes `manuscript/manuscript.<venue>.yaml`: a second
+manuscript, same schema, whose sections carry the venue's ids, titles and order and point at the
+**same** `.md` files as `manuscript.yaml`. Only the plan is new — no prose is copied, and nothing
+under `manuscript/` is rewritten. A section over the venue's word limit comes out `revised` and
+without its `approved_by`, because the approval was for text at a length that venue will not take.
+
+It is canonical, not derived: it is committed, and it goes stale the moment the canonical
+manuscript's structure changes. Re-running `adapt --apply` rewrites it; a run that would write
+exactly what is already there writes nothing and records no event.
+
+What it is **not**, yet, is a build input. `phdude build` reads `manuscript/manuscript.yaml` and
+takes its venue from `--profile` or `target_profile`, so building for a venue you have adapted to
+still builds the canonical section list against that venue's profile. The adapted file is the
+record of the mapping and the work list it implies: which sections the venue renamed, and which
+ones came back `revised` and still owe a revision.
+
 ## Derived files
 
-Two things in the workspace are outputs rather than knowledge, and both can be deleted and
-rebuilt: `.phdude/cache/` (below) and `references.bib` / `references.json`, written at the
-workspace root by `phdude cite export`.
+Three things in the workspace are outputs rather than knowledge, and all of them can be deleted
+and rebuilt: `.phdude/cache/` (below), `outputs/` (what `phdude build` and `phdude present outline`
+write), and `references.bib` / `references.json`, written at the workspace root by
+`phdude cite export`. Nothing under `outputs/` is ever read back as knowledge or cited: it is
+rebuilt from the manuscript, the knowledge graph and the profile, so editing it by hand loses
+the edit at the next build.
 
 The default `.gitignore` covers both, since committing a file that is one command away from
 being regenerated only creates merge conflicts. The export covers every source, cited or not. It
@@ -390,6 +435,13 @@ and `phdude ingest --force` rebuilds it.
 assembled, and `report.json`, the full gate report behind the last accepted `submit` or
 `deslop` — every finding, warnings included, where `manuscript/reports/<section>.yaml` keeps
 only the canonical summary. A blocked run writes neither: it leaves the workspace as it was.
+
+`.phdude/cache/build/<slug>/` holds one `<format>.json` and one `<format>.md` per format
+built: the record of every input hash behind the last build, and the Markdown that build handed
+the renderer. The record is what makes a second `phdude build` report `up to date` instead of
+rendering again; delete the directory and the next build renders from scratch. Nothing in
+`outputs/` is scratch — the assembled source lives here so that everything a build delivers can
+be sent to a co-author as it stands.
 
 Agents read the cache section by section rather than loading whole documents, which is how
 PhDude stays inside a context budget on projects with hundreds of sources (PRD §70).

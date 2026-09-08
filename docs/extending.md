@@ -14,10 +14,11 @@ that must still be true tomorrow, for another researcher on another agent, belon
 
 ## Packs
 
-A pack is a directory holding `pack.yaml` and its own skill Markdown. It carries vocabulary
-and recommendations, never executable code. Built-in packs live under `packs/fields/` and
-`packs/methods/`; a workspace can add its own under `.phdude/packs/<kind>/<name>/`, and a
-workspace pack with the same name overrides the built-in one.
+A pack is a directory holding `pack.yaml` and, for a field or method pack, its own skill
+Markdown. It carries vocabulary and recommendations, never executable code. Built-in packs live
+under `packs/fields/`, `packs/methods/` and `packs/venues/`; a workspace can add its own under
+`.phdude/packs/<kind>/<name>/`, and a workspace pack with the same name overrides the built-in
+one.
 
 ```yaml
 schema: phdude.pack
@@ -62,35 +63,123 @@ node --test "tests/contracts/packs.test.js"
 
 It validates every discovered pack and checks that each referenced skill file exists.
 
-### Venue profiles
+### Venue packs
 
-A venue pack carries one more file, `profile.yaml`, and it is the extension point the writing
-pipeline actually reads. `gate-profile` loads it when a manuscript sets `target_profile`, and
-checks a draft against the sections the venue expects.
+A venue pack is the publication profile of one venue: the sections it expects, the limits it
+sets, the citation style it wants, and a minimal LaTeX template for its document class. Three
+ship with PhDude - `generic-thesis`, `ieee` and `acm` - and each is a directory under
+`packs/venues/<name>/`:
 
-```yaml
-schema: phdude.venue-profile
-version: 1
-name: generic-thesis
-description: >-
-  The default venue profile: the six standard sections in the usual order.
-sections:
-  - id: abstract
-    max_words: 500
-  - id: introduction
-    max_words: 6000
+```
+packs/venues/ieee/
+├── pack.yaml                  # kind: venue, no detection keywords, no skills
+├── profile.yaml               # schema phdude.profile v1
+├── csl/ieee.csl               # the citation style, vendored
+└── templates/IEEEtran.tex     # a minimal pandoc LaTeX template
 ```
 
-A section the venue does not list, or one out of order, is a `warn`. Exceeding `max_words`
-blocks: a word limit that stops nothing is not a limit. A profile lives beside the pack rather
-than inside `pack.yaml` because it is validation data, not a skill bundle. The loader looks in
-`packs/venues/<name>/profile.yaml` and then `.phdude/packs/venues/<name>/profile.yaml`, so a
-workspace profile overrides a built-in one of the same name. v0.4 ships one profile,
-`generic-thesis`, with limits generous enough that only a runaway section trips them; the real
-venue profiles arrive with v0.6.
+```yaml
+schema: phdude.profile
+version: 1
+name: ieee                    # the directory it lives in
+display: IEEE conference paper
+description: >-
+  The IEEE conference template.
+document_class: IEEEtran      # what the LaTeX template declares
+citation_style: csl/ieee.csl  # a CSL file in the pack, or the name of a built-in style
+sections:                     # what the venue expects, in the order it expects it
+  - id: abstract
+    title: Abstract
+    required: true
+    order: 1
+  - id: introduction
+    title: Introduction
+    required: true
+    order: 2
+    max_words: 1200
+    synonyms: [intro, background, related-work]   # what this venue would call the same section
+abstract:
+  max_words: 250              # the abstract section inherits this unless it sets max_words
+page_limit: 8                 # reported, not enforced: pages are a rendering fact
+figures:
+  formats: [pdf, png]         # the formats the venue takes
+  min_dpi: 300
+tables:
+  style: ieeetran
+references:
+  style: IEEE
+templates:
+  latex: templates/IEEEtran.tex
+writing:
+  first_person: sparing       # never | sparing | natural
+  tense_abstract: past
+  terminology_map:
+    Figure: Fig.
+```
 
-A venue directory holding only a `profile.yaml` is not a pack, and `phdude packs list` will not
-show it. Give it a `pack.yaml` and a skill if you also want it detected and applied.
+Rules the loader enforces:
+
+- `profile.yaml` must validate against `schemas/profile.json`; unknown keys are refused.
+- `name` must equal the directory the profile lives in.
+- `citation_style` ending in `.csl`, and every path under `templates`, must exist and must
+  resolve inside the pack directory. Absolute paths, `..` traversal, paths containing a NUL
+  byte and symlinks pointing outside the pack are rejected, exactly as a pack's skill paths are.
+- A `citation_style` that is not a `.csl` path is taken as the name of a style the renderer
+  already knows, and resolves to no file.
+
+The loader looks in `packs/venues/<name>/` and then `.phdude/packs/venues/<name>/`, so a
+workspace venue overrides a shipped one of the same name. A venue directory holding only a
+`profile.yaml` still loads and still appears in `phdude profile list`; give it a `pack.yaml`
+with `kind: venue` if you also want `phdude packs apply <name>` to record it in `phdude.yaml`.
+
+Venue packs declare `detect.keywords: []` and `skills: []`. A venue is a decision the researcher
+makes about where the work is going, so `phdude packs detect` must not infer one from the corpus,
+and a venue carries validation data rather than guidance.
+
+`synonyms` is the one field only `phdude adapt` reads. It is the venue saying which other names
+mean this section, so a manuscript with a `related-work` chapter can be told what that chapter
+becomes at a venue that folds it into the introduction. Adapting maps a section by its id first,
+then by a synonym the target venue declared, then by a title the two share; a section nothing
+matches is reported as **needs decision** and left for the researcher. Synonyms never relax
+`phdude profile check`: a section the venue does not list is still `section-unknown` there,
+because the check reports the manuscript as it is and `adapt` is what proposes the move. A target
+section can only be claimed once, so two manuscript sections that both look like one venue
+section leave the second undecided, naming the first.
+
+### What a profile is checked against
+
+`src/domain/profiles.js` holds the rules, and both readers go through it: `gate-profile` runs
+the per-section rules on every `manuscript submit`, and `phdude profile check` runs all of them
+over the whole manuscript. A section the gate lets through is a section `profile check` lets
+through, because neither has its own copy of the rule.
+
+Order is the exception, and it is a rule about the manuscript rather than about a section: a gate
+that sees one section cannot tell a reordered manuscript from one that is simply missing a
+section. `checkProfile` compares the sections the manuscript and the venue both have, in
+manuscript order, against the same set in venue order, so a missing section leaves no gap and a
+section the venue does not list holds no place. `phdude profile check` is the only reporter.
+
+| Finding | Severity | When |
+|---|---|---|
+| `section-missing` | block | the venue requires a section the manuscript does not have |
+| `section-words` | block | a section's body is over its `max_words` |
+| `section-unknown` | warn | the manuscript has a section the venue does not list |
+| `section-order` | warn | two sections the venue orders one way sit the other way round; the finding names the pair and carries no `section` |
+| `figure-format` | warn | a figure produces no format in `figures.formats` |
+| `section-optional` | info | the venue also takes a section the manuscript does not have |
+| `section-unwritten` | info | a required section has no prose to measure yet |
+| `references-style` | info | the reference style in force |
+
+Word counts come from `domain/textstats.js`'s `words`, which strips Markdown, `[@key]` citations
+and `<!-- claim: -->` markers first, so a citation-dense paragraph is measured as the prose it is.
+
+### CSL licensing
+
+The `.csl` files under `packs/venues/*/csl/` come unmodified from the
+[CSL styles repository](https://github.com/citation-style-language/styles) and keep their own
+`<rights>` element: CC BY-SA 3.0, not the MIT licence the rest of PhDude uses. See
+[packs/venues/README.md](../packs/venues/README.md). If you need a variant of a shipped style,
+add it as a workspace venue pack rather than editing the vendored file.
 
 ## Writing gates
 
@@ -488,6 +577,75 @@ holds the shipped generator to that byte for byte.
 
 To ship another one, add it to `generators/`, register it in `SHIPPED_GENERATORS` in
 `src/domain/figures.js`, and add it to `files` in `package.json` if it needs a new directory.
+
+### DocumentRenderer
+
+```js
+{
+  name: 'pandoc',
+  formats: ['docx', 'html', 'latex', 'md', 'pptx'],
+  available: async () => ({ ok, version, hint }),
+  render: async ({ input, output, cwd }) => ({ path, warnings }),
+}
+```
+
+`input` is `{ markdownPath, bibPath?, cslPath?, referenceDoc?, template?, metadata? }`, `output`
+is `{ path, format }`, and `metadata` is a flat map of scalars and arrays of scalars (`title`,
+`author`, `date`, `abstract`). A fixed `date` is what makes two builds of the same manuscript
+produce the same bytes, so the build passes one rather than letting the tool reach for the clock.
+
+Four rules, in this order, and the order is the interesting part:
+
+| Situation | Answer |
+| --- | --- |
+| A format the renderer does not declare, or an input file nobody wrote | `VALIDATION`, whether or not the tool is installed |
+| The tool is not installed | `TOOL_MISSING` carrying the install hint |
+| Anything else | Create the output's parent directory, render, return the absolute path |
+| An input this renderer cannot honour (a CSL style, a `--reference-doc`) | A **warning naming the file**, never a silent drop |
+
+A malformed request stays malformed on a machine that has every tool, which is why validation
+comes first: answering `TOOL_MISSING` over a typo would send a researcher off to install Pandoc.
+And the *artifact* decides whether a render succeeded, never the exit code — a tool that exits 0
+and writes nothing is an `EXECUTION` failure, because hashing whatever happens to be at that path
+would record a render that did not happen.
+
+```js
+import { documentRendererContract } from '../../src/ports/document-renderer.js';
+documentRendererContract(test, assert, myRenderer, { fixturesDir: FIXTURES });
+```
+
+The suite checks the shape, that `available()` reports honestly and stably, both `VALIDATION`
+paths, and then — for every format the renderer declares — either a rendered file (non-empty,
+with the fixture's text in it, or the right magic bytes for a binary format) or a `TOOL_MISSING`
+refusal, whichever the machine warrants. For `md`, `latex` and `html` it also renders twice and
+compares bytes: identical inputs and an identical renderer version must produce identical files,
+which is what lets the build cache treat "the inputs did not change" as "the output would not
+change". DOCX, PPTX and PDF are best-effort and not held to that (see
+[ADR 10](adr/0010-renderer-adapters-and-reproducible-builds.md)).
+
+**Precedence.** `buildRenderers({ execFile, env, version, paths })` returns
+`[markdown, pandoc, latex]` and `rendererFor(renderers, format)` takes the first renderer that
+declares the format:
+
+| Format | Renderer | Needs |
+| --- | --- | --- |
+| `md` | `markdown` (built in) | nothing |
+| `docx`, `pptx`, `html`, `latex` | `pandoc` | pandoc |
+| `pdf` | `latex` | pandoc **and** `latexmk` or `pdflatex` |
+
+`md` goes to the built-in renderer *even where Pandoc is installed*: the one format that must
+never depend on a tool must not quietly start depending on one. The built-in renderer resolves
+`[@key]`, `[@a; @b]`, `[-@key]` and `[@key, p. 3]` into plain `(Surname, Year)` forms and appends
+a `## References` list holding the entries actually cited, in author-year order, read out of
+`references.bib` by `parseBibtex`. It is one fixed style and says so: a venue's style is what
+`--csl` and Pandoc are for, and a CSL file handed to it comes back as a warning.
+
+`PHDUDE_PANDOC`, `PHDUDE_LATEXMK`, `PHDUDE_PDFLATEX` and `PHDUDE_BIBTEX` point an adapter at a
+user-local install; `paths` does the same from code. Every tool is called with `execFile` and an
+argument array, never a shell.
+
+Then wire the renderers into `deps.renderers` in `src/adapters/cli/run.js`; `phdude doctor` picks
+them up from there and prints one line each.
 
 ### Store
 

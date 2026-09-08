@@ -147,7 +147,12 @@ test('the no-detector rule is stated on every surface a researcher reads', () =>
 test('the phdude-core skill lists the reporting commands as read-only', () => {
   const skill = read('skills', 'phdude-core', 'SKILL.md');
   const section = skill.slice(skill.indexOf('## The only way to write'));
-  for (const command of ['repro check', 'figure list|show|check', 'analyze list|show|runs']) {
+  for (const command of [
+    'repro check',
+    'figure list|show|check',
+    'template list|check',
+    'analyze list|show|runs',
+  ]) {
     assert.ok(
       section.includes(`\`${command}\``),
       `skills/phdude-core/SKILL.md does not name ${command} as read-only`,
@@ -167,6 +172,7 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'research accept',
     'research dismiss',
     'packs apply',
+    'profile use',
     'mode',
     'authors add',
     'authors learn',
@@ -176,12 +182,17 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'table build',
     'figure add',
     'figure build',
+    'present outline',
+    'template add',
+    'template use',
     'manuscript init',
     'manuscript submit',
     'manuscript approve',
     'manuscript reopen',
     'analyze add',
     'analyze run',
+    'build',
+    'adapt --apply',
     'deslop',
   ];
   const skill = read('skills', 'phdude-core', 'SKILL.md');

@@ -1,0 +1,97 @@
+{
+  "$id": "phdude://profile",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schema": { "const": "phdude.profile" },
+    "version": { "const": 1 },
+    "name": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "display": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "document_class": { "type": "string", "minLength": 1 },
+    "citation_style": { "type": "string", "minLength": 1 },
+    "sections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+          "title": { "type": "string", "minLength": 1 },
+          "required": { "type": "boolean" },
+          "order": { "type": "integer", "minimum": 1 },
+          "max_words": { "type": "integer", "minimum": 1 },
+          "synonyms": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        },
+        "required": ["id", "title", "required", "order"],
+        "additionalProperties": false
+      }
+    },
+    "abstract": {
+      "type": "object",
+      "properties": { "max_words": { "type": "integer", "minimum": 1 } },
+      "required": ["max_words"],
+      "additionalProperties": false
+    },
+    "page_limit": { "type": "integer", "minimum": 1 },
+    "figures": {
+      "type": "object",
+      "properties": {
+        "formats": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "enum": ["svg", "png", "pdf"] }
+        },
+        "min_dpi": { "type": "integer", "minimum": 1 }
+      },
+      "required": ["formats"],
+      "additionalProperties": false
+    },
+    "tables": {
+      "type": "object",
+      "properties": { "style": { "type": "string", "minLength": 1 } },
+      "required": ["style"],
+      "additionalProperties": false
+    },
+    "references": {
+      "type": "object",
+      "properties": { "style": { "type": "string", "minLength": 1 } },
+      "required": ["style"],
+      "additionalProperties": false
+    },
+    "templates": {
+      "type": "object",
+      "properties": {
+        "docx": { "type": "string", "minLength": 1 },
+        "pptx": { "type": "string", "minLength": 1 },
+        "latex": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "writing": {
+      "type": "object",
+      "properties": {
+        "first_person": { "enum": ["never", "sparing", "natural"] },
+        "tense_abstract": { "enum": ["past", "present"] },
+        "terminology_map": { "type": "object", "additionalProperties": { "type": "string" } }
+      },
+      "required": ["first_person"],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "schema",
+    "version",
+    "name",
+    "display",
+    "document_class",
+    "citation_style",
+    "sections",
+    "abstract",
+    "figures",
+    "tables",
+    "references",
+    "writing"
+  ],
+  "additionalProperties": false
+}
