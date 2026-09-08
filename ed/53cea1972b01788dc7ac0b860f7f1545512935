@@ -1,0 +1,117 @@
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_053e513d9a223c 93-95
+commands/ready.md
+  s_946fc7502759d8::t_053e513d9a223c 1-25
+tests/integration/ready.test.js
+  s_946fc7502759d8::t_c12b66fd058a1a 73,163
+  s_946fc7502759d8::t_1ee2aa68e6116e 9,230-240,306-308
+  s_946fc7502759d8::t_59bd3524721168 277
+  s_946fc7502759d8::t_0b057751c72bca 3
+  s_946fc7502759d8::t_b51c75c71c59ce 1-2,4-8,10-72,74-162,164-229,241-276,278-305,309-376
+src/adapters/cli/commands/skills.js
+  s_946fc7502759d8::t_600759e82f60a7 3,6,28-40,86,89-91,110-113
+README.md
+  s_946fc7502759d8::t_f18a4c41567cfd 857-1045
+  s_946fc7502759d8::t_debdd7f7b4ef01 1085,1102-1103
+  s_946fc7502759d8::t_63e2193fc0c7da 12,40,43-103,109,118,208,1059,1162,1213-1214
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_a593d9e879a2cc 64-65,82-83,118-126
+  s_946fc7502759d8::t_8b543da9087a29 127
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_6682970036224c 110
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_e12cdbed13f2ef 212-228,433
+src/adapters/cli/commands/ready.js
+  s_946fc7502759d8::t_6682970036224c 1-10
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_e9839ddfa590e1 3132-3134,3136-3137
+  s_946fc7502759d8::t_4efe67c9974504 3098-3131,3135,3138-3144
+CHANGELOG.md
+  s_946fc7502759d8::t_2584bb53874499 9-117,716-717
+src/adapters/cli/output.js
+  s_946fc7502759d8::t_788f80923a8c00 408-462
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_076b38cd40ae74 278-282,288-289,295-305,324-326,330-331,333-334
+  s_946fc7502759d8::t_053e513d9a223c 246-247,249-251
+  s_946fc7502759d8::t_97153eafcf83c7 248
+tests/fixtures/objects/invalid/skills-lock.1.json
+  s_946fc7502759d8::t_b1c4e27cbd875c 1-13
+src/adapters/agents/hosts.js
+  s_946fc7502759d8::t_a5d3c0ee601946 1-40
+src/application/init.js
+  s_946fc7502759d8::t_7f741e1bf5cf2e 168-209,306,317
+tests/unit/domain/ready.test.js
+  s_946fc7502759d8::t_211c153ae14b95 379,400-404,411,425,427-428
+  s_946fc7502759d8::t_b8c64458955f76 1-138,153-305,311-378,380-384,390-399,409-410,412-424,426,429-479,484-529
+  s_946fc7502759d8::t_97153eafcf83c7 139-152,306-310,385-389,405-408,480-483
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_a593d9e879a2cc 156-157,205-207
+src/adapters/agents/claude-code.js
+  s_946fc7502759d8::t_199e3b04b3fe2b 77-83,91-98
+tests/integration/skills.test.js
+  s_946fc7502759d8::t_97153eafcf83c7 473-478
+  s_946fc7502759d8::t_475a5e9ec28155 18-19,428-437,441,444-472,479-493
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_827379f9a93a32 64-65,82-83,118-126
+  s_946fc7502759d8::t_c46727d877d712 127
+tests/golden/expected/next.txt
+  s_946fc7502759d8::t_b353294b7e37b9 16-23
+docs/cli.md
+  s_946fc7502759d8::t_4fc68a46e4e68b 803
+  s_946fc7502759d8::t_d630f1fba05412 1739-1796
+docs/adr/0011-research-health-formulas.md
+  s_946fc7502759d8::t_4fc68a46e4e68b 38,61-64
+src/application/ready.js
+  s_946fc7502759d8::t_6cf589f5712f26 1-44
+src/adapters/agents/codex.js
+  s_946fc7502759d8::t_199e3b04b3fe2b 17,22-29
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_827379f9a93a32 53
+src/domain/ready.js
+  s_946fc7502759d8::t_4ee392c6f17697 177
+  s_946fc7502759d8::t_44051627acc755 1-176,178-194,199-256,261-335
+  s_946fc7502759d8::t_97153eafcf83c7 195-198,257-260
+tests/golden/ready.test.js
+  s_946fc7502759d8::t_63033f9b60d314 1-46
+src/domain/health.js
+  s_946fc7502759d8::t_4fc68a46e4e68b 211-214,225-227,237,246-249
+  s_946fc7502759d8::t_ee613ceb4106b2 250-251
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_6682970036224c 70,115
+docs/workspace.md
+  s_946fc7502759d8::t_e17be21f151691 507-511
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_b353294b7e37b9 50
+tests/unit/domain/health.test.js
+  s_946fc7502759d8::t_05c772ac4e2144 398-414
+  s_946fc7502759d8::t_20379328b78115 284-314
+tests/golden/expected/ready.txt
+  s_946fc7502759d8::t_63033f9b60d314 1-21
+package.json
+  s_946fc7502759d8::t_2584bb53874499 3
+scripts/make-example.mjs
+  s_946fc7502759d8::t_827379f9a93a32 25,385-411,419-421,641,811-815
+  s_946fc7502759d8::t_97153eafcf83c7 412-418
+tests/golden/expected/health.txt
+  s_946fc7502759d8::t_b353294b7e37b9 1,10,13
+src/adapters/cli/commands/init.js
+  s_946fc7502759d8::t_a5d3c0ee601946 3,7
+examples/generic-thesis/reviews/REVIEW-e5ebf39e98.yaml
+  s_946fc7502759d8::t_827379f9a93a32 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "ed53cea1972b01788dc7ac0b860f7f1545512935",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
