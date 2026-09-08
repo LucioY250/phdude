@@ -67,6 +67,7 @@ import profileCommand from './commands/profile.js';
 import present from './commands/present.js';
 import promote from './commands/promote.js';
 import prose from './commands/prose.js';
+import ready from './commands/ready.js';
 import repro from './commands/repro.js';
 import research from './commands/research.js';
 import researchFresh from './commands/research-fresh.js';
@@ -111,6 +112,7 @@ const COMMANDS = {
   present,
   promote,
   prose,
+  ready,
   repro,
   research,
   'research-fresh': researchFresh,

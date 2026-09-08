@@ -3095,3 +3095,50 @@ test('e2e: audit citations records findings, verifies a DOI, and never reopens a
   assert.match(events[0].summary, /offline/);
   assert.match(events[1].summary, /1 DOI\(s\) verified/);
 });
+
+test('e2e: ready exits 2 while anything blocks, 0 once nothing does, and never writes', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-ready-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Readiness', '--agents', 'claude-code', '--no-git']);
+  await run(ws, ['packs', 'apply', 'generic-thesis']);
+  await run(ws, ['manuscript', 'init']);
+  await run(ws, ['profile', 'use', 'generic-thesis']);
+
+  const eventsPath = join(ws, '.phdude', 'events.jsonl');
+  const before = await readFile(eventsPath, 'utf8');
+
+  // A fresh workspace: nothing is written and nothing is approved, so the gate refuses.
+  const blocked = await phdude(ws, ['ready', '--json', ...ACTOR]);
+  assert.equal(blocked.code, 2);
+  const report = JSON.parse(blocked.stdout);
+  assert.equal(report.ready, false);
+  assert.equal(report.profile, 'generic-thesis');
+  const codes = report.blocking.map((item) => item.code);
+  assert.ok(codes.includes('all-sections-approved'), codes.join(', '));
+  assert.equal(await readFile(eventsPath, 'utf8'), before, 'ready recorded an event');
+
+  // Human output leads with the verdict and names a command for each blocking item.
+  const human = await phdude(ws, ['ready', ...ACTOR]);
+  assert.equal(human.code, 2);
+  assert.match(human.stdout, /^Not ready to submit: \d+ blocking item\(s\)\n/);
+  assert.match(human.stdout, /\n {4}Fix: phdude /);
+
+  // A venue the workspace does not have is a usage error, not a verdict.
+  const unknown = await phdude(ws, ['ready', '--profile', 'nope', '--json', ...ACTOR]);
+  assert.equal(unknown.code, 1);
+  assert.match(JSON.parse(unknown.stderr).error.message, /unknown venue: nope/);
+
+  // The policy is the gate: with every requirement taken out of it, the same workspace passes.
+  const policyPath = join(ws, '.phdude', 'research-policy.yaml');
+  const policy = await readFile(policyPath, 'utf8');
+  await writeFile(
+    policyPath,
+    policy.replace(/\nready:\n[\s\S]*$/, '\nready:\n  min_health: 0\n  require: []\n'),
+  );
+
+  const passed = await phdude(ws, ['ready', '--json', ...ACTOR]);
+  assert.equal(passed.code, 0);
+  assert.equal(JSON.parse(passed.stdout).ready, true);
+  assert.equal(await readFile(eventsPath, 'utf8'), before, 'ready recorded an event');
+});

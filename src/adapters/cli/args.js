@@ -107,6 +107,7 @@ export const COMMAND_OPTIONS = {
   template: { kind: { type: 'string' }, for: { type: 'string' } },
   figure: { 'allow-exec': { type: 'boolean' } },
   repro: {},
+  ready: { profile: { type: 'string' } },
   authors: {
     from: { type: 'string', multiple: true },
     approved: { type: 'boolean' },

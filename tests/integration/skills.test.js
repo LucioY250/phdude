@@ -15,6 +15,8 @@ import {
   writeSkillTree,
 } from '../../src/adapters/skills/install.js';
 import { DEFAULT_SKILLS_DIR } from '../../src/adapters/agents/shared.js';
+import { claudeCodeHost } from '../../src/adapters/agents/claude-code.js';
+import { indexAgentSkills } from '../../src/application/init.js';
 import { install, list, remove } from '../../src/application/skills.js';
 import { PhdudeError } from '../../src/domain/errors.js';
 
@@ -423,8 +425,69 @@ test('doctor reports an external skill with its source, and warns once its files
     },
   ]);
 
+  // Edited in place: the files are still there, they are no longer the ones that were locked.
+  await writeFile(
+    join(root, '.phdude', 'skills', 'lab-checklist', 'SKILL.md'),
+    skillMd({ name: 'lab-checklist', description: 'edited after install' }),
+  );
+  const drifted = await doctor(doctorDeps);
+  assert.equal(drifted.externalSkills[0].present, true);
+  assert.equal(drifted.externalSkills[0].drifted, true);
+  assert.ok(drifted.warnings.some((w) => /no longer matches the hash/.test(w)));
+
   await rm(join(root, '.phdude', 'skills', 'lab-checklist'), { recursive: true, force: true });
   const gone = await doctor(doctorDeps);
   assert.equal(gone.externalSkills[0].present, false);
+  assert.equal(gone.externalSkills[0].drifted, false);
   assert.ok(gone.warnings.some((w) => /locked to .* but is not installed/.test(w)));
+});
+
+// docs/extending.md promises that a skill which *states* the prohibition - as the shipped
+// `academic-prose` skill does - stays installable, because only the declared purpose is read.
+// A later change that scanned bodies would pass every other test in this file and fail here.
+test('a skill whose body states the no-humanizer rule installs; only the purpose is read', async (t) => {
+  const { store, deps } = await newWorkspace(t);
+  const src = await sourceDir(t, {
+    'SKILL.md':
+      skillMd({ name: 'lab-prose', description: 'House style for lab reports.' }) +
+      [
+        '',
+        'Never rewrite a draft to humanize it or to move an AI-detector score: PhDude has no',
+        'detector score and detection evasion is not a goal (PRD §30c).',
+        '',
+      ].join('\n'),
+  });
+
+  const result = await install(deps, src);
+
+  assert.equal(result.name, 'lab-prose');
+  assert.equal((await store.readSkillsLock()).skills[0].name, 'lab-prose');
+});
+
+test('an installed skill is indexed in the files the agent reads, and de-indexed on removal', async (t) => {
+  const { root, store, deps } = await newWorkspace(t);
+  const src = await sourceDir(t, {
+    'SKILL.md': skillMd({ name: 'lab-checklist', description: 'The lab bench checklist.' }),
+  });
+  const project = await store.readProject();
+  const agents = {
+    store,
+    agentHosts: [claudeCodeHost],
+    discoverSkills,
+    skillsDir: DEFAULT_SKILLS_DIR,
+  };
+
+  await store.writeProject({ ...project, agents: ['claude-code'] });
+  await install(deps, src);
+  await indexAgentSkills(agents);
+
+  const indexed = await readFile(join(root, 'AGENTS.md'), 'utf8');
+  assert.match(indexed, /- \*\*lab-checklist\*\* \(external\) - The lab bench checklist\./);
+  assert.match(indexed, /-> \.phdude\/skills\/lab-checklist\/SKILL\.md/);
+  assert.match(indexed, /- \*\*phdude-core\*\*|## Operating rules/);
+
+  await remove(deps, 'lab-checklist');
+  await indexAgentSkills(agents);
+
+  assert.doesNotMatch(await readFile(join(root, 'AGENTS.md'), 'utf8'), /lab-checklist/);
 });

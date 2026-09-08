@@ -35,7 +35,7 @@ workspace scores the same on any machine, on any day, at any hour.
 | Literature Coverage | Mean of three shares of the research questions: those with a `supported` or `canonical` claim, those with a source behind them (through a claim's evidence), and those whose search is not stale. |
 | Evidence Strength | The mean claim-state score (`canonical` 100, `supported` 80, `candidate` 40, `disputed` 20, `rejected` 0) times the evidence strength factor: the mean of `strong` 1, `moderate` 0.75, `weak` and `unknown` 0.5 over every evidence item. |
 | Methodological Integrity | Mean of the share of questions that have a method and the share of methods that declare `limitations`, minus 20 per open `methodology` review. |
-| Citation Quality | 100 minus 10 per citation fault: every `cite check` finding that fails the check, plus every open `citation` review. |
+| Citation Quality | 100 minus 10 per citation fault: every `cite check` finding that fails the check, plus every open `citation` review above `note` severity. |
 | Freshness | 100 minus the share of research questions whose search has gone stale. |
 | Reproducibility | The share of declared analyses, tables and figures that `repro check` calls `up-to-date`. |
 | Consistency | 100 minus 25 per open fact conflict and 25 per disputed claim pair. |
@@ -58,7 +58,10 @@ researcher never assessed must not read as one they did.
 **`uncited-source` costs nothing.** It is the one `cite check` finding that never fails `ok` —
 it is a gap in the argument, which `phdude gaps` already raises, not a fault in the registry.
 Charging for it would put every honest workspace with a reading list near zero. It is still
-printed under Citation Quality, at no cost, so nobody has to wonder whether it was seen.
+printed under Citation Quality, at no cost, so nobody has to wonder whether it was seen. The
+same holds for a `citation` review recorded at `note`: `phdude audit citations` files an uncited
+source as exactly that, and the two paths must agree, or running the auditor would cost a
+workspace points for what `cite check` calls informational.
 
 **The overall is a weighted mean over the dimensions that scored**, with the weights in
 `health.weights` in the research policy, defaulting to 1 each and documented in

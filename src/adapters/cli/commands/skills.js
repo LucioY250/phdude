@@ -1,7 +1,9 @@
 import { resolve } from 'node:path';
 import * as skills from '../../../application/skills.js';
+import { indexAgentSkills } from '../../../application/init.js';
 import { classifySkillSource } from '../../../domain/skills.js';
 import { PhdudeError } from '../../../domain/errors.js';
+import { knownHosts } from '../../agents/hosts.js';
 
 function renderList({ skills: entries, warnings }) {
   const lines = [];
@@ -21,6 +23,19 @@ function renderList({ skills: entries, warnings }) {
     for (const warning of warnings) lines.push(`  - ${warning}`);
   }
   return lines.join('\n') + '\n';
+}
+
+// Installing or removing a skill changes what the workspace loads, so the files the agent reads
+// - AGENTS.md, CLAUDE.md - are rewritten to match. The hosts come from what `init` recorded in
+// `phdude.yaml`; a workspace that named no agent host gets nothing rewritten.
+async function reindex(deps) {
+  const project = await deps.store.readProject();
+  return indexAgentSkills({
+    store: deps.store,
+    agentHosts: knownHosts(project?.agents),
+    discoverSkills: deps.discoverSkills,
+    skillsDir: deps.skillsDir,
+  });
 }
 
 // The source is resolved here rather than in the application because only the adapter knows the
@@ -68,12 +83,12 @@ export default async function skillsCommand({ sub, positionals, flags, deps, cwd
       sourceArg(raw, cwd),
       { allowNetwork: flags.allowNetwork, force: flags.force },
     );
+    const indexed = await reindex(deps);
     const verb = result.replaced ? 'Replaced' : 'Installed';
     const files = `${result.files} file${result.files === 1 ? '' : 's'}`;
-    return {
-      text: `${verb} skill ${result.name} from ${result.source} (${files})\n`,
-      json: result,
-    };
+    const lines = [`${verb} skill ${result.name} from ${result.source} (${files})`];
+    if (indexed.written.length > 0) lines.push(`Indexed in ${indexed.written.join(', ')}`);
+    return { text: lines.join('\n') + '\n', json: { ...result, indexed: indexed.written } };
   }
 
   if (sub === 'remove') {
@@ -92,7 +107,10 @@ export default async function skillsCommand({ sub, positionals, flags, deps, cwd
       },
       name,
     );
-    return { text: `Removed skill ${result.name}\n`, json: result };
+    const indexed = await reindex(deps);
+    const lines = [`Removed skill ${result.name}`];
+    if (indexed.written.length > 0) lines.push(`Indexed in ${indexed.written.join(', ')}`);
+    return { text: lines.join('\n') + '\n', json: { ...result, indexed: indexed.written } };
   }
 
   throw new PhdudeError(

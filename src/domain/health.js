@@ -208,7 +208,10 @@ function methodologicalIntegrity(snapshot) {
 }
 
 // `uncited-source` is the one `cite check` finding that never fails `ok` - it is a gap in the
-// argument, not a fault in the registry - so it is reported here and charged for nowhere.
+// argument, not a fault in the registry - so it is reported here and charged for nowhere. A
+// `citation` review recorded at `note` is the same statement in the other shape (`phdude audit
+// citations` files an uncited source as one), and is not charged either: running the auditor
+// must not cost a workspace points for what `cite check` calls informational.
 function citationQuality(snapshot) {
   const sources = snapshot.sources ?? [];
   const open = openReviews(snapshot, 'citation');
@@ -219,7 +222,9 @@ function citationQuality(snapshot) {
   const all = snapshot.citations ?? [];
   const uncited = all.filter((f) => f.kind === 'uncited-source');
   const findings = all.filter((f) => f.kind !== 'uncited-source');
-  const charged = findings.length + open.length;
+  const noted = open.filter((review) => review.severity === 'note');
+  const reviews = open.filter((review) => review.severity !== 'note');
+  const charged = findings.length + reviews.length;
 
   const observations = [
     {
@@ -229,13 +234,19 @@ function citationQuality(snapshot) {
   for (const finding of findings) {
     observations.push({ message: finding.message ?? finding.kind, ids: [finding.id] });
   }
-  for (const review of open) {
+  for (const review of reviews) {
     observations.push({ message: review.message, ids: [review.id] });
   }
   if (uncited.length > 0) {
     observations.push({
       message: `${uncited.length} source(s) are cited by no evidence; that is a gap, not a citation fault, and costs nothing here`,
       ids: ids(uncited),
+    });
+  }
+  if (noted.length > 0) {
+    observations.push({
+      message: `${noted.length} citation review(s) are recorded as notes; a note is informational and costs nothing here`,
+      ids: ids(noted),
     });
   }
 

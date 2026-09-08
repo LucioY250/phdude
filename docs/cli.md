@@ -800,7 +800,7 @@ number nobody measured, and is left out of the overall.
 | Literature Coverage | Mean of three shares of the research questions: those with a `supported` or `canonical` claim, those with a source behind them (through a claim's evidence), and those whose search is not stale. | No research question is recorded. |
 | Evidence Strength | The mean claim-state score (`canonical` 100, `supported` 80, `candidate` 40, `disputed` 20, `rejected` 0) times the evidence strength factor (`strong` 1, `moderate` 0.75, `weak` and `unknown` 0.5, averaged over every evidence item). With claims recorded and no evidence at all the factor is 0. | No claim is recorded. |
 | Methodological Integrity | Mean of the share of questions that have a method and the share of methods that declare `limitations`, minus 20 per open `methodology` review, floored at 0. | Neither a question nor a method is recorded. |
-| Citation Quality | 100 minus 10 per citation fault, floored at 0: every `cite check` finding that fails the check, plus every open `citation` review. `uncited-source` is informational there and costs nothing here — it is reported, and `phdude gaps` raises it as a gap. | No source and no citation review is recorded. |
+| Citation Quality | 100 minus 10 per citation fault, floored at 0: every `cite check` finding that fails the check, plus every open `citation` review above `note` severity. `uncited-source` is informational there and costs nothing here — it is reported, and `phdude gaps` raises it as a gap; a `citation` review at `note` is the same statement in review form and is not charged either. | No source and no citation review is recorded. |
 | Freshness | 100 minus the share of research questions whose search has gone stale, a question nobody searched included. | No research question is recorded. |
 | Reproducibility | The share of declared analyses, tables and figures that `repro check` calls `up-to-date`. | Nothing reproducible is declared, so a free 100 cannot carry the overall. |
 | Consistency | 100 minus 25 per open fact conflict and 25 per disputed claim pair, floored at 0. | No fact and no claim is recorded. |
@@ -1735,6 +1735,64 @@ open finding blocks or would need changes. In `ruthless` mode a `minor` finding 
 `major` and a `major` one as blocking — the promotion happens where the verdict is computed, so
 raising the mode raises the recommendation without rewriting a single stored severity, and
 lowering it again restores the old reading.
+
+### `phdude ready [--profile <venue>] [--json]`
+
+```
+phdude ready
+phdude ready --profile ieee
+phdude ready --json
+```
+
+The submission verdict (PRD §42, spec §3.4). It composes what the rest of PhDude already knows
+about the workspace into one answer: can this go out, and if not, what is in the way and what
+fixes it. It reads only — no file is written and no event is recorded — and exits 0 when nothing
+blocks, 2 while anything does.
+
+The venue is `--profile`, or the one `manuscript.yaml` targets. A workspace that has chosen
+neither is still given a verdict, with a warning that the venue rules went unchecked; a venue
+PhDude does not ship exits 1.
+
+| Check | Blocks when | Severity |
+|---|---|---|
+| `profile-<rule>` | The venue profile reports a `block` finding: a required section missing, a section or abstract over its word limit, two sections in the venue's wrong order. One item per rule. | block |
+| `no-open-conflicts` | A fact conflict is open. The command is the one `phdude gaps` gives for it. | major |
+| `no-disputed-pairs` | Two claims contradict each other and neither has been rejected. | major |
+| `no-block-reviews` | An open `REVIEW-` finding is `block` after the mode's promotion. | block |
+| `all-sections-approved` | A manuscript section is not `approved` — or there is no manuscript at all. | block |
+| `figures-alt` | A declared figure has no alt text (PRD §100). | block |
+| `repro-clean` | An analysis, table or figure is not `up-to-date`. | major |
+| `citations-clean` | The offline `cite check` reports a `block` finding, or an open `citation` review is `block` or `major`. | block or major |
+| `min-health` | Research Health is below `ready.min_health`. A workspace that scores nothing at all has no health to check, and this passes. | major |
+| `gaps-high` | A high-severity gap is open that no requirement above already reports. | major |
+
+Which requirements run is `ready.require` in `.phdude/research-policy.yaml`, and the threshold is
+`ready.min_health`. The venue check, the health threshold and the gap check always run; the seven
+named requirements run only while the policy lists them. A key the policy invents is reported as
+a warning rather than silently ignored.
+
+```yaml
+ready:
+  min_health: 70
+  require:
+    - no-open-conflicts
+    - no-disputed-pairs
+    - no-block-reviews
+    - all-sections-approved
+    - figures-alt
+    - repro-clean
+    - citations-clean
+```
+
+The review mode changes the verdict without changing a record. `ruthless` promotes an open
+`major` finding to `block`, so `no-block-reviews` catches it. `lite` blocks only on the
+`block`-severity items and lists the rest under `relaxed` — set aside, never hidden, because a
+lighter gate that quietly dropped findings would be a worse gate than none. `full` and `off` run
+the whole set: `off` means do not review unasked, and running this command is asking.
+
+`ready` never runs the citation auditor, because the auditor writes. It reads the `citation`
+reviews a previous `phdude audit citations` recorded, plus the offline `cite check`, which only
+reads. A finding the researcher dismissed stops blocking, which is the point of a verdict.
 
 ### `phdude mode lite|full|ruthless|off`
 

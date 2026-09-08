@@ -281,6 +281,37 @@ test('Citation Quality loses 10 per citation finding and per open citation revie
   assert.equal(dimension(report, 'citation-quality').score, 70);
 });
 
+// `phdude audit citations` records an uncited source as a `citation` review at `note`. Charging
+// that would mean running the auditor costs a workspace ten points for the one finding
+// `cite check` calls informational, and the two paths would disagree about the same source.
+test('Citation Quality never charges for a citation review recorded as a note', () => {
+  const report = health(
+    snapshot({
+      sources: [
+        { id: 'SRC-0000000001', title: 't', authors: ['a'], type: 'article', state: 'canonical' },
+      ],
+      reviews: [
+        {
+          id: 'REVIEW-n',
+          kind: 'citation',
+          target: 'SRC-0000000001',
+          severity: 'note',
+          message: 'SRC-0000000001 is not cited by any evidence',
+          status: 'open',
+        },
+      ],
+    }),
+    null,
+  );
+
+  const quality = dimension(report, 'citation-quality');
+  assert.equal(quality.score, 100);
+  assert.ok(
+    quality.observations.some((o) => (o.ids ?? []).includes('REVIEW-n')),
+    'the note is not reported at all',
+  );
+});
+
 test('Citation Quality never charges for an uncited source, which cite check calls informational', () => {
   const report = health(
     snapshot({
@@ -364,6 +395,23 @@ test('Consistency loses 25 per open conflict and per disputed pair, and floors a
   );
 
   assert.equal(dimension(report, 'consistency').score, 50);
+
+  // Five more disputed pairs is 150 points off a 100-point scale: the floor, not a negative.
+  const pairs = [];
+  for (let i = 0; i < 10; i += 2) {
+    pairs.push(claim(`CLAIM-p${i}`, 'disputed', { contradicts: [`CLAIM-p${i + 1}`] }));
+    pairs.push(claim(`CLAIM-p${i + 1}`, 'disputed', { contradicts: [`CLAIM-p${i}`] }));
+  }
+  const floored = health(
+    snapshot({
+      facts: [facts(30, 'ART-a'), facts(40, 'ART-b')],
+      claims: pairs,
+      evidence: [evidence('EVID-1', 'strong')],
+    }),
+    null,
+  );
+
+  assert.equal(dimension(floored, 'consistency').score, 0);
 });
 
 test('Consistency is 100 with nothing contested, and null with nothing to contest', () => {

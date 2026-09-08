@@ -22,6 +22,7 @@ import * as authors from '../src/application/authors.js';
 import * as data from '../src/application/data.js';
 import * as figure from '../src/application/figure.js';
 import * as research from '../src/application/research.js';
+import * as review from '../src/application/review.js';
 import * as manuscript from '../src/application/manuscript.js';
 import * as packs from '../src/application/packs.js';
 import * as profile from '../src/application/profile.js';
@@ -381,6 +382,43 @@ async function submitDraft(deps, body, options) {
   await rm(path);
 }
 
+// One recorded review, so the example carries the v0.7 loop and not only its commands: a
+// methodologist's finding about the sampling frame, at `major`, still open. `phdude next` ranks
+// it, `phdude health` charges Methodological Integrity for it, and `phdude ready` leaves it out
+// of the blocking list because a `major` finding only blocks under `ruthless`.
+async function recordMethodologyReview(deps, method, evidence) {
+  const path = join(deps.store.root, 'findings.json');
+  await writeFile(
+    path,
+    JSON.stringify(
+      {
+        findings: [
+          {
+            target: method.id,
+            severity: 'major',
+            message:
+              'The three samples were recruited through different channels and the design ' +
+              'records no stratification or weighting, so the pooled adoption rate cannot be ' +
+              'read as an estimate for the student population.',
+            evidence: evidence.map((item) => item.id),
+            suggested_command: `phdude decide propose --title "Weight the pooled adoption rate by recruitment channel" --affects ${method.id}`,
+          },
+        ],
+      },
+      null,
+      2,
+    ) + '\n',
+  );
+  await review.submit(
+    { ...deps, readText: () => readFile(path, 'utf8') },
+    {
+      file: path,
+      kind: 'methodology',
+    },
+  );
+  await rm(path);
+}
+
 // The manuscript, so the example carries a section that went through the whole writing loop
 // rather than one step of it: a planned six-section plan, an introduction submitted as a draft,
 // the same section revised once with its filler removed, the prose report `phdude prose`
@@ -600,7 +638,7 @@ export async function generate(root) {
     questions: [rq2.id],
   });
 
-  await addEntity(deps, 'method', {
+  const { obj: method } = await addEntity(deps, 'method', {
     name: 'Cross-sectional survey',
     design: 'Three independently recruited undergraduate samples, one wave each.',
     paradigm: 'quantitative',
@@ -770,6 +808,11 @@ export async function generate(root) {
   // workspace. The project adopts the thesis venue pack; the manuscript targets it.
   await packs.apply(deps, 'generic-thesis');
   await profile.use(deps, 'generic-thesis');
+
+  // The review last, because reviewing is what happens once there is something to review. It
+  // stays open: accepting, dismissing or resolving a finding is the researcher's call, and an
+  // example that had already made it would be showing the wrong half of the loop.
+  await recordMethodologyReview(deps, method, [evidence1, evidenceBeta]);
 }
 
 async function main() {

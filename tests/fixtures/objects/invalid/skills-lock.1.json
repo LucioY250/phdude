@@ -1,0 +1,13 @@
+{
+  "schema": "phdude.skills-lock",
+  "version": 1,
+  "skills": [
+    {
+      "name": "Lab-Checklist",
+      "source": "/home/ada/skills/lab-checklist",
+      "hash": "9f2c1d4e",
+      "installed_at": "2026-09-08T09:12:44.101Z",
+      "trusted": true
+    }
+  ]
+}

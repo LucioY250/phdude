@@ -1,0 +1,21 @@
+schema: phdude.review
+version: 1
+id: REVIEW-e5ebf39e98
+created: 2026-09-01T00:01:33.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+kind: methodology
+target: METH-b137e5e2a3
+severity: major
+message: The three samples were recruited through different channels and the design records no stratification or weighting, so the pooled adoption rate cannot be read as an estimate for the student population.
+evidence:
+  - EVID-93cd3745fc
+  - EVID-6c03150777
+status: open
+by:
+  researcher: example
+  agent: script
+mode: full
+suggested_command: phdude decide propose --title "Weight the pooled adoption rate by recruitment channel" --affects METH-b137e5e2a3

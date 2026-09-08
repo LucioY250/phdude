@@ -243,6 +243,12 @@ export const COMMAND_ROWS = [
       'the reviewer found as REVIEW objects the researcher accepts, dismisses or resolves. ' +
       'Every finding names the ids it rests on; you never accept your own findings.',
   ],
+  [
+    'ready',
+    "Submission readiness: the venue profile's blocking rules, Research Health against the " +
+      'policy threshold, every requirement in `ready.require`, and the high-severity gaps, each ' +
+      'with the command that fixes it. It reads and never writes; exit 2 while anything blocks.',
+  ],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   [
     'skills list|install|remove',
@@ -269,17 +275,34 @@ function renderCommandTable() {
 // the file Claude Code auto-loads every session stays small (PRD S41b, S70). `skills`, when
 // given, is the list of skill names actually installed; anything else under `skillsDir` is left
 // out of both forms.
+//
+// `externalSkills` names the skills `phdude skills install` put under `externalSkillsDir`
+// (the workspace's `.phdude/skills/`), which PhDude did not ship. They are indexed the same way
+// and marked as external: a skill nobody can see here is a skill the agent will never load
+// (PRD S41c), and where it came from is part of what the agent should know about it.
 export async function renderAgentsMd({
   project,
   skillsDir = DEFAULT_SKILLS_DIR,
   inlineSkills = true,
   skills,
+  externalSkills,
+  externalSkillsDir = null,
 }) {
   const names = await listSkillNames(skillsDir, skills);
   const core = names.includes('phdude-core')
     ? await readSkill(skillsDir, 'phdude-core')
     : { meta: {}, body: '' };
-  const others = names.filter((n) => n !== 'phdude-core');
+
+  const shipped = new Set(names);
+  const external =
+    externalSkillsDir === null
+      ? []
+      : (await listSkillNames(externalSkillsDir, externalSkills)).filter((n) => !shipped.has(n));
+
+  const others = [
+    ...names.filter((n) => n !== 'phdude-core').map((name) => ({ name, dir: skillsDir })),
+    ...external.map((name) => ({ name, dir: externalSkillsDir, external: true })),
+  ].sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
 
   const lines = [
     MANAGED_MARKER,
@@ -298,16 +321,17 @@ export async function renderAgentsMd({
   ];
 
   if (inlineSkills) {
-    for (const name of others) {
-      const skill = await readSkill(skillsDir, name);
-      lines.push('', `## Skill: ${name}`, '', skill.body);
+    for (const { name, dir, external: installed } of others) {
+      const skill = await readSkill(dir, name);
+      lines.push('', `## Skill: ${name}${installed ? ' (external)' : ''}`, '', skill.body);
     }
   } else {
     lines.push('', '## Skills', '', 'Load a skill only when its command or task is active:', '');
-    for (const name of others) {
-      const skill = await readSkill(skillsDir, name);
+    for (const { name, dir, external: installed } of others) {
+      const skill = await readSkill(dir, name);
       const description = skill.meta.description ?? '';
-      lines.push(`- **${name}** - ${description} -> .phdude/skills/${name}/SKILL.md`);
+      const mark = installed ? ' (external)' : '';
+      lines.push(`- **${name}**${mark} - ${description} -> .phdude/skills/${name}/SKILL.md`);
     }
   }
 

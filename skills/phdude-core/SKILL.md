@@ -61,7 +61,8 @@ Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude l
 `phdude template add`, `phdude template use`, `phdude manuscript init`,
 `phdude manuscript submit`, `phdude manuscript approve`, `phdude manuscript reopen`,
 `phdude build`, `phdude adapt --apply`, `phdude audit citations`, `phdude review submit`,
-`phdude review accept`, `phdude review dismiss`, `phdude review resolve`, or
+`phdude review accept`, `phdude review dismiss`, `phdude review resolve`,
+`phdude health --save`, `phdude skills install`, `phdude skills remove`, or
 `phdude deslop <section> --file <revised.md>`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
 cache; `phdude bootstrap` runs that ingest, scores the packs and hands off to `[[bootstrap]]`, so
@@ -78,7 +79,8 @@ Every other command —
 `packs list|detect`, `authors list|show`, `data list|show|profile`, `analyze list|show|runs`,
 `table list|show`, `figure list|show|check`, `template list|check`, `repro check`,
 `manuscript list|show|status`, `profile list|show|check`, `adapt` without `--apply`, `prose`,
-`review list|show`, `doctor`, `help` — only reads or derives from what is already recorded.
+`review list|show`, `health` (without `--save`), `ready`, `skills list`, `doctor`, `help` —
+only reads or derives from what is already recorded.
 (`phdude write`, `phdude review <kind>` and
 `phdude deslop <section>` without a file write only `.phdude/cache/`, and
 `phdude prose <section>` stores the section's scores in `manuscript/reports/`, a derived file.)
@@ -112,6 +114,16 @@ own decision.
 
 A finding already recorded — the same kind, target and message — is left as it is, verdict
 included, so re-running a review never reopens something the researcher has already dismissed.
+
+### Before it goes out
+
+`phdude ready` is the submission gate: the venue profile's blocking rules, Research Health
+against `ready.min_health`, every requirement in `ready.require`, and the high-severity gaps,
+each with the command that fixes it. It reads and writes nothing, and exits 2 while anything
+blocks. Report the blocking items and let the researcher choose which to fix — several of the
+fixes are decisions (`phdude manuscript approve`, `phdude review accept|dismiss|resolve`) that
+are never yours. Under `lite` only the blocking-severity items count; the rest are listed as
+relaxed and still stand.
 
 ### Running a script
 

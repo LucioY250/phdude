@@ -405,6 +405,61 @@ export function renderHealth(report) {
   return lines.join('\n') + '\n';
 }
 
+function readyItems(items) {
+  const lines = [];
+  for (const item of items) {
+    lines.push(`  - [${item.code}] ${item.message}`);
+    lines.push(`    Fix: ${item.command}`);
+  }
+  return lines;
+}
+
+/**
+ * The submission-readiness verdict of `phdude ready` (spec §3.4): the answer first, then what is
+ * in the way and the command that fixes each, then the checks that passed - a gate that only
+ * ever printed its complaints would leave the researcher guessing what it looked at.
+ * @param {object} report - see application/ready.js
+ * @returns {string}
+ */
+export function renderReady(report) {
+  const passed = report.checks.filter((check) => check.ok);
+  const health =
+    report.health.overall === null
+      ? `Research Health: n/a (needs ${report.health.min})`
+      : `Research Health: ${report.health.overall}/100 (needs ${report.health.min})`;
+
+  const lines = [
+    report.ready
+      ? 'Ready to submit: nothing is blocking'
+      : `Not ready to submit: ${report.blocking.length} blocking item(s)`,
+    `Venue: ${report.profile ?? '(none)'}   Mode: ${report.mode}   ${health}`,
+  ];
+
+  if (report.blocking.length > 0) {
+    lines.push('', `Blocking (${report.blocking.length}):`, ...readyItems(report.blocking));
+  }
+
+  if (passed.length > 0) {
+    lines.push('', `Passed (${passed.length}):`);
+    for (const check of passed) lines.push(`  - [${check.code}] ${check.message}`);
+  }
+
+  if (report.relaxed.length > 0) {
+    lines.push(
+      '',
+      `Set aside by lite mode (${report.relaxed.length}):`,
+      ...readyItems(report.relaxed),
+    );
+  }
+
+  if (report.warnings.length > 0) {
+    lines.push('', 'Warnings:');
+    for (const warning of report.warnings) lines.push(`  - ${warning}`);
+  }
+
+  return lines.join('\n') + '\n';
+}
+
 const PROSE_SCORES = [
   ['specificity', 'Specificity'],
   ['evidenceAlignment', 'Evidence Alignment'],

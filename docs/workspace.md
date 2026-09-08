@@ -504,6 +504,11 @@ assembled, and `report.json`, the full gate report behind the last accepted `sub
 `deslop` — every finding, warnings included, where `manuscript/reports/<section>.yaml` keeps
 only the canonical summary. A blocked run writes neither: it leaves the workspace as it was.
 
+`.phdude/cache/review/<kind>/` holds `context.md`, the bounded review context
+`phdude review <kind>` assembled and the findings contract it printed. Like the writing context
+it is disposable: nothing is recorded until `phdude review submit` turns a findings file into
+`REVIEW-` objects, and the next `phdude review <kind>` rebuilds it.
+
 `.phdude/cache/build/<slug>/` holds one `<format>.json` and one `<format>.md` per format
 built: the record of every input hash behind the last build, and the Markdown that build handed
 the renderer. The record is what makes a second `phdude build` report `up to date` instead of

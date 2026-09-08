@@ -74,7 +74,13 @@ export const claudeCodeHost = {
   name: 'claude-code',
   async install(
     root,
-    { project, skills, skillsDir = DEFAULT_SKILLS_DIR, commandsDir = DEFAULT_COMMANDS_DIR } = {},
+    {
+      project,
+      skills,
+      externalSkills,
+      skillsDir = DEFAULT_SKILLS_DIR,
+      commandsDir = DEFAULT_COMMANDS_DIR,
+    } = {},
   ) {
     const written = [];
     const skipped = [];
@@ -82,7 +88,14 @@ export const claudeCodeHost = {
 
     const commandFiles = await listCommandFiles(commandsDir);
 
-    const agentsMd = await renderAgentsMd({ project, skillsDir, inlineSkills: false, skills });
+    const agentsMd = await renderAgentsMd({
+      project,
+      skillsDir,
+      inlineSkills: false,
+      skills,
+      externalSkills,
+      externalSkillsDir: join(root, '.phdude', 'skills'),
+    });
     record(await writeManagedFile(root, 'AGENTS.md', agentsMd));
     record(await writeManagedFile(root, 'CLAUDE.md', renderClaudeMd(commandFiles)));
 

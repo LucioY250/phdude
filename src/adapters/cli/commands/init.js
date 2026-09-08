@@ -1,25 +1,10 @@
 import { basename } from 'node:path';
 import { initWorkspace } from '../../../application/init.js';
-import { PhdudeError } from '../../../domain/errors.js';
-import { claudeCodeHost } from '../../agents/claude-code.js';
-import { codexHost } from '../../agents/codex.js';
-
-const HOSTS = { 'claude-code': claudeCodeHost, codex: codexHost };
-const DEFAULT_AGENTS = ['claude-code', 'codex'];
+import { DEFAULT_AGENTS, hostsFor } from '../../agents/hosts.js';
 
 export default async function init({ flags, deps, workspace }) {
   const agents = flags.agents ?? DEFAULT_AGENTS;
-  const agentHosts = agents.map((name) => {
-    const host = HOSTS[name];
-    if (!host) {
-      throw new PhdudeError(
-        'USAGE',
-        `unknown agent host: ${name}`,
-        `known hosts: ${Object.keys(HOSTS).join(', ')}`,
-      );
-    }
-    return host;
-  });
+  const agentHosts = hostsFor(agents);
 
   const title = flags.title ?? basename(workspace);
   const result = await initWorkspace(

@@ -209,6 +209,23 @@ test('parseCli: audit takes its target and the network switch, and nothing else'
   );
 });
 
+test('parseCli: ready takes a venue, and nothing else', () => {
+  const cli = parseCli(['ready', '--profile', 'ieee']);
+  assert.equal(cli.command, 'ready');
+  assert.equal(cli.flags.profile, 'ieee');
+
+  assert.equal(parseCli(['ready']).flags.profile, undefined);
+
+  assert.throws(
+    () => parseCli(['ready', '--save']),
+    (err) => {
+      assert.equal(err.code, 'USAGE');
+      assert.match(err.message, /unknown option --save for ready/);
+      return true;
+    },
+  );
+});
+
 test('parseCli: decide supersede takes --by and --with', () => {
   const cli = parseCli([
     'decide',
@@ -413,6 +430,7 @@ for (const flag of DETECTOR_FLAGS) {
       ['status', flag],
       ['review', 'reviewer2', flag],
       ['audit', 'citations', flag],
+      ['ready', flag],
       ['frobnicate', flag],
     ]) {
       assert.throws(

@@ -165,6 +165,48 @@ export async function copySkills(
   return { withheld, installed, removed };
 }
 
+const SKILLS_DIR_REL = join('.phdude', 'skills');
+
+// What `.phdude/skills-lock.yaml` says was installed from outside. A lock this cannot read is
+// no reason to fail: `phdude doctor` and `phdude skills list` both report an unreadable one, and
+// an agent index that stops being written would be a worse failure than one skill missing.
+async function lockedSkillNames(store) {
+  try {
+    return ((await store.readSkillsLock())?.skills ?? []).map((entry) => entry.name);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Rewrites the agent files (AGENTS.md, CLAUDE.md and the slash-command templates) so they index
+ * exactly the skills the workspace holds now, external ones included. `init` does this as part
+ * of writing the workspace; `phdude skills install|remove` calls it afterwards, because a skill
+ * the agent's own index never names is a skill the agent will never load (PRD §41c).
+ * @param {{store: object, agentHosts: object[], discoverSkills: Function, skillsDir: string}} deps
+ * @returns {Promise<{written: string[], skipped: string[]}>}
+ */
+export async function indexAgentSkills({ store, agentHosts = [], discoverSkills, skillsDir }) {
+  if (agentHosts.length === 0) return { written: [], skipped: [] };
+
+  const project = await store.readProject();
+  const shipped = await discoverSkills([{ dir: skillsDir, source: 'core' }], { onError: () => {} });
+  const skills = [];
+  for (const skill of shipped) {
+    if (await store.exists(join(SKILLS_DIR_REL, skill.name))) skills.push(skill.name);
+  }
+  const externalSkills = await lockedSkillNames(store);
+
+  const written = [];
+  const skipped = [];
+  for (const host of agentHosts) {
+    const result = await host.install(store.root, { project, skills, externalSkills });
+    written.push(...result.written);
+    skipped.push(...result.skipped);
+  }
+  return { written, skipped };
+}
+
 /**
  * @returns {Promise<{ created: string[], updated: string[], skipped: string[],
  *   removed: string[], withheldSkills: {name: string, reason: string, hint: string}[],
@@ -261,6 +303,7 @@ export async function initWorkspace(
 
   if (agentHosts.length > 0) {
     const preExisting = await snapshotAgentHostFiles(store);
+    const externalSkills = await lockedSkillNames(store);
     // One status per path across every host: a `written` report from any host wins over a
     // `skipped` report for the same path from another host (e.g. codex deliberately leaving the
     // AGENTS.md claude-code just wrote in place), so a path is never reported twice.
@@ -271,6 +314,7 @@ export async function initWorkspace(
       const { written, skipped: hostSkipped } = await host.install(store.root, {
         project,
         skills: installed,
+        externalSkills,
       });
       for (const rel of written) status.set(rel, 'written');
       for (const rel of hostSkipped) if (!status.has(rel)) status.set(rel, 'skipped');
