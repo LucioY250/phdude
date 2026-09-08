@@ -60,6 +60,7 @@ import prose from './commands/prose.js';
 import repro from './commands/repro.js';
 import research from './commands/research.js';
 import researchFresh from './commands/research-fresh.js';
+import review from './commands/review.js';
 import status from './commands/status.js';
 import table from './commands/table.js';
 import template from './commands/template.js';
@@ -100,6 +101,7 @@ const COMMANDS = {
   repro,
   research,
   'research-fresh': researchFresh,
+  review,
   status,
   table,
   template,

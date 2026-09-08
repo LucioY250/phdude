@@ -680,6 +680,84 @@ function reproItem(kind, id, status, name = 'item') {
   return { kind, id, name, status, reasons: [] };
 }
 
+function reviewFinding(id, severity, status = 'open', overrides = {}) {
+  return {
+    id,
+    schema: 'phdude.review',
+    version: 1,
+    created,
+    actor,
+    kind: 'reviewer2',
+    target: 'project',
+    severity,
+    message: `A ${severity} finding.`,
+    evidence: [],
+    status,
+    by: actor,
+    mode: 'full',
+    ...overrides,
+  };
+}
+
+test('recommendNext: reviews-open counts the open findings and names the worst one', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    reviews: [
+      reviewFinding('REVIEW-1111111111', 'minor'),
+      reviewFinding('REVIEW-2222222222', 'block'),
+      reviewFinding('REVIEW-3333333333', 'major'),
+      reviewFinding('REVIEW-4444444444', 'block', 'dismissed'),
+    ],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'reviews-open');
+  assert.ok(action);
+  assert.equal(action.impact, 'high');
+  assert.equal(action.dependents, 3, 'the dismissed finding is closed');
+  assert.match(action.why[0], /3 review finding\(s\) are open: block=1, major=1, minor=1/);
+  assert.match(action.why[1], /REVIEW-2222222222, REVIEW-3333333333/);
+  assert.equal(action.command, 'phdude review show REVIEW-2222222222');
+});
+
+test('recommendNext: open findings that are only minor or note are medium, not high', () => {
+  const snapshot = emptySnapshot({
+    questions: [question('RQ-1')],
+    reviews: [
+      reviewFinding('REVIEW-1111111111', 'minor'),
+      reviewFinding('REVIEW-2222222222', 'note'),
+    ],
+  });
+
+  const action = recommendNext(snapshot, []).find((a) => a.rule === 'reviews-open');
+  assert.equal(action.impact, 'medium');
+  assert.equal(action.why.length, 1, 'nothing blocks, so nothing is said about blocking');
+});
+
+test('recommendNext: ruthless mode promotes a minor finding into a blocking recommendation', () => {
+  const reviews = [reviewFinding('REVIEW-1111111111', 'minor')];
+  const full = emptySnapshot({ questions: [question('RQ-1')], reviews });
+  const ruthless = emptySnapshot({
+    questions: [question('RQ-1')],
+    project: { title: 'T', fields: [], methods: [], outputs: ['thesis'], mode: 'ruthless' },
+    reviews,
+  });
+
+  assert.equal(recommendNext(full, []).find((a) => a.rule === 'reviews-open').impact, 'medium');
+
+  const promoted = recommendNext(ruthless, []).find((a) => a.rule === 'reviews-open');
+  assert.equal(promoted.impact, 'high');
+  assert.match(promoted.why[2], /review mode is ruthless/);
+  assert.equal(reviews[0].severity, 'minor', 'the stored severity is untouched');
+});
+
+test('recommendNext: a workspace with no review findings makes no reviews-open recommendation', () => {
+  const snapshot = emptySnapshot({ questions: [question('RQ-1')], reviews: [] });
+  assert.equal(
+    recommendNext(snapshot, []).find((a) => a.rule === 'reviews-open'),
+    undefined,
+  );
+});
+
 test('recommendNext: analysis-stale is medium while nothing has been said out loud yet', () => {
   const snapshot = emptySnapshot({
     questions: [question('RQ-1')],

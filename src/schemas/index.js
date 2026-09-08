@@ -32,6 +32,7 @@ export const SCHEMA_TYPES = [
   'figure',
   'search',
   'decision',
+  'review',
   'manuscript',
   'section-report',
   'templates-registry',

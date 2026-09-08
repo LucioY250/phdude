@@ -113,6 +113,13 @@ export const COMMAND_OPTIONS = {
   migrate: {},
   doctor: {},
   prose: { lang: { type: 'string' } },
+  review: {
+    target: { type: 'string' },
+    kind: { type: 'string' },
+    status: { type: 'string' },
+    budget: { type: 'string' },
+    reason: { type: 'string' },
+  },
   help: {},
 };
 
@@ -335,6 +342,8 @@ function build(
       title: values.title,
       type: values.type,
       state: values.state,
+      status: values.status,
+      target: values.target,
       query: values.query,
       by: values.by,
       with: values.with,

@@ -223,6 +223,12 @@ export const COMMAND_ROWS = [
       'words it renames, and which citation style takes over. `--apply` writes ' +
       '`manuscript/manuscript.<venue>.yaml`; it never rewrites prose.',
   ],
+  [
+    'review <kind>|submit|list|show|accept|dismiss|resolve',
+    'Assemble a bounded review context for one kind of review and one target, then record what ' +
+      'the reviewer found as REVIEW objects the researcher accepts, dismisses or resolves. ' +
+      'Every finding names the ids it rests on; you never accept your own findings.',
+  ],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
   ['doctor', 'Report adapter availability, cache state, schema versions, and skill permissions.'],

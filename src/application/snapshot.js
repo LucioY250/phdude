@@ -24,6 +24,7 @@ const TYPES = [
   ['candidate', 'candidates'],
   ['search', 'searches'],
   ['decision', 'decisions'],
+  ['review', 'reviews'],
 ];
 
 // What `domain/repro.js` cannot work out on its own: what each dataset's file hashes to right

@@ -39,8 +39,9 @@ test('makeSeqId and parseId', () => {
   assert.deepEqual(parseId('ANALYSIS-0123456789'), { type: 'analysis', suffix: '0123456789' });
   assert.deepEqual(parseId('TABLE-0123456789'), { type: 'table', suffix: '0123456789' });
   assert.deepEqual(parseId('FIG-0123456789'), { type: 'figure', suffix: '0123456789' });
+  assert.deepEqual(parseId('REVIEW-0123456789'), { type: 'review', suffix: '0123456789' });
   assert.equal(parseId('nope'), null);
-  assert.equal(Object.keys(ID_PREFIXES).length, 16);
+  assert.equal(Object.keys(ID_PREFIXES).length, 17);
 });
 
 test('makeHashId takes the first ten characters of a content hash', () => {

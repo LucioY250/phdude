@@ -27,6 +27,23 @@ relax, only how proactively you flag problems does.
   fail them instead of warning and continuing.
 - **off** — do not proactively review; act only on explicit instructions.
 
+## What the mode changes mechanically
+
+Two things, and only two, read the mode as data rather than as posture:
+
+- `phdude manuscript submit` runs the prose gate in the mode: `ruthless` turns every prose
+  warning into a blocking finding, `lite` reports them as `info`, and `off` computes the scores
+  but reports no finding at all.
+- Review findings are weighted in the mode. A `REVIEW-` object stores the severity the reviewer
+  wrote and nothing ever rewrites it; `ruthless` promotes `minor` to `major` and `major` to
+  `block` at the point a verdict is computed — `phdude next`'s `reviews-open` recommendation, and
+  `phdude ready`. Changing the mode therefore changes the verdict without touching a record, and
+  changing it back restores the old one.
+
+Recording the mode on the review is deliberate: a finding written under `ruthless` and one
+written under `lite` do not mean the same thing, and a mode changed later must not rewrite that
+history.
+
 ## Reading the current mode
 
 The mode lives in `phdude.yaml` (`mode:` field) and is also reported by `phdude status --json`

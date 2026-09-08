@@ -3,12 +3,16 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { FsStore } from '../../src/adapters/store/fs-store.js';
 import { addEntity } from '../../src/application/add.js';
 import { propose, approve as approveDecision } from '../../src/application/decide.js';
 import * as manuscript from '../../src/application/manuscript.js';
 import { parseSectionFile, sectionHash } from '../../src/domain/manuscript.js';
 import { PhdudeError } from '../../src/domain/errors.js';
+import { CURRENT_WORKSPACE_VERSION } from '../../src/domain/versioning.js';
+
+const SLOPPY = fileURLToPath(new URL('../fixtures/prose/en/slop.md', import.meta.url));
 
 const actor = { researcher: 'test', agent: 'node' };
 
@@ -190,6 +194,49 @@ test('submit refuses an unknown section and a missing draft file', async () => {
     /missing\.md/,
   );
   await rejectsWith(manuscript.submit(deps, { section: 'introduction' }), 'USAGE', /--file/);
+});
+
+// PRD §40: `ruthless` is the one mode that changes what `submit` accepts. The gate itself is
+// covered in tests/unit/domain/gates/pipeline.test.js; what this proves is that the workspace's
+// own mode reaches it, so the same draft is refused under ruthless and recorded under full.
+async function setMode(deps, mode) {
+  await deps.store.writeProject({
+    schema: 'phdude.project',
+    version: 1,
+    workspace_version: CURRENT_WORKSPACE_VERSION,
+    title: 'A thesis',
+    fields: [],
+    methods: [],
+    outputs: [],
+    mode,
+    agents: [],
+  });
+}
+
+test('ruthless mode turns the prose findings into a blocking submit; full records them', async () => {
+  const deps = await initialized();
+  const body = await readFile(SLOPPY, 'utf8');
+  const file = await draft(deps, 'draft.md', body);
+
+  await setMode(deps, 'ruthless');
+  await assert.rejects(manuscript.submit(deps, { section: 'introduction', file }), (err) => {
+    assert.equal(err.code, 'VALIDATION');
+    assert.match(err.message, /gate-prose/);
+    return true;
+  });
+  assert.equal(await deps.store.exists(join('manuscript', 'introduction.md')), false);
+
+  await setMode(deps, 'full');
+  const result = await manuscript.submit(deps, { section: 'introduction', file });
+  assert.equal(result.section.status, 'draft');
+  assert.ok(
+    result.findings.some((finding) => finding.gate === 'gate-prose' && finding.severity === 'warn'),
+    'the same findings are warnings under full',
+  );
+
+  const report = await deps.store.readYaml(join('manuscript', 'reports', 'introduction.yaml'));
+  assert.equal(report.blocks, 0);
+  assert.ok(report.gates.every((gate) => !gate.blocked));
 });
 
 test('submit --revision moves a draft to revised', async () => {

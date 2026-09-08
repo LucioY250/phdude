@@ -24,6 +24,7 @@ const DIRS = [
   'research/methods',
   'research/searches',
   'decisions',
+  'reviews',
   'data',
   'analysis',
   'analysis/out',

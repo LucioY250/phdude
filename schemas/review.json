@@ -1,0 +1,31 @@
+{
+  "$id": "phdude://review",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "allOf": [
+    { "$ref": "phdude://common#/$defs/base" },
+    {
+      "properties": {
+        "schema": { "const": "phdude.review" },
+        "kind": { "enum": ["citation", "methodology", "reviewer2", "reproducibility", "custom"] },
+        "target": {
+          "anyOf": [
+            { "$ref": "phdude://common#/$defs/id" },
+            { "type": "string", "pattern": "^manuscript:[a-z0-9]+(-[a-z0-9]+)*$" },
+            { "const": "project" }
+          ]
+        },
+        "severity": { "enum": ["block", "major", "minor", "note"] },
+        "message": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "items": { "$ref": "phdude://common#/$defs/id" } },
+        "suggested_command": { "type": "string" },
+        "status": { "enum": ["open", "accepted", "dismissed", "resolved"] },
+        "by": { "$ref": "phdude://common#/$defs/actor" },
+        "mode": { "enum": ["lite", "full", "ruthless", "off"] },
+        "reason": { "type": "string" },
+        "resolved": { "type": "string", "format": "date-time" }
+      },
+      "required": ["kind", "target", "severity", "message", "evidence", "status", "by", "mode"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

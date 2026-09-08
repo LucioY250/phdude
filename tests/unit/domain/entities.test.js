@@ -15,6 +15,7 @@ import {
   newAnalysis,
   newTable,
   newFigure,
+  newReview,
 } from '../../../src/domain/entities.js';
 import { makeId } from '../../../src/domain/ids.js';
 import { assertValid } from '../../../src/schemas/index.js';
@@ -670,6 +671,56 @@ test('newFigure: a figure without alt text never becomes a record', () => {
     (err) => {
       assert.ok(err instanceof PhdudeError);
       assert.match(err.message, /alt text/);
+      return true;
+    },
+  );
+});
+
+const REVIEW = {
+  kind: 'reviewer2',
+  target: 'CLAIM-0123456789',
+  severity: 'major',
+  message: 'The claim generalizes past the sampled firms.',
+  evidence: ['EVID-0123456789'],
+  by: { researcher: 'test', agent: 'claude-code' },
+  mode: 'full',
+  actor,
+  created,
+};
+
+test('newReview: schema-valid, opens open, and carries the mode it was written under', () => {
+  const review = newReview(REVIEW);
+  assert.doesNotThrow(() => assertValid('review', review));
+  assert.equal(review.status, 'open');
+  assert.equal(review.mode, 'full');
+  assert.deepEqual(review.by, { researcher: 'test', agent: 'claude-code' });
+  assert.equal(review.suggested_command, undefined, 'no command is invented');
+  assert.equal(
+    review.id,
+    makeId('review', `${REVIEW.kind}\n${REVIEW.target}\n${REVIEW.message}`),
+    'the identity is the kind, the target and the message',
+  );
+});
+
+test('newReview: the same finding twice is one record; a different kind or target is not', () => {
+  const first = newReview(REVIEW);
+  assert.equal(newReview({ ...REVIEW, message: `  ${REVIEW.message}  ` }).id, first.id);
+  assert.notEqual(newReview({ ...REVIEW, kind: 'methodology' }).id, first.id);
+  assert.notEqual(newReview({ ...REVIEW, target: 'project' }).id, first.id);
+  assert.notEqual(newReview({ ...REVIEW, message: 'Something else entirely.' }).id, first.id);
+  assert.equal(
+    newReview({ ...REVIEW, severity: 'note', evidence: [] }).id,
+    first.id,
+    'the severity and the ids behind it are the reviewer revising one finding, not a second',
+  );
+});
+
+test('newReview: rejects an empty message', () => {
+  assert.throws(
+    () => newReview({ ...REVIEW, message: '   ' }),
+    (err) => {
+      assert.ok(err instanceof PhdudeError);
+      assert.match(err.message, /message must not be empty/);
       return true;
     },
   );

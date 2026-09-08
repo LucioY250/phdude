@@ -1552,6 +1552,87 @@ venue it renders against is the one that build was given or the manuscript targe
 for IEEE puts the canonical sections in IEEE's order, under IEEE's headings, in IEEE's citation
 style. `manuscript.<venue>.yaml` is the record of the mapping and the work list it implies.
 
+### `phdude review <kind> | submit | list | show <id> | accept|dismiss|resolve <id>`
+
+```
+phdude review methodology
+phdude review reviewer2 --target manuscript:discussion
+phdude review reproducibility --target project --budget 8000
+phdude review submit --file findings.json --kind methodology
+phdude review list --status open --kind reviewer2
+phdude review show REVIEW-4a1c9e7b02
+phdude review accept REVIEW-4a1c9e7b02
+phdude review dismiss REVIEW-4a1c9e7b02 --reason "the sample is defended in the methods"
+phdude review resolve REVIEW-4a1c9e7b02
+```
+
+A review is judgment, and judgment is the reviewer's; what PhDude owns is the context the review
+is done from and the record of what it said. So the command is in two halves.
+
+**Assembling the context.** `phdude review <kind>` builds a bounded view of what the workspace
+records about the target and writes it to `.phdude/cache/review/<kind>/context.md`, then prints
+the findings contract. It writes cache, records no event, and changes nothing. The kinds are
+`methodology`, `reviewer2`, `reproducibility`, `citation` and `custom`; each orders the context
+differently — a methodology review reads the methods before the claims, a reproducibility review
+reads what reproduces before either.
+
+`--target` takes an object id, `manuscript:<section>`, or `project` (the default). `--budget`
+takes a number of characters; the default is 12000, the same budget `phdude write` uses. The
+instruction and the checklist are always included — they are the contract, not context — and
+whatever does not fit after them is reported as left out rather than shortened.
+
+**Recording what came back.** `phdude review submit --file findings.json [--kind <kind>]` reads a
+JSON file shaped like this:
+
+```json
+{
+  "findings": [
+    {
+      "target": "CLAIM-bb244df965",
+      "severity": "major",
+      "message": "The claim generalizes past the sampled region.",
+      "evidence": ["EVID-02756876a5"],
+      "suggested_command": "phdude edit CLAIM-bb244df965 --json '{\"statement\":\"…\"}'"
+    }
+  ]
+}
+```
+
+Every `target` must be an id the workspace records, a `manuscript:<section>` that exists, or
+`project`; every `evidence` id must exist; `severity` is `block`, `major`, `minor` or `note`; an
+unknown field is refused rather than dropped. Every problem in the file is reported at once, one
+line each, and nothing is written when any of them fails — a reviewer handed one error at a time
+would re-run the whole review each round.
+
+Each finding becomes a `REVIEW-` object under `reviews/`, whose id is derived from its kind, its
+target and its message. Submitting the same finding twice therefore lands on the record that
+already exists and leaves it exactly as it is, verdict included: re-running a review never
+reopens something the researcher has already dismissed. One `review` event records the run,
+listing the ids it created; a submit that created nothing records none.
+
+The workspace's review mode is recorded on each finding as `mode`. A finding written under
+`ruthless` and one written under `lite` do not mean the same thing, and a mode changed later must
+not rewrite that history.
+
+**Deciding.** `list` filters by `--status` and `--kind`; `show <id>` prints the record.
+`accept`, `dismiss` and `resolve` are the verdicts, and they are the researcher's:
+
+| From | To | Meaning |
+|---|---|---|
+| `open` | `accepted` | The finding stands and something will be done about it. |
+| `open` | `dismissed` | The finding does not stand. `--reason` records why. |
+| `accepted` | `resolved` | It was dealt with. |
+
+Anything else exits 2 with what the review can become instead: a dismissed or resolved finding is
+closed, and a finding nobody accepted cannot be resolved. Re-running a transition the review is
+already in changes nothing and records no event.
+
+`phdude next` picks open findings up as its `reviews-open` recommendation, ranked `high` when any
+open finding blocks or would need changes. In `ruthless` mode a `minor` finding counts as
+`major` and a `major` one as blocking — the promotion happens where the verdict is computed, so
+raising the mode raises the recommendation without rewriting a single stored severity, and
+lowering it again restores the old reading.
+
 ### `phdude mode lite|full|ruthless|off`
 
 Sets the review mode in `phdude.yaml`. Setting the mode it already has changes nothing and
@@ -1561,16 +1642,16 @@ records no event.
 
 Upgrades a workspace written by an older PhDude to the current workspace version.
 `phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
-current version is 4. Migration steps ship with the package, one module per step, and run in
+current version is 5. Migration steps ship with the package, one module per step, and run in
 order through the store; each applied step appends one `migrate` event.
 
-Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 4)`
+Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 5)`
 as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
 `packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
 
 A workspace written by a *newer* PhDude is the same problem from the other end, and this build
 cannot migrate its way out of it. Reads warn with
-`workspace version 5 is newer than this PhDude (4)`; the same writes exit 1 with that message
+`workspace version 6 is newer than this PhDude (5)`; the same writes exit 1 with that message
 and the hint `upgrade phdude`.
 
 `--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
@@ -1582,7 +1663,7 @@ an up-to-date workspace prints `Workspace is up to date (4)` and records no even
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
-that version is `(current)`, `(needs migration → 4)` or `(newer than this phdude)`, whether
+that version is `(current)`, `(needs migration → 5)` or `(newer than this phdude)`, whether
 network access is enabled and the configured search providers, whether script execution is
 enabled and under what limits, which document formats this machine can render, the cache
 entry count, the discoverable packs and the schema

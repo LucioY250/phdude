@@ -156,6 +156,41 @@ test('parseCli: per-command flags reach the flags object', () => {
   assert.equal(shown.flags.id, 'ART-0123456789');
 });
 
+test('parseCli: review carries its kind, target, status, budget and reason', () => {
+  const context = parseCli([
+    'review',
+    'methodology',
+    '--target',
+    'manuscript:results',
+    '--budget',
+    '8000',
+  ]);
+  assert.equal(context.command, 'review');
+  assert.equal(context.sub, 'methodology');
+  assert.equal(context.flags.target, 'manuscript:results');
+  assert.equal(context.flags.budget, '8000');
+
+  const submitted = parseCli([
+    'review',
+    'submit',
+    '--file',
+    'findings.json',
+    '--kind',
+    'reviewer2',
+  ]);
+  assert.equal(submitted.sub, 'submit');
+  assert.equal(submitted.flags.file, 'findings.json');
+  assert.equal(submitted.flags.kind, 'reviewer2');
+
+  const listed = parseCli(['review', 'list', '--status', 'open', '--kind', 'citation']);
+  assert.equal(listed.flags.status, 'open');
+  assert.equal(listed.flags.kind, 'citation');
+
+  const dismissed = parseCli(['review', 'dismiss', 'REVIEW-0123456789', '--reason', 'answered']);
+  assert.deepEqual(dismissed.positionals, ['review', 'dismiss', 'REVIEW-0123456789']);
+  assert.equal(dismissed.flags.reason, 'answered');
+});
+
 test('parseCli: decide supersede takes --by and --with', () => {
   const cli = parseCli([
     'decide',
@@ -355,6 +390,7 @@ for (const flag of DETECTOR_FLAGS) {
     for (const argv of [
       ['prose', '--file', 'draft.md', flag],
       ['status', flag],
+      ['review', 'reviewer2', flag],
       ['frobnicate', flag],
     ]) {
       assert.throws(

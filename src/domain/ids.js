@@ -17,6 +17,7 @@ export const ID_PREFIXES = {
   table: 'TABLE',
   figure: 'FIG',
   search: 'SEARCH',
+  review: 'REVIEW',
 };
 const BY_PREFIX = Object.fromEntries(Object.entries(ID_PREFIXES).map(([t, p]) => [p, t]));
 export function makeId(type, input) {

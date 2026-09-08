@@ -269,10 +269,10 @@ test('the venue profile the writing gates load is the one profile check reports 
   assert.equal(ctx.venueProfile.abstract.max_words, 250);
 });
 
-test('init writes a workspace at version 4 with an empty venue list and template registry', async () => {
+test('init writes a workspace at version 5 with an empty venue list and template registry', async () => {
   const deps = await workspace();
   const project = await deps.store.readProject();
-  assert.equal(project.workspace_version, 4);
+  assert.equal(project.workspace_version, 5);
   assert.deepEqual(project.venues, []);
   assert.deepEqual(await deps.store.readYaml(join('.phdude', 'templates.yaml')), {
     schema: 'phdude.templates',

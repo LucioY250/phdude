@@ -1,0 +1,17 @@
+{
+  "schema": "phdude.review",
+  "version": 1,
+  "id": "REVIEW-4a1c9e7b02",
+  "created": "2026-09-07T10:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com", "agent": "claude-code" },
+  "tags": ["reviewer2"],
+  "kind": "reviewer2",
+  "target": "CLAIM-bb244df965",
+  "severity": "major",
+  "message": "The claim generalizes to all SMEs from a convenience sample of one region; either narrow the wording or say what licenses the generalization.",
+  "evidence": ["EVID-02756876a5", "METH-9c4e2a7b15"],
+  "suggested_command": "phdude edit CLAIM-bb244df965 --json '{\"statement\":\"…\"}'",
+  "status": "open",
+  "by": { "researcher": "lucio.yen@yavendio.com", "agent": "claude-code" },
+  "mode": "full"
+}

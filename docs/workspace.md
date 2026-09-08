@@ -41,6 +41,7 @@ my-research/
 │   ├── methods/    METH-*.yaml
 │   └── searches/   SEARCH-*.yaml # what was asked, of whom, and when
 ├── decisions/      DEC-*.yaml
+├── reviews/        REVIEW-*.yaml  # what a reviewer found, and what was decided about it
 ├── tables/         TABLE-*.yaml  # table declarations
 │   └── out/                      # the rendered .md/.tex/.csv, generated
 ├── figures/        FIG-*.yaml    # figure declarations, alt text included
@@ -75,7 +76,7 @@ else in the tree is meant to be read in a diff.
 ```yaml
 schema: phdude.project
 version: 1
-workspace_version: 4
+workspace_version: 5
 title: Adaptive scheduling in edge clusters
 language: en
 fields: [computer-science]
@@ -96,11 +97,11 @@ detect` suggested; it is a recommendation until you run `phdude packs apply`. A 
 
 `version: 1` is the schema of this file. `workspace_version` is the shape of the whole
 directory, and it is what `phdude migrate` moves forward. A workspace without the field is
-version 1 (everything v0.1 wrote); the current version is 4. Versioning the workspace rather
+version 1 (everything v0.1 wrote); the current version is 5. Versioning the workspace rather
 than each object keeps an additive field — `provenance`, `contradicts` — from turning into a
 breaking change for every reader; see [ADR 6](adr/0006-workspace-versioning-and-migrations.md).
 
-Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 4)`.
+Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 5)`.
 Writes stop until you run `phdude migrate`, which is deliberately a command you run rather than
 something that happens to your files while you were asking for something else.
 
@@ -141,6 +142,7 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Decision | `DEC-<hash10>` | `title`, `rationale`, `proposed_by`, `approved_by[]`, `status`, `change`, `affects[]` |
 | Candidate | `CAND-<hash10>` | `provider`, `providers[]`, `external_id`, `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `abstract`, `type`, `open_access`, `cited_by`, `query`, `question`, `search`, `score`, `score_parts`, `needs_approval`, `state`, `reason?`, `accepted_as?` |
 | Search | `SEARCH-<hash10>` | `query`, `question`, `providers[]`, `filters`, `runs[]`, `last_run` |
+| Review | `REVIEW-<hash10>` | `kind`, `target`, `severity`, `message`, `evidence[]`, `suggested_command?`, `status`, `by`, `mode`, `reason?`, `resolved?` |
 
 Ids are derived from content, so the same claim added twice is one file. See
 [ADR 3](adr/0003-content-derived-ids.md). A candidate's identity is the **work**, not the
@@ -205,6 +207,30 @@ ext:
 from a provider, not from a document in `sources/`. The candidate moves to `accepted` and
 records `accepted_as`. If the workspace already records that Source — the same normalized title
 and year — the candidate is linked to it and the existing record is left exactly as it is.
+
+## Reviews
+
+`phdude review <kind>` assembles the context a review is done from; `phdude review submit` records
+what the reviewer said as `REVIEW-` objects under `reviews/`. A review is not knowledge: it has no
+`state` from the knowledge lifecycle, only its own `status`, and nothing downstream ever rests on
+it the way a claim rests on evidence.
+
+A review's identity is what was said about what — its `kind`, its `target` and its `message` —
+so the same finding submitted twice lands on the record that already exists. Submitting never
+rewrites one, verdict included: re-running a review must not reopen a finding the researcher
+already dismissed.
+
+`target` is an object id, `manuscript:<section>`, or `project`. `evidence[]` lists the ids the
+finding rests on, and `review submit` refuses a file naming an id or a section the workspace does
+not have. `by` is the actor the review is recorded against and `mode` the workspace review mode
+at the time, because a finding written under `ruthless` and one written under `lite` do not mean
+the same thing.
+
+`status` moves one way: `open` becomes `accepted` or `dismissed`, and only an `accepted` finding
+becomes `resolved`. Those verdicts are the researcher's, exactly like a Decision's approval.
+`severity` is `block`, `major`, `minor` or `note` and is never rewritten — `ruthless` mode
+promotes `minor` to `major` and `major` to `block` where a verdict is computed (`phdude next`,
+`phdude ready`), so changing the mode changes the reading and not one record.
 
 ## Author voice profiles
 

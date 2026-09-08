@@ -152,6 +152,7 @@ test('the phdude-core skill lists the reporting commands as read-only', () => {
     'figure list|show|check',
     'template list|check',
     'analyze list|show|runs',
+    'review list|show',
   ]) {
     assert.ok(
       section.includes(`\`${command}\``),
@@ -194,6 +195,10 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'build',
     'adapt --apply',
     'deslop',
+    'review submit',
+    'review accept',
+    'review dismiss',
+    'review resolve',
   ];
   const skill = read('skills', 'phdude-core', 'SKILL.md');
   const section = skill.slice(skill.indexOf('## The only way to write'));

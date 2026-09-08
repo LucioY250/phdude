@@ -4,6 +4,7 @@ import { openConflicts } from './conflicts.js';
 import { questionFreshness } from './freshness.js';
 import { findGaps } from './gaps.js';
 import { makeHashId } from './ids.js';
+import { seriousReviews } from './reviews.js';
 import { DEFAULT_FILTERS, ENABLE_EXECUTION, ENABLE_NETWORK } from './policy.js';
 
 const IMPACT_RANK = { high: 0, medium: 1, low: 2 };
@@ -24,6 +25,7 @@ const COLLECTION_KEYS = [
   'questions',
   'hypotheses',
   'decisions',
+  'reviews',
 ];
 
 function allObjects(snapshot) {
@@ -501,6 +503,52 @@ function ruleNeverRun(snapshot) {
   };
 }
 
+const SEVERITY_ORDER = { block: 0, major: 1, minor: 2, note: 3 };
+
+// A finding somebody recorded against the work, still unanswered. The stored severity is what
+// the reviewer wrote; `ruthless` is applied here, where the verdict is computed, so raising the
+// mode raises the recommendation without rewriting a single review (spec §4).
+function ruleReviewsOpen(snapshot) {
+  const open = (snapshot.reviews ?? []).filter((review) => review.status === 'open');
+  if (open.length === 0) return null;
+
+  const mode = snapshot.project?.mode;
+  const serious = seriousReviews(open, mode);
+  const worst = [...open].sort(
+    (a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity] || (a.id < b.id ? -1 : 1),
+  );
+
+  const counts = new Map();
+  for (const review of open) counts.set(review.severity, (counts.get(review.severity) ?? 0) + 1);
+  const summary = Object.keys(SEVERITY_ORDER)
+    .filter((severity) => counts.has(severity))
+    .map((severity) => `${severity}=${counts.get(severity)}`)
+    .join(', ');
+
+  const why = [`${open.length} review finding(s) are open: ${summary}`];
+  if (serious.length > 0) {
+    why.push(
+      `${serious.length} of them block or need changes before this can go out: ` +
+        serious
+          .map((review) => review.id)
+          .sort()
+          .join(', '),
+    );
+  }
+  if (mode === 'ruthless') {
+    why.push('review mode is ruthless: a minor finding counts as major, a major one as blocking');
+  }
+
+  return {
+    rule: 'reviews-open',
+    action: 'Answer the open review findings',
+    why,
+    impact: serious.length > 0 ? 'high' : 'medium',
+    command: `phdude review show ${worst[0].id}`,
+    dependents: open.length,
+  };
+}
+
 const GAPS_THRESHOLD = 3;
 
 function gapSummary(gaps) {
@@ -575,6 +623,7 @@ const RULES = [
   ruleDraftBlocked,
   ruleSectionsPlanned,
   ruleApprovalPending,
+  ruleReviewsOpen,
   ruleAnalysisStale,
   ruleFigureMissingAlt,
   ruleNeverRun,

@@ -152,7 +152,7 @@ test('write refuses an un-migrated workspace before it writes its cache', async 
 
   await assert.rejects(() => write(deps, { section: 'introduction' }), {
     code: 'USAGE',
-    message: 'workspace needs migration (1 \u2192 4)',
+    message: 'workspace needs migration (1 \u2192 5)',
     hint: 'run phdude migrate',
   });
   assert.equal(

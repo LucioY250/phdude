@@ -1,6 +1,6 @@
 schema: phdude.project
 version: 1
-workspace_version: 4
+workspace_version: 5
 title: Generic Thesis Example
 language: en
 fields: []
