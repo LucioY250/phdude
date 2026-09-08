@@ -162,7 +162,7 @@ talk its way around it, and neither can a tired researcher at 2 a.m.
 
 ### How "what next?" is decided
 
-<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, thirteen rules, ranking, top action with reasons" width="900"></p>
+<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, the rules, ranking, top action with reasons" width="900"></p>
 
 Every rule is deterministic and every recommendation carries its reasons, its impact, and the
 command that does it. There is no hidden score.

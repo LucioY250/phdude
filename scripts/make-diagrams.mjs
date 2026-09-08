@@ -752,7 +752,7 @@ const scenes = [
   },
   {
     name: 'next',
-    alt: 'How the next action is chosen: a snapshot of the workspace goes through thirteen deterministic rules, candidates are ranked by impact, dependents and rule order, and the top action comes with its reasons and the exact command.',
+    alt: 'How the next action is chosen: a snapshot of the workspace goes through its deterministic rules, candidates are ranked by impact, dependents and rule order, and the top action comes with its reasons and the exact command.',
     width: 900,
     height: 340,
     seed: 67,
@@ -775,7 +775,7 @@ const scenes = [
         y: 105,
         w: 150,
         h: 120,
-        text: 'thirteen\nrules',
+        text: 'the\nrules',
         fill: C.purple,
         size: 17,
       },
