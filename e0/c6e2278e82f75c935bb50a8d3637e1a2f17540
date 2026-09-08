@@ -1,0 +1,95 @@
+src/adapters/cli/commands/adapt.js
+  s_946fc7502759d8::t_0c4df6b60e521b 1-105
+commands/adapt.md
+  s_946fc7502759d8::t_86fed275c2f50a 1-34
+docs/extending.md
+  s_946fc7502759d8::t_16d2c79b8987a5 100
+  s_946fc7502759d8::t_944be7292da21d 167
+  s_946fc7502759d8::t_beae3bb9be2735 156-161
+  s_946fc7502759d8::t_7ed7dfb230e3f2 139-148
+schemas/profile.json
+  s_946fc7502759d8::t_ec4b0d117adf67 23-24
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_01daba41a92b4f 219-225
+skills/venue-adapt/SKILL.md
+  s_946fc7502759d8::t_58f1199db0368f 1-89
+  s_946fc7502759d8::t_4188311bb11616 90-95
+tests/integration/adapt.test.js
+  s_946fc7502759d8::t_af02165bd237c6 121,125-127
+  s_946fc7502759d8::t_712a0f930e0108 1-120,122-124,128-301
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_c8389b5f85c078 79-81
+src/application/adapt.js
+  s_946fc7502759d8::t_d2a9d4a1e6f842 1-117
+  s_946fc7502759d8::t_31082b200d9e9f 118-125
+skills/write/SKILL.md
+  s_946fc7502759d8::t_a1152d554f8b50 73-78
+  s_946fc7502759d8::t_fff0ff0ba97246 86-96
+tests/unit/domain/adapt.test.js
+  s_946fc7502759d8::t_68069ab9420199 1-362
+  s_946fc7502759d8::t_06f38cfa06cf85 363-368
+docs/cli.md
+  s_946fc7502759d8::t_bb6f68abebc537 1507-1546,1548-1549
+  s_946fc7502759d8::t_056ce865d39ce5 1547
+  s_946fc7502759d8::t_1f31eda3d166c4 1550-1554
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_f5851a9b06eec9 72-74,79-80
+  s_946fc7502759d8::t_261b951a5b7738 63
+src/domain/adapt.js
+  s_946fc7502759d8::t_10d4f349dd841b 1-237
+  s_946fc7502759d8::t_645431aa66465e 238-243
+CHANGELOG.md
+  s_946fc7502759d8::t_fc97e5b2283891 9-129,607-608
+README.md
+  s_946fc7502759d8::t_e9e7dc3b8d7e8e 12,40,45-105,107,113,121,211,692-859,873,876,916,922-923,969,981-989,1018-1019
+docs/workspace.md
+  s_946fc7502759d8::t_b8d4d77d8b66ff 50,394-411
+examples/generic-thesis/.phdude/events.jsonl
+  s_946fc7502759d8::t_597026591f0346 51-52
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_1d8b3578fc355d 63,72-74,79-80
+examples/generic-thesis/.phdude/skills/venue-adapt/SKILL.md
+  s_946fc7502759d8::t_c3669bbc13bffd 1-95
+examples/generic-thesis/.phdude/skills/write/SKILL.md
+  s_946fc7502759d8::t_888ea216f3c360 73-78,86-96
+examples/generic-thesis/manuscript/manuscript.yaml
+  s_946fc7502759d8::t_210c967cb40253 58
+examples/generic-thesis/phdude.yaml
+  s_946fc7502759d8::t_e1d5e328ac0d9e 8-9
+package.json
+  s_946fc7502759d8::t_772a5303cad9a6 3
+packs/venues/acm/profile.yaml
+  s_946fc7502759d8::t_481d871ee12a5e 15,21,27,33,44
+packs/venues/generic-thesis/profile.yaml
+  s_946fc7502759d8::t_1fc7548b10e75d 16,22,28,34,45
+packs/venues/ieee/profile.yaml
+  s_946fc7502759d8::t_6375f56854c478 15,21,27,33,44
+scripts/make-example.mjs
+  s_946fc7502759d8::t_9c37d7edb7afe1 11-12,26-27,514-521,767-772
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_9971e92f412396 104,343
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_cea618f6fe585f 30,71
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_501892e10fba4b 2701-2767
+tests/golden/expected/status.txt
+  s_946fc7502759d8::t_43e46e8a429978 49-50
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_16861b5d37c730 195
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e0c6e2278e82f75c935bb50a8d3637e1a2f17540",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
