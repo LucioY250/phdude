@@ -201,7 +201,7 @@ This writes:
 |---|---|
 | `CLAUDE.md` | Entry point. Imports `AGENTS.md` and adds Claude-specific notes. |
 | `AGENTS.md` | Operating rules, the command reference, and an *index* of skills. Skills are loaded on demand, not up front, to keep your context small. |
-| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-data`, `/phdude-analyze`, `/phdude-table`, `/phdude-figure`, `/phdude-repro`, `/phdude-authors`, `/phdude-write`, `/phdude-deslop`, `/phdude-manuscript`, `/phdude-prose`, `/phdude-packs`, `/phdude-profile`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
+| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-data`, `/phdude-analyze`, `/phdude-table`, `/phdude-figure`, `/phdude-repro`, `/phdude-authors`, `/phdude-write`, `/phdude-deslop`, `/phdude-manuscript`, `/phdude-prose`, `/phdude-packs`, `/phdude-profile`, `/phdude-build`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
 | `.phdude/skills/*/SKILL.md` | The skills themselves, in the open `SKILL.md` convention. |
 
 Open Claude Code in the directory and start with:
@@ -786,6 +786,7 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude authors list\|show\|add\|learn\|consensus` | Per-researcher voice profiles, learned from approved writing samples; `consensus` merges them for collaborative projects. |
 | `phdude packs list\|detect\|apply <name>` | Field, method and venue packs. |
 | `phdude profile list\|show\|check\|use <venue>` | Venue profiles: what IEEE, ACM or a thesis expects of the manuscript, and which of those rules it does not meet yet. |
+| `phdude build [--format md\|docx\|pdf\|latex\|html] [--profile <venue>]` | Build the manuscript from its approved sections, in the venue's order, with the bibliography regenerated from the citation registry. A build whose inputs have not moved renders nothing. |
 | `phdude mode lite\|full\|ruthless\|off` | How hard the agent pushes back. |
 | `phdude migrate [--dry-run]` | Upgrade a workspace written by an older PhDude. |
 | `phdude doctor` | Adapters, cache, schema versions, skill permissions, git state, and the manuscript: sections by status, reports on file, sections edited outside PhDude. |

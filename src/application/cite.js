@@ -164,15 +164,16 @@ export async function check({ store }) {
 
 const EXPORT_FORMATS = ['bibtex', 'csl-json'];
 
+const DEFAULT_PATHS = { bibtex: 'references.bib', 'csl-json': 'references.json' };
+
 /**
- * Writes the citation registry to the workspace root. The registry is derived, never
- * canonical (spec S3.3): the export writes no event. A write, so it still refuses on an
- * out-of-date workspace even though it produces no knowledge object.
+ * The registry as text, without writing it. `phdude build` hashes the bibliography before it
+ * decides whether to build at all, and a plan that wrote the file first would write on a build
+ * that turns out to have nothing to do.
  * @param {{store: object, format?: 'bibtex'|'csl-json'}} deps
- * @returns {Promise<{path: string, count: number}>}
+ * @returns {Promise<{text: string, count: number}>}
  */
-export async function exportRegistry({ store, format = 'bibtex' }) {
-  assertUpToDate(await store.readProject());
+export async function registryText({ store, format = 'bibtex' }) {
   if (!EXPORT_FORMATS.includes(format)) {
     throw new PhdudeError(
       'USAGE',
@@ -180,14 +181,27 @@ export async function exportRegistry({ store, format = 'bibtex' }) {
       `valid formats: ${EXPORT_FORMATS.join(', ')}`,
     );
   }
-
   const { sources, keys } = await loadRegistry(store);
-  const relPath = format === 'csl-json' ? 'references.json' : 'references.bib';
   const text =
     format === 'csl-json'
       ? JSON.stringify(toCslJson(sources, keys), null, 2) + '\n'
       : toBibtex(sources, keys);
+  return { text, count: sources.length };
+}
+
+/**
+ * Writes the citation registry to the workspace root, or to `path` when a caller wants it
+ * somewhere else - `phdude build` regenerates it beside the document it is building. The
+ * registry is derived, never canonical (spec S3.3): the export writes no event. A write, so it
+ * still refuses on an out-of-date workspace even though it produces no knowledge object.
+ * @param {{store: object, format?: 'bibtex'|'csl-json', path?: string}} deps
+ * @returns {Promise<{path: string, count: number, text: string}>}
+ */
+export async function exportRegistry({ store, format = 'bibtex', path }) {
+  assertUpToDate(await store.readProject());
+  const { text, count } = await registryText({ store, format });
+  const relPath = path ?? DEFAULT_PATHS[format];
 
   await store.writeTextAtomic(relPath, text);
-  return { path: join(store.root, relPath), count: sources.length };
+  return { path: join(store.root, relPath), count, text };
 }

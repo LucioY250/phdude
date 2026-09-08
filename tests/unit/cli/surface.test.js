@@ -183,6 +183,7 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'manuscript reopen',
     'analyze add',
     'analyze run',
+    'build',
     'deslop',
   ];
   const skill = read('skills', 'phdude-core', 'SKILL.md');

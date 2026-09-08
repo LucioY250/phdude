@@ -15,6 +15,15 @@ figure generator are pure functions of their input, so they run on fixtures rath
 example, and pin the exact bytes of a Markdown, a LaTeX and a CSV table and of the generated SVG.
 They take `UPDATE_GOLDEN=1` the same way.
 
+`build.test.js` runs `phdude build` against a throwaway copy of the example, the way
+`cite.test.js` does, because `outputs/` is derived and is not committed with it. Two files are
+pinned: `build-manuscript.md`, the whole `--format md` deliverable, and `build-ieee-source.md`,
+the Markdown a `--format latex --profile ieee` build hands to Pandoc. The `.tex` Pandoc then
+writes is asserted structurally rather than byte for byte — Pandoc's LaTeX output moves between
+Pandoc versions, and CI's Pandoc is not the one on a developer's machine, so a byte-exact `.tex`
+golden would fail on a version bump that changed nothing about PhDude. The IEEE test skips
+honestly where Pandoc is absent.
+
 `examples/generic-thesis` is itself generated (not hand-authored) by `scripts/make-example.mjs`;
 see that file and `tests/integration/make-example.test.js` for how it stays reproducible.
 

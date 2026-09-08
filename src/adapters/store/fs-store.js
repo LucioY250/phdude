@@ -104,6 +104,18 @@ export class FsStore {
     }
   }
 
+  // An external renderer writes its own output file, so the directory has to be there before it
+  // runs: every other write in the store creates it on the way past.
+  async ensureDir(relPath) {
+    await mkdir(join(this.root, relPath), { recursive: true });
+  }
+
+  // A rendered document is bytes, not text: an `.xlsx` written through writeTextAtomic would be
+  // re-encoded and stop being a package a reader can open.
+  async writeBytesAtomic(relPath, bytes) {
+    await writeFileAtomic(join(this.root, relPath), bytes);
+  }
+
   async readProject() {
     const cfg = await this.readYaml('phdude.yaml');
     if (cfg !== null) assertValid('project', cfg);

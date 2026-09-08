@@ -94,6 +94,12 @@ export const COMMAND_OPTIONS = {
   data: {},
   analyze: { 'allow-exec': { type: 'boolean' } },
   table: { format: { type: 'string' } },
+  build: {
+    format: { type: 'string' },
+    profile: { type: 'string' },
+    sections: { type: 'string' },
+    'include-drafts': { type: 'boolean' },
+  },
   figure: { 'allow-exec': { type: 'boolean' } },
   repro: {},
   authors: {
@@ -334,6 +340,8 @@ function build(
       contradicts: values.contradicts,
       format: values.format,
       profile: values.profile,
+      sections: parseList(values.sections),
+      includeDrafts: values['include-drafts'] === true,
       lang: values.lang,
       question: values.question,
       language: values.language,

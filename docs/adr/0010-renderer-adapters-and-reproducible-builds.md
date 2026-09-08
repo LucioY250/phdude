@@ -73,6 +73,30 @@ build cache stores it alongside the input hashes, and `phdude doctor` prints one
 the formats it covers and either its version or the command that would install it. A document
 rebuilt after a Pandoc upgrade is a document that may differ, and the cache has to know that.
 
+**A build is a comparison of two maps of strings.** `phdude build` reduces everything a document
+depends on — each section body, the regenerated bibliography, each figure and table the prose
+reaches for, the venue profile, the CSL, the template, and the renderer's name and version — to
+one entry in a flat map, and writes that map to `.phdude/cache/build/<slug>/<format>.json` beside
+the hash of the file it wrote. A second build hashes the same things and compares: nothing
+different, and the output file still holding the bytes the record claims, means `up to date` —
+no render, no event, nothing written. An edited section, a rebuilt figure, a new source, an
+edited template and a Pandoc upgrade are then all the same kind of finding, and `--json` names
+which one it was. `--force` skips the comparison, never the record.
+
+The output file is part of that check on purpose. A record is a claim about a file, and a
+document somebody deleted or overwrote has not been built however unchanged its inputs are.
+
+**The assembled Markdown is cache; `outputs/` is delivery.** The build writes the Markdown it
+hands the renderer to `.phdude/cache/build/<slug>/<format>.md`, and `outputs/<slug>/` holds only
+the document, the bibliography and the figures — a directory a co-author can be sent as it
+stands. It also settles a smaller thing: for `--format md` the renderer's input and its output
+would otherwise be the same path.
+
+**The build's date never comes from the clock.** Metadata is what makes two renders of unchanged
+prose differ, so the date is `manuscript.yaml`'s `date`, or the timestamp of the last approval
+the workspace recorded, and nothing else. That is also what `--metadata date=` fixes for Pandoc,
+which is as far as DOCX reproducibility can be pushed from outside Pandoc.
+
 ## Consequences
 
 External tools are invoked with `execFile` and an argument array, never a shell — the same rule as

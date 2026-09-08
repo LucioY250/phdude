@@ -198,6 +198,12 @@ export const COMMAND_ROWS = [
     'Venue profiles: what a venue expects of the manuscript, which of its rules the manuscript ' +
       'does not meet yet, and which venue it targets. `check` exits 2 on a blocking finding.',
   ],
+  [
+    'build',
+    'Build the manuscript into md, docx, pdf, latex or html from its approved sections, in the ' +
+      'venue profile order, with the bibliography regenerated from the citation registry. A ' +
+      'build whose inputs have not moved renders nothing and records nothing.',
+  ],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
   ['doctor', 'Report adapter availability, cache state, schema versions, and skill permissions.'],

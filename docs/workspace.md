@@ -53,11 +53,16 @@ my-research/
 ├── analysis/       ANALYSIS-*.yaml # declared analysis scripts and their runs
 │   └── out/                      # where a run's results.json and files land
 ├── data/                         # your data files; registered ones become DATASET records
-├── templates/ outputs/
+├── templates/                    # DOCX/PPTX/LaTeX templates a build renders through
+├── outputs/<slug>/               # what `phdude build` delivers, generated
+│   ├── manuscript.<ext>          # the document: .md, .docx, .pdf, .tex or .html
+│   ├── references.bib            # the citation registry, regenerated for this build
+│   └── figures/                  # the figures the prose shows, converted where the venue asks
 └── .gitignore
 ```
 
-`analysis/out/`, `tables/out/` and `figures/out/` are gitignored, and so is `.phdude/cache/`.
+`analysis/out/`, `tables/out/`, `figures/out/` and `outputs/` are gitignored, and so is
+`.phdude/cache/`.
 What lands in them is reproducible from the record next to it — the run already carries the hash
 of every file it wrote — so committing them would be committing the same thing twice. Everything
 else in the tree is meant to be read in a diff.
@@ -373,9 +378,9 @@ Neither writes prose; both leave that to `submit` and to `deslop --file`.
 
 ## Derived files
 
-Two things in the workspace are outputs rather than knowledge, and both can be deleted and
-rebuilt: `.phdude/cache/` (below) and `references.bib` / `references.json`, written at the
-workspace root by `phdude cite export`.
+Three things in the workspace are outputs rather than knowledge, and each can be deleted and
+rebuilt: `.phdude/cache/` (below), `references.bib` / `references.json`, written at the
+workspace root by `phdude cite export`, and `outputs/`, written by `phdude build`.
 
 The default `.gitignore` covers both, since committing a file that is one command away from
 being regenerated only creates merge conflicts. The export covers every source, cited or not. It
@@ -394,6 +399,13 @@ and `phdude ingest --force` rebuilds it.
 assembled, and `report.json`, the full gate report behind the last accepted `submit` or
 `deslop` — every finding, warnings included, where `manuscript/reports/<section>.yaml` keeps
 only the canonical summary. A blocked run writes neither: it leaves the workspace as it was.
+
+`.phdude/cache/build/<slug>/` holds one `<format>.json` and one `<format>.md` per format
+built: the record of every input hash behind the last build, and the Markdown that build handed
+the renderer. The record is what makes a second `phdude build` report `up to date` instead of
+rendering again; delete the directory and the next build renders from scratch. Nothing in
+`outputs/` is scratch — the assembled source lives here so that everything a build delivers can
+be sent to a co-author as it stands.
 
 Agents read the cache section by section rather than loading whole documents, which is how
 PhDude stays inside a context budget on projects with hundreds of sources (PRD §70).

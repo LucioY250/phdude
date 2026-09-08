@@ -2512,3 +2512,87 @@ test('e2e: packs apply a venue, profile list, show, use and a blocking check', a
   assert.equal(events.filter((event) => event.op === 'profile').length, 2);
   assert.equal(events.filter((event) => event.op === 'packs').length, 1);
 });
+
+test('e2e: build through the binary — drafts, approval, up to date, and a missing tool', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-build-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Build thesis', '--no-git']);
+  await run(ws, ['manuscript', 'init', '--title', 'Build Thesis']);
+
+  // Nothing approved yet: the command says which two ways forward there are.
+  const nothing = await phdude(ws, ['build', '--json', ...ACTOR]);
+  assert.equal(nothing.code, 2);
+  const refused = JSON.parse(nothing.stderr).error;
+  assert.equal(refused.code, 'VALIDATION');
+  assert.match(refused.hint, /--include-drafts/);
+
+  const draft = join(ws, 'introduction.md');
+  await writeFile(draft, 'Scheduling under load is the problem this thesis takes up.\n');
+  await run(ws, ['manuscript', 'submit', 'introduction', '--file', draft]);
+
+  const drafted = await runJson(ws, ['build', '--include-drafts']);
+  assert.equal(drafted.built, true);
+  assert.equal(drafted.output.path, 'outputs/build-thesis/manuscript.md');
+  const draftedText = await readFile(join(ws, drafted.output.path), 'utf8');
+  assert.match(draftedText, /^draft: true$/m);
+  assert.match(draftedText, /^# Introduction$/m);
+  assert.ok(await exists(join(ws, 'outputs', 'build-thesis', 'references.bib')));
+
+  const again = await run(ws, ['build', '--include-drafts']);
+  assert.match(again.stdout, /outputs\/build-thesis\/manuscript\.md is up to date/);
+
+  const decision = await runJson(ws, [
+    'decide',
+    'propose',
+    '--title',
+    'Approve the introduction',
+    '--rationale',
+    'Read end to end by the supervisor.',
+    '--affects',
+    'manuscript:introduction',
+  ]);
+  await run(ws, ['decide', 'approve', decision.id, '--by', 'A Supervisor']);
+  await run(ws, ['manuscript', 'approve', 'introduction', '--decision', decision.id]);
+
+  // The approved build is a different document: no draft marker, and a date taken from the
+  // approval rather than from the clock.
+  const approved = await runJson(ws, ['build']);
+  assert.equal(approved.built, true);
+  assert.ok(approved.changed.includes('include-drafts'));
+  const approvedText = await readFile(join(ws, approved.output.path), 'utf8');
+  assert.doesNotMatch(approvedText, /^draft: true$/m);
+  assert.match(approvedText, /^date: \d{4}-\d{2}-\d{2}$/m);
+
+  const text = await run(ws, ['build']);
+  assert.match(text.stdout, /is up to date/);
+
+  const forced = await runJson(ws, ['build', '--force']);
+  assert.equal(forced.built, true);
+
+  // The assembled Markdown is cache, and outputs/ holds only what the build delivers.
+  assert.ok(await exists(join(ws, '.phdude', 'cache', 'build', 'build-thesis', 'md.json')));
+  assert.ok(await exists(join(ws, '.phdude', 'cache', 'build', 'build-thesis', 'md.md')));
+
+  const unknown = await phdude(ws, ['build', '--format', 'epub', ...ACTOR]);
+  assert.equal(unknown.code, 2);
+
+  // A format whose tool is missing exits 4 and names it. PATH is emptied so this holds on a
+  // machine that does have Pandoc.
+  const noTool = await phdude(ws, ['build', '--format', 'docx', '--json', ...ACTOR], {
+    PATH: join(ws, 'no-such-bin'),
+    PHDUDE_PANDOC: join(ws, 'no-such-bin', 'pandoc'),
+  });
+  assert.equal(noTool.code, 4);
+  const missing = JSON.parse(noTool.stderr).error;
+  assert.equal(missing.code, 'TOOL_MISSING');
+  assert.match(missing.hint, /install pandoc/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'build');
+  assert.equal(events.length, 3, 'one event per render, and none for the up-to-date runs');
+  assert.match(events[0].summary, /manuscript built: outputs\/build-thesis\/manuscript\.md \(md,/);
+});

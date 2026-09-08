@@ -58,7 +58,8 @@ Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude l
 `phdude authors add`, `phdude authors learn`, `phdude authors consensus`,
 `phdude data add`, `phdude analyze add`, `phdude analyze run`, `phdude table add`,
 `phdude table build`, `phdude figure add`, `phdude figure build`, `phdude manuscript init`,
-`phdude manuscript submit`, `phdude manuscript approve`, `phdude manuscript reopen`, or
+`phdude manuscript submit`, `phdude manuscript approve`, `phdude manuscript reopen`,
+`phdude build`, or
 `phdude deslop <section> --file <revised.md>`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
 cache; `phdude bootstrap` runs that ingest, scores the packs and hands off to `[[bootstrap]]`, so
@@ -66,7 +67,9 @@ it writes exactly what `ingest` writes — expected setup steps, not knowledge e
 `phdude research` and `phdude research-fresh`
 write candidates and search records, which are not knowledge until accepted. `phdude cite
 export` writes `references.bib` or `references.json` at the workspace root, a derived file that
-records no event and is never a substitute for the `SRC-` id itself.) Every other command —
+records no event and is never a substitute for the `SRC-` id itself. `phdude build` writes only
+under `outputs/`, which is derived too, but it records a `build` event, so it is listed above.)
+Every other command —
 `phdude status`, `next`, `knowledge`, `cite list|check`, `matrix`, `gaps`, `freshness`,
 `packs list|detect`, `authors list|show`, `data list|show|profile`, `analyze list|show|runs`,
 `table list|show`, `figure list|show|check`, `repro check`,

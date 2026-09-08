@@ -1360,6 +1360,80 @@ needs a manuscript, and it refuses a venue that ships no profile rather than rec
 nothing can check. Setting the venue the manuscript already targets changes nothing and records
 no event.
 
+### `phdude build [--format md|docx|pdf|latex|html] [--profile <venue>] [--sections a,b] [--include-drafts] [--force]`
+
+```
+phdude build
+phdude build --format docx
+phdude build --format latex --profile ieee
+phdude build --sections introduction,conclusions --include-drafts
+phdude build --force --json
+```
+
+Turns the approved manuscript into the file somebody asked for. The sections go in the order the
+venue profile puts them, under the headings the venue calls them, with the bibliography
+regenerated from the citation registry and the figures the prose shows copied in beside the
+document.
+
+Everything a build produces lands in one directory, `outputs/<slug>/`, named after the
+manuscript title:
+
+| File | What it is |
+|---|---|
+| `manuscript.<ext>` | the document — `.md`, `.docx`, `.pdf`, `.tex` or `.html` |
+| `references.bib` | the citation registry, exactly as `phdude cite export` writes it |
+| `figures/` | the figures the prose shows, converted where the venue asks for another format |
+
+`outputs/` is derived, never canonical: it is gitignored, it is never read back as knowledge, and
+editing a file there is editing something the next build overwrites. The Markdown the renderer is
+given is kept under `.phdude/cache/build/<slug>/`, so nothing in `outputs/` is scratch.
+
+**Formats.** `md` is built in and always works. `docx`, `html` and `latex` go through Pandoc, and
+`pdf` through Pandoc plus a TeX engine; when the tool is missing the command exits 4 and names
+what to install. It never renders a different format under the name of the one that was asked
+for. `phdude doctor` lists what this machine has.
+
+**The venue.** `--profile <venue>` overrides `manuscript.yaml`'s `target_profile`, and a
+workspace with neither builds against `generic-thesis`. The profile decides the section order and
+titles, the CSL citation style, and the LaTeX template. A template the workspace has registered against this venue outranks the one
+the venue pack ships.
+
+**Front matter.** The renderer writes the metadata, so the document body starts at the first
+section heading. The title comes from the manuscript, the authors from the profiles under
+`authors/` (or from `.phdude/author-profile.yaml` when there are none), and the abstract section
+becomes the `abstract` metadata rather than a chapter of its own — which is where every venue
+template puts it. The date is `manuscript.yaml`'s `date`, or the last approval the workspace
+recorded, and never the clock: a build has to produce the same bytes tomorrow as today.
+
+**Which sections.** Approved ones. `--include-drafts` adds `draft` and `revised` sections and
+marks the document a draft in its own front matter, so a draft cannot travel as the finished
+thing. `--sections a,b` narrows the build; a section named there that is not approved is a
+validation error rather than a silent omission, and a manuscript with nothing approved exits 2
+pointing at `phdude manuscript approve`.
+
+**Figures and tables.** An image the prose shows from `figures/out/` is copied to
+`outputs/<slug>/figures/` and its link rewritten. An SVG is converted to PDF with `rsvg-convert`
+when the venue takes PDF and not SVG; without that tool the SVG is copied across and the build
+warns, naming the file. A link to a `tables/out/*.md` file **on a line of its own** is replaced
+by the table itself; the same link inside a sentence is left alone, because it is a reference to
+the table and not an include of it. An asset that is not on disk is a warning, and the prose is
+left exactly as it was written.
+
+**Incremental.** Every input is hashed into `.phdude/cache/build/<slug>/<format>.json`: each
+section body, the bibliography, each figure and table, the venue profile, the CSL, the template,
+and the renderer's name and version. A build whose inputs all match, and whose output file still
+holds the bytes the record claims, reports `up to date` — it renders nothing and appends no
+event. `--force` builds anyway. The `changed` list in `--json` names what moved.
+
+**Reproducible.** Identical inputs and an identical renderer version produce identical bytes for
+`md`, `latex` and `html`. DOCX and PDF are best-effort: they are containers with timestamps
+inside, and the build fixes what it can. See
+[ADR 10](adr/0010-renderer-adapters-and-reproducible-builds.md).
+
+One `build` event per render, carrying the output's hash. A build that was up to date records
+nothing. `build` does not run `phdude profile check`: the venue's word limits and required
+sections are that command's report, and a build refuses nothing on their account.
+
 ### `phdude mode lite|full|ruthless|off`
 
 Sets the review mode in `phdude.yaml`. Setting the mode it already has changes nothing and

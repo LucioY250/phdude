@@ -15,6 +15,7 @@ import {
 import { localRunner } from '../execution/local.js';
 import { DEFAULT_GENERATORS_DIR } from '../execution/generators.js';
 import { buildRenderers } from '../render/index.js';
+import { svgConverter } from '../render/svg.js';
 import { buildProviders } from '../search/index.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
@@ -28,6 +29,7 @@ import add from './commands/add.js';
 import analyze from './commands/analyze.js';
 import authors from './commands/authors.js';
 import bootstrap from './commands/bootstrap.js';
+import buildCommand from './commands/build.js';
 import cite from './commands/cite.js';
 import data from './commands/data.js';
 import decide from './commands/decide.js';
@@ -65,6 +67,7 @@ const COMMANDS = {
   analyze,
   authors,
   bootstrap,
+  build: buildCommand,
   cite,
   data,
   decide,
@@ -151,6 +154,7 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     parseTable,
     runner: localRunner,
     renderers: buildRenderers({ execFile, env, version }),
+    svgConvert: svgConverter({ execFile, env }),
     generatorsDir: DEFAULT_GENERATORS_DIR,
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     loadProfile: (name) =>
