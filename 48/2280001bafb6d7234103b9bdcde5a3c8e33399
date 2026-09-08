@@ -1,0 +1,63 @@
+docs/packs-authoring.md
+  s_946fc7502759d8::t_00a53abaa2d4e8 1-267
+examples/extensions/pack-example/README.md
+  s_946fc7502759d8::t_ac74c9e10d2a76 1-58
+docs/skills-authoring.md
+  s_946fc7502759d8::t_0ac6593eb5757a 4-5
+  s_946fc7502759d8::t_deb86c4353ca44 1-3,6-197,202-219
+  s_946fc7502759d8::t_7e5b3cb893378a 198-201
+examples/extensions/pack-example/packs/fields/example-field/skills/example-field/SKILL.md
+  s_946fc7502759d8::t_2e47fca7162b01 1-54
+examples/extensions/search-provider-example/fixtures/search.json
+  s_946fc7502759d8::t_13c20c47e63755 1-69
+examples/extensions/search-provider-example/README.md
+  s_946fc7502759d8::t_342986bb7ea713 1-44
+examples/extensions/document-parser-example/README.md
+  s_946fc7502759d8::t_9dc464a78058ca 1-36
+examples/extensions/renderer-example/README.md
+  s_946fc7502759d8::t_72e4728ee5700f 1-43
+examples/extensions/search-provider-example/index.js
+  s_946fc7502759d8::t_8c7b7c1a5fa708 1-195
+examples/extensions/document-parser-example/fixtures/notes.txt
+  s_946fc7502759d8::t_6ed89dea30cd1d 1-6
+examples/extensions/README.md
+  s_946fc7502759d8::t_9aa94c71dfb7fa 1-43
+examples/extensions/renderer-example/index.js
+  s_946fc7502759d8::t_3d0efa8951636e 1-119
+examples/extensions/pack-example/packs/fields/example-field/pack.yaml
+  s_946fc7502759d8::t_3760b4868c61f1 1-36
+tests/contracts/example-extensions.test.js
+  s_946fc7502759d8::t_8ff87f46ac4847 1-167
+examples/extensions/document-parser-example/index.js
+  s_946fc7502759d8::t_34c28574625e9b 1-52
+docs/extension-api.md
+  s_946fc7502759d8::t_a70167f3129d3f 1-585
+examples/extensions/document-parser-example/package.json
+  s_946fc7502759d8::t_81d88d621bd929 1-10
+examples/extensions/pack-example/package.json
+  s_946fc7502759d8::t_e95e8690819614 1-9
+examples/extensions/renderer-example/package.json
+  s_946fc7502759d8::t_b78fc9f4a09911 1-10
+examples/extensions/search-provider-example/fixtures/empty.json
+  s_946fc7502759d8::t_7fbb9f42f004a6 1-3
+examples/extensions/search-provider-example/fixtures/malformed.txt
+  s_946fc7502759d8::t_c8ab89270c7361 1
+examples/extensions/search-provider-example/package.json
+  s_946fc7502759d8::t_0ed6ea4abca836 1-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "482280001bafb6d7234103b9bdcde5a3c8e33399",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
