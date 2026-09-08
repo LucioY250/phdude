@@ -1,0 +1,59 @@
+name: Bug report
+description: A command did something other than what it says it does.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. A vulnerability goes through
+        [SECURITY.md](https://github.com/LucioY250/phdude/blob/main/SECURITY.md) instead — never
+        a public issue.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The command you ran and what it printed. Paste the output rather than describing it.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How to reproduce it
+      description: >-
+        The shortest sequence that shows it, ideally starting from a fresh `phdude init` rather
+        than your own workspace. If it only happens with particular content, attach the smallest
+        file that triggers it.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: phdude doctor
+      description: The output of `phdude doctor`, which names your version, your adapters and what is missing.
+      render: text
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and Node version
+      placeholder: Ubuntu 24.04, Node 22.11.0
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you file
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: I am on the latest release, or I have said which version this is.
+          required: true

@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Only the root manifest is scanned. `examples/extensions/*/package.json` are standalone
+  # teaching packages with no dependencies of their own and are deliberately left out.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore
+      include: scope
+    # Three runtime dependencies and two dev ones: grouping the minor and patch bumps keeps one
+    # pull request rather than five for what is usually one CI run.
+    groups:
+      dependencies:
+        patterns: ['*']
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      actions:
+        patterns: ['*']

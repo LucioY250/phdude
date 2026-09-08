@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question about using PhDude
+    url: https://github.com/LucioY250/phdude/discussions
+    about: How do I do X? Ask in Discussions rather than opening an issue.
+  - name: Report a vulnerability
+    url: https://github.com/LucioY250/phdude/security/advisories/new
+    about: Privately, through a security advisory. Never in a public issue.
+  - name: CLI reference
+    url: https://github.com/LucioY250/phdude/blob/main/docs/cli.md
+    about: Every command, every flag, every exit code.
+  - name: Writing an extension
+    url: https://github.com/LucioY250/phdude/blob/main/docs/extension-api.md
+    about: The ports, their contract suites, and the example third-party implementations.

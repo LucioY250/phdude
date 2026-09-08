@@ -140,6 +140,7 @@ test('the no-detector rule is stated on every surface a researcher reads', () =>
   const surfaces = [
     ['README.md'],
     ['docs', 'cli.md'],
+    ['docs', 'non-goals.md'],
     ['docs', 'adr', '0008-writing-pipeline-and-no-detector-rule.md'],
     ['skills', 'academic-prose', 'SKILL.md'],
   ];

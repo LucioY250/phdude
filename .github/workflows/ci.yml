@@ -2,10 +2,15 @@ name: ci
 on: [push, pull_request]
 permissions:
   contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy: { matrix: { node: [22, 24] } }
+    strategy:
+      fail-fast: false
+      matrix: { node: [22, 24] }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -16,5 +21,34 @@ jobs:
       - run: npm ci
       - run: npm run format:check
       - run: npm run lint
+      # Advisory, not a gate: an advisory against a transitive dependency with no path from
+      # PhDude's own code should not stop a release. It is printed so a reviewer sees it.
+      - name: audit (advisory)
+        run: npm audit --audit-level=high || true
+      - run: npm run validate
       - run: npm test
       - run: npm pack --dry-run
+      # The four committed example workspaces are generated. If a change moves what a generator
+      # writes without the example being regenerated, the tree is dirty here and the build fails.
+      - name: example parity
+        run: |
+          npm run example:all
+          dirty=$(git status --porcelain)
+          if [ -n "$dirty" ]; then
+            echo "committed examples are out of date; run npm run example:all and commit the result"
+            echo "$dirty"
+            git --no-pager diff --stat
+            exit 1
+          fi
+
+  # Path handling is the only thing that differs on Windows, and the unit and contract suites are
+  # where paths are built and joined. The integration, golden and e2e suites shell out to tools
+  # (pandoc, poppler, python3, Rscript) that are not installed here, so they stay on ubuntu.
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: node --test "tests/unit/**/*.test.js" "tests/contracts/**/*.test.js"

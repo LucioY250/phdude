@@ -9,7 +9,7 @@
 Your AI can write. PhDude helps make the research worth publishing.
 
 [![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.7.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-1.0.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![works with Claude Code, Codex and OpenCode](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex%20%C2%B7%20OpenCode-8A2BE2)](#set-up-your-agent)
@@ -37,57 +37,68 @@ It makes no assumptions about your field. A clinical trial, an archival history 
 empirical software-engineering paper get the same treatment; discipline-specific vocabulary
 and review questions arrive as packs.
 
-> **Where things stand.** This is v0.7. The deterministic core is done and tested: workspace,
-> ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the
-> citation registry, the literature matrix and gap report, workspace migrations, five literature
-> search providers, and the Claude Code and Codex adapters. v0.4 taught PhDude to help *write*,
-> v0.5 to run the *analysis*, v0.6 to produce the *documents*. New in this release, it *reviews*:
-> a citation auditor, a methodologist, a Reviewer #2, a reproducibility reviewer, an explainable
-> Research Health score, and `phdude ready` — the verdict on whether the work can go out. What is
-> left is stabilization for v1.0; see the [roadmap](#roadmap).
+> **Where things stand.** This is v1.0. The whole loop is here and tested: workspace, ingestion,
+> the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the citation
+> registry, the literature matrix and gap report, workspace migrations, five literature search
+> providers, the writing pipeline, analyses and figures, document builds, the reviewers, and
+> three agent hosts. What 1.0 adds is not new research capability but a promise: the schemas, the
+> commands, the exit codes and the ports are frozen, and what it would cost to change them is
+> written down. See the [roadmap](#roadmap).
 
-## What's new in 0.7
+## What's new in 1.0
 
-v0.7 is the Reviewer. Every release until now helped you build the argument. This one argues
-back — and then tells you whether the thing is ready to send.
+v1.0 is the release that stops moving. Nothing here changes what PhDude does; all of it changes
+what you can rely on.
 
-- **Reviews you can act on.** `phdude review methodology` (or `reviewer2`, `reproducibility`,
-  `citation`, `custom`) hands the agent a bounded view of the claims, evidence, methods and prose
-  the review is about, plus the contract it has to answer in. What it finds comes back through
-  `phdude review submit --file findings.json` as `REVIEW-` objects: a severity, a message, and
-  the ids the finding rests on. A finding with no id behind it is a question for you, not a
-  record. Accepting, dismissing and resolving them is yours, exactly like a Decision — and
-  re-running a review never reopens something you already dismissed.
-- **Three reviewers.** A methodologist that asks whether the design can answer the question, a
-  Reviewer #2 that hunts the overclaim you stopped seeing three drafts ago, and a reproducibility
-  reviewer that reads `repro check` and the analysis contracts before it says anything. The
-  medicine pack brings CONSORT, STROBE and PRISMA summaries for the reviewers that want them.
-- **`phdude audit citations`.** Every `[@key]` in the prose resolves to a source, every asserted
-  claim rests on one, no cited source is still unreviewed or was dismissed, plus every
-  `cite check` finding. With `--allow-network` it also asks Crossref about each DOI: whether it
-  resolves, whether the title matches, whether the year is within one, and whether the paper has
-  been retracted. Findings land as `citation` reviews for you to rule on.
-- **`phdude health`.** Eight dimensions — literature coverage, evidence strength, methodological
-  integrity, citation quality, freshness, reproducibility, consistency and academic prose quality
-  — each scored out of 100 and each printed with the observations its number came from, so you
-  can argue with it. A dimension the workspace cannot answer for reads `n/a` rather than a number
-  nobody measured. `--save` records the score and `--trend` says what moved since.
-- **`phdude ready`.** One command for the question you actually have: can this go out? It
-  composes the venue's own rules, Research Health against your threshold, the requirements your
-  policy lists, and the high-severity gaps, and prints what is in the way with the command that
-  fixes each. It exits 0 when nothing blocks and 2 while something does, and it never writes.
+- **The contracts are frozen.** Every schema carries `x-phdude: { stability: stable, since }`, and
+  a snapshot test refuses a change to any required field or enum unless the version moves and a
+  migration comes with it. Every command in [docs/cli.md](docs/cli.md) is marked stable, and the
+  exit codes and the `--json` error envelope are held there by a contract test.
+  [docs/versioning.md](docs/versioning.md) says exactly what that covers and what it does not.
+- **A documented extension API.** Seven ports — search provider, document parser, document
+  renderer, agent host, analysis runner, pack and skill — each with its lifecycle, its error
+  behaviour, its stability, and the contract suite your implementation runs against.
+  [`examples/extensions/`](examples/extensions/) ships a working third-party provider, parser,
+  renderer and pack, and CI runs all four through those suites.
+  See [docs/extension-api.md](docs/extension-api.md).
+- **A third agent host.** `phdude init --agents opencode` writes `AGENTS.md` and the
+  `.opencode/command/*` slash commands, alongside Claude Code and Codex. Gemini CLI and anything
+  else that reads `AGENTS.md` works with no host-specific files.
+  See [docs/agents.md](docs/agents.md).
+- **Three more example workspaces, in three different fields.** A survey study in the social
+  sciences, a quantization benchmark in machine learning, and an archival study in the humanities
+  — each generated, each with golden `status`, `next`, `gaps`, `health` and `ready` reports. They
+  exist to prove the claim the whole design rests on: the core never branches on your field.
+  See [docs/examples.md](docs/examples.md).
+- **The guides that were missing.** How to migrate a workspace and how to write a migration
+  ([docs/migration.md](docs/migration.md)), how to write a skill
+  ([docs/skills-authoring.md](docs/skills-authoring.md)), how to write a pack
+  ([docs/packs-authoring.md](docs/packs-authoring.md)), and what PhDude will never become
+  ([docs/non-goals.md](docs/non-goals.md)).
+- **A release you can audit.** CI runs format, lint, an advisory dependency audit, schema and
+  skill validation, the full suite on Node 22 and 24, a Windows subset for path handling,
+  `npm pack --dry-run`, and a check that the four committed example workspaces still regenerate
+  byte-for-byte. Tagging `v*` builds, tests and publishes with npm provenance.
+
+### What 0.7 added: the reviewer
+
+- **Reviews as records.** `phdude review methodology` (or `reviewer2`, `reproducibility`,
+  `citation`, `custom`) hands the agent a bounded view of what the review is about; what it finds
+  comes back through `phdude review submit --file findings.json` as `REVIEW-` objects, each naming
+  the ids it rests on. Accepting, dismissing and resolving them is yours, exactly like a Decision.
+- **`phdude audit citations`.** Every `[@key]` resolves, every asserted claim rests on a recorded
+  source, nothing cited is still unreviewed or dismissed. With `--allow-network` it asks Crossref
+  about each DOI: whether it resolves, whether the title matches, whether the year is within one,
+  and whether the paper has been retracted.
+- **`phdude health`.** Eight dimensions, each out of 100, each printed with the observations its
+  number came from — so you can argue with it. A dimension the workspace cannot answer for reads
+  `n/a` rather than a number nobody measured.
+- **`phdude ready`.** Can this go out? The venue's rules, Research Health against your threshold,
+  the requirements your policy lists and the high-severity gaps, each with the command that fixes
+  it. Exits 2 while anything blocks, and it never writes.
 - **Skills from outside, under the same permissions.** `phdude skills install <path|https url>`
-  copies a lab's own skill into `.phdude/skills/`, validates its contract, records where it came
-  from in `.phdude/skills-lock.yaml`, and indexes it where your agent will actually see it. It is
-  a file copy: nothing in a skill is ever executed, a skill wanting network or execution the
-  policy has not opened is refused rather than quietly withheld, and a skill whose stated purpose
-  is detector evasion is refused outright.
-- **Review modes that finally bite.** `ruthless` promotes an open `major` finding to blocking
-  where the verdict is computed, so `phdude ready` and `phdude next` both harden without a single
-  stored severity being rewritten. `lite` blocks only on what is already blocking, and lists the
-  rest as set aside rather than hiding it.
-- **Migration 0004** brings an older workspace to version 5: the `reviews/` directory, and the
-  `health.weights` and `ready.*` keys in the research policy.
+  copies a lab's skill in and validates its contract before a byte lands. Nothing in a skill is
+  ever executed, and one whose stated purpose is detector evasion is refused outright.
 
 ### What 0.6 added: the document factory
 
@@ -106,9 +117,10 @@ See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
 
 ## Contents
 
-- [What's new in 0.7](#whats-new-in-07)
+- [What's new in 1.0](#whats-new-in-10)
 - [How it works](#how-it-works)
 - [Install](#install)
+- [The 90-second tour](#the-90-second-tour)
 - [Set up your agent](#set-up-your-agent) (Claude Code, Codex, OpenCode, anything else)
 - [A first session](#a-first-session)
 - [Finding literature](#finding-literature)
@@ -120,6 +132,7 @@ See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
 - [Your workspace](#your-workspace)
 - [Commands](#commands)
 - [Packs](#packs)
+- [Documentation](#documentation)
 - [Principles](#principles)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -169,22 +182,76 @@ command that does it. There is no hidden score.
 
 ## Install
 
-v0.5 is not on npm yet. Install it from the repository:
+PhDude is not on npm yet — the package is ready and the release workflow publishes it, but the
+token is not in place. Until it is, install from the repository:
 
 ```
 git clone https://github.com/LucioY250/phdude && cd phdude
 npm ci
 npm link
-phdude --version      # phdude 0.5.0
+phdude --version      # phdude 1.0.0
 ```
 
-Node 22 or newer. `pdftotext` (poppler-utils) is optional: without it PDFs are still
-inventoried and hashed, and `phdude doctor` tells you exactly what is missing.
+Once it is published, this becomes:
 
 ```
-sudo apt install poppler-utils     # Debian / Ubuntu
-brew install poppler               # macOS
+npm install -g phdude
 ```
+
+Node 22 or newer, and nothing else at install time. The external tools below are all optional,
+and `phdude doctor` tells you exactly which of them you have:
+
+| Tool | Needed for | Without it |
+|---|---|---|
+| `pdftotext` (poppler-utils) | extracting text from PDFs | PDFs are still inventoried, hashed and tracked |
+| `pandoc` | building DOCX, PPTX and XLSX | Markdown, LaTeX and HTML still build |
+| `python3` / `Rscript` | analyses written in them | Node analyses still run |
+
+```
+sudo apt install poppler-utils pandoc     # Debian / Ubuntu
+brew install poppler pandoc               # macOS
+```
+
+## The 90-second tour
+
+```
+mkdir thesis && cd thesis
+phdude init --title "Adaptive scheduling in edge clusters"
+
+cp ~/Downloads/*.pdf sources/
+phdude ingest                                  # inventory, hash, extract, cache
+
+phdude add question --json '{"text":"Does adaptive scheduling reduce tail latency?"}'
+phdude add source --json '{"title":"Latency in edge clusters","type":"article","year":2025}'
+phdude add claim --json '{"statement":"Adaptive scheduling reduces p99 latency"}'
+phdude link CLAIM-… --to RQ-1                  # the claim answers the question
+
+phdude status                                  # what exists, what conflicts, what is pending
+phdude next                                    # the highest-impact next action, with reasons
+```
+
+Nothing above states anything as fact. A claim starts as `candidate`, earns `supported` when
+evidence is attached, and becomes `canonical` only behind a Decision you approved:
+
+```
+phdude add evidence --json '{"source":"SRC-…","excerpt":"p99 fell 34% (n=1200)"}'
+phdude link CLAIM-… --to EVID-…
+phdude decide propose --title "Adopt adaptive scheduling as the headline finding" \
+  --rationale "Two independent measurements agree" --affects CLAIM-…
+phdude decide approve DEC-… --by lucio
+phdude promote CLAIM-… --decision DEC-…
+```
+
+Then the same workspace answers the questions you actually have:
+
+```
+phdude gaps        # what is missing: questions with no evidence, claims with no source
+phdude health      # eight dimensions, each with the observations behind its score
+phdude ready       # can this go out? exits 2 while anything blocks
+```
+
+Every one of those takes `--json`. The full walkthrough is [below](#a-first-session), and four
+complete example workspaces are in [`examples/`](examples/).
 
 ## Set up your agent
 
@@ -1083,8 +1150,8 @@ phdude/
 ├── commands/              the Claude Code slash-command templates
 ├── packs/                 ten starter packs: fields/, methods/ and venues/
 ├── defaults/              the research constitution and policies a new workspace gets
-├── examples/              a complete generated workspace, used by the golden tests
-├── docs/                  CLI reference, workspace guide, extending guide, ADRs
+├── examples/              four generated workspaces + example third-party extensions
+├── docs/                  CLI, workspace, extending, extension API, migration, ADRs
 └── tests/                 unit · contract · integration · golden · e2e (node:test only)
 ```
 
@@ -1205,7 +1272,28 @@ template a build renders through. `phdude packs detect` recommends field and met
 what it finds in your sources — never a venue, which is your decision about where the work is
 going — and nothing is applied until you say so.
 
-Writing your own is a `pack.yaml` and a `SKILL.md`: see [docs/extending.md](docs/extending.md).
+Writing your own is a `pack.yaml` and a `SKILL.md`: see
+[docs/packs-authoring.md](docs/packs-authoring.md).
+
+## Documentation
+
+| Page | What it answers |
+|---|---|
+| [docs/cli.md](docs/cli.md) | Every command, every flag, every exit code, and which of them are stable. |
+| [docs/workspace.md](docs/workspace.md) | What is on disk, what each file means, and what is safe to edit by hand. |
+| [docs/examples.md](docs/examples.md) | The four example workspaces, what each demonstrates, and how to regenerate them. |
+| [docs/agents.md](docs/agents.md) | Setting up Claude Code, Codex, OpenCode, or anything that reads `AGENTS.md`. |
+| [docs/migration.md](docs/migration.md) | Upgrading a workspace, what each migration does, and how to write one. |
+| [docs/extending.md](docs/extending.md) | Where a change belongs: core, skill, pack or adapter. |
+| [docs/extension-api.md](docs/extension-api.md) | The seven ports, with lifecycle, errors, stability and contract suites. |
+| [docs/skills-authoring.md](docs/skills-authoring.md) | Writing a skill: the contract, the permissions, the tests. |
+| [docs/packs-authoring.md](docs/packs-authoring.md) | Writing a field, method or venue pack. |
+| [docs/versioning.md](docs/versioning.md) | What 1.0 froze, what it did not, and what a breaking change costs. |
+| [docs/non-goals.md](docs/non-goals.md) | What PhDude will never become, and why. |
+| [docs/adr/](docs/adr/) | The eleven decisions the design rests on, with the reasoning. |
+| [CHANGELOG.md](CHANGELOG.md) | What changed in every release, including every breaking change since 0.1. |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Dev setup, the rules the code follows, and what a pull request needs. |
+| [SECURITY.md](SECURITY.md) | Reporting a vulnerability, and what counts as one. |
 
 ## Principles
 
@@ -1234,8 +1322,12 @@ The reasoning behind the big calls is in [docs/adr/](docs/adr/).
 | v0.4 | Co-Author | the manuscript model, the writing context, six writing gates, `deslop`, author voice profiles, the Academic Prose Quality report |
 | v0.5 | Analysis & Visualization | datasets with profiles, declared analyses, results with lineage, tables, figures with alt text, `repro check` |
 | v0.6 | Document Factory | incremental reproducible builds to DOCX, PDF, LaTeX, HTML and Markdown, venue packs (thesis, IEEE, ACM), venue adaptation, PPTX outlines, XLSX tables, a templates registry |
-| **v0.7** | Reviewer | review objects and the review workflow, methodologist, Reviewer #2 and reproducibility skills, the citation auditor with Crossref DOI verification, explainable Research Health, `phdude ready`, external skills under least privilege |
-| v1.0 | Public Release | stable workspace schema, extension API and skill contract, a third agent, cross-field examples, migration docs |
+| v0.7 | Reviewer | review objects and the review workflow, methodologist, Reviewer #2 and reproducibility skills, the citation auditor with Crossref DOI verification, explainable Research Health, `phdude ready`, external skills under least privilege |
+| **v1.0** | Public Release | frozen schemas with a stability snapshot, the documented extension API with example third-party extensions, the OpenCode host, three cross-field example workspaces, migration and authoring guides, hardened CI and a release workflow |
+
+After 1.0 the promise is the feature. Anything that would change a schema's required fields, a
+command's meaning, an exit code or a port's shape waits for a major release, and
+[docs/versioning.md](docs/versioning.md) says what that costs.
 
 ## Contributing
 
@@ -1245,10 +1337,14 @@ Install from source as above, then:
 npm run format && npm run lint && npm test
 ```
 
-Tests use `node:test` only and run in a few seconds. New parsers, agent hosts and packs plug
-in behind documented ports with contract suites you can run against your own implementation.
-Start at [docs/extending.md](docs/extending.md); [CHANGELOG.md](CHANGELOG.md) records what
-changed and why.
+Tests use `node:test` only and run in a few seconds. New parsers, agent hosts, packs and skills
+plug in behind documented ports with contract suites you can run against your own implementation.
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before you open a pull request: it covers the dev setup,
+the rules the code follows, what a new command owes, and what to do when your change touches
+something 1.0 froze. Everyone taking part agrees to the
+[Code of Conduct](CODE_OF_CONDUCT.md). A vulnerability goes through [SECURITY.md](SECURITY.md),
+privately, never as a public issue.
 
 ## License
 

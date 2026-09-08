@@ -40,11 +40,20 @@ const ADD_EXAMPLE_RE = /phdude add (\S+) --json '(\{".*\})'/g;
 
 // The README and the guides teach the same commands to a human, and drifted the same way the
 // skills did until v0.4: a flag renamed in `COMMAND_OPTIONS` left a worked example that exits 1.
+// Every shipped guide is here except `docs/non-goals.md`, which quotes the flags PhDude refuses
+// on purpose - the one page whose examples are supposed not to parse.
 const GUIDES = [
   'README.md',
   join('docs', 'cli.md'),
   join('docs', 'workspace.md'),
   join('docs', 'extending.md'),
+  join('docs', 'agents.md'),
+  join('docs', 'examples.md'),
+  join('docs', 'extension-api.md'),
+  join('docs', 'migration.md'),
+  join('docs', 'packs-authoring.md'),
+  join('docs', 'skills-authoring.md'),
+  join('docs', 'versioning.md'),
 ];
 
 function markdownFiles() {
