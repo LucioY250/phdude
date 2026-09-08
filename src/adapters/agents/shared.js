@@ -216,6 +216,13 @@ export const COMMAND_ROWS = [
       'venue profile order, with the bibliography regenerated from the citation registry. A ' +
       'build whose inputs have not moved renders nothing and records nothing.',
   ],
+  [
+    'adapt --to <venue>',
+    'What moving the manuscript to another venue would take: which section becomes which, ' +
+      'which ones no longer fit its word limits, which figures need another format, which ' +
+      'words it renames, and which citation style takes over. `--apply` writes ' +
+      '`manuscript/manuscript.<venue>.yaml`; it never rewrites prose.',
+  ],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
   ['doctor', 'Report adapter availability, cache state, schema versions, and skill permissions.'],

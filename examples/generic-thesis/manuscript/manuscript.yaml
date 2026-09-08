@@ -55,3 +55,4 @@ sections:
     hash: null
     claims: []
     questions: []
+target_profile: generic-thesis

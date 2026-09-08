@@ -1504,6 +1504,54 @@ One `build` event per render, carrying the output's hash. A build that was up to
 nothing. `build` does not run `phdude profile check`: the venue's word limits and required
 sections are that command's report, and a build refuses nothing on their account.
 
+### `phdude adapt --to <venue> [--apply]`
+
+```
+phdude adapt --to ieee
+phdude adapt --to acm --json
+phdude adapt --to ieee --apply
+```
+
+What moving this manuscript to another venue would take. Without `--apply` it writes nothing and
+records nothing: it is a plan, and every line of it is a question for the researcher.
+
+The manuscript is read from the venue it targets today (`manuscript.yaml`'s `target_profile`, or
+`generic-thesis`), so `--to` is the only argument. Adapting to the venue already in force is a
+usage error rather than a second copy of the same manuscript under another name.
+
+| Key | What it reports |
+|---|---|
+| `mapping` | one row per section: `{from, to, reason}`. `to: null` is a section the venue has no place for; `from: null` is a section the venue requires that the manuscript does not have |
+| `limits` | `{section, words, max, delta}` per mapped section that has prose and a limit at the target. A positive `delta` is words that have to go |
+| `abstract` | `{section, words, from, to, delta}` — the abstract has one limit, written once in the profile, so it is reported once and never among `limits` |
+| `figures` | `{id, from, to}` for a figure whose formats the venue does not take |
+| `terminology` | `{from, to, hits}` for each word in the venue's `writing.terminology_map` the prose actually uses |
+| `citation_style` | `{from, to}`, naming the two reference styles rather than the CSL files behind them |
+
+**How a section is mapped.** By id first, then by a `synonyms` entry the target venue declares,
+then by a title the two sections share. A target section an earlier manuscript section already
+took is not offered twice, and the row that missed it says which section holds it. Anything left
+is `needs decision`: PhDude does not guess what a chapter becomes at a venue that never heard of
+it. Venue packs carry their own synonym lists — see
+[docs/extending.md](extending.md#venue-packs).
+
+**`--apply`** writes one file, `manuscript/manuscript.<venue>.yaml`, and records one `adapt`
+event. Its sections point at the same `.md` files as the canonical manuscript, under the venue's
+ids, titles and order; a section the venue does not list is carried over after the ones it names.
+Sections over the venue's word limit come out `revised` and lose their `approved_by`, because an
+approval was for text at a length this venue will not take. **`manuscript/manuscript.yaml` is not
+touched, and no prose is rewritten** — cutting a section to a limit is `phdude deslop`'s job, and
+it goes through the writing gates like every other revision.
+
+Applying the same adaptation twice writes nothing the second time and records no second event.
+`phdude profile check` against that venue is what says whether the manuscript now meets it;
+`adapt` states the plan, never the verdict.
+
+`phdude build` does not read the adapted file. It reads `manuscript/manuscript.yaml`, and the
+venue it renders against is the one that build was given or the manuscript targets — so building
+for IEEE puts the canonical sections in IEEE's order, under IEEE's headings, in IEEE's citation
+style. `manuscript.<venue>.yaml` is the record of the mapping and the work list it implies.
+
 ### `phdude mode lite|full|ruthless|off`
 
 Sets the review mode in `phdude.yaml`. Setting the mode it already has changes nothing and

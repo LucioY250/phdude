@@ -123,7 +123,6 @@ export async function gateContext({ store, loadProfile }, { manuscript, entry } 
     venueProfile,
     voiceProfile,
     section: entry?.id ?? null,
-    sectionOrder: entry?.order ?? null,
   };
 }
 

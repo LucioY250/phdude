@@ -20,7 +20,8 @@
           "title": { "type": "string", "minLength": 1 },
           "required": { "type": "boolean" },
           "order": { "type": "integer", "minimum": 1 },
-          "max_words": { "type": "integer", "minimum": 1 }
+          "max_words": { "type": "integer", "minimum": 1 },
+          "synonyms": { "type": "array", "items": { "type": "string", "minLength": 1 } }
         },
         "required": ["id", "title", "required", "order"],
         "additionalProperties": false

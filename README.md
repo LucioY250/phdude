@@ -9,7 +9,7 @@
 Your AI can write. PhDude helps make the research worth publishing.
 
 [![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.5.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.6.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
@@ -37,74 +37,80 @@ It makes no assumptions about your field. A clinical trial, an archival history 
 empirical software-engineering paper get the same treatment; discipline-specific vocabulary
 and review questions arrive as packs.
 
-> **Where things stand.** This is v0.5. The deterministic core is done and tested: workspace,
+> **Where things stand.** This is v0.6. The deterministic core is done and tested: workspace,
 > ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the
 > citation registry, the literature matrix and gap report, workspace migrations, five literature
 > search providers, and the Claude Code and Codex adapters. v0.4 taught PhDude to help *write*:
 > a manuscript with per-section status, a bounded writing context, six deterministic gates every
-> draft goes through, and a prose report that shows its arithmetic. New in this release, it runs
-> the *analysis* — datasets, scripts under an execution policy, results with lineage, tables,
-> figures and `phdude repro check`. Document rendering comes next; see the
-> [roadmap](#roadmap).
+> draft goes through, and a prose report that shows its arithmetic. v0.5 taught it to run the
+> *analysis* — datasets, scripts under an execution policy, results with lineage, tables and
+> figures. New in this release, it produces the *documents*: DOCX, PDF, LaTeX, HTML, slides and
+> spreadsheets, built from the approved sections against the venue you are writing for. The
+> reviewer skills come next; see the [roadmap](#roadmap).
 
-## What's new in 0.5
+## What's new in 0.6
 
-v0.5 is Analysis & Visualization. A number in your thesis now has a chain behind it: the file it
-came from, the script that read it, the run that produced it, and the table and figure drawn from
-it — all recorded, all hashed, and all checkable in one command.
+v0.6 is the Document Factory. Until now the manuscript lived in `manuscript/` as a set of
+Markdown files and a YAML plan. Now it comes out the other end as the file you have to send
+somebody — and it comes out the same way twice.
 
-- **Datasets with a profile.** `phdude data add data/survey.csv` hashes a file's bytes, makes
-  that hash its identity, and records rows, per-column inferred types, missing cells and distinct
-  values. Editing the file and adding it again makes a second dataset linked to the first.
-- **Analyses that PhDude runs, not you.** `phdude analyze add` declares a script under
-  `analysis/` and the datasets it reads; `phdude analyze run` executes it with an argument array,
-  no shell, a minimal environment and a timeout, and records the hash of every input and output.
-  It refuses to re-run when nothing has changed, and refuses to run at all unless the execution
-  policy is open.
-- **Results with lineage.** Each entry in the script's `results.json` becomes a `RESULT` you can
-  cite, pointing back at the analysis that produced it. A re-run that states the finding
-  differently supersedes the old result; a re-run that only moves the numbers under the same
-  sentence corrects that record in place.
-- **Tables and figures as objects.** `phdude table build` renders a result or a dataset as
-  Markdown, LaTeX and CSV, deterministically. `phdude figure build` runs a generator through the
-  same execution policy; `phdude:bar-chart` ships with PhDude and draws an accessible SVG.
-  **Alt text is required** — a figure without it never becomes a record at all.
+- **`phdude build`.** One command turns the approved sections into `outputs/<slug>/manuscript.md`,
+  `.docx`, `.tex`, `.html` or `.pdf`, in the order the venue puts them, under the headings the
+  venue calls them, with `references.bib` regenerated from the citation registry and the figures
+  the prose shows copied in beside the document. Markdown is built in and needs nothing installed.
+  Everything else goes through Pandoc, and PDF through a TeX engine; when one is missing the
+  command exits 4 and names the package, and never quietly produces a different format instead.
+- **Builds that skip themselves.** Every input is hashed — each section body, the bibliography,
+  each figure and table, the venue profile, the template, and the renderer's own version. A build
+  whose inputs all match the last one, and whose output file is still the one that build wrote,
+  reports `up to date`, renders nothing and records nothing. Running it twice is the cheap way to
+  ask whether the DOCX on disk is current.
+- **The same bytes tomorrow.** A build never reads the clock: the date on the title page comes
+  from `manuscript.yaml` or from the approval the workspace recorded. Identical inputs and an
+  identical Pandoc produce identical Markdown, LaTeX and HTML. DOCX and PDF are containers with
+  timestamps inside, so those are best-effort, and
+  [ADR 10](docs/adr/0010-renderer-adapters-and-reproducible-builds.md) says exactly how far the
+  promise goes.
+- **Venue packs.** `generic-thesis`, `ieee` and `acm` ship as packs, each carrying the sections
+  the venue expects, its word limits, its CSL citation style (vendored, licence intact) and a
+  minimal LaTeX template for its document class. `phdude profile check` reports the manuscript
+  against one: a required section that is missing, an abstract over the limit, two sections in the
+  wrong order, a figure in a format the venue does not take. It exits 2 while anything blocks.
+- **`phdude adapt --to <venue>`.** What moving the work would cost, before anything is changed:
+  which section becomes which, how many words each one is over, which figures need converting,
+  which words the venue renames, and which citation style takes over. `--apply` writes a second
+  manuscript for that venue, marking the sections that no longer fit as `revised`. It never
+  rewrites a line of prose — that goes back through `phdude deslop` and the gates, like every
+  other revision.
+- **Slides and spreadsheets.** `phdude present outline` writes the talk from the research: one
+  slide per approved section, or per claim the evidence supports, with its strongest excerpts as
+  bullets, and a PPTX too when Pandoc is installed. `phdude table build --format xlsx` writes a
+  real spreadsheet with numbers typed as numbers, using no external tool at all.
+- **A templates registry.** `phdude template add <path>` files your university's DOCX or your
+  conference's LaTeX template under `templates/`, `template use <name> --for <venue>` binds it to
+  a venue, and `template check` unzips a DOCX to say whether it actually declares the styles
+  Pandoc writes with. A template you registered outranks the one the venue pack ships.
+- **Migration 0003** brings an older workspace to version 4: an empty `venues` list in
+  `phdude.yaml` and an empty template registry under `.phdude/`.
+
+### What 0.5 added: analysis with lineage
+
+- **Datasets and analyses.** `phdude data add` makes a file's bytes its identity and profiles its
+  columns; `phdude analyze run` runs a script with an argument array, no shell and a timeout, and
+  records the hash of every input and output. Execution is closed by default.
+- **Results you can cite.** Each entry in a script's `results.json` becomes a `RESULT` pointing
+  back at the analysis that produced it, so a number in the thesis has a chain behind it.
+- **Tables and figures as objects.** `phdude table build` renders a result or a dataset
+  deterministically; `phdude figure build` runs a generator through the same execution policy, and
+  a figure without alt text never becomes a record at all.
 - **`phdude repro check`.** One line per analysis, table and figure, saying whether what is on
-  disk still follows from what is recorded, and naming the input that moved. It always exits 0.
-  `status`, `next` and `gaps` read the same report.
-- **Execution is closed by default.** `execution.enabled: false` in a fresh workspace, and the
-  core skill forbids your agent from running a script any other way. Migration 0002 brings an
-  older workspace to version 3.
+  disk still follows from what is recorded, and naming the input that moved.
 
 See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
 
-### What 0.4 added: the writing pipeline
-
-- **A manuscript with a status per section.** `phdude manuscript init` plans the six standard
-  sections; each one moves `planned → draft → revised → approved` and carries the hash of the
-  text that status applies to. Prose only ever reaches `manuscript/` through the CLI.
-- **A bounded writing context.** `phdude write introduction` assembles what the agent needs and
-  nothing else: the section's claims with their strongest evidence and locators, the citation
-  keys that resolve, the writing policy, your voice profile, and the verb table for each claim's
-  state. It stops at a character budget and tells you what it left out.
-- **Six gates on every submit.** Citations must resolve. Claim markers must name real claims,
-  and a rejected claim may not be asserted. The prose lint reports the patterns that read as
-  filler. On a revision, the meaning gate compares the old text with the new and refuses one
-  that drops a claim, a citation, a number or a negation. A blocking finding writes nothing at
-  all — you get line numbers instead.
-- **`phdude deslop`.** The revision half: what this section's prose is doing, and the explicit
-  list of what a rewrite may not change. The agent revises, `deslop --file` runs the gates.
-- **Author voice profiles.** `phdude authors learn <id> --from <sample…>` computes descriptive
-  statistics from writing you have approved — sentence length and its spread, opening diversity,
-  transition and hedge rates, the terminology you keep. Every field is a number or a word you
-  can read and correct. Never an embedding.
-- **An explainable prose report.** `phdude prose <section>` prints six sub-scores, the formula
-  behind each one, and the located observations that moved it.
-- **No AI-detector score, and there never will be one.** See [why](#the-one-number-phdude-will-not-give-you).
-
 ## Contents
 
-- [What's new in 0.5](#whats-new-in-05)
+- [What's new in 0.6](#whats-new-in-06)
 - [How it works](#how-it-works)
 - [Install](#install)
 - [Set up your agent](#set-up-your-agent) (Claude Code, Codex, anything else)
@@ -112,6 +118,7 @@ See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
 - [Finding literature](#finding-literature)
 - [Analysis and figures](#analysis-and-figures)
 - [Writing with PhDude](#writing-with-phdude)
+- [Building documents](#building-documents)
 - [What's in the box](#whats-in-the-box)
 - [Your workspace](#your-workspace)
 - [Commands](#commands)
@@ -201,7 +208,7 @@ This writes:
 |---|---|
 | `CLAUDE.md` | Entry point. Imports `AGENTS.md` and adds Claude-specific notes. |
 | `AGENTS.md` | Operating rules, the command reference, and an *index* of skills. Skills are loaded on demand, not up front, to keep your context small. |
-| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-data`, `/phdude-analyze`, `/phdude-table`, `/phdude-present`, `/phdude-template`, `/phdude-figure`, `/phdude-repro`, `/phdude-authors`, `/phdude-write`, `/phdude-deslop`, `/phdude-manuscript`, `/phdude-prose`, `/phdude-packs`, `/phdude-profile`, `/phdude-build`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
+| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-data`, `/phdude-analyze`, `/phdude-table`, `/phdude-present`, `/phdude-template`, `/phdude-figure`, `/phdude-repro`, `/phdude-authors`, `/phdude-write`, `/phdude-deslop`, `/phdude-manuscript`, `/phdude-prose`, `/phdude-packs`, `/phdude-profile`, `/phdude-build`, `/phdude-adapt`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
 | `.phdude/skills/*/SKILL.md` | The skills themselves, in the open `SKILL.md` convention. |
 
 Open Claude Code in the directory and start with:
@@ -682,6 +689,174 @@ resolves, a claim whose evidence is all weak, a number with no source, a paragra
 and each one comes with the line it is on and the arithmetic behind it. Fix those and the writing
 gets better for readers, which happens to be the only audience that matters.
 
+## Building documents
+
+Approved sections are not a document. Somebody wants a DOCX by Friday, the conference wants
+LaTeX in its own class, and your supervisor wants to read it on a train. `phdude build` makes
+those files, and makes them the same way every time.
+
+```
+phdude build
+```
+
+That is the whole command. It takes the sections you have approved, puts them in the order the
+venue asks for under the headings the venue uses, regenerates `references.bib` from the citation
+registry, copies in the figures the prose shows, and writes the lot into `outputs/<slug>/`:
+
+```
+outputs/note-taking-adoption/
+├── manuscript.md
+├── references.bib
+└── figures/
+    └── adoption.svg
+```
+
+Markdown is built in and always works — no Pandoc, no LaTeX, nothing to install. Every other
+format goes through Pandoc, and PDF through a TeX engine as well:
+
+```
+phdude build --format docx
+phdude build --format latex --profile ieee
+phdude build --format pdf
+```
+
+When the tool is not there, the command exits 4 and tells you what to install. It never falls
+back to a different format under the name of the one you asked for, because a `.docx` that is
+secretly Markdown is worse than no file at all. `phdude doctor` lists what this machine has.
+
+### Run it twice and nothing happens
+
+```
+$ phdude build --format docx
+Built outputs/note-taking-adoption/manuscript.docx
+
+$ phdude build --format docx
+The build is up to date. Build it anyway with --force.
+```
+
+Everything the document depends on is hashed into `.phdude/cache/build/`: each section body, the
+bibliography, each figure and table, the venue profile, the template, and Pandoc's own version.
+If none of them moved and the file on disk is still the one the last build wrote, there is
+nothing to do — so `phdude build` is also the answer to "is the DOCX I sent still the current
+one?". When something did move, `--json` names it, right down to `renderer` when the only thing
+that changed was a Pandoc upgrade.
+
+The same discipline makes builds reproducible. A build never reads the clock: the date on the
+title page comes from `manuscript.yaml`, or from the approval the workspace recorded. Identical
+inputs and an identical Pandoc give identical Markdown, LaTeX and HTML, byte for byte. DOCX and
+PDF are zip containers with timestamps inside them, so those are best-effort and
+[ADR 10](docs/adr/0010-renderer-adapters-and-reproducible-builds.md) says exactly how far the
+promise goes.
+
+### The venue is a pack
+
+Three venues ship with PhDude — `generic-thesis`, `ieee` and `acm` — and each is a small
+directory: the sections it expects with their word limits, its CSL citation style vendored with
+its licence intact, and a minimal LaTeX template for its document class.
+
+```
+phdude packs apply ieee        # this project is aiming at IEEE
+phdude profile use ieee        # this manuscript targets it
+phdude profile check
+```
+
+`check` is the report you read before you send anything:
+
+```
+ieee (IEEE conference paper)
+  block abstract: 312 words exceeds the 250-word limit ieee sets for abstract
+        cut the section, raise the limit in the venue profile, or drop target_profile
+  warn  ieee does not list a "appendix" section
+  info  references follow IEEE
+
+1 block, 1 warn, 1 info
+```
+
+It exits 2 while anything blocks, and it never fixes anything itself. Cutting the abstract is
+your call, and raising the limit in the venue profile so the prose fits is not a fix — the venue
+is not negotiating.
+
+Writing your own venue is a `pack.yaml` and a `profile.yaml`; a workspace venue under
+`.phdude/packs/venues/` overrides a shipped one of the same name. See
+[docs/extending.md](docs/extending.md).
+
+### Moving to another venue
+
+A thesis chapter is not an eight-page conference paper, and pretending otherwise is how a
+submission gets desk-rejected. `phdude adapt` says what the move would cost before anything
+changes:
+
+```
+$ phdude adapt --to ieee
+generic-thesis → ieee
+
+Sections
+  abstract      → abstract      abstract is the same section id
+  introduction  → introduction  introduction is the same section id
+  methods       → methods       methods is the same section id
+  results       → results       results is the same section id
+  discussion    → discussion    discussion is the same section id
+  appendix      → —             needs decision: ieee lists no section for appendix
+
+Word limits
+  introduction  1840 / 1200 words  640 over
+
+Abstract
+  312 / 250 words (was 500)  62 over
+
+Terminology
+  Figure → Fig.  (4 in the prose)
+
+Citation style: APA 7th edition → IEEE
+
+Nothing was written. --apply writes manuscript/manuscript.ieee.yaml.
+```
+
+Sections map by id, then by a synonym the venue declares, then by a shared title. What nothing
+matches is reported as **needs decision** and left alone: what an appendix becomes at a venue
+that has no appendices is a decision about your argument, not a string-matching problem.
+
+`--apply` writes a second manuscript for that venue — the same section files under IEEE's ids,
+titles and order — and marks everything over a limit as `revised`. It does not touch
+`manuscript/manuscript.yaml`, and it does not touch a single word of your prose. Cutting 640
+words out of an introduction is a writing job, and it goes back through `phdude deslop` and the
+same gates as everything else, which is what stops "shorter" from turning into "one claim
+lighter".
+
+### Slides, spreadsheets and templates
+
+The talk comes from the same research the paper does:
+
+```
+phdude present outline
+phdude present outline --from claims
+```
+
+One slide per approved section, or per claim the evidence supports with its strongest excerpts
+as bullets, written to `outputs/<slug>/outline.md` — and to `outline.pptx` when Pandoc is
+installed. `phdude table build --format xlsx` writes a real spreadsheet, numbers typed as
+numbers, with no external tool involved at all.
+
+If your university hands out a DOCX template, register it once:
+
+```
+phdude template add ~/Downloads/thesis-template.docx --kind docx
+phdude template use thesis-template --for generic-thesis
+phdude template check thesis-template
+```
+
+`check` unzips the file and reports whether it actually declares the styles Pandoc writes with —
+Heading 1 to 3, Body Text, Caption — which is the difference between a build that comes out
+looking like your department's thesis and one that comes out looking like Pandoc's default.
+A template you registered outranks the one the venue pack ships.
+
+### Nothing under `outputs/` is yours to edit
+
+It is derived, it is gitignored, and the next build overwrites it. A typo you fix in
+`outputs/…/manuscript.docx` is a typo that comes back, and now the workspace and the file you
+sent say different things. Fix the prose with `phdude deslop <section> --file`, the reference
+with `phdude edit` on the source, the figure with `phdude figure build` — then build again.
+
 ## What's in the box
 
 ```
@@ -695,10 +870,10 @@ phdude/
 │   └── schemas/           the JSON Schema validator
 ├── schemas/               one JSON Schema per research object, plus the skill contract
 ├── migrations/            one module per workspace-version step
-├── skills/                the twelve core skills, one SKILL.md directory each
+├── skills/                the fourteen core skills, one SKILL.md directory each
 ├── generators/            the figure generators PhDude ships (bar-chart.mjs, plain Node)
 ├── commands/              the Claude Code slash-command templates
-├── packs/                 seven starter packs: fields/ and methods/
+├── packs/                 ten starter packs: fields/, methods/ and venues/
 ├── defaults/              the research constitution and policies a new workspace gets
 ├── examples/              a complete generated workspace, used by the golden tests
 ├── docs/                  CLI reference, workspace guide, extending guide, ADRs
@@ -738,12 +913,14 @@ my-research/
 │                        # searches/  SEARCH-*.yaml  what was asked, of whom, and when
 ├── decisions/           # DEC-*.yaml
 ├── manuscript/          # manuscript.yaml, one .md per section, reports/ per section
+│                        # manuscript.<venue>.yaml is what `phdude adapt --apply` writes
 ├── references.bib       # written by `phdude cite export`; derived, not knowledge
 ├── data/                # your data files; the ones you register become DATASET records
 ├── analysis/            # ANALYSIS-*.yaml and your scripts · out/ holds what they write
 ├── tables/              # TABLE-*.yaml · out/ holds the rendered md, tex and csv
 ├── figures/             # FIG-*.yaml and your generators · out/ holds the drawn files
-└── templates/ outputs/
+├── templates/           # your DOCX, PPTX and LaTeX templates, filed by kind
+└── outputs/<slug>/      # what `phdude build` and `phdude present outline` deliver
 ```
 
 Every `out/` directory is gitignored: what is in it is reproducible from the record beside it,
@@ -789,6 +966,7 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude packs list\|detect\|apply <name>` | Field, method and venue packs. |
 | `phdude profile list\|show\|check\|use <venue>` | Venue profiles: what IEEE, ACM or a thesis expects of the manuscript, and which of those rules it does not meet yet. |
 | `phdude build [--format md\|docx\|pdf\|latex\|html] [--profile <venue>]` | Build the manuscript from its approved sections, in the venue's order, with the bibliography regenerated from the citation registry. A build whose inputs have not moved renders nothing. |
+| `phdude adapt --to <venue> [--apply]` | What moving the manuscript to another venue would take: which section becomes which, how far over its word limits each one is, which figures need converting, which words the venue renames. `--apply` writes a second manuscript for that venue; it never rewrites prose. |
 | `phdude mode lite\|full\|ruthless\|off` | How hard the agent pushes back. |
 | `phdude migrate [--dry-run]` | Upgrade a workspace written by an older PhDude. |
 | `phdude doctor` | Adapters, cache, schema versions, skill permissions, git state, and the manuscript: sections by status, reports on file, sections edited outside PhDude. |
@@ -800,12 +978,15 @@ in [docs/cli.md](docs/cli.md).
 
 ## Packs
 
-Seven packs ship today: four fields (`computer-science`, `business`, `medicine`,
-`humanities`) and three methods (`quantitative`, `qualitative`, `systematic-review`). Each
-brings terminology, reviewers, recommended checks and a skill with concrete review questions
-and the epistemic norms of its discipline, so "demonstrates" and "suggests" are used the way
-that field uses them. `phdude packs detect` recommends packs from what it finds in your
-sources; nothing is applied until you say so.
+Ten packs ship today: four fields (`computer-science`, `business`, `medicine`, `humanities`),
+three methods (`quantitative`, `qualitative`, `systematic-review`) and three venues
+(`generic-thesis`, `ieee`, `acm`). A field or method pack brings terminology, reviewers,
+recommended checks and a skill with concrete review questions and the epistemic norms of its
+discipline, so "demonstrates" and "suggests" are used the way that field uses them. A venue
+pack brings a publication profile instead: the sections, the limits, the citation style and the
+template a build renders through. `phdude packs detect` recommends field and method packs from
+what it finds in your sources — never a venue, which is your decision about where the work is
+going — and nothing is applied until you say so.
 
 Writing your own is a `pack.yaml` and a `SKILL.md`: see [docs/extending.md](docs/extending.md).
 
@@ -834,8 +1015,8 @@ The reasoning behind the big calls is in [docs/adr/](docs/adr/).
 | v0.2 | Research Brain | citation registry, literature matrix, research gaps, contradictions, methods, provenance, workspace migrations, skill contracts |
 | v0.3 | Research Engine | fresh literature search, five provider adapters, candidate review, freshness tracking, `phdude edit` |
 | v0.4 | Co-Author | the manuscript model, the writing context, six writing gates, `deslop`, author voice profiles, the Academic Prose Quality report |
-| **v0.5** | Analysis & Visualization | datasets with profiles, declared analyses, results with lineage, tables, figures with alt text, `repro check` |
-| v0.6 | Document Factory | DOCX, PDF, LaTeX, PPTX and XLSX output, venue packs (IEEE, ACM) |
+| v0.5 | Analysis & Visualization | datasets with profiles, declared analyses, results with lineage, tables, figures with alt text, `repro check` |
+| **v0.6** | Document Factory | incremental reproducible builds to DOCX, PDF, LaTeX, HTML and Markdown, venue packs (thesis, IEEE, ACM), venue adaptation, PPTX outlines, XLSX tables, a templates registry |
 | v0.7 | Reviewer | citation auditor, methodology reviewer, Reviewer #2, Research Health, submission readiness |
 | v1.0 | Public Release | stable workspace schema, extension API and skill contract, a third agent, cross-field examples, migration docs |
 
