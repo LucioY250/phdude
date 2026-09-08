@@ -1,0 +1,113 @@
+src/domain/templates.js
+  s_946fc7502759d8::t_b915140d3dcb19 1-173
+src/ports/store.js
+  s_946fc7502759d8::t_8c495ea3622ebc 12-15
+tests/unit/domain/templates.test.js
+  s_946fc7502759d8::t_d0d16c0f398731 1-134
+src/domain/renderers.js
+  s_946fc7502759d8::t_744f3dee6b4ff3 1-13
+tests/unit/domain/outline.test.js
+  s_946fc7502759d8::t_32ba3c3824a94f 141
+  s_946fc7502759d8::t_94bdd5a7f6ef11 1-140,142-190
+tests/golden/outline.test.js
+  s_946fc7502759d8::t_2743cb0941c365 1-135
+commands/template.md
+  s_946fc7502759d8::t_cd104679a2e11a 1-29
+tests/unit/adapters/xlsx.test.js
+  s_946fc7502759d8::t_cd439edd02761b 1-129
+  s_946fc7502759d8::t_318b27e4655cdd 130-132
+src/adapters/documents/ooxml.js
+  s_946fc7502759d8::t_4d5c38b7c7021c 185-209
+  s_946fc7502759d8::t_a15f46ac1a5d7d 2
+src/application/present.js
+  s_946fc7502759d8::t_8552caa8050796 1-105
+commands/present.md
+  s_946fc7502759d8::t_9662646b3f55e6 1-28
+tests/integration/table-formats.test.js
+  s_946fc7502759d8::t_3e0b6aa9891d4e 1-242
+  s_946fc7502759d8::t_4eb5f0b1b22973 243-245
+src/domain/outline.js
+  s_946fc7502759d8::t_50f173469b90c8 1-126
+src/adapters/cli/commands/template.js
+  s_946fc7502759d8::t_0e8e5d9c5121de 1-105
+tests/unit/domain/renderers.test.js
+  s_946fc7502759d8::t_df0dd0632011ba 1-27
+tests/integration/present.test.js
+  s_946fc7502759d8::t_e4d3e9c5dbb5f9 1-290
+src/application/template.js
+  s_946fc7502759d8::t_8b59fd4bd11509 1-185,188,192
+  s_946fc7502759d8::t_57705fc577333e 186-187,189-191,193-198
+tests/integration/template.test.js
+  s_946fc7502759d8::t_a1cee51474d45e 1-266
+  s_946fc7502759d8::t_7462511ca1d0cb 267-270
+tests/unit/documents/ooxml-styles.test.js
+  s_946fc7502759d8::t_1885c986cb63d5 1-64
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_5431d45fd369a8 28
+  s_946fc7502759d8::t_48a7d64ca09d68 112,114-131
+  s_946fc7502759d8::t_0e4f9b4931f3c6 108-111,113
+src/adapters/cli/commands/present.js
+  s_946fc7502759d8::t_d879c18aa32f92 1-34
+README.md
+  s_946fc7502759d8::t_bbc7261bcfc245 204,779-781
+docs/cli.md
+  s_946fc7502759d8::t_8184d24d0e2319 903,925-934,940-1001
+docs/workspace.md
+  s_946fc7502759d8::t_049a0086fe4ea1 55-57,126,372-383,386-391
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_77a977a004f6c5 59-60,72
+schemas/table.json
+  s_946fc7502759d8::t_9dcf07b3b9f222 37,46-48
+schemas/templates-registry.json
+  s_946fc7502759d8::t_5b7afb415955cd 1-26
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_6b015aaae4200f 59-60,72
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_62c632f2b9fc22 159-171
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_3500f8b14756c7 96-97,337-339
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_91d469d9af4add 42-51
+src/adapters/cli/commands/table.js
+  s_946fc7502759d8::t_f72cdccdaeed28 95-96
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_700c60b3fa5a0f 8-9,46,54,83,91,147-148
+src/adapters/render/xlsx.js
+  s_946fc7502759d8::t_5d32e256e08003 1-189
+src/application/table.js
+  s_946fc7502759d8::t_312b8a1f8f3cef 1,7-16,179,182,189-260,277,289,296,303-308,312-324,353
+src/domain/tables.js
+  s_946fc7502759d8::t_f054c4fc9b62ba 4-10,13,37-38,41-43,275-306,320-323
+src/schemas/index.js
+  s_946fc7502759d8::t_8222aae859275d 37
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_23cdb6e4132d61 2447-2545
+tests/fixtures/objects/invalid/templates-registry.1.json
+  s_946fc7502759d8::t_8e80eb75cb54f1 1-12
+tests/fixtures/objects/valid/templates-registry.1.json
+  s_946fc7502759d8::t_244baa1875ce25 1-19
+tests/golden/expected/outline-claims.md
+  s_946fc7502759d8::t_35c105a7923aed 1-11
+tests/golden/expected/outline-manuscript.md
+  s_946fc7502759d8::t_013fbc70295fae 1-15
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_55234a1ae1059b 150-155,184-186
+tests/unit/domain/tables.test.js
+  s_946fc7502759d8::t_4b861c985bfcb0 4,6,17,49-51,54-62,70-71,306,308,329-365
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "05c17044daaa9ec1f07c3de3247ea4dc86838267",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
