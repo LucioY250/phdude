@@ -19,6 +19,7 @@ import { DEFAULT_GENERATORS_DIR } from '../execution/generators.js';
 import { buildRenderers } from '../render/index.js';
 import { svgConverter } from '../render/svg.js';
 import { buildProviders } from '../search/index.js';
+import { lookupDoi } from '../search/crossref-doi.js';
 import { fakeFetchFromFile } from '../search/fake-fetch.js';
 import { DEFAULT_SKILLS_DIR } from '../agents/shared.js';
 import { discoverSkills, loadSkill } from '../skills/loader.js';
@@ -37,6 +38,7 @@ import { printJson } from './output.js';
 import adapt from './commands/adapt.js';
 import add from './commands/add.js';
 import analyze from './commands/analyze.js';
+import audit from './commands/audit.js';
 import authors from './commands/authors.js';
 import bootstrap from './commands/bootstrap.js';
 import buildCommand from './commands/build.js';
@@ -81,6 +83,7 @@ const COMMANDS = {
   adapt,
   add,
   analyze,
+  audit,
   authors,
   bootstrap,
   build: buildCommand,
@@ -123,6 +126,10 @@ const COMMANDS = {
 // policy and building the provider list, and only these can ever hold a `fetch`.
 const NETWORK_COMMANDS = new Set(['research', 'research-fresh']);
 
+// `audit` reaches Crossref for one DOI at a time rather than through the provider list, so it
+// gets a `fetch` and the lookup bound to it, and never a provider.
+const DOI_COMMANDS = new Set(['audit']);
+
 // Test-only hook: with PHDUDE_FAKE_FETCH set to a JSON routes file, every provider talks to
 // that file instead of the network. Documented under "Testing" in docs/cli.md; nothing in a
 // real run sets it.
@@ -133,14 +140,25 @@ async function fetchFor(env) {
 
 // The providers this run may call: exactly what the policy lists. `--provider` is applied
 // downstream, where it can only narrow this list - building it from the flag would let a flag
-// reach a provider the workspace never named. `mailto` is the polite contact OpenAlex and
-// Crossref ask for, taken from the author profile when the researcher recorded one (spec §3.1).
+// reach a provider the workspace never named.
 async function searchDeps(store, env, fetch) {
   const policy = await store.readYaml(join('.phdude', 'research-policy.yaml'));
-  const profile = await store.readYaml(join('.phdude', 'author-profile.yaml'));
   const names = providerNames(policy);
-  const mailto = typeof profile?.email === 'string' && profile.email.trim() ? profile.email : null;
-  return buildProviders(names, { fetch, env, version, mailto });
+  return buildProviders(names, { fetch, env, version, mailto: await contactOf(store) });
+}
+
+// The polite contact OpenAlex and Crossref ask for: the author profile's email when the
+// researcher recorded one, and nothing at all when they did not (spec §3.1).
+async function contactOf(store) {
+  const profile = await store.readYaml(join('.phdude', 'author-profile.yaml'));
+  return typeof profile?.email === 'string' && profile.email.trim() ? profile.email : null;
+}
+
+// The DOI resolver the citation auditor uses, bound to this run's fetch and contact. The
+// application never sees the adapter, only "given a DOI, what does the registrar say".
+async function doiLookup(store, fetch) {
+  const mailto = await contactOf(store);
+  return (doi) => lookupDoi(fetch, doi, { mailto, version });
 }
 
 function workspaceFor(cli, cwd) {
@@ -202,6 +220,9 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
   if (NETWORK_COMMANDS.has(cli.command)) {
     deps.fetch = await fetchFor(env);
     deps.providers = await searchDeps(store, env, deps.fetch);
+  } else if (DOI_COMMANDS.has(cli.command)) {
+    deps.fetch = await fetchFor(env);
+    deps.lookupDoi = await doiLookup(store, deps.fetch);
   }
 
   return { ...cli, deps, workspace, cwd, env, stdout, stderr };

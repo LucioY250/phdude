@@ -1,0 +1,15 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "DOI": "10.1234/adoption",
+    "type": "journal-article",
+    "title": ["Adoption of <i>AI</i> in small firms"],
+    "container-title": ["Journal of Small Business Research"],
+    "author": [{ "given": "Z.", "family": "Zeta" }],
+    "issued": { "date-parts": [[2020, 4, 12]] },
+    "URL": "https://doi.org/10.1234/adoption",
+    "is-referenced-by-count": 41
+  }
+}

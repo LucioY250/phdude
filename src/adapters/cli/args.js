@@ -56,6 +56,7 @@ export const COMMAND_OPTIONS = {
   packs: {},
   profile: { profile: { type: 'string' } },
   cite: { format: { type: 'string' } },
+  audit: { 'allow-network': { type: 'boolean' } },
   research: {
     question: { type: 'string' },
     provider: { type: 'string' },

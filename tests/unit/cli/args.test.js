@@ -191,6 +191,24 @@ test('parseCli: review carries its kind, target, status, budget and reason', () 
   assert.equal(dismissed.flags.reason, 'answered');
 });
 
+test('parseCli: audit takes its target and the network switch, and nothing else', () => {
+  const cli = parseCli(['audit', 'citations', '--allow-network']);
+  assert.equal(cli.command, 'audit');
+  assert.equal(cli.sub, 'citations');
+  assert.equal(cli.flags.allowNetwork, true);
+
+  assert.equal(parseCli(['audit', 'citations']).flags.allowNetwork, false);
+
+  assert.throws(
+    () => parseCli(['audit', 'citations', '--allow-exec']),
+    (err) => {
+      assert.equal(err.code, 'USAGE');
+      assert.match(err.message, /unknown option --allow-exec for audit/);
+      return true;
+    },
+  );
+});
+
 test('parseCli: decide supersede takes --by and --with', () => {
   const cli = parseCli([
     'decide',
@@ -394,6 +412,7 @@ for (const flag of DETECTOR_FLAGS) {
       ['prose', '--file', 'draft.md', flag],
       ['status', flag],
       ['review', 'reviewer2', flag],
+      ['audit', 'citations', flag],
       ['frobnicate', flag],
     ]) {
       assert.throws(

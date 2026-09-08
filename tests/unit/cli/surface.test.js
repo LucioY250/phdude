@@ -195,6 +195,7 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'build',
     'adapt --apply',
     'deslop',
+    'audit citations',
     'review submit',
     'review accept',
     'review dismiss',

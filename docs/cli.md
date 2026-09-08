@@ -450,6 +450,52 @@ A source may carry `bibkey` (`^[a-z0-9-]+$`, wins over the derived key), `abstra
 (a string array), and `identifiers: { doi?, isbn?, arxiv?, pmid?, url? }`. The top-level `doi`
 and `url` fields from v0.1 still work; `identifiers.doi` takes precedence when both are set.
 
+### `phdude audit citations [--allow-network] [--json]`
+
+```
+phdude audit citations
+phdude audit citations --allow-network
+```
+
+The citation auditor (PRD §37, spec §3.1). It reads the manuscript and the registry, records
+what it found as `citation` REVIEW objects, and exits 0 whatever it found — a `block` finding
+is reported here, and stops a submission in `phdude ready`, not in the exit code of the audit.
+
+Offline, it applies four rules:
+
+| Rule | Severity | What it means |
+|---|---|---|
+| `unresolved-citation` | `block` | A `[@key]` in a drafted section resolves to neither a SRC id nor a bibkey. |
+| `unsourced-claim` | `major` | A claim the prose asserts with `<!-- claim: … -->` has no evidence behind it citing a recorded source. Evidence quoting a raw artifact is not one yet. |
+| `dismissed-source` | `major` | A source cited in the prose was accepted from — or shares a DOI with — a candidate the researcher dismissed. |
+| `unreviewed-source` | `minor` | The same, for a candidate still awaiting review: the prose cites a paper nobody has ruled on. |
+
+Every `phdude cite check` finding is recorded too, at its own weight:
+`evidence-missing-source` blocks; `invalid-doi`, `duplicate-source` and `duplicate-bibkey` are
+`major`; `missing-field` is `minor`; `uncited-source` is a `note`, because it is a gap in the
+argument rather than a fault in the registry.
+
+With the network open — `--allow-network`, or `network.enabled: true` in
+`.phdude/research-policy.yaml` — each source's DOI is also resolved against Crossref's
+`works/<DOI>` endpoint, one at a time, carrying the author profile's email as the polite
+contact when one is recorded:
+
+| Rule | Severity | What it means |
+|---|---|---|
+| `retracted-source` | `block` | Crossref's `update-to` names a retraction of that DOI. |
+| `doi-unresolved` | `major` | Crossref answers 404: the identifier does not exist. |
+| `title-mismatch` | `major` | The Crossref title and the recorded one share less than 0.8 of their words (normalized token Jaccard). |
+| `year-mismatch` | `minor` | The years differ by more than one. Online-first publication routinely costs a year. |
+
+A lookup that fails — a timeout, a 5xx — is reported as a warning and checked nothing; only a
+404 is the finding `doi-unresolved`. Sources with no DOI are not looked up. Nothing but the DOI
+leaves the machine.
+
+Findings are identified by kind, target and message, so **re-running the audit records nothing
+new and writes no event when it finds what is already on file**, and a finding the researcher
+dismissed is never reopened. Rule on them with `phdude review accept|dismiss|resolve <REVIEW-id>`
+(see `phdude review`); `phdude health` charges the open ones against Citation Quality.
+
 ### `phdude research "<query>" | list | show | accept | dismiss`
 
 ```

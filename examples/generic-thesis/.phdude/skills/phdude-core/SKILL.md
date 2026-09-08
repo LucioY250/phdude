@@ -60,8 +60,8 @@ Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude l
 `phdude table build`, `phdude figure add`, `phdude figure build`, `phdude present outline`,
 `phdude template add`, `phdude template use`, `phdude manuscript init`,
 `phdude manuscript submit`, `phdude manuscript approve`, `phdude manuscript reopen`,
-`phdude build`, `phdude adapt --apply`, `phdude review submit`, `phdude review accept`,
-`phdude review dismiss`, `phdude review resolve`, or
+`phdude build`, `phdude adapt --apply`, `phdude audit citations`, `phdude review submit`,
+`phdude review accept`, `phdude review dismiss`, `phdude review resolve`, or
 `phdude deslop <section> --file <revised.md>`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
 cache; `phdude bootstrap` runs that ingest, scores the packs and hands off to `[[bootstrap]]`, so

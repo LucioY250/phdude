@@ -33,13 +33,22 @@ export function retryAfterMs(header) {
  * @param {Function} fetch - injected so tests never reach the network
  * @param {string} url
  * @param {{provider?: string, headers?: Record<string, string>, timeoutMs?: number,
- *   retryOn?: number[], signal?: AbortSignal}} options
+ *   retryOn?: number[], allowStatus?: number[], signal?: AbortSignal}} options -
+ *   `allowStatus` names the failures the caller reads as an answer rather than an error, which
+ *   is how a DOI lookup tells "this identifier does not exist" apart from "the provider is down"
  * @returns {Promise<object>} the successful Response
  */
 export async function fetchWithPolicy(
   fetch,
   url,
-  { provider = 'search', headers = {}, timeoutMs = 15000, retryOn = [429, 503], signal } = {},
+  {
+    provider = 'search',
+    headers = {},
+    timeoutMs = 15000,
+    retryOn = [429, 503],
+    allowStatus = [],
+    signal,
+  } = {},
 ) {
   let response = await attempt(fetch, url, { provider, headers, timeoutMs, signal });
 
@@ -50,7 +59,7 @@ export async function fetchWithPolicy(
     response = await attempt(fetch, url, { provider, headers, timeoutMs, signal });
   }
 
-  if (response.ok) return response;
+  if (response.ok || allowStatus.includes(response.status)) return response;
   await discard(response);
   throw statusError(provider, response.status);
 }

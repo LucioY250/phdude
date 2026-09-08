@@ -122,6 +122,13 @@ export const COMMAND_ROWS = [
     'Citation registry: list sources, verify them, export BibTeX/CSL-JSON.',
   ],
   [
+    'audit citations',
+    'Audit the citations: every `[@key]` resolves, every asserted claim rests on a recorded ' +
+      'source, no cited source is still unreviewed or dismissed, plus the `cite check` findings. ' +
+      'With `--allow-network` it also verifies each DOI against Crossref: title, year and ' +
+      'retractions. Findings are recorded as `citation` REVIEW objects; the researcher rules on them.',
+  ],
+  [
     'research "<query>"|list|show|accept|dismiss',
     'Search the literature through the configured providers and record the candidates; the researcher accepts them, never you.',
   ],

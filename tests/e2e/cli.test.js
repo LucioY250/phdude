@@ -3024,3 +3024,74 @@ test('e2e: skills list, install from a directory, the detector refusal, and remo
     ],
   );
 });
+
+test('e2e: audit citations records findings, verifies a DOI, and never reopens a verdict', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-audit-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Audited thesis', '--no-git']);
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'Adoption of AI in Small Firms',
+      authors: ['Z. Zeta'],
+      year: 2020,
+      type: 'article',
+      identifiers: { doi: '10.1234/adoption' },
+    }),
+  ]);
+
+  // Offline: nothing cites the source yet, which is a note rather than a fault.
+  const offline = await runJson(ws, ['audit', 'citations']);
+  assert.equal(offline.network, false);
+  assert.equal(offline.checked, 0);
+  assert.equal(offline.created.length, 1);
+  assert.equal(offline.created[0].kind, 'citation');
+  assert.equal(offline.created[0].severity, 'note');
+  assert.equal(offline.created[0].target, source.id);
+
+  // The same audit again finds what is already on file, and records no second event.
+  const again = await runJson(ws, ['audit', 'citations']);
+  assert.deepEqual(again.created, []);
+  assert.equal(again.existing.length, 1);
+
+  // With the network open, Crossref answers with a different paper's title.
+  const routes = join(REPO_ROOT, 'tests', 'fixtures', 'search', 'audit-routes.json');
+  const online = await runJson(ws, ['audit', 'citations', '--allow-network'], {
+    PHDUDE_FAKE_FETCH: routes,
+  });
+  assert.equal(online.network, true);
+  assert.equal(online.checked, 1);
+  const mismatch = online.created.find((item) => item.message.includes('Groundwater'));
+  assert.ok(mismatch, 'the title mismatch is recorded');
+  assert.equal(mismatch.severity, 'major');
+  const year = online.created.find((item) => item.message.includes('dates'));
+  assert.ok(year, 'the year mismatch is recorded');
+  assert.equal(year.severity, 'minor');
+
+  const listed = await runJson(ws, ['review', 'list', '--kind', 'citation']);
+  assert.equal(listed.length, 3);
+
+  // A verdict the researcher gave survives the next audit.
+  await run(ws, ['review', 'dismiss', mismatch.id, '--reason', 'Crossref has the wrong record']);
+  const afterVerdict = await runJson(ws, ['audit', 'citations', '--allow-network'], {
+    PHDUDE_FAKE_FETCH: routes,
+  });
+  assert.deepEqual(afterVerdict.created, []);
+  assert.equal(afterVerdict.existing.find((item) => item.id === mismatch.id).status, 'dismissed');
+
+  const usage = await phdude(ws, ['audit', '--json', ...ACTOR]);
+  assert.equal(usage.code, 1);
+  assert.match(JSON.parse(usage.stderr).error.message, /unknown audit target/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'audit');
+  assert.equal(events.length, 2, 'one event per audit that recorded something');
+  assert.match(events[0].summary, /offline/);
+  assert.match(events[1].summary, /1 DOI\(s\) verified/);
+});

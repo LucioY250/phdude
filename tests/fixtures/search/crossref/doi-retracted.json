@@ -1,0 +1,22 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "DOI": "10.7777/retracted",
+    "type": "journal-article",
+    "title": ["Rapid diffusion of AI among micro firms"],
+    "container-title": ["Journal of Overstated Results"],
+    "author": [{ "given": "Q.", "family": "Quill" }],
+    "issued": { "date-parts": [[2021]] },
+    "update-to": [
+      {
+        "updated": { "date-parts": [[2023, 2, 1]] },
+        "DOI": "10.7777/retraction-notice",
+        "type": "retraction",
+        "label": "Retraction"
+      }
+    ],
+    "URL": "https://doi.org/10.7777/retracted"
+  }
+}
