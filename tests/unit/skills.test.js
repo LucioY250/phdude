@@ -44,6 +44,7 @@ const ADD_EXAMPLE_RE = /phdude add (\S+) --json '(\{".*\})'/g;
 // on purpose - the one page whose examples are supposed not to parse.
 const GUIDES = [
   'README.md',
+  join('docs', 'guide.md'),
   join('docs', 'cli.md'),
   join('docs', 'workspace.md'),
   join('docs', 'extending.md'),

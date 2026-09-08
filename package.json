@@ -49,6 +49,7 @@
     "generators",
     "docs/agents.md",
     "docs/cli.md",
+    "docs/guide.md",
     "docs/examples.md",
     "docs/extending.md",
     "docs/extension-api.md",
@@ -60,6 +61,7 @@
     "docs/workspace.md",
     "docs/adr",
     "docs/assets",
+    "docs/assets/demo.svg",
     "!docs/assets/diagrams/*.excalidraw",
     "!docs/assets/fonts",
     "README.md",
@@ -78,7 +80,8 @@
     "examples": "node scripts/make-examples.mjs",
     "example:all": "npm run example && npm run examples",
     "fixtures": "node scripts/make-fixtures.mjs",
-    "diagrams": "node scripts/make-diagrams.mjs"
+    "diagrams": "node scripts/make-diagrams.mjs",
+    "demo": "node scripts/make-demo.mjs"
   },
   "dependencies": {
     "ajv": "^8.17.1",

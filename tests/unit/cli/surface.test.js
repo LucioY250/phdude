@@ -85,22 +85,31 @@ test('docs/cli.md has a reference section for every command', () => {
   }
 });
 
-test('the README command table has a row for every command', () => {
-  const readme = read('README.md');
-  const rows = [...readme.matchAll(/^\| `phdude ([a-z][a-z-]*)/gm)].map((m) => m[1]);
+test('the guide command table has a row for every command', () => {
+  const guide = read('docs', 'guide.md');
+  const rows = [...guide.matchAll(/^\| `phdude ([a-z][a-z-]*)/gm)].map((m) => m[1]);
   for (const command of COMMANDS) {
-    assert.ok(rows.includes(command), `README.md's command table has no row for ${command}`);
+    assert.ok(rows.includes(command), `docs/guide.md's command table has no row for ${command}`);
   }
 });
 
-test('the README slash-command list names every installed template', () => {
-  const readme = read('README.md');
+test('the guide slash-command list names every installed template', () => {
+  const guide = read('docs', 'guide.md');
   for (const command of COMMANDS) {
     assert.ok(
-      readme.includes(`\`/phdude-${command}\``),
-      `README.md does not mention the /phdude-${command} slash command`,
+      guide.includes(`\`/phdude-${command}\``),
+      `docs/guide.md does not mention the /phdude-${command} slash command`,
     );
   }
+});
+
+// The README is the front page and a first reader will not scroll past it, so its length is a
+// contract too: everything long lives in the guide, and the README has to send them there.
+test('the README stays short and points at the guide', () => {
+  const readme = read('README.md');
+  const lines = readme.split('\n').length;
+  assert.ok(lines < 150, `README.md is ${lines} lines; it must stay under 150`);
+  assert.ok(readme.includes('docs/guide.md'), 'README.md does not link docs/guide.md');
 });
 
 test("CLAUDE.md's slash-command list names every command", async () => {
@@ -118,17 +127,17 @@ test("CLAUDE.md's slash-command list names every command", async () => {
 });
 
 // The writing commands are the ones a researcher meets as a workflow rather than one at a time,
-// so the README owes them a worked section and not only a table row.
-test("the README's writing section walks through every writing command", () => {
-  const readme = read('README.md');
-  const start = readme.indexOf('## Writing with PhDude');
-  assert.notEqual(start, -1, 'README.md has no "Writing with PhDude" section');
-  const section = readme.slice(start, readme.indexOf('\n## ', start + 1));
+// so the guide owes them a worked section and not only a table row.
+test("the guide's writing section walks through every writing command", () => {
+  const guide = read('docs', 'guide.md');
+  const start = guide.indexOf('## Writing with PhDude');
+  assert.notEqual(start, -1, 'docs/guide.md has no "Writing with PhDude" section');
+  const section = guide.slice(start, guide.indexOf('\n## ', start + 1));
 
   for (const command of ['manuscript', 'write', 'deslop', 'prose', 'authors']) {
     assert.ok(
       section.includes(`phdude ${command}`),
-      `README.md's writing section never runs \`phdude ${command}\``,
+      `docs/guide.md's writing section never runs \`phdude ${command}\``,
     );
   }
 });
@@ -139,6 +148,7 @@ test("the README's writing section walks through every writing command", () => {
 test('the no-detector rule is stated on every surface a researcher reads', () => {
   const surfaces = [
     ['README.md'],
+    ['docs', 'guide.md'],
     ['docs', 'cli.md'],
     ['docs', 'non-goals.md'],
     ['docs', 'adr', '0008-writing-pipeline-and-no-detector-rule.md'],

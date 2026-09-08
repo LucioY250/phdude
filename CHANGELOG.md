@@ -4,6 +4,27 @@ All notable changes to PhDude are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and PhDude adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Documentation only. Nothing about how PhDude behaves has changed.
+
+### Changed
+
+- **The README is the front page again.** A first reader arrived at 1351 lines of it and said
+  what anyone would say: nobody reads that. It is now 66 lines — what PhDude is, an animated
+  demo of six real commands, install, an eight-command tour, how to point an agent at it, three
+  principles, and where to read more. Everything that was there is in
+  [docs/guide.md](docs/guide.md), whole, with its links repointed.
+
+### Added
+
+- **An animated demo, `docs/assets/demo.svg`.** `npm run demo` copies `examples/generic-thesis`
+  to a scratch directory, runs `status`, `next`, `research list`, `manuscript status`, `health`
+  and `ready` against it with this repository's own binary, and renders what they printed as a
+  looping terminal animation. The frames are real output, so the demo cannot drift from the CLI;
+  `tests/integration/make-demo.test.js` holds the committed SVG to the same byte parity as the
+  example workspaces.
+
 ## [1.0.0] — 2026-09-08
 
 Public release. Nothing here is a new research capability; all of it is a promise. Every schema
