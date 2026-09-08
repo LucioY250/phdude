@@ -1,0 +1,85 @@
+.github/ISSUE_TEMPLATE/config.yml
+  s_946fc7502759d8::t_e7609c9d7de9fa 1-14
+.github/dependabot.yml
+  s_946fc7502759d8::t_a5bba73e464e55 3-4,14-15
+  s_946fc7502759d8::t_c2884d5a7b93b3 1-2,5-13,16-30
+docs/non-goals.md
+  s_946fc7502759d8::t_19a54760dd3c64 1-30,34,38-76
+  s_946fc7502759d8::t_a5ab93bd2d273f 31-33
+  s_946fc7502759d8::t_599a7c7587e15f 35-37
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_489d7a1d9a5766 143
+docs/migration.md
+  s_946fc7502759d8::t_d3c02c00dcf7ca 74
+  s_946fc7502759d8::t_ea8a51ef11ebe1 1-73,75-85,92-219
+  s_946fc7502759d8::t_e8d786952083dd 86-91
+CONTRIBUTING.md
+  s_946fc7502759d8::t_fa1baea7686156 95-96,99-102
+  s_946fc7502759d8::t_5b18fcafae92b8 1-94,97-98,103-168
+docs/extending.md
+  s_946fc7502759d8::t_78f768fa965938 431-432
+  s_946fc7502759d8::t_810151e97a38d8 15-28
+.github/ISSUE_TEMPLATE/feature.yml
+  s_946fc7502759d8::t_f42a7a34eaf6d1 1-50
+CHANGELOG.md
+  s_946fc7502759d8::t_58d95877843c16 903
+  s_946fc7502759d8::t_5ac2cce87a7836 7-17
+  s_946fc7502759d8::t_698d7e5a275575 80-195
+SECURITY.md
+  s_946fc7502759d8::t_902753872b21eb 1-65
+CODE_OF_CONDUCT.md
+  s_946fc7502759d8::t_7d041561842596 1-133
+README.md
+  s_946fc7502759d8::t_766af523d83811 225
+  s_946fc7502759d8::t_46dc4d24e1e0c5 40-98,100-101
+  s_946fc7502759d8::t_046ce6c2b3ad88 237,240-242
+  s_946fc7502759d8::t_79c6e80739ed4f 227
+  s_946fc7502759d8::t_c8217907fbc34a 1325-1330
+  s_946fc7502759d8::t_d8083fdb5eb2ed 1275-1296
+  s_946fc7502759d8::t_023b5b2d960dc8 1153-1154
+  s_946fc7502759d8::t_02cd50772cba74 120,123
+  s_946fc7502759d8::t_1a3f21b9f86cd5 12
+  s_946fc7502759d8::t_f639a80ba0c8aa 1340-1347
+  s_946fc7502759d8::t_a4eadfd22ab32f 135
+  s_946fc7502759d8::t_e72f40fcbca510 238
+  s_946fc7502759d8::t_d237a86edfea62 201-202
+  s_946fc7502759d8::t_7e5dd822ea9407 185-186,192,195,198,203-224,226,228-236,239,243-254
+  s_946fc7502759d8::t_b39e4ab62d1eda 255
+.github/PULL_REQUEST_TEMPLATE.md
+  s_946fc7502759d8::t_1c76715fd96b1e 1-26,28,30
+  s_946fc7502759d8::t_3c09e396af25bc 27,29
+.github/workflows/release.yml
+  s_946fc7502759d8::t_e9a953156fc11b 94-95,97
+  s_946fc7502759d8::t_385df0bb2a43c2 1-93,96,98-112
+package.json
+  s_946fc7502759d8::t_ec130762fd1929 35
+  s_946fc7502759d8::t_d261fd96f13c62 73
+  s_946fc7502759d8::t_873cb51f578889 52,54-60
+  s_946fc7502759d8::t_0ea53dbbcd023f 34,36
+  s_946fc7502759d8::t_143acca1b1c086 67-68
+  s_946fc7502759d8::t_80575091270bbc 3,6-21
+tests/unit/skills.test.js
+  s_946fc7502759d8::t_415359349f6cfa 50-56
+  s_946fc7502759d8::t_f6758ad5d15157 43-44
+.github/workflows/ci.yml
+  s_946fc7502759d8::t_d518e885db1a4e 5-7,11-13,24-28,31-35,38,40-54
+  s_946fc7502759d8::t_83784e471d134b 36-37,39
+.github/ISSUE_TEMPLATE/bug.yml
+  s_946fc7502759d8::t_3c41c0ccef5a8c 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "d0a86cccda82b0d395a34678585f207b1baeeca4",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
