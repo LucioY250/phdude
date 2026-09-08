@@ -1,0 +1,116 @@
+tests/integration/table-formats.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-245
+commands/template.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-29
+src/adapters/render/xlsx.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-189
+tests/unit/documents/ooxml-styles.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-64
+.gitignore
+  s_946fc7502759d8::t_4f6b63da818827 1
+tests/integration/template.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-270
+schemas/templates-registry.json
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-26
+docs/workspace.md
+  s_946fc7502759d8::t_0a41a4044754d7 58,61-62,396
+  s_946fc7502759d8::t_024c10ec6a6aa8 56-57,135,381-392,395,397-400
+tests/integration/build.test.js
+  s_946fc7502759d8::t_cb4bb28a95840c 680-726
+commands/table.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 2,16,21-22
+tests/unit/adapters/xlsx.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-132
+tests/unit/domain/tables.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 4,6,17,49-51,54-62,70-71,306,308,329-365
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 60-61,76
+src/domain/outline.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-126
+tests/golden/expected/outline-manuscript.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-15
+tests/fixtures/objects/valid/templates-registry.1.json
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-19
+src/domain/templates.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-173
+tests/fixtures/objects/invalid/templates-registry.1.json
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-12
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 150-155,185-187
+src/adapters/cli/commands/table.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 95-96
+tests/unit/domain/outline.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-190
+tests/unit/domain/renderers.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-27
+src/application/build.js
+  s_946fc7502759d8::t_5cad205dd3a182 330-333
+docs/cli.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 903,925-934,940-1000
+  s_946fc7502759d8::t_19596d37e9ebc4 1001
+src/schemas/index.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 37
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 42-51
+src/application/table.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1,7-16,179,182,189-260,277,289,296,303-308,312-324,353
+tests/golden/outline.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-135
+src/adapters/cli/commands/template.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-105
+src/application/template.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-198
+commands/present.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-28
+src/adapters/documents/ooxml.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 2,185-207
+  s_946fc7502759d8::t_48900716506d3b 208-209
+tests/golden/expected/outline-claims.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-11
+tests/unit/domain/templates.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-134
+src/application/present.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-105
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 60-61,76
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 159-171
+tests/integration/present.test.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-290
+README.md
+  s_946fc7502759d8::t_024c10ec6a6aa8 779-781
+  s_946fc7502759d8::t_0a41a4044754d7 204
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_0a41a4044754d7 9-10
+  s_946fc7502759d8::t_024c10ec6a6aa8 56,64,95,103,159-160
+schemas/table.json
+  s_946fc7502759d8::t_024c10ec6a6aa8 37,46-48
+src/domain/tables.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 4-10,13,37-38,41-43,275-306,320-323
+src/adapters/cli/commands/present.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 1-34
+src/ports/store.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 14-15
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 103-104,344,346
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_024c10ec6a6aa8 28,120-131
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_8c2284014b63c8 2599-2700
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "4f9bcbdadf0c34a19c4782406ff96abe39ebedc6",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
