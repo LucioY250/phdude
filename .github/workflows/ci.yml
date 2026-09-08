@@ -12,8 +12,8 @@ jobs:
       fail-fast: false
       matrix: { node: [22, 24] }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: '${{ matrix.node }}', cache: npm }
       # poppler-utils for the PDF parser, pandoc for the docx/pptx/html/latex renderers. No
       # texlive: it is minutes of install for one format, so the PDF tests skip in CI instead.
@@ -47,8 +47,8 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: 22, cache: npm }
       - run: npm ci
       - run: node --test "tests/unit/**/*.test.js" "tests/contracts/**/*.test.js"
