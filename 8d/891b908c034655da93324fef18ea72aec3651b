@@ -1,0 +1,78 @@
+src/adapters/cli/commands/skills.js
+  s_946fc7502759d8::t_d251e3518ef144 1-71,73,75-103
+  s_946fc7502759d8::t_d1c2a81fc0c7c1 72,74
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_e51c3960cb3344 83-85
+commands/skills.md
+  s_946fc7502759d8::t_3c643c76b57e7f 1-19
+tests/unit/domain/skills.test.js
+  s_946fc7502759d8::t_1b6a3a20860d32 1-125
+  s_946fc7502759d8::t_4dbe4f32938c3a 126-140
+docs/cli.md
+  s_946fc7502759d8::t_6e5eefe4eb3006 1596-1597
+  s_946fc7502759d8::t_71cfcc2ea19fff 1560-1595,1598-1608,1694-1700
+src/domain/skills.js
+  s_946fc7502759d8::t_2238ebe14a0677 1-152
+tests/integration/skills.test.js
+  s_946fc7502759d8::t_b2653ce7653a80 1-414
+  s_946fc7502759d8::t_78d99ac7778f3e 415-430
+tests/fixtures/objects/valid/skills-lock.1.json
+  s_946fc7502759d8::t_cbbeb2cb4e5f76 1-18
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_458baebffbed7d 227-232
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_c28e1a6b0500ff 29
+  s_946fc7502759d8::t_ca1f419f27127c 133-144
+src/adapters/skills/install.js
+  s_946fc7502759d8::t_3f7be726a3396b 1-137
+schemas/skills-lock.json
+  s_946fc7502759d8::t_f9064548db4044 1-25
+src/application/skills.js
+  s_946fc7502759d8::t_d836182f48296d 318
+  s_946fc7502759d8::t_05bfce1f3b38a4 3-14
+  s_946fc7502759d8::t_1d95ef47c46394 315-317
+  s_946fc7502759d8::t_5344ac23a1ba47 319-321
+  s_a0f7aa6058f84f::t_8f8c1d34d4c375 140-314,322-379
+README.md
+  s_946fc7502759d8::t_cdd5691f0329a9 211,971
+docs/extending.md
+  s_946fc7502759d8::t_e18027487cd5ed 327-371
+docs/workspace.md
+  s_946fc7502759d8::t_02e6f32f1a9ec6 22,311-313,398-411
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_84be1082268c0c 113
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_64612df87755d1 86-93,113
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_08ee8dc84e2fa4 25-31,70,111,185-189
+src/application/doctor.js
+  s_946fc7502759d8::t_11efdb434b3898 12,24-25,30,42,147-157,185
+src/schemas/index.js
+  s_946fc7502759d8::t_71b46a3f212348 38
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_60a9936416647b 2768-2876
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "8d891b908c034655da93324fef18ea72aec3651b",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    },
+    "s_a0f7aa6058f84f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-av7-impl-t3-4537df00b12b46fc",
+        "model": "unknown"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
