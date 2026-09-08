@@ -1,0 +1,95 @@
+CHANGELOG.md
+  s_946fc7502759d8::t_63c3aa0aeb073e 9-69
+docs/cli.md
+  s_946fc7502759d8::t_cbca63900e3425 11-15,63-69,116-117,149-150,157-158,202-203,230-231,253-254,280-281,342-343,370-371,393-394,419-420,447-448,491-492,539-540,657-658,691-692,713-714,758-759,790-791,836-837,895-896,949-950,1043-1044,1103-1104,1133-1134,1169-1170,1233-1234,1289-1290,1357-1358,1395-1396,1421-1422,1501-1502,1551-1552,1570-1571,1618-1619,1694-1695,1744-1745,1827-1828,1887-1888,1894-1895,1949-1950,1972-1973,2052-2053
+docs/versioning.md
+  s_8e117dff288344::t_29f2486529035a 1-182
+schemas/analysis.json
+  s_946fc7502759d8::t_448d290bd5bdd2 4
+schemas/artifact.json
+  s_946fc7502759d8::t_eb032568144d49 4
+schemas/author-profile.json
+  s_946fc7502759d8::t_e83cb0c5c0ba07 4
+schemas/candidate.json
+  s_946fc7502759d8::t_a51b4aa51ddddf 4
+schemas/claim.json
+  s_946fc7502759d8::t_7649cc695667ae 4
+schemas/common.json
+  s_946fc7502759d8::t_53c3cd4acafb42 4
+schemas/dataset.json
+  s_946fc7502759d8::t_e3236487145094 4
+schemas/decision.json
+  s_946fc7502759d8::t_59cfe3d1d027a8 4
+schemas/event.json
+  s_946fc7502759d8::t_2b67d252962a50 4
+schemas/evidence.json
+  s_946fc7502759d8::t_ce6f9569ef626f 4
+schemas/fact.json
+  s_946fc7502759d8::t_aa0ed20567097d 4
+schemas/figure.json
+  s_946fc7502759d8::t_db0099882d0512 4
+schemas/hypothesis.json
+  s_946fc7502759d8::t_1fcc3636c38dba 4
+schemas/manuscript.json
+  s_946fc7502759d8::t_85d4066dc21500 4
+schemas/method.json
+  s_946fc7502759d8::t_ddf340cef22d10 4
+schemas/pack.json
+  s_946fc7502759d8::t_0d639cd0fa9ff1 4
+schemas/profile.json
+  s_946fc7502759d8::t_25c20eefb17a60 4
+schemas/project.json
+  s_946fc7502759d8::t_88fe900f134475 4
+schemas/question.json
+  s_946fc7502759d8::t_ce6879155c3873 4
+schemas/result.json
+  s_946fc7502759d8::t_dde9621795fd3f 4
+schemas/results-json.json
+  s_946fc7502759d8::t_3df0cbde36efd6 4
+schemas/review.json
+  s_946fc7502759d8::t_40bca9751417b6 4
+schemas/search.json
+  s_946fc7502759d8::t_4f4fd14cdcfc23 4
+schemas/section-report.json
+  s_946fc7502759d8::t_79a095203f12bb 4
+schemas/skill.json
+  s_946fc7502759d8::t_277b1ee5bdff50 4
+schemas/skills-lock.json
+  s_946fc7502759d8::t_74836af1c209f2 4
+schemas/source.json
+  s_946fc7502759d8::t_5f44eb29ec9429 4
+schemas/table.json
+  s_946fc7502759d8::t_d529399432517a 4
+schemas/templates-registry.json
+  s_946fc7502759d8::t_c47b84ff12f7c2 4
+tests/contracts/cli-json-shape.test.js
+  s_946fc7502759d8::t_c4d6a9cd0755b2 1-197
+tests/contracts/schema-stability.test.js
+  s_946fc7502759d8::t_f0d6ab4f2a4c1f 1-204
+tests/fixtures/schema-snapshot.json
+  s_946fc7502759d8::t_7eac83993e3f45 1-1520
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f0cb28277b74407b441d17221a29cdb99c8dbb65",
+  "prompts": {},
+  "sessions": {
+    "s_8e117dff288344": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "be2d0588-a705-4a58-82fa-b16450cd86ed",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    },
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
