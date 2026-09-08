@@ -1,0 +1,27 @@
+docs/cli.md
+  s_946fc7502759d8::t_55ffbe7a7c359d 1221
+src/domain/gates/profile.js
+  s_946fc7502759d8::t_33ec4852033704 2-5,19,27-29
+src/domain/profiles.js
+  s_946fc7502759d8::t_23073444339f17 8-9,51-53,56,59,93-122,214-215,218
+tests/unit/domain/gates/pipeline.test.js
+  s_946fc7502759d8::t_2fbc31c2cd5d03 94,103-111,113-115
+tests/unit/domain/profiles.test.js
+  s_946fc7502759d8::t_13a7df59599a93 10,31-73,124-125,128,130,151,208-318
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "3903d1236f34a849c2daf5bdc4dbddfb136807b6",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
