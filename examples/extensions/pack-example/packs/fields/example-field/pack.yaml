@@ -1,0 +1,36 @@
+schema: phdude.pack
+version: 1
+name: example-field
+kind: field
+description: >-
+  An example third-party field pack. It stands in for a discipline PhDude does not
+  ship - science and technology studies - and carries that field's vocabulary,
+  reviewer perspectives, recommended checks and one skill.
+terminology:
+  - sociotechnical
+  - infrastructure
+  - boundary object
+  - situated knowledge
+  - actor-network
+detect:
+  keywords:
+    - sociotechnical
+    - infrastructure
+    - laboratory study
+    - actor-network
+    - boundary object
+    - co-production
+    - controversy
+    - standardization
+    - expertise
+    - ethnography
+reviewers:
+  - reflexivity
+  - situated-evidence
+recommended_checks:
+  - positionality-statement
+  - fieldwork-consent
+  - thick-description
+skills:
+  - skills/example-field/SKILL.md
+schemas: []

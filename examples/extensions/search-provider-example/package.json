@@ -1,0 +1,10 @@
+{
+  "name": "phdude-search-provider-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A third-party PhDude SearchProvider that maps a fictional literature API into the Candidate shape.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": "./index.js"
+}

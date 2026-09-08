@@ -1,0 +1,9 @@
+{
+  "name": "phdude-pack-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A third-party PhDude field pack with one skill. Data only: a pack carries no executable code.",
+  "license": "MIT",
+  "type": "module",
+  "files": ["packs"]
+}
