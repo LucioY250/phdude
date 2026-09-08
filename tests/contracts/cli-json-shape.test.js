@@ -67,8 +67,9 @@ async function declareAnalysis(root, name, script) {
 async function pointNodeAt(root, executable) {
   const path = join(root, '.phdude', 'research-policy.yaml');
   const policy = await readFile(path, 'utf8');
-  assert.ok(policy.includes('    node: node\n'), 'the default policy maps node to node');
-  await writeFile(path, policy.replace('    node: node\n', `    node: ${executable}\n`));
+  const mapping = /^([ \t]*node: )node$/m;
+  assert.match(policy, mapping, 'the default policy maps node to node');
+  await writeFile(path, policy.replace(mapping, `$1${executable}`));
 }
 
 // Each case names the code it freezes and the smallest real invocation that raises it.

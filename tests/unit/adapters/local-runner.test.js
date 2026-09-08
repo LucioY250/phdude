@@ -85,7 +85,9 @@ test('a grandchild the script spawned dies with it when the timeout fires', asyn
   assert.ok(dead, `the grandchild ${pid} outlived the timeout`);
 });
 
-test('a script killed by a signal of its own reports the signal, not an exit code', async () => {
+test('a script killed by a signal of its own reports the signal, not an exit code', async (t) => {
+  if (!POSIX) return t.skip('signals are a posix mechanism');
+
   const result = await localRunner.run({
     runtime: process.execPath,
     script: 'signal.mjs',
