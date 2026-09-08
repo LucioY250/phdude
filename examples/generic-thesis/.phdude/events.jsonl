@@ -48,3 +48,5 @@
 {"ts":"2026-09-01T00:01:26.000Z","op":"figure","actor":{"researcher":"example","agent":"script"},"ids":["FIG-843c619df9"],"summary":"figure built: respondents-by-channel (figures/out/respondents-by-channel.svg)"}
 {"ts":"2026-09-01T00:01:28.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-7b4227f9fe"],"summary":"evidence added"}
 {"ts":"2026-09-01T00:01:29.000Z","op":"link","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-8ad284d305","EVID-7b4227f9fe"],"summary":"CLAIM-8ad284d305 linked to 1 object(s)"}
+{"ts":"2026-09-01T00:01:30.000Z","op":"packs","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"applied generic-thesis"}
+{"ts":"2026-09-01T00:01:31.000Z","op":"profile","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"target profile generic-thesis"}

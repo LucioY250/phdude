@@ -5,7 +5,8 @@ title: Generic Thesis Example
 language: en
 fields: []
 methods: []
-venues: []
+venues:
+  - generic-thesis
 outputs:
   - thesis
 mode: full

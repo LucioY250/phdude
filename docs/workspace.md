@@ -47,6 +47,7 @@ my-research/
 │   └── out/                      # what the generators wrote, generated
 ├── manuscript/
 │   ├── manuscript.yaml           # schema phdude.manuscript v1: the plan and every section
+│   ├── manuscript.<venue>.yaml   # the same sections adapted to a venue, by `phdude adapt --apply`
 │   ├── <section>.md              # the prose, front matter + Markdown body
 │   └── reports/<section>.yaml    # schema phdude.section-report v1: the last gate run
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
@@ -389,6 +390,24 @@ and the profile it is bound `for` once `phdude template use` says so. A build an
 The registry is a record, not a cache: it is committed, and `phdude template check` reports a
 template whose bytes no longer hash to what was registered. The templates themselves are yours —
 a university's thesis DOCX, a conference's LaTeX class — and PhDude never edits one.
+
+## Adapted manuscripts
+
+`phdude adapt --to <venue> --apply` writes `manuscript/manuscript.<venue>.yaml`: a second
+manuscript, same schema, whose sections carry the venue's ids, titles and order and point at the
+**same** `.md` files as `manuscript.yaml`. Only the plan is new — no prose is copied, and nothing
+under `manuscript/` is rewritten. A section over the venue's word limit comes out `revised` and
+without its `approved_by`, because the approval was for text at a length that venue will not take.
+
+It is canonical, not derived: it is committed, and it goes stale the moment the canonical
+manuscript's structure changes. Re-running `adapt --apply` rewrites it; a run that would write
+exactly what is already there writes nothing and records no event.
+
+What it is **not**, yet, is a build input. `phdude build` reads `manuscript/manuscript.yaml` and
+takes its venue from `--profile` or `target_profile`, so building for a venue you have adapted to
+still builds the canonical section list against that venue's profile. The adapted file is the
+record of the mapping and the work list it implies: which sections the venue renamed, and which
+ones came back `revised` and still owe a revision.
 
 ## Derived files
 

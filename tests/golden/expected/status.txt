@@ -43,8 +43,8 @@ Pending decisions (1):
   - DEC-7aa12a7b78: Resolve sample_size discrepancy between Survey Alpha/Gamma and Survey Beta
 
 Recent events:
-  table: table built: daily-use-by-channel (md, latex, csv)
-  figure: figure declared: respondents-by-channel
   figure: figure built: respondents-by-channel (figures/out/respondents-by-channel.svg)
   add: evidence added
   link: CLAIM-8ad284d305 linked to 1 object(s)
+  packs: applied generic-thesis
+  profile: target profile generic-thesis

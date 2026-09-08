@@ -97,6 +97,7 @@ sections:                     # what the venue expects, in the order it expects 
     required: true
     order: 2
     max_words: 1200
+    synonyms: [intro, background, related-work]   # what this venue would call the same section
 abstract:
   max_words: 250              # the abstract section inherits this unless it sets max_words
 page_limit: 8                 # reported, not enforced: pages are a rendering fact
@@ -135,6 +136,16 @@ Venue packs declare `detect.keywords: []` and `skills: []`. A venue is a decisio
 makes about where the work is going, so `phdude packs detect` must not infer one from the corpus,
 and a venue carries validation data rather than guidance.
 
+`synonyms` is the one field only `phdude adapt` reads. It is the venue saying which other names
+mean this section, so a manuscript with a `related-work` chapter can be told what that chapter
+becomes at a venue that folds it into the introduction. Adapting maps a section by its id first,
+then by a synonym the target venue declared, then by a title the two share; a section nothing
+matches is reported as **needs decision** and left for the researcher. Synonyms never relax
+`phdude profile check`: a section the venue does not list is still `section-unknown` there,
+because the check reports the manuscript as it is and `adapt` is what proposes the move. A target
+section can only be claimed once, so two manuscript sections that both look like one venue
+section leave the second undecided, naming the first.
+
 ### What a profile is checked against
 
 `src/domain/profiles.js` holds the rules, and both readers go through it: `gate-profile` runs
@@ -142,12 +153,18 @@ the per-section rules on every `manuscript submit`, and `phdude profile check` r
 over the whole manuscript. A section the gate lets through is a section `profile check` lets
 through, because neither has its own copy of the rule.
 
+Order is the exception, and it is a rule about the manuscript rather than about a section: a gate
+that sees one section cannot tell a reordered manuscript from one that is simply missing a
+section. `checkProfile` compares the sections the manuscript and the venue both have, in
+manuscript order, against the same set in venue order, so a missing section leaves no gap and a
+section the venue does not list holds no place. `phdude profile check` is the only reporter.
+
 | Finding | Severity | When |
 |---|---|---|
 | `section-missing` | block | the venue requires a section the manuscript does not have |
 | `section-words` | block | a section's body is over its `max_words` |
 | `section-unknown` | warn | the manuscript has a section the venue does not list |
-| `section-order` | warn | the venue puts the section somewhere else |
+| `section-order` | warn | two sections the venue orders one way sit the other way round; the finding names the pair and carries no `section` |
 | `figure-format` | warn | a figure produces no format in `figures.formats` |
 | `section-optional` | info | the venue also takes a section the manuscript does not have |
 | `section-unwritten` | info | a required section has no prose to measure yet |

@@ -27,6 +27,7 @@ import { FsStore } from '../store/fs-store.js';
 import { read, realpath, walk } from '../store/fs-walk.js';
 import { parseCli } from './args.js';
 import { printJson } from './output.js';
+import adapt from './commands/adapt.js';
 import add from './commands/add.js';
 import analyze from './commands/analyze.js';
 import authors from './commands/authors.js';
@@ -67,6 +68,7 @@ import write from './commands/write.js';
 const { version } = createRequire(import.meta.url)('../../../package.json');
 
 const COMMANDS = {
+  adapt,
   add,
   analyze,
   authors,

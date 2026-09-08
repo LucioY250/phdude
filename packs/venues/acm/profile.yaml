@@ -12,21 +12,25 @@ sections:
     title: Abstract
     required: true
     order: 1
+    synonyms: [summary]
   - id: introduction
     title: Introduction
     required: true
     order: 2
     max_words: 1500
+    synonyms: [intro, background, related-work, literature-review]
   - id: methods
     title: Method
     required: true
     order: 3
     max_words: 2500
+    synonyms: [method, methodology, materials-and-methods, approach]
   - id: results
     title: Evaluation
     required: true
     order: 4
     max_words: 2200
+    synonyms: [result, findings, evaluation, experiments]
   - id: discussion
     title: Discussion
     required: true
@@ -37,6 +41,7 @@ sections:
     required: true
     order: 6
     max_words: 600
+    synonyms: [conclusion, concluding-remarks, closing, future-work]
 abstract:
   max_words: 250
 page_limit: 10

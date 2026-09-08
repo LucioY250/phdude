@@ -2698,3 +2698,70 @@ test('e2e: xlsx tables, the templates registry and the presentation outline', as
   assert.equal(events.filter((e) => e.op === 'present').length, 1);
   assert.equal(events.filter((e) => e.op === 'template').length, 2);
 });
+
+test('e2e: adapt plans a venue move, then --apply writes a manuscript for it', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-adapt-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Adapt thesis', '--no-git']);
+  await run(ws, ['manuscript', 'init', '--title', 'Adapt thesis']);
+
+  // A 300-word abstract is fine under the thesis profile, which allows 500. IEEE allows 250.
+  const draft = join(ws, 'abstract.md');
+  await writeFile(draft, `${'word '.repeat(300)}\n`);
+  await run(ws, ['manuscript', 'submit', 'abstract', '--file', draft]);
+
+  const plan = await runJson(ws, ['adapt', '--to', 'ieee']);
+  assert.equal(plan.from, 'generic-thesis');
+  assert.equal(plan.to, 'ieee');
+  assert.equal(plan.applied, false);
+  assert.deepEqual(plan.plan.abstract, {
+    section: 'abstract',
+    words: 300,
+    from: 500,
+    to: 250,
+    delta: 50,
+  });
+  assert.deepEqual(plan.plan.citation_style, { from: 'APA 7th edition', to: 'IEEE' });
+  assert.equal(
+    plan.plan.mapping.every((row) => row.from === row.to),
+    true,
+    'the standard sections map onto IEEE by id',
+  );
+  assert.equal(await exists(join(ws, 'manuscript', 'manuscript.ieee.yaml')), false);
+
+  const text = await run(ws, ['adapt', '--to', 'ieee']);
+  assert.match(text.stdout, /generic-thesis → ieee/);
+  assert.match(text.stdout, /Nothing was written/);
+
+  const applied = await runJson(ws, ['adapt', '--to', 'ieee', '--apply']);
+  assert.equal(applied.applied, true);
+  assert.equal(applied.path, 'manuscript/manuscript.ieee.yaml');
+  assert.deepEqual(applied.revised, ['abstract']);
+
+  const adapted = await readFile(join(ws, 'manuscript', 'manuscript.ieee.yaml'), 'utf8');
+  assert.match(adapted, /target_profile: ieee/);
+  assert.match(adapted, /status: revised/);
+  assert.match(adapted, /title: Conclusion\n/, "IEEE's section titles are the adapted ones");
+
+  // The canonical manuscript is untouched: no target profile, and the abstract still a draft.
+  const canonical = await readFile(join(ws, 'manuscript', 'manuscript.yaml'), 'utf8');
+  assert.equal(canonical.includes('target_profile'), false);
+  assert.match(canonical, /title: Conclusions\n/);
+
+  const again = await runJson(ws, ['adapt', '--to', 'ieee', '--apply']);
+  assert.equal(again.applied, false);
+  assert.equal(again.reason, 'up to date');
+
+  // The venue the manuscript already targets has nothing to adapt to.
+  await run(ws, ['profile', 'use', 'ieee']);
+  const same = await phdude(ws, ['adapt', '--to', 'ieee', '--json', ...ACTOR]);
+  assert.equal(same.code, 1);
+  assert.match(JSON.parse(same.stderr).error.message, /already targets ieee/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.filter((event) => event.op === 'adapt').length, 1);
+});

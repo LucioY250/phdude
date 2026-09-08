@@ -70,12 +70,29 @@ raise `--budget` rather than guessing what it said.
 5. The verb matches the claim's state and its evidence strength. A claim resting on weak
    evidence may not "show" anything, whatever its state says.
 6. Nothing the context does not carry. No new source, no new number, no finding you inferred.
+7. A figure goes in as `![alt text](figures/out/<name>.svg)`, and a built table as a link **on a
+   line of its own**: `[Table 1](tables/out/<name>.md)`. `phdude build` copies the figure in
+   beside the document and replaces that line with the table itself; the same link inside a
+   sentence stays a reference to the file, which is what you want when the prose points at a
+   table rather than showing it. Only a path a `FIG-` or `TABLE-` record has actually built
+   exists — `phdude figure list` and `phdude table list` say which.
 
 ## When the context is not enough
 
 Say so and stop. A section with no claims attached is not a section to improvise: it is a
 research gap, and the answer is `phdude gaps`, not better prose. If you need a number the
 workspace does not record, ask the researcher to record it (`phdude add fact`) first.
+
+## Writing to a venue
+
+When `manuscript.yaml` names a `target_profile`, the venue's word limit for the section is a
+gate: `phdude manuscript submit` refuses a section over it, and the refusal names the limit.
+`phdude profile check` reports every venue rule at once — required sections, order, word counts,
+figure formats — and it is what to read before saying a section is done.
+
+A section written for one venue rarely fits another. `phdude adapt --to <venue>` says what the
+move would cost before anything is changed; follow `[[venue-adapt]]` when the work is going
+somewhere else.
 
 ## Revising
 
