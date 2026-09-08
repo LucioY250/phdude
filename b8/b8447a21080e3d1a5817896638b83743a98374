@@ -1,0 +1,570 @@
+tests/integration/make-examples.test.js
+  s_946fc7502759d8::t_f92791180aa988 72-84,87-88,94-96,104
+  s_946fc7502759d8::t_67e879ef0ba47c 1-71,85-86,89-93,97-103,105-111
+tests/e2e/examples.test.js
+  s_946fc7502759d8::t_b0172c26e253f8 1-56,58-89
+  s_946fc7502759d8::t_bd9584c3954a83 57
+package.json
+  s_946fc7502759d8::t_1ae509f5e26ecb 49-50
+scripts/lib/example-builder.mjs
+  s_946fc7502759d8::t_fb4727027b4e30 1-245
+tests/golden/README.md
+  s_946fc7502759d8::t_236f9dc107e0bf 30-35
+tests/golden/examples.test.js
+  s_946fc7502759d8::t_c3aa392054397c 1-73
+scripts/make-example.mjs
+  s_946fc7502759d8::t_8d737e5efd330a 4-6,9,19-32,252-261,306-307,309-316,318,332-333,337-338,416-654,656-657
+docs/examples.md
+  s_946fc7502759d8::t_45c77b504282df 1-124
+scripts/make-examples.mjs
+  s_946fc7502759d8::t_55d8d9ca6c2af5 1-1363
+  s_946fc7502759d8::t_c63efabdddcd5a 1364-1377
+examples/machine-learning/.gitignore
+  s_946fc7502759d8::t_736e3338cd8827 1-13
+examples/machine-learning/.phdude/author-profile.yaml
+  s_946fc7502759d8::t_79533c40f3ab4b 1-11
+examples/machine-learning/.phdude/citation-policy.yaml
+  s_946fc7502759d8::t_9a824539b49e31 1-6
+examples/machine-learning/.phdude/constitution.yaml
+  s_946fc7502759d8::t_b4a0e0ab0d0711 1-26
+examples/machine-learning/.phdude/events.jsonl
+  s_946fc7502759d8::t_6e2175294be51e 1-45
+examples/machine-learning/.phdude/methodology-policy.yaml
+  s_946fc7502759d8::t_eae93345c2544b 1-4
+examples/machine-learning/.phdude/publication-policy.yaml
+  s_946fc7502759d8::t_2d9fcf6a19c22a 1-4
+examples/machine-learning/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_a6cca1a5c063ca 1-72
+examples/machine-learning/.phdude/skills/academic-prose/SKILL.md
+  s_946fc7502759d8::t_a52b63fe88b8bc 1-133
+examples/machine-learning/.phdude/skills/academic-prose/references/academic-style.md
+  s_946fc7502759d8::t_01cfe9eb7f016d 1-71
+examples/machine-learning/.phdude/skills/academic-prose/references/ai-writing-patterns.md
+  s_946fc7502759d8::t_ddabd194672730 1-78
+examples/machine-learning/.phdude/skills/academic-prose/references/epistemic-language.md
+  s_946fc7502759d8::t_9f24f71b77fdca 1-62
+examples/machine-learning/.phdude/skills/academic-prose/references/examples.md
+  s_946fc7502759d8::t_3ebedcb1c95885 1-129
+examples/machine-learning/.phdude/skills/academic-prose/references/voice-matching.md
+  s_946fc7502759d8::t_6766843dfbc140 1-53
+examples/machine-learning/.phdude/skills/academic-prose/scripts/prose-lint.mjs
+  s_946fc7502759d8::t_83252ba61dcb53 1-76
+examples/machine-learning/.phdude/skills/academic-prose/tests/academic.yaml
+  s_946fc7502759d8::t_fdb109d2df0ba2 1-47
+examples/machine-learning/.phdude/skills/academic-prose/tests/ai-slop.yaml
+  s_946fc7502759d8::t_307f2f716bdb18 1-80
+examples/machine-learning/.phdude/skills/academic-prose/tests/human-writing.yaml
+  s_946fc7502759d8::t_657c1f158fa051 1-41
+examples/machine-learning/.phdude/skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_be0cccd267b376 1-132
+examples/machine-learning/.phdude/skills/build/SKILL.md
+  s_946fc7502759d8::t_36a8baf5a5b530 1-79
+examples/machine-learning/.phdude/skills/decisions/SKILL.md
+  s_946fc7502759d8::t_8ecc05a5c828e7 1-93
+examples/machine-learning/.phdude/skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_29c266cc581427 1-76
+examples/machine-learning/.phdude/skills/literature/SKILL.md
+  s_946fc7502759d8::t_2b11855a810ebd 1-167
+examples/machine-learning/.phdude/skills/methodologist/SKILL.md
+  s_946fc7502759d8::t_df274808c3f330 1-88
+examples/machine-learning/.phdude/skills/methodologist/references/design-question-fit.md
+  s_946fc7502759d8::t_83f9960919290f 1-25
+examples/machine-learning/.phdude/skills/methodologist/references/reporting-standards.md
+  s_946fc7502759d8::t_ba4df73e1a8cca 1-29
+examples/machine-learning/.phdude/skills/methodologist/references/validity-threats.md
+  s_946fc7502759d8::t_5db0b59d137dff 1-37
+examples/machine-learning/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_7e94b345df8dc9 1-85
+examples/machine-learning/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_5e6c5e3af57a85 1-232
+examples/machine-learning/.phdude/skills/reproducibility-reviewer/SKILL.md
+  s_946fc7502759d8::t_4d65d921d3a73f 1-81
+examples/machine-learning/.phdude/skills/reproducibility-reviewer/references/analysis-contracts.md
+  s_946fc7502759d8::t_9253e340e45b0a 1-37
+examples/machine-learning/.phdude/skills/reproducibility-reviewer/references/data-availability.md
+  s_946fc7502759d8::t_f384fa643c6383 1-39
+examples/machine-learning/.phdude/skills/review-modes/SKILL.md
+  s_946fc7502759d8::t_433e5fad930a99 1-63
+examples/machine-learning/.phdude/skills/reviewer2/SKILL.md
+  s_946fc7502759d8::t_af4f1ba0c0d49b 1-90
+examples/machine-learning/.phdude/skills/reviewer2/references/adversarial-checks.md
+  s_946fc7502759d8::t_bed584d1b31013 1-39
+examples/machine-learning/.phdude/skills/reviewer2/references/overclaiming.md
+  s_946fc7502759d8::t_3a664f84d1448f 1-36
+examples/machine-learning/.phdude/skills/venue-adapt/SKILL.md
+  s_946fc7502759d8::t_84ebc001195dec 1-95
+examples/machine-learning/.phdude/skills/write/SKILL.md
+  s_946fc7502759d8::t_f727f21fda028c 1-100
+examples/machine-learning/.phdude/templates.yaml
+  s_946fc7502759d8::t_4d709759a94c1e 1-3
+examples/machine-learning/.phdude/writing-policy.yaml
+  s_946fc7502759d8::t_2c9e4b85c8e5db 1-15
+examples/machine-learning/analysis/ANALYSIS-19e42e3957.yaml
+  s_946fc7502759d8::t_6fae7608e51d3e 1-30
+examples/machine-learning/analysis/benchmark.mjs
+  s_946fc7502759d8::t_630561be32f1c8 1-58
+examples/machine-learning/analysis/out/benchmark-summary/results.json
+  s_946fc7502759d8::t_806327df496d90 1-24
+examples/machine-learning/authors/researcher-c.yaml
+  s_946fc7502759d8::t_592eb35ae2274b 1-53
+examples/machine-learning/authors/samples/researcher-c/intro-approved.md
+  s_946fc7502759d8::t_098aafd75928d7 1-5
+examples/machine-learning/data/benchmark-runs.csv
+  s_946fc7502759d8::t_68a86bd8b80445 1-16
+examples/machine-learning/decisions/DEC-497d708e6b.yaml
+  s_946fc7502759d8::t_f7b1a7b0dcf3f8 1-20
+examples/machine-learning/figures/FIG-359202df9b.yaml
+  s_946fc7502759d8::t_50087747135ab8 1-39
+examples/machine-learning/figures/out/latency-by-precision.svg
+  s_946fc7502759d8::t_709cc968274064 1-26
+examples/machine-learning/knowledge/artifacts/ART-d6be23332e.yaml
+  s_946fc7502759d8::t_f65433d58352f6 1-23
+examples/machine-learning/knowledge/artifacts/ART-f4e6774a3e.yaml
+  s_946fc7502759d8::t_b941e908873f98 1-23
+examples/machine-learning/knowledge/artifacts/ART-fa084130f1.yaml
+  s_946fc7502759d8::t_67911a61ef5a33 1-23
+examples/machine-learning/knowledge/candidates/CAND-19176c0235.yaml
+  s_946fc7502759d8::t_eb9917aa8cd5c3 1-35
+examples/machine-learning/knowledge/candidates/CAND-dd64bcf8b0.yaml
+  s_946fc7502759d8::t_5cf5dce17bc58f 1-33
+examples/machine-learning/knowledge/claims/CLAIM-4b634ae3b0.yaml
+  s_946fc7502759d8::t_5e3fa94b481564 1-23
+examples/machine-learning/knowledge/claims/CLAIM-6988534f7f.yaml
+  s_946fc7502759d8::t_6c4241f4552b67 1-21
+examples/machine-learning/knowledge/claims/CLAIM-6e71302587.yaml
+  s_946fc7502759d8::t_33ef0ad103db3f 1-18
+examples/machine-learning/knowledge/claims/CLAIM-79c11966df.yaml
+  s_946fc7502759d8::t_7f49b71fd02599 1-21
+examples/machine-learning/knowledge/claims/CLAIM-d0ac24ffa0.yaml
+  s_946fc7502759d8::t_fa2d4a07e55396 1-19
+examples/machine-learning/knowledge/datasets/DATASET-0240995739.yaml
+  s_946fc7502759d8::t_21ce0b28df1e8b 1-70
+examples/machine-learning/knowledge/evidence/EVID-89f97b3771.yaml
+  s_946fc7502759d8::t_d422e466c66633 1-17
+examples/machine-learning/knowledge/evidence/EVID-9495d5d2af.yaml
+  s_946fc7502759d8::t_68fe9a9854425e 1-17
+examples/machine-learning/knowledge/evidence/EVID-d48ddd631a.yaml
+  s_946fc7502759d8::t_012d272b892b9a 1-16
+examples/machine-learning/knowledge/evidence/EVID-e7323833c0.yaml
+  s_946fc7502759d8::t_2e21b58001538f 1-17
+examples/machine-learning/knowledge/evidence/EVID-ed8844509d.yaml
+  s_946fc7502759d8::t_f20f1649767e24 1-16
+examples/machine-learning/knowledge/results/RESULT-d53111b0f2.yaml
+  s_946fc7502759d8::t_9b8f4acc8460f2 1-20
+examples/machine-learning/knowledge/results/RESULT-d87b1ffbab.yaml
+  s_946fc7502759d8::t_ba8e8223d788cf 1-20
+examples/machine-learning/knowledge/sources/SRC-70fcdb80e9.yaml
+  s_946fc7502759d8::t_c9214f2dc0e901 1-18
+examples/machine-learning/knowledge/sources/SRC-9a56723890.yaml
+  s_946fc7502759d8::t_47bc9e27ba7c06 1-31
+examples/machine-learning/knowledge/sources/SRC-ae77970deb.yaml
+  s_946fc7502759d8::t_b16df6bd32f6de 1-19
+examples/machine-learning/knowledge/sources/SRC-cbc2790e9f.yaml
+  s_946fc7502759d8::t_376e67dbde2bf1 1-18
+examples/machine-learning/manuscript/introduction.md
+  s_946fc7502759d8::t_879744d9f30c1e 1-17
+examples/machine-learning/manuscript/manuscript.yaml
+  s_946fc7502759d8::t_a525fa6da087c6 1-58
+examples/machine-learning/manuscript/reports/introduction.yaml
+  s_946fc7502759d8::t_58020e052755f9 1-33
+examples/machine-learning/phdude.yaml
+  s_946fc7502759d8::t_f7aa778389f56b 1-14
+examples/machine-learning/research/hypotheses/H-1.yaml
+  s_946fc7502759d8::t_e11c97ebf60926 1-12
+examples/machine-learning/research/methods/METH-8a4ba177c0.yaml
+  s_946fc7502759d8::t_aa25c94adb26cc 1-26
+examples/machine-learning/research/questions/RQ-1.yaml
+  s_946fc7502759d8::t_228529d653c7cc 1-12
+examples/machine-learning/research/questions/RQ-2.yaml
+  s_946fc7502759d8::t_18ce3fe33dee02 1-12
+examples/machine-learning/research/questions/RQ-3.yaml
+  s_946fc7502759d8::t_86e5f5877c1cf5 1-12
+examples/machine-learning/research/searches/SEARCH-442c0cdcb0.yaml
+  s_946fc7502759d8::t_8a845e538dfc2b 1-26
+examples/machine-learning/reviews/REVIEW-2e988f9a52.yaml
+  s_946fc7502759d8::t_7c6c6e6c690610 1-21
+examples/machine-learning/sources/arxiv-2402-09113.md
+  s_946fc7502759d8::t_c7be478d4b479d 1-11
+examples/machine-learning/sources/arxiv-2406-02871.md
+  s_946fc7502759d8::t_f4ce59c79980e4 1-10
+examples/machine-learning/sources/benchmark-card.md
+  s_946fc7502759d8::t_dd4a480bae1fb9 1-4
+examples/machine-learning/tables/TABLE-3589b9e04c.yaml
+  s_946fc7502759d8::t_c088c30bcfcfc3 1-34
+examples/machine-learning/tables/out/accuracy-by-precision.csv
+  s_946fc7502759d8::t_4bd62fa82710b6 1-4
+examples/machine-learning/tables/out/accuracy-by-precision.md
+  s_946fc7502759d8::t_b117b8ac53fbdb 1-7
+examples/machine-learning/tables/out/accuracy-by-precision.tex
+  s_946fc7502759d8::t_3630b0cef33d7d 1-14
+examples/qualitative-humanities/.gitignore
+  s_946fc7502759d8::t_e422e5f8608201 1-13
+examples/qualitative-humanities/.phdude/author-profile.yaml
+  s_946fc7502759d8::t_95318d0044c748 1-11
+examples/qualitative-humanities/.phdude/citation-policy.yaml
+  s_946fc7502759d8::t_690170a4eb21a8 1-6
+examples/qualitative-humanities/.phdude/constitution.yaml
+  s_946fc7502759d8::t_39e643595a0a77 1-26
+examples/qualitative-humanities/.phdude/events.jsonl
+  s_946fc7502759d8::t_ee0616d0884898 1-36
+examples/qualitative-humanities/.phdude/methodology-policy.yaml
+  s_946fc7502759d8::t_e1e1b0be6b79f4 1-4
+examples/qualitative-humanities/.phdude/publication-policy.yaml
+  s_946fc7502759d8::t_0e304c9d427731 1-4
+examples/qualitative-humanities/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_906b4e3f0889d0 1-72
+examples/qualitative-humanities/.phdude/skills/academic-prose/SKILL.md
+  s_946fc7502759d8::t_aa560cd9f3b738 1-133
+examples/qualitative-humanities/.phdude/skills/academic-prose/references/academic-style.md
+  s_946fc7502759d8::t_9e5766734b0d9e 1-71
+examples/qualitative-humanities/.phdude/skills/academic-prose/references/ai-writing-patterns.md
+  s_946fc7502759d8::t_6c1e3ec7833e3d 1-78
+examples/qualitative-humanities/.phdude/skills/academic-prose/references/epistemic-language.md
+  s_946fc7502759d8::t_967d7fd4db48dd 1-62
+examples/qualitative-humanities/.phdude/skills/academic-prose/references/examples.md
+  s_946fc7502759d8::t_146e6b46c4cd33 1-129
+examples/qualitative-humanities/.phdude/skills/academic-prose/references/voice-matching.md
+  s_946fc7502759d8::t_7e62ef7e92baa7 1-53
+examples/qualitative-humanities/.phdude/skills/academic-prose/scripts/prose-lint.mjs
+  s_946fc7502759d8::t_bf9484df3fae63 1-76
+examples/qualitative-humanities/.phdude/skills/academic-prose/tests/academic.yaml
+  s_946fc7502759d8::t_b0506af0bb2405 1-47
+examples/qualitative-humanities/.phdude/skills/academic-prose/tests/ai-slop.yaml
+  s_946fc7502759d8::t_309138bc9ab712 1-80
+examples/qualitative-humanities/.phdude/skills/academic-prose/tests/human-writing.yaml
+  s_946fc7502759d8::t_fa2c231bf4138f 1-41
+examples/qualitative-humanities/.phdude/skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_048e296a7911e6 1-132
+examples/qualitative-humanities/.phdude/skills/build/SKILL.md
+  s_946fc7502759d8::t_7d64a11e2ccca5 1-79
+examples/qualitative-humanities/.phdude/skills/decisions/SKILL.md
+  s_946fc7502759d8::t_fb6072d10852c0 1-93
+examples/qualitative-humanities/.phdude/skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_1e45efbf507be0 1-76
+examples/qualitative-humanities/.phdude/skills/literature/SKILL.md
+  s_946fc7502759d8::t_d1393c468edfbc 1-167
+examples/qualitative-humanities/.phdude/skills/methodologist/SKILL.md
+  s_946fc7502759d8::t_7e7beea8b5860c 1-88
+examples/qualitative-humanities/.phdude/skills/methodologist/references/design-question-fit.md
+  s_946fc7502759d8::t_5f01a7a8aab330 1-25
+examples/qualitative-humanities/.phdude/skills/methodologist/references/reporting-standards.md
+  s_946fc7502759d8::t_478408d5d60a3d 1-29
+examples/qualitative-humanities/.phdude/skills/methodologist/references/validity-threats.md
+  s_946fc7502759d8::t_ee9a19c82b9e2d 1-37
+examples/qualitative-humanities/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_9b050f7bfd2b55 1-85
+examples/qualitative-humanities/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_b8652eb2f224be 1-232
+examples/qualitative-humanities/.phdude/skills/reproducibility-reviewer/SKILL.md
+  s_946fc7502759d8::t_fee610b54db2f6 1-81
+examples/qualitative-humanities/.phdude/skills/reproducibility-reviewer/references/analysis-contracts.md
+  s_946fc7502759d8::t_8396b940aec554 1-37
+examples/qualitative-humanities/.phdude/skills/reproducibility-reviewer/references/data-availability.md
+  s_946fc7502759d8::t_7bff1ce9ffb54d 1-39
+examples/qualitative-humanities/.phdude/skills/review-modes/SKILL.md
+  s_946fc7502759d8::t_a951944f733e62 1-63
+examples/qualitative-humanities/.phdude/skills/reviewer2/SKILL.md
+  s_946fc7502759d8::t_53d3fe259a9aa1 1-90
+examples/qualitative-humanities/.phdude/skills/reviewer2/references/adversarial-checks.md
+  s_946fc7502759d8::t_0a03811e8dad23 1-39
+examples/qualitative-humanities/.phdude/skills/reviewer2/references/overclaiming.md
+  s_946fc7502759d8::t_72acdfdca5511a 1-36
+examples/qualitative-humanities/.phdude/skills/venue-adapt/SKILL.md
+  s_946fc7502759d8::t_21c228c2bfaca5 1-95
+examples/qualitative-humanities/.phdude/skills/write/SKILL.md
+  s_946fc7502759d8::t_16e58f04a8e6b2 1-100
+examples/qualitative-humanities/.phdude/templates.yaml
+  s_946fc7502759d8::t_9c69c62f7ab052 1-3
+examples/qualitative-humanities/.phdude/writing-policy.yaml
+  s_946fc7502759d8::t_b782737dfc5016 1-15
+examples/qualitative-humanities/authors/researcher-d.yaml
+  s_946fc7502759d8::t_3999c8a9fc362f 1-53
+examples/qualitative-humanities/authors/samples/researcher-d/intro-approved.md
+  s_946fc7502759d8::t_7f3ab97d4feeb2 1-5
+examples/qualitative-humanities/decisions/DEC-0a041b9b8a.yaml
+  s_946fc7502759d8::t_26fd21fe267641 1-20
+examples/qualitative-humanities/decisions/DEC-292a91d92e.yaml
+  s_946fc7502759d8::t_40d2ef12643a12 1-23
+examples/qualitative-humanities/knowledge/artifacts/ART-0b66fb01e7.yaml
+  s_946fc7502759d8::t_29716c7551f168 1-24
+examples/qualitative-humanities/knowledge/artifacts/ART-ad21c3d2f2.yaml
+  s_946fc7502759d8::t_7f9f6f9da09a22 1-25
+examples/qualitative-humanities/knowledge/artifacts/ART-ff9a294dbb.yaml
+  s_946fc7502759d8::t_5071befa50dc29 1-23
+examples/qualitative-humanities/knowledge/candidates/CAND-147a25d71b.yaml
+  s_946fc7502759d8::t_4710634eeca6b8 1-34
+examples/qualitative-humanities/knowledge/candidates/CAND-5015817e93.yaml
+  s_946fc7502759d8::t_bbaed23bd53899 1-33
+examples/qualitative-humanities/knowledge/claims/CLAIM-2796e63e39.yaml
+  s_946fc7502759d8::t_bd28b73ade9171 1-21
+examples/qualitative-humanities/knowledge/claims/CLAIM-2d2237b335.yaml
+  s_946fc7502759d8::t_f8725399483194 1-21
+examples/qualitative-humanities/knowledge/claims/CLAIM-b7b061f8fa.yaml
+  s_946fc7502759d8::t_93f839bb3825e9 1-24
+examples/qualitative-humanities/knowledge/claims/CLAIM-f8ad688c36.yaml
+  s_946fc7502759d8::t_97c04bf57ea856 1-20
+examples/qualitative-humanities/knowledge/evidence/EVID-622d23e063.yaml
+  s_946fc7502759d8::t_f3e8a50ac44840 1-17
+examples/qualitative-humanities/knowledge/evidence/EVID-71046fcc21.yaml
+  s_946fc7502759d8::t_19db182e2921a7 1-18
+examples/qualitative-humanities/knowledge/evidence/EVID-84772d95c1.yaml
+  s_946fc7502759d8::t_10e31a7873b52a 1-17
+examples/qualitative-humanities/knowledge/evidence/EVID-c4928cf2cd.yaml
+  s_946fc7502759d8::t_a4d94694616abb 1-16
+examples/qualitative-humanities/knowledge/facts/FACT-dfc50bbec8.yaml
+  s_946fc7502759d8::t_9e94541c9c6baf 1-14
+examples/qualitative-humanities/knowledge/sources/SRC-282dbb8148.yaml
+  s_946fc7502759d8::t_b2fd2330480fda 1-18
+examples/qualitative-humanities/knowledge/sources/SRC-e48244f910.yaml
+  s_946fc7502759d8::t_740f630046a5b0 1-31
+examples/qualitative-humanities/knowledge/sources/SRC-ef1f86d389.yaml
+  s_946fc7502759d8::t_176aaf1e17d1a1 1-17
+examples/qualitative-humanities/manuscript/introduction.md
+  s_946fc7502759d8::t_fb91083e6cc210 1-17
+examples/qualitative-humanities/manuscript/manuscript.yaml
+  s_946fc7502759d8::t_11a3a219224a44 1-58
+examples/qualitative-humanities/manuscript/reports/introduction.yaml
+  s_946fc7502759d8::t_9a5f6483b36fae 1-33
+examples/qualitative-humanities/phdude.yaml
+  s_946fc7502759d8::t_0a6f4a7396cc0f 1-15
+examples/qualitative-humanities/research/hypotheses/H-1.yaml
+  s_946fc7502759d8::t_2f5f25188ceba3 1-12
+examples/qualitative-humanities/research/methods/METH-deb95d210e.yaml
+  s_946fc7502759d8::t_0d4ff6a13fc93b 1-25
+examples/qualitative-humanities/research/questions/RQ-1.yaml
+  s_946fc7502759d8::t_b7299da7b65e8b 1-12
+examples/qualitative-humanities/research/questions/RQ-2.yaml
+  s_946fc7502759d8::t_9ee9bbef061da9 1-12
+examples/qualitative-humanities/research/searches/SEARCH-be915322eb.yaml
+  s_946fc7502759d8::t_b95495d98038ec 1-26
+examples/qualitative-humanities/reviews/REVIEW-aa0e2882cf.yaml
+  s_946fc7502759d8::t_d4a6f614f283f3 1-21
+examples/qualitative-humanities/sources/finding-aid.md
+  s_946fc7502759d8::t_7da461fe838d81 1-4
+examples/qualitative-humanities/sources/letter-1873-05-12.md
+  s_946fc7502759d8::t_4547ab67356b5a 1-10
+examples/qualitative-humanities/sources/letter-1874-02-03.md
+  s_946fc7502759d8::t_2c9415ecf46727 1-10
+examples/quantitative-social-science/.gitignore
+  s_946fc7502759d8::t_12bcb46b361f2b 1-13
+examples/quantitative-social-science/.phdude/author-profile.yaml
+  s_946fc7502759d8::t_b80b9d1f476d64 1-11
+examples/quantitative-social-science/.phdude/citation-policy.yaml
+  s_946fc7502759d8::t_09494cb6b69534 1-6
+examples/quantitative-social-science/.phdude/constitution.yaml
+  s_946fc7502759d8::t_065f4eff2b40b1 1-26
+examples/quantitative-social-science/.phdude/events.jsonl
+  s_946fc7502759d8::t_37694ba263b704 1-43
+examples/quantitative-social-science/.phdude/methodology-policy.yaml
+  s_946fc7502759d8::t_e416d6fbd31dd7 1-4
+examples/quantitative-social-science/.phdude/publication-policy.yaml
+  s_946fc7502759d8::t_a4c55f602f5946 1-4
+examples/quantitative-social-science/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_23aab50d38cce4 1-72
+examples/quantitative-social-science/.phdude/skills/academic-prose/SKILL.md
+  s_946fc7502759d8::t_6d161acda86191 1-133
+examples/quantitative-social-science/.phdude/skills/academic-prose/references/academic-style.md
+  s_946fc7502759d8::t_ae3619fc7b7064 1-71
+examples/quantitative-social-science/.phdude/skills/academic-prose/references/ai-writing-patterns.md
+  s_946fc7502759d8::t_5cde73ad112f67 1-78
+examples/quantitative-social-science/.phdude/skills/academic-prose/references/epistemic-language.md
+  s_946fc7502759d8::t_60fba2a56fbcb0 1-62
+examples/quantitative-social-science/.phdude/skills/academic-prose/references/examples.md
+  s_946fc7502759d8::t_01af3d41037660 1-129
+examples/quantitative-social-science/.phdude/skills/academic-prose/references/voice-matching.md
+  s_946fc7502759d8::t_ec1de666571da4 1-53
+examples/quantitative-social-science/.phdude/skills/academic-prose/scripts/prose-lint.mjs
+  s_946fc7502759d8::t_f696f272d81601 1-76
+examples/quantitative-social-science/.phdude/skills/academic-prose/tests/academic.yaml
+  s_946fc7502759d8::t_04ed4df79f826f 1-47
+examples/quantitative-social-science/.phdude/skills/academic-prose/tests/ai-slop.yaml
+  s_946fc7502759d8::t_a6bc6387c6d4bb 1-80
+examples/quantitative-social-science/.phdude/skills/academic-prose/tests/human-writing.yaml
+  s_946fc7502759d8::t_dfc98f76cfaca0 1-41
+examples/quantitative-social-science/.phdude/skills/bootstrap/SKILL.md
+  s_946fc7502759d8::t_cc429a0048d181 1-132
+examples/quantitative-social-science/.phdude/skills/build/SKILL.md
+  s_946fc7502759d8::t_3d71c944e08686 1-79
+examples/quantitative-social-science/.phdude/skills/decisions/SKILL.md
+  s_946fc7502759d8::t_2f9a8f711ca5fd 1-93
+examples/quantitative-social-science/.phdude/skills/knowledge/SKILL.md
+  s_946fc7502759d8::t_b1e52fd294c0fb 1-76
+examples/quantitative-social-science/.phdude/skills/literature/SKILL.md
+  s_946fc7502759d8::t_0b18e8bf6739ac 1-167
+examples/quantitative-social-science/.phdude/skills/methodologist/SKILL.md
+  s_946fc7502759d8::t_91ed7292f14306 1-88
+examples/quantitative-social-science/.phdude/skills/methodologist/references/design-question-fit.md
+  s_946fc7502759d8::t_2c4b5469ea9179 1-25
+examples/quantitative-social-science/.phdude/skills/methodologist/references/reporting-standards.md
+  s_946fc7502759d8::t_30fd9400ed525d 1-29
+examples/quantitative-social-science/.phdude/skills/methodologist/references/validity-threats.md
+  s_946fc7502759d8::t_840a17df3ace2b 1-37
+examples/quantitative-social-science/.phdude/skills/next/SKILL.md
+  s_946fc7502759d8::t_a64f61124448d1 1-85
+examples/quantitative-social-science/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_e33ccbe8659a30 1-232
+examples/quantitative-social-science/.phdude/skills/reproducibility-reviewer/SKILL.md
+  s_946fc7502759d8::t_3f0a1791f425c7 1-81
+examples/quantitative-social-science/.phdude/skills/reproducibility-reviewer/references/analysis-contracts.md
+  s_946fc7502759d8::t_69157e87e99c95 1-37
+examples/quantitative-social-science/.phdude/skills/reproducibility-reviewer/references/data-availability.md
+  s_946fc7502759d8::t_8f2b24d53e84ff 1-39
+examples/quantitative-social-science/.phdude/skills/review-modes/SKILL.md
+  s_946fc7502759d8::t_e2468bd0e1dfa2 1-63
+examples/quantitative-social-science/.phdude/skills/reviewer2/SKILL.md
+  s_946fc7502759d8::t_8994bed3acce3d 1-90
+examples/quantitative-social-science/.phdude/skills/reviewer2/references/adversarial-checks.md
+  s_946fc7502759d8::t_14d0cfe1f2dbb6 1-39
+examples/quantitative-social-science/.phdude/skills/reviewer2/references/overclaiming.md
+  s_946fc7502759d8::t_c4652311646214 1-36
+examples/quantitative-social-science/.phdude/skills/venue-adapt/SKILL.md
+  s_946fc7502759d8::t_be2784fd3b15cd 1-95
+examples/quantitative-social-science/.phdude/skills/write/SKILL.md
+  s_946fc7502759d8::t_885b282b6f12ae 1-100
+examples/quantitative-social-science/.phdude/templates.yaml
+  s_946fc7502759d8::t_d16d2b1f451641 1-3
+examples/quantitative-social-science/.phdude/writing-policy.yaml
+  s_946fc7502759d8::t_16fd0576b3a663 1-15
+examples/quantitative-social-science/analysis/ANALYSIS-206365cc2e.yaml
+  s_946fc7502759d8::t_5bd2930674254c 1-30
+examples/quantitative-social-science/analysis/attendance.mjs
+  s_946fc7502759d8::t_08329b1a5d493b 1-60
+examples/quantitative-social-science/analysis/out/attendance-descriptives/results.json
+  s_946fc7502759d8::t_5849339dc883ee 1-25
+examples/quantitative-social-science/authors/researcher-b.yaml
+  s_946fc7502759d8::t_8dd2a8aec75443 1-52
+examples/quantitative-social-science/authors/samples/researcher-b/intro-approved.md
+  s_946fc7502759d8::t_59ae68c0c90728 1-5
+examples/quantitative-social-science/data/attendance.csv
+  s_946fc7502759d8::t_d30ddeb26ce357 1-25
+examples/quantitative-social-science/decisions/DEC-0ed7bb2068.yaml
+  s_946fc7502759d8::t_382397c654c6b3 1-20
+examples/quantitative-social-science/decisions/DEC-883e2adf46.yaml
+  s_946fc7502759d8::t_8a97e9d96739a4 1-21
+examples/quantitative-social-science/figures/FIG-15eee39ece.yaml
+  s_946fc7502759d8::t_824caff53905fb 1-39
+examples/quantitative-social-science/figures/out/households-by-district.svg
+  s_946fc7502759d8::t_ead442b5ff8766 1-31
+examples/quantitative-social-science/knowledge/artifacts/ART-5dd74562a3.yaml
+  s_946fc7502759d8::t_e683005f39666c 1-23
+examples/quantitative-social-science/knowledge/artifacts/ART-81017a69c6.yaml
+  s_946fc7502759d8::t_588a97ee2abe77 1-23
+examples/quantitative-social-science/knowledge/artifacts/ART-a360b7f2ef.yaml
+  s_946fc7502759d8::t_9f65b6857718c9 1-23
+examples/quantitative-social-science/knowledge/candidates/CAND-737f519e18.yaml
+  s_946fc7502759d8::t_314228e3a5989d 1-35
+examples/quantitative-social-science/knowledge/candidates/CAND-c80a0b0c69.yaml
+  s_946fc7502759d8::t_71691ac421fb4b 1-33
+examples/quantitative-social-science/knowledge/claims/CLAIM-26abd01106.yaml
+  s_946fc7502759d8::t_6230a3d3f8e8da 1-18
+examples/quantitative-social-science/knowledge/claims/CLAIM-83e492f314.yaml
+  s_946fc7502759d8::t_2f373d6a44fc97 1-20
+examples/quantitative-social-science/knowledge/claims/CLAIM-8909ac5b5b.yaml
+  s_946fc7502759d8::t_c15c0d65053233 1-24
+examples/quantitative-social-science/knowledge/datasets/DATASET-8959b01e5d.yaml
+  s_946fc7502759d8::t_e708454e9fca77 1-55
+examples/quantitative-social-science/knowledge/evidence/EVID-20104ab040.yaml
+  s_946fc7502759d8::t_691380ff89fd24 1-17
+examples/quantitative-social-science/knowledge/evidence/EVID-3c57b4b86c.yaml
+  s_946fc7502759d8::t_8c5defe80c78b0 1-16
+examples/quantitative-social-science/knowledge/evidence/EVID-47d31ee737.yaml
+  s_946fc7502759d8::t_158759f9231449 1-17
+examples/quantitative-social-science/knowledge/evidence/EVID-be73a89c98.yaml
+  s_946fc7502759d8::t_285488bdc7fb75 1-16
+examples/quantitative-social-science/knowledge/evidence/EVID-e1bdcbc7f1.yaml
+  s_946fc7502759d8::t_f925d0318e368c 1-18
+examples/quantitative-social-science/knowledge/facts/FACT-3e5ca78442.yaml
+  s_946fc7502759d8::t_4d049e4b053217 1-15
+examples/quantitative-social-science/knowledge/facts/FACT-f2d0423334.yaml
+  s_946fc7502759d8::t_07e17373a18b8b 1-15
+examples/quantitative-social-science/knowledge/results/RESULT-2b62947ad9.yaml
+  s_946fc7502759d8::t_f2d8a574685106 1-21
+examples/quantitative-social-science/knowledge/results/RESULT-3a5d6d9b5b.yaml
+  s_946fc7502759d8::t_ef741228c5a67d 1-20
+examples/quantitative-social-science/knowledge/sources/SRC-3c94c2a3c2.yaml
+  s_946fc7502759d8::t_3246f51159db4a 1-18
+examples/quantitative-social-science/knowledge/sources/SRC-5f66943b0a.yaml
+  s_946fc7502759d8::t_096dbcab480334 1-32
+examples/quantitative-social-science/knowledge/sources/SRC-b56a303ca1.yaml
+  s_946fc7502759d8::t_1d01a1c152807e 1-17
+examples/quantitative-social-science/manuscript/introduction.md
+  s_946fc7502759d8::t_58e14fe7b93cee 1-17
+examples/quantitative-social-science/manuscript/manuscript.yaml
+  s_946fc7502759d8::t_a3591eedf5af90 1-58
+examples/quantitative-social-science/manuscript/reports/introduction.yaml
+  s_946fc7502759d8::t_a7b3816feae828 1-33
+examples/quantitative-social-science/phdude.yaml
+  s_946fc7502759d8::t_90d271edf113a3 1-14
+examples/quantitative-social-science/research/hypotheses/H-1.yaml
+  s_946fc7502759d8::t_47498e84659fe8 1-12
+examples/quantitative-social-science/research/methods/METH-4270240d26.yaml
+  s_946fc7502759d8::t_12661654d4c585 1-22
+examples/quantitative-social-science/research/questions/RQ-1.yaml
+  s_946fc7502759d8::t_de15f35d45aa33 1-12
+examples/quantitative-social-science/research/questions/RQ-2.yaml
+  s_946fc7502759d8::t_d2e803f16c18dd 1-12
+examples/quantitative-social-science/research/searches/SEARCH-8ab72c7e15.yaml
+  s_946fc7502759d8::t_ebc5fb36cea7b0 1-26
+examples/quantitative-social-science/reviews/REVIEW-cf38db2bc7.yaml
+  s_946fc7502759d8::t_cd096234588151 1-21
+examples/quantitative-social-science/sources/instrument-codebook.md
+  s_946fc7502759d8::t_0ceff77e38a54f 1-4
+examples/quantitative-social-science/sources/wave-one-report.md
+  s_946fc7502759d8::t_e51713fafb2fb2 1-11
+examples/quantitative-social-science/sources/wave-two-report.md
+  s_946fc7502759d8::t_73ec2592e9485b 1-10
+examples/quantitative-social-science/tables/TABLE-5bfe190861.yaml
+  s_946fc7502759d8::t_48b0c211c3b662 1-34
+examples/quantitative-social-science/tables/out/attendance-by-news-source.csv
+  s_946fc7502759d8::t_0972891773ed24 1-4
+examples/quantitative-social-science/tables/out/attendance-by-news-source.md
+  s_946fc7502759d8::t_d15d9375581265 1-7
+examples/quantitative-social-science/tables/out/attendance-by-news-source.tex
+  s_946fc7502759d8::t_e65c335c570bfc 1-14
+tests/golden/expected/machine-learning/gaps.txt
+  s_946fc7502759d8::t_631502ea69d67b 1-44
+tests/golden/expected/machine-learning/health.txt
+  s_946fc7502759d8::t_c76bbeff2d4336 1-25
+tests/golden/expected/machine-learning/next.txt
+  s_946fc7502759d8::t_c3b16596a939f0 1-21
+tests/golden/expected/machine-learning/ready.txt
+  s_946fc7502759d8::t_cdc1fbcab2fffb 1-20
+tests/golden/expected/machine-learning/status.txt
+  s_946fc7502759d8::t_e45ead549f77f1 1-50
+tests/golden/expected/qualitative-humanities/gaps.txt
+  s_946fc7502759d8::t_5fd3a5e2312823 1-32
+tests/golden/expected/qualitative-humanities/health.txt
+  s_946fc7502759d8::t_2bb8dfc738c8c1 1-25
+tests/golden/expected/qualitative-humanities/next.txt
+  s_946fc7502759d8::t_85972037a7d9b2 1-21
+tests/golden/expected/qualitative-humanities/ready.txt
+  s_946fc7502759d8::t_72f0b57b041f54 1-20
+tests/golden/expected/qualitative-humanities/status.txt
+  s_946fc7502759d8::t_a9d6630bf526ad 1-50
+tests/golden/expected/quantitative-social-science/gaps.txt
+  s_946fc7502759d8::t_c815eb9365c961 1-35
+tests/golden/expected/quantitative-social-science/health.txt
+  s_946fc7502759d8::t_797cdee97a53ec 1-26
+tests/golden/expected/quantitative-social-science/next.txt
+  s_946fc7502759d8::t_c91ecdf9f58913 1-23
+tests/golden/expected/quantitative-social-science/ready.txt
+  s_946fc7502759d8::t_c70fe6101758fb 1-20
+tests/golden/expected/quantitative-social-science/status.txt
+  s_946fc7502759d8::t_80a2850d683d99 1-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b8b8447a21080e3d1a5817896638b83743a98374",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
