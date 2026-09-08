@@ -1,0 +1,24 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-b7b061f8fa
+created: 2026-09-01T00:00:26.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: The Devane correspondence attributes the founding of the reading society to two different parties within nine months.
+kind: empirical
+state: supported
+supported_by:
+  - EVID-622d23e063
+  - EVID-84772d95c1
+questions:
+  - RQ-1
+sections:
+  - Introduction
+  - Discussion
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-0b66fb01e7
+    - ART-ad21c3d2f2

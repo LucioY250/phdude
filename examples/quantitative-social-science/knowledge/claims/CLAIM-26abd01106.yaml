@@ -1,0 +1,18 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-26abd01106
+created: 2026-09-01T00:00:29.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Attendance may track the reach of local media rather than the income of the district.
+kind: empirical
+state: candidate
+supported_by:
+  - EVID-3c57b4b86c
+questions: []
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from: []

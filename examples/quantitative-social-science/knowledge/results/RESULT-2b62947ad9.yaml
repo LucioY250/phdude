@@ -1,0 +1,21 @@
+schema: phdude.result
+version: 1
+id: RESULT-2b62947ad9
+created: 2026-09-01T00:00:56.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+summary: The four districts contributed unequal numbers of households.
+from: ANALYSIS-206365cc2e
+values:
+  Centro: 8
+  Norte: 7
+  Ribera: 4
+  Alto: 5
+state: candidate
+ext:
+  analysis:
+    key: households_by_district
+    run_at: 2026-09-01T00:00:56.000Z
+    unit: households

@@ -1,6 +1,7 @@
 {
   "$id": "phdude://results-json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "x-phdude": { "stability": "stable", "since": "0.5" },
   "title": "The results.json an analysis script writes",
   "type": "object",
   "properties": {

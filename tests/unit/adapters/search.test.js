@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { fetchWithPolicy, retryAfterMs, userAgent } from '../../../src/adapters/search/http.js';
 import { buildProviders, PROVIDER_FACTORIES } from '../../../src/adapters/search/index.js';
 import { arxiv } from '../../../src/adapters/search/arxiv.js';
@@ -562,7 +563,7 @@ test('pubmed: a response without a result object is a VALIDATION', async () => {
 });
 
 test('fakeFetchFromFile: routes load their bodies from files beside the routes file', async () => {
-  const path = new URL('../../fixtures/search/e2e-routes.json', import.meta.url).pathname;
+  const path = fileURLToPath(new URL('../../fixtures/search/e2e-routes.json', import.meta.url));
   const fetch = await fakeFetchFromFile(path);
 
   const openalex = await fetch('https://api.openalex.org/works?search=x');

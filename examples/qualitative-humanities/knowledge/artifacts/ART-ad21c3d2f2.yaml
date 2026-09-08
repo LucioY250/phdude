@@ -1,0 +1,25 @@
+schema: phdude.artifact
+version: 1
+id: ART-ad21c3d2f2
+created: 2026-09-01T00:00:03.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/letter-1874-02-03.md
+paths:
+  - sources/letter-1874-02-03.md
+hash: ad21c3d2f243212fd342361ebaaa41428341c3b21e7f8f4576d02ae88e192beb
+bytes: 312
+mime: text/markdown
+kind: md
+role: unknown
+extracted:
+  status: ok
+  method: text
+  text_chars: 312
+  sections: 3
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z
+versions_of: ART-0b66fb01e7
+latest: true

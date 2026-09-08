@@ -1,0 +1,35 @@
+schema: phdude.candidate
+version: 1
+id: CAND-19176c0235
+created: 2025-03-01T00:00:00Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+provider: arxiv
+providers:
+  - arxiv
+external_id: "2401.05512"
+title: Calibration Sets for Post-Training Quantization of Reading-Comprehension Models
+authors:
+  - V. Petrov
+  - W. Zhang
+year: 2024
+venue: null
+doi: null
+url: http://arxiv.org/pdf/2401.05512v1
+abstract: We study how the choice of calibration set changes the accuracy cost of eight-bit post-training quantization on extractive question answering benchmarks.
+type: preprint
+open_access: true
+cited_by: null
+query: post-training quantization extractive question answering
+question: RQ-1
+search: SEARCH-442c0cdcb0
+score: 1.9
+score_parts:
+  rank: 1
+  citations: 0
+  recency: 0.9
+needs_approval: true
+state: accepted
+accepted_as: SRC-9a56723890

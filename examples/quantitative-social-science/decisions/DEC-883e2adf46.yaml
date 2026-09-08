@@ -1,0 +1,21 @@
+schema: phdude.decision
+version: 1
+id: DEC-883e2adf46
+created: 2026-09-01T00:00:41.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Reconcile the households_surveyed denominator across the two waves
+rationale: Wave one reports 1204 households and wave two 1180; the two are different samples, so the write-up has to say which denominator any pooled rate is computed against.
+proposed_by:
+  researcher: example
+  agent: script
+approved_by: []
+status: proposed
+change:
+  fact_key: households_surveyed
+  canonical_value: 1204
+affects:
+  - FACT-3e5ca78442
+  - FACT-f2d0423334

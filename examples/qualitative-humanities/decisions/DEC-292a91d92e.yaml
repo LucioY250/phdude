@@ -1,0 +1,23 @@
+schema: phdude.decision
+version: 1
+id: DEC-292a91d92e
+created: 2026-09-01T00:00:42.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Resolve the disputed attribution of the founding
+rationale: The May 1873 letter credits the schoolmaster and the February 1874 letter the subscribing merchants. Preferring either requires the first subscription list, which both letters refer to and which has not been located in the series.
+proposed_by:
+  researcher: example
+  agent: script
+approved_by: []
+status: proposed
+change:
+  resolves_contradiction:
+    - CLAIM-2796e63e39
+    - CLAIM-2d2237b335
+  survivor: CLAIM-2d2237b335
+affects:
+  - CLAIM-2796e63e39
+  - CLAIM-2d2237b335

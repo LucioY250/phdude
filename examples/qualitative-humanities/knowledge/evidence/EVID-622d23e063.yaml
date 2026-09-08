@@ -1,0 +1,17 @@
+schema: phdude.evidence
+version: 1
+id: EVID-622d23e063
+created: 2026-09-01T00:00:18.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: ART-0b66fb01e7
+locator: box 4, folio 18
+excerpt: The catalogue "was drawn up by the schoolmaster himself, who founded our little society and kept its ledger until Michaelmas last."
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-0b66fb01e7

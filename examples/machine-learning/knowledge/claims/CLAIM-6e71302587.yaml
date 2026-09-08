@@ -1,0 +1,18 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-6e71302587
+created: 2026-09-01T00:00:33.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Four-bit precision costs materially more accuracy than eight-bit on this benchmark.
+kind: empirical
+state: candidate
+supported_by:
+  - EVID-d48ddd631a
+questions: []
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from: []

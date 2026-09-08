@@ -114,7 +114,9 @@ export function analysisRunnerContract(test, assert, runner, { scriptsDir }) {
     assert.equal(result.exitCode, null);
   });
 
-  test(`${name}: a script a signal killed is reported as killed, not as a success`, async () => {
+  test(`${name}: a script a signal killed is reported as killed, not as a success`, async (t) => {
+    if (process.platform === 'win32') return t.skip('signals are a posix mechanism');
+
     const result = await runner.run({
       runtime: node,
       script: 'signal.mjs',

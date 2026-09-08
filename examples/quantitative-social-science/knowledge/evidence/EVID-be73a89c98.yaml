@@ -1,0 +1,16 @@
+schema: phdude.evidence
+version: 1
+id: EVID-be73a89c98
+created: 2026-09-01T00:00:22.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: SRC-3c94c2a3c2
+locator: Discussion
+excerpt: Households relying on locally produced broadcast media participate in municipal processes more often than households relying on national outlets.
+strength: weak
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from: []

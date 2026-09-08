@@ -1,0 +1,16 @@
+schema: phdude.evidence
+version: 1
+id: EVID-d48ddd631a
+created: 2026-09-01T00:01:07.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: RESULT-d53111b0f2
+locator: accuracy_by_precision
+excerpt: Mean exact-match accuracy is 81.0% at half precision, 80.6% at eight-bit and 77.1% at four-bit precision.
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from: []

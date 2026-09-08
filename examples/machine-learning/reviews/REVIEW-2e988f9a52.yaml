@@ -1,0 +1,21 @@
+schema: phdude.review
+version: 1
+id: REVIEW-2e988f9a52
+created: 2026-09-01T00:01:14.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+kind: reproducibility
+target: ANALYSIS-19e42e3957
+severity: major
+message: The recorded runs name their seeds but not the inference library version or the accelerator, so the latency column cannot be reproduced elsewhere without guessing the environment.
+evidence:
+  - DATASET-0240995739
+  - METH-8a4ba177c0
+status: open
+by:
+  researcher: example
+  agent: script
+mode: full
+suggested_command: phdude decide propose --title "Record the runtime environment with the benchmark runs" --affects DATASET-0240995739

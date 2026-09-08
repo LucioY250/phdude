@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-2
+created: 2026-09-01T00:00:12.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: How did the subscription lists shape what the society acquired?
+objectives:
+  - Compare the surviving catalogue entries with the subscribers named in the letters.
+state: candidate

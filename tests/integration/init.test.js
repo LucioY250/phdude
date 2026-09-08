@@ -8,6 +8,8 @@ import { copySkills, initWorkspace } from '../../src/application/init.js';
 import { discoverSkills } from '../../src/adapters/skills/loader.js';
 import { codexHost } from '../../src/adapters/agents/codex.js';
 import { claudeCodeHost } from '../../src/adapters/agents/claude-code.js';
+import { opencodeHost } from '../../src/adapters/agents/opencode.js';
+import { DEFAULT_AGENTS, hostsFor } from '../../src/adapters/agents/hosts.js';
 import { PhdudeError } from '../../src/domain/errors.js';
 
 const deps = (root) => ({
@@ -119,6 +121,65 @@ test('agents: [claude-code, codex] reports AGENTS.md exactly once, never in two 
   assert.ok(r2.skipped.includes('AGENTS.md'));
   assert.ok(!r2.created.includes('AGENTS.md'));
   assert.ok(!r2.updated.includes('AGENTS.md'));
+});
+
+test('--agents resolves opencode, and the default list is unchanged', () => {
+  assert.deepEqual(
+    hostsFor(['claude-code', 'codex', 'opencode']).map((h) => h.name),
+    ['claude-code', 'codex', 'opencode'],
+  );
+  assert.deepEqual(DEFAULT_AGENTS, ['claude-code', 'codex']);
+  assert.throws(
+    () => hostsFor(['nope']),
+    (err) => err.code === 'USAGE',
+  );
+});
+
+test('agents: [opencode] installs AGENTS.md and the .opencode command files', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const d = deps(root);
+  d.agentHosts = [opencodeHost];
+  const command = join('.opencode', 'command', 'phdude-status.md');
+
+  const r1 = await initWorkspace(d, { title: 'My thesis', agents: ['opencode'] });
+  assert.ok(r1.created.includes('AGENTS.md'));
+  assert.ok(r1.created.includes(command));
+  assert.match(await readFile(join(root, command), 'utf8'), /phdude status/);
+
+  const r2 = await initWorkspace(d, { title: 'My thesis', agents: ['opencode'] });
+  assert.ok(r2.skipped.includes(command));
+  assert.ok(!r2.created.includes(command));
+  assert.ok(!r2.updated.includes(command));
+});
+
+test('a refreshed .opencode command file is reported as updated, never as created', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const d = deps(root);
+  d.agentHosts = [opencodeHost];
+  const command = join('.opencode', 'command', 'phdude-status.md');
+
+  await initWorkspace(d, { title: 'My thesis', agents: ['opencode'] });
+  const shipped = await readFile(join(root, command), 'utf8');
+  await writeFile(join(root, command), shipped.replace('Arguments:', 'Args of an older phdude:'));
+
+  const r = await initWorkspace(d, { title: 'My thesis', agents: ['opencode'] });
+  assert.ok(r.updated.includes(command));
+  assert.ok(!r.created.includes(command));
+  assert.equal(await readFile(join(root, command), 'utf8'), shipped);
+});
+
+test('claude-code and opencode together report AGENTS.md exactly once', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'phdude-'));
+  const d = deps(root);
+  d.agentHosts = [claudeCodeHost, opencodeHost];
+  const count = (r, rel) =>
+    [r.created, r.updated, r.skipped].filter((list) => list.includes(rel)).length;
+
+  const r = await initWorkspace(d, { title: 'My thesis', agents: ['claude-code', 'opencode'] });
+  assert.equal(count(r, 'AGENTS.md'), 1);
+  assert.ok(r.created.includes('AGENTS.md'));
+  assert.ok(r.created.includes(join('.claude', 'commands', 'phdude-status.md')));
+  assert.ok(r.created.includes(join('.opencode', 'command', 'phdude-status.md')));
 });
 
 test('copySkills classifies created, then skipped, then updated on content change', async () => {

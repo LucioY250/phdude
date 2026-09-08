@@ -1,0 +1,25 @@
+schema: phdude.method
+version: 1
+id: METH-deb95d210e
+created: 2026-09-01T00:00:16.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: Archival close reading
+design: Folio-by-folio close reading of the correspondence series against the archive finding aid.
+paradigm: qualitative
+instruments:
+  - transcription protocol
+  - coding scheme for founding attributions
+analysis:
+  - thematic coding of founding attributions
+  - triangulation against the printed histories
+limitations:
+  - one archive
+  - correspondence survives unevenly
+  - no subscription list located
+questions:
+  - RQ-1
+state: candidate
+sampling: The complete surviving correspondence series for 1871-1879 held in the diocesan archive.

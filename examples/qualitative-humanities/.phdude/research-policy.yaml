@@ -1,0 +1,72 @@
+schema: phdude.research-policy
+version: 1
+
+network:
+  enabled: false
+
+providers:
+  - openalex
+  - crossref
+  - arxiv
+
+research:
+  year_range:
+    from: 2021
+
+  peer_reviewed: preferred
+
+  quartiles:
+    allowed:
+      - Q1
+      - Q2
+
+  languages:
+    - en
+    - es
+
+  regions:
+    priority:
+      - Latin America
+
+  freshness:
+    always_check_recent: true
+    stale_after_days: 180
+
+  preprints:
+    require_approval: true
+
+  limit: 20
+
+health:
+  weights:
+    literature-coverage: 1
+    evidence-strength: 1
+    methodological-integrity: 1
+    citation-quality: 1
+    freshness: 1
+    reproducibility: 1
+    consistency: 1
+    prose-quality: 1
+
+execution:
+  enabled: false
+  runtimes:
+    node: node
+    python3: python3
+    Rscript: Rscript
+  timeout_seconds: 600
+
+skills:
+  allow_network: false
+  allow_execution: false
+
+ready:
+  min_health: 70
+  require:
+    - no-open-conflicts
+    - no-disputed-pairs
+    - no-block-reviews
+    - all-sections-approved
+    - figures-alt
+    - repro-clean
+    - citations-clean

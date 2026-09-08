@@ -1,0 +1,33 @@
+schema: phdude.candidate
+version: 1
+id: CAND-5015817e93
+created: 2025-02-01T00:00:00Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+provider: openalex
+providers:
+  - openalex
+external_id: W4225508113
+title: The Schoolmaster as Cultural Broker in the Provincial Town
+authors:
+  - R. Lynskey
+year: 2022
+venue: Open Humanities Preprints
+doi: null
+url: https://example.org/preprints/schoolmaster-broker
+abstract: null
+type: preprint
+open_access: true
+cited_by: 3
+query: provincial reading societies subscription lists
+question: RQ-1
+search: SEARCH-be915322eb
+score: 1.351
+score_parts:
+  rank: 0.5
+  citations: 0.151
+  recency: 0.7
+needs_approval: true
+state: candidate

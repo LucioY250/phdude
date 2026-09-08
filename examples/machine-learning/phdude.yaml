@@ -1,0 +1,14 @@
+schema: phdude.project
+version: 1
+workspace_version: 5
+title: Quantized Inference Benchmark Study
+language: en
+fields:
+  - computer-science
+methods: []
+venues:
+  - ieee
+outputs:
+  - thesis
+mode: full
+agents: []

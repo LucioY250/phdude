@@ -1,0 +1,50 @@
+Project: Participatory Budgeting Attendance Study
+Fields: (none)
+Methods: quantitative
+Outputs: thesis
+Mode: full
+
+Inventory:
+  Total artifacts: 3
+  By kind: md=3
+  By extraction: ok=3
+  Unknown role: 2
+
+Knowledge:
+  source: total=3 (candidate=3)
+  claim: total=3 (candidate=2, supported=1)
+  evidence: total=5 (candidate=5)
+  fact: total=2 (candidate=2)
+  result: total=2 (candidate=2)
+  question: total=2 (candidate=2)
+  hypothesis: total=1 (candidate=1)
+  method: total=1 (candidate=1)
+
+Analysis:
+  Datasets: 1
+  Analyses: 1
+  Results (from analyses): 2
+  Tables: 1
+  Figures: 1
+  Stale or unbuilt: 0 of 3
+
+Literature:
+  Candidates: total=2 (accepted=1, candidate=1)
+  Searches: 1
+  Questions with a stale or missing search: 2 of 2
+
+Conflicts (1 open of 1 total):
+  - households_surveyed: 1204 households (FACT-3e5ca78442 from ART-5dd74562a3) vs 1180 households (FACT-f2d0423334 from ART-81017a69c6) [open]
+
+Disputed claims (0 pairs):
+  (none)
+
+Pending decisions (1):
+  - DEC-883e2adf46: Reconcile the households_surveyed denominator across the two waves
+
+Recent events:
+  link: CLAIM-26abd01106 linked to 1 object(s)
+  packs: applied quantitative
+  packs: applied generic-thesis
+  profile: target profile generic-thesis
+  review: methodology review: 1 finding(s) recorded

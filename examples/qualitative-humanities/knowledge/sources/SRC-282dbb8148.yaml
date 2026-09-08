@@ -1,0 +1,18 @@
+schema: phdude.source
+version: 1
+id: SRC-282dbb8148
+created: 2026-09-01T00:00:08.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Reading Societies of the Provincial Towns
+authors:
+  - P. Ni Ghallchoir
+type: book
+artifacts: []
+state: candidate
+year: 2022
+venue: Studies in Book History
+identifiers:
+  doi: 10.6666/sbh.2022.0044

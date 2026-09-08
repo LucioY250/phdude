@@ -1,0 +1,1520 @@
+{
+  "$comment": "The frozen public contract of every schema in schemas/. Regenerate with UPDATE_SNAPSHOT=1 only alongside an x-phdude.since bump. See docs/versioning.md.",
+  "schemas": {
+    "analysis": {
+      "$id": "phdude://analysis",
+      "stability": "stable",
+      "since": "0.5",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "args",
+            "inputs",
+            "name",
+            "outputs",
+            "params",
+            "runs",
+            "runtime",
+            "script",
+            "state"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.analysis"
+        },
+        "/allOf/1/properties/runtime": {
+          "enum": [
+            "Rscript",
+            "node",
+            "other",
+            "python3"
+          ]
+        },
+        "/allOf/1/properties/inputs/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/outputs": {
+          "required": [
+            "files",
+            "results"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/runs/items": {
+          "required": [
+            "at",
+            "duration_ms",
+            "exit",
+            "input_hashes",
+            "output_hashes",
+            "results"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/runs/items/properties/input_hashes": {
+          "additionalProperties": "<schema>"
+        },
+        "/allOf/1/properties/runs/items/properties/output_hashes": {
+          "additionalProperties": "<schema>"
+        },
+        "/allOf/1/properties/runs/items/properties/results/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "artifact": {
+      "$id": "phdude://artifact",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "bytes",
+            "extracted",
+            "hash",
+            "kind",
+            "mime",
+            "mtime",
+            "path",
+            "paths",
+            "role"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.artifact"
+        },
+        "/allOf/1/properties/kind": {
+          "enum": [
+            "bib",
+            "csv",
+            "docx",
+            "md",
+            "other",
+            "pdf",
+            "pptx",
+            "tex",
+            "txt",
+            "xlsx"
+          ]
+        },
+        "/allOf/1/properties/role": {
+          "enum": [
+            "dataset",
+            "notes",
+            "paper",
+            "presentation",
+            "questionnaire",
+            "report",
+            "thesis-draft",
+            "unknown"
+          ]
+        },
+        "/allOf/1/properties/extracted": {
+          "required": [
+            "method",
+            "sections",
+            "status",
+            "tables",
+            "text_chars",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/extracted/properties/status": {
+          "enum": [
+            "failed",
+            "ok",
+            "partial",
+            "unavailable"
+          ]
+        },
+        "/allOf/1/properties/versions_of": {
+          "$ref": "phdude://common#/$defs/id"
+        }
+      }
+    },
+    "author-profile": {
+      "$id": "phdude://author-profile",
+      "stability": "stable",
+      "since": "0.4",
+      "contract": {
+        "/": {
+          "required": [
+            "id",
+            "language",
+            "paragraphs",
+            "samples",
+            "schema",
+            "sentences",
+            "terminology",
+            "tone",
+            "transitions",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/schema": {
+          "const": "phdude.author-profile"
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/tone": {
+          "required": [
+            "academic",
+            "assertiveness",
+            "first_person"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/tone/properties/assertiveness": {
+          "enum": [
+            "high",
+            "low",
+            "moderate"
+          ]
+        },
+        "/properties/tone/properties/first_person": {
+          "enum": [
+            "natural",
+            "never",
+            "sparing"
+          ]
+        },
+        "/properties/sentences": {
+          "required": [
+            "length",
+            "openings"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/sentences/properties/length": {
+          "enum": [
+            "long",
+            "short",
+            "varied"
+          ]
+        },
+        "/properties/sentences/properties/openings": {
+          "enum": [
+            "consistent",
+            "varied"
+          ]
+        },
+        "/properties/paragraphs": {
+          "required": [
+            "density"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/paragraphs/properties/density": {
+          "enum": [
+            "high",
+            "low",
+            "medium"
+          ]
+        },
+        "/properties/transitions": {
+          "enum": [
+            "frequent",
+            "minimal",
+            "moderate"
+          ]
+        },
+        "/properties/terminology": {
+          "required": [
+            "avoid",
+            "preserve"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/samples/items": {
+          "required": [
+            "approved",
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/learned": {
+          "required": [
+            "first_person_rate",
+            "hedge_rate",
+            "learned_at",
+            "opening_diversity",
+            "paragraph_density",
+            "preserved_terms",
+            "sample_count",
+            "sentence_length_mean",
+            "sentence_length_sd",
+            "transition_rate"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "candidate": {
+      "$id": "phdude://candidate",
+      "stability": "stable",
+      "since": "0.3",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "abstract",
+            "authors",
+            "cited_by",
+            "doi",
+            "external_id",
+            "needs_approval",
+            "open_access",
+            "provider",
+            "providers",
+            "query",
+            "question",
+            "score",
+            "score_parts",
+            "search",
+            "state",
+            "title",
+            "type",
+            "url",
+            "venue",
+            "year"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.candidate"
+        },
+        "/allOf/1/properties/type": {
+          "enum": [
+            "article",
+            "book",
+            "chapter",
+            "other",
+            "preprint"
+          ]
+        },
+        "/allOf/1/properties/question/anyOf/0": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/search": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/score_parts": {
+          "additionalProperties": "<schema>"
+        },
+        "/allOf/1/properties/state": {
+          "enum": [
+            "accepted",
+            "candidate",
+            "dismissed"
+          ]
+        },
+        "/allOf/1/properties/accepted_as": {
+          "$ref": "phdude://common#/$defs/id"
+        }
+      }
+    },
+    "claim": {
+      "$id": "phdude://claim",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "kind",
+            "questions",
+            "sections",
+            "state",
+            "statement",
+            "supported_by"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.claim"
+        },
+        "/allOf/1/properties/kind": {
+          "enum": [
+            "empirical",
+            "literature",
+            "methodological",
+            "theoretical"
+          ]
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        },
+        "/allOf/1/properties/supported_by/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/questions/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/contradicts/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/provenance": {
+          "$ref": "phdude://common#/$defs/provenance"
+        }
+      }
+    },
+    "common": {
+      "$id": "phdude://common",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/$defs/actor": {
+          "required": [
+            "researcher"
+          ],
+          "additionalProperties": false
+        },
+        "/$defs/state": {
+          "enum": [
+            "candidate",
+            "canonical",
+            "disputed",
+            "rejected",
+            "supported"
+          ]
+        },
+        "/$defs/provenance": {
+          "required": [
+            "derived_from",
+            "method"
+          ],
+          "additionalProperties": false
+        },
+        "/$defs/provenance/properties/method": {
+          "enum": [
+            "agent-extraction",
+            "imported",
+            "manual"
+          ]
+        },
+        "/$defs/provenance/properties/derived_from/items": {
+          "$ref": "#/$defs/id"
+        },
+        "/$defs/base": {
+          "required": [
+            "actor",
+            "created",
+            "id",
+            "schema",
+            "version"
+          ]
+        },
+        "/$defs/base/properties/version": {
+          "const": 1
+        },
+        "/$defs/base/properties/id": {
+          "$ref": "#/$defs/id"
+        },
+        "/$defs/base/properties/actor": {
+          "$ref": "#/$defs/actor"
+        }
+      }
+    },
+    "dataset": {
+      "$id": "phdude://dataset",
+      "stability": "stable",
+      "since": "0.5",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "bytes",
+            "format",
+            "hash",
+            "path",
+            "profile",
+            "sensitive",
+            "state"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.dataset"
+        },
+        "/allOf/1/properties/format": {
+          "enum": [
+            "csv",
+            "json",
+            "other",
+            "tsv",
+            "xlsx"
+          ]
+        },
+        "/allOf/1/properties/profile": {
+          "required": [
+            "columns",
+            "rows"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/profile/properties/columns/items": {
+          "required": [
+            "distinct",
+            "distinct_truncated",
+            "inferred_type",
+            "missing",
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/profile/properties/columns/items/properties/inferred_type": {
+          "enum": [
+            "boolean",
+            "date",
+            "empty",
+            "number",
+            "string"
+          ]
+        },
+        "/allOf/1/properties/versions_of": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "decision": {
+      "$id": "phdude://decision",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "affects",
+            "approved_by",
+            "change",
+            "proposed_by",
+            "rationale",
+            "status",
+            "title"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.decision"
+        },
+        "/allOf/1/properties/proposed_by": {
+          "$ref": "phdude://common#/$defs/actor"
+        },
+        "/allOf/1/properties/status": {
+          "enum": [
+            "approved",
+            "proposed",
+            "rejected",
+            "superseded"
+          ]
+        },
+        "/allOf/1/properties/affects/items/anyOf/0": {
+          "$ref": "phdude://common#/$defs/id"
+        }
+      }
+    },
+    "event": {
+      "$id": "phdude://event",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "required": [
+            "actor",
+            "ids",
+            "op",
+            "summary",
+            "ts"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/actor": {
+          "$ref": "phdude://common#/$defs/actor"
+        }
+      }
+    },
+    "evidence": {
+      "$id": "phdude://evidence",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "excerpt",
+            "source",
+            "state",
+            "strength"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.evidence"
+        },
+        "/allOf/1/properties/source": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/strength": {
+          "enum": [
+            "moderate",
+            "strong",
+            "unknown",
+            "weak"
+          ]
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        },
+        "/allOf/1/properties/provenance": {
+          "$ref": "phdude://common#/$defs/provenance"
+        }
+      }
+    },
+    "fact": {
+      "$id": "phdude://fact",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "from",
+            "key",
+            "state",
+            "value"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.fact"
+        },
+        "/allOf/1/properties/from": {
+          "required": [
+            "artifact"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/from/properties/artifact": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "figure": {
+      "$id": "phdude://figure",
+      "stability": "stable",
+      "since": "0.5",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "alt",
+            "caption",
+            "generator",
+            "inputs",
+            "name",
+            "outputs",
+            "runs",
+            "state"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.figure"
+        },
+        "/allOf/1/properties/generator": {
+          "required": [
+            "args",
+            "runtime",
+            "script"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/inputs/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/outputs/items": {
+          "required": [
+            "format",
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/outputs/items/properties/format": {
+          "enum": [
+            "pdf",
+            "png",
+            "svg"
+          ]
+        },
+        "/allOf/1/properties/runs/items": {
+          "required": [
+            "at",
+            "duration_ms",
+            "exit",
+            "input_hashes",
+            "output_hashes"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/runs/items/properties/input_hashes": {
+          "additionalProperties": "<schema>"
+        },
+        "/allOf/1/properties/runs/items/properties/output_hashes": {
+          "additionalProperties": "<schema>"
+        },
+        "/allOf/1/properties/runs/items/properties/timed_out": {
+          "const": true
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "hypothesis": {
+      "$id": "phdude://hypothesis",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "questions",
+            "state",
+            "text"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.hypothesis"
+        },
+        "/allOf/1/properties/questions/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "manuscript": {
+      "$id": "phdude://manuscript",
+      "stability": "stable",
+      "since": "0.4",
+      "contract": {
+        "/": {
+          "required": [
+            "language",
+            "schema",
+            "sections",
+            "title",
+            "version",
+            "voice"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/schema": {
+          "const": "phdude.manuscript"
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/voice": {
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/voice/properties/kind": {
+          "enum": [
+            "author",
+            "consensus"
+          ]
+        },
+        "/properties/voice/allOf/0/if": {
+          "required": [
+            "kind"
+          ]
+        },
+        "/properties/voice/allOf/0/if/properties/kind": {
+          "const": "author"
+        },
+        "/properties/voice/allOf/0/then": {
+          "required": [
+            "author"
+          ]
+        },
+        "/properties/sections/items": {
+          "required": [
+            "claims",
+            "file",
+            "hash",
+            "id",
+            "order",
+            "questions",
+            "status",
+            "title"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/sections/items/properties/status": {
+          "enum": [
+            "approved",
+            "draft",
+            "planned",
+            "revised"
+          ]
+        },
+        "/properties/sections/items/properties/claims/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/properties/sections/items/properties/questions/items": {
+          "$ref": "phdude://common#/$defs/id"
+        }
+      }
+    },
+    "method": {
+      "$id": "phdude://method",
+      "stability": "stable",
+      "since": "0.2",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "design",
+            "name",
+            "paradigm",
+            "questions",
+            "state"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.method"
+        },
+        "/allOf/1/properties/paradigm": {
+          "enum": [
+            "archival",
+            "computational",
+            "mixed",
+            "other",
+            "qualitative",
+            "quantitative",
+            "theoretical"
+          ]
+        },
+        "/allOf/1/properties/questions/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "pack": {
+      "$id": "phdude://pack",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "required": [
+            "description",
+            "detect",
+            "kind",
+            "name",
+            "recommended_checks",
+            "reviewers",
+            "schema",
+            "schemas",
+            "skills",
+            "terminology",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/schema": {
+          "const": "phdude.pack"
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/kind": {
+          "enum": [
+            "field",
+            "method",
+            "venue"
+          ]
+        },
+        "/properties/detect": {
+          "required": [
+            "keywords"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "profile": {
+      "$id": "phdude://profile",
+      "stability": "stable",
+      "since": "0.6",
+      "contract": {
+        "/": {
+          "required": [
+            "abstract",
+            "citation_style",
+            "display",
+            "document_class",
+            "figures",
+            "name",
+            "references",
+            "schema",
+            "sections",
+            "tables",
+            "version",
+            "writing"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/schema": {
+          "const": "phdude.profile"
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/sections/items": {
+          "required": [
+            "id",
+            "order",
+            "required",
+            "title"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/abstract": {
+          "required": [
+            "max_words"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/figures": {
+          "required": [
+            "formats"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/figures/properties/formats/items": {
+          "enum": [
+            "pdf",
+            "png",
+            "svg"
+          ]
+        },
+        "/properties/tables": {
+          "required": [
+            "style"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/references": {
+          "required": [
+            "style"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/templates": {
+          "additionalProperties": false
+        },
+        "/properties/writing": {
+          "required": [
+            "first_person"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/writing/properties/first_person": {
+          "enum": [
+            "natural",
+            "never",
+            "sparing"
+          ]
+        },
+        "/properties/writing/properties/tense_abstract": {
+          "enum": [
+            "past",
+            "present"
+          ]
+        },
+        "/properties/writing/properties/terminology_map": {
+          "additionalProperties": "<schema>"
+        }
+      }
+    },
+    "project": {
+      "$id": "phdude://project",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "required": [
+            "agents",
+            "fields",
+            "methods",
+            "mode",
+            "outputs",
+            "schema",
+            "title",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/schema": {
+          "const": "phdude.project"
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/mode": {
+          "enum": [
+            "full",
+            "lite",
+            "off",
+            "ruthless"
+          ]
+        }
+      }
+    },
+    "question": {
+      "$id": "phdude://question",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "objectives",
+            "state",
+            "text"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.question"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "result": {
+      "$id": "phdude://result",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "from",
+            "state",
+            "summary",
+            "values"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.result"
+        },
+        "/allOf/1/properties/ext/properties/analysis": {
+          "required": [
+            "key",
+            "run_at"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/superseded_by": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "results-json": {
+      "$id": "phdude://results-json",
+      "stability": "stable",
+      "since": "0.5",
+      "contract": {
+        "/": {
+          "required": [
+            "results"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/results/items": {
+          "required": [
+            "key",
+            "summary",
+            "values"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "review": {
+      "$id": "phdude://review",
+      "stability": "stable",
+      "since": "0.7",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "by",
+            "evidence",
+            "kind",
+            "message",
+            "mode",
+            "severity",
+            "status",
+            "target"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.review"
+        },
+        "/allOf/1/properties/kind": {
+          "enum": [
+            "citation",
+            "custom",
+            "methodology",
+            "reproducibility",
+            "reviewer2"
+          ]
+        },
+        "/allOf/1/properties/target/anyOf/0": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/target/anyOf/2": {
+          "const": "project"
+        },
+        "/allOf/1/properties/severity": {
+          "enum": [
+            "block",
+            "major",
+            "minor",
+            "note"
+          ]
+        },
+        "/allOf/1/properties/evidence/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/status": {
+          "enum": [
+            "accepted",
+            "dismissed",
+            "open",
+            "resolved"
+          ]
+        },
+        "/allOf/1/properties/by": {
+          "$ref": "phdude://common#/$defs/actor"
+        },
+        "/allOf/1/properties/mode": {
+          "enum": [
+            "full",
+            "lite",
+            "off",
+            "ruthless"
+          ]
+        }
+      }
+    },
+    "search": {
+      "$id": "phdude://search",
+      "stability": "stable",
+      "since": "0.3",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "filters",
+            "last_run",
+            "providers",
+            "query",
+            "question",
+            "runs"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.search"
+        },
+        "/allOf/1/properties/question/anyOf/0": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/runs/items": {
+          "required": [
+            "at",
+            "count",
+            "new",
+            "provider"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "section-report": {
+      "$id": "phdude://section-report",
+      "stability": "stable",
+      "since": "0.4",
+      "contract": {
+        "/": {
+          "required": [
+            "at",
+            "blocks",
+            "gates",
+            "hash",
+            "schema",
+            "scores",
+            "section",
+            "version",
+            "warnings"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/schema": {
+          "const": "phdude.section-report"
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/gates/items": {
+          "required": [
+            "blocked",
+            "findings",
+            "gate"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/scores": {
+          "additionalProperties": "<schema>"
+        }
+      }
+    },
+    "skill": {
+      "$id": "phdude://skill",
+      "stability": "stable",
+      "since": "0.2",
+      "contract": {
+        "/": {
+          "required": [
+            "permissions",
+            "reads",
+            "version",
+            "writes"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/permissions": {
+          "required": [
+            "network",
+            "workspace"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/permissions/properties/network": {
+          "enum": [
+            "allowed",
+            "none"
+          ]
+        },
+        "/properties/permissions/properties/execution": {
+          "enum": [
+            "allowed",
+            "none"
+          ]
+        },
+        "/properties/permissions/properties/workspace/items": {
+          "enum": [
+            "read",
+            "write:knowledge",
+            "write:manuscript",
+            "write:sources"
+          ]
+        }
+      }
+    },
+    "skills-lock": {
+      "$id": "phdude://skills-lock",
+      "stability": "stable",
+      "since": "0.7",
+      "contract": {
+        "/": {
+          "required": [
+            "schema",
+            "skills",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/schema": {
+          "const": "phdude.skills-lock"
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/skills/items": {
+          "required": [
+            "hash",
+            "installed_at",
+            "name",
+            "source"
+          ],
+          "additionalProperties": false
+        }
+      }
+    },
+    "source": {
+      "$id": "phdude://source",
+      "stability": "stable",
+      "since": "0.1",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "artifacts",
+            "authors",
+            "state",
+            "title",
+            "type"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.source"
+        },
+        "/allOf/1/properties/type": {
+          "enum": [
+            "article",
+            "book",
+            "chapter",
+            "dataset",
+            "other",
+            "preprint",
+            "report",
+            "thesis",
+            "web"
+          ]
+        },
+        "/allOf/1/properties/artifacts/items": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        },
+        "/allOf/1/properties/identifiers": {
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/provenance": {
+          "$ref": "phdude://common#/$defs/provenance"
+        }
+      }
+    },
+    "table": {
+      "$id": "phdude://table",
+      "stability": "stable",
+      "since": "0.5",
+      "contract": {
+        "/": {
+          "unevaluatedProperties": false
+        },
+        "/allOf/0": {
+          "$ref": "phdude://common#/$defs/base"
+        },
+        "/allOf/1": {
+          "required": [
+            "caption",
+            "columns",
+            "formats",
+            "name",
+            "outputs",
+            "runs",
+            "source",
+            "state"
+          ]
+        },
+        "/allOf/1/properties/schema": {
+          "const": "phdude.table"
+        },
+        "/allOf/1/properties/source": {
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/source/properties/result": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/source/properties/dataset": {
+          "$ref": "phdude://common#/$defs/id"
+        },
+        "/allOf/1/properties/source/oneOf/0": {
+          "required": [
+            "result"
+          ]
+        },
+        "/allOf/1/properties/source/oneOf/1": {
+          "required": [
+            "dataset"
+          ]
+        },
+        "/allOf/1/properties/columns/items": {
+          "required": [
+            "key",
+            "label"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/formats/items": {
+          "enum": [
+            "csv",
+            "docx",
+            "latex",
+            "md",
+            "xlsx"
+          ]
+        },
+        "/allOf/1/properties/outputs": {
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/runs/items": {
+          "required": [
+            "at",
+            "output_hashes",
+            "source_hash"
+          ],
+          "additionalProperties": false
+        },
+        "/allOf/1/properties/runs/items/properties/output_hashes": {
+          "additionalProperties": "<schema>"
+        },
+        "/allOf/1/properties/state": {
+          "$ref": "phdude://common#/$defs/state"
+        }
+      }
+    },
+    "templates-registry": {
+      "$id": "phdude://templates-registry",
+      "stability": "stable",
+      "since": "0.6",
+      "contract": {
+        "/": {
+          "required": [
+            "schema",
+            "templates",
+            "version"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/schema": {
+          "const": "phdude.templates"
+        },
+        "/properties/version": {
+          "const": 1
+        },
+        "/properties/templates/items": {
+          "required": [
+            "hash",
+            "kind",
+            "name",
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        "/properties/templates/items/properties/kind": {
+          "enum": [
+            "docx",
+            "latex",
+            "pptx"
+          ]
+        }
+      }
+    }
+  }
+}

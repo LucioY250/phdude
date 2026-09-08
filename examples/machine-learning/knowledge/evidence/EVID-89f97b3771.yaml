@@ -1,0 +1,17 @@
+schema: phdude.evidence
+version: 1
+id: EVID-89f97b3771
+created: 2026-09-01T00:00:22.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: ART-f4e6774a3e
+locator: Claim
+excerpt: Eight-bit post-training quantization leaves exact-match accuracy unchanged within run-to-run variation on extractive question answering.
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-f4e6774a3e

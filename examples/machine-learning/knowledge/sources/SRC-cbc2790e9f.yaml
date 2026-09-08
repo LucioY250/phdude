@@ -1,0 +1,18 @@
+schema: phdude.source
+version: 1
+id: SRC-cbc2790e9f
+created: 2026-09-01T00:00:10.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: A Survey of Low-Precision Inference for Transformer Models
+authors:
+  - U. Nakamura
+type: article
+artifacts: []
+state: candidate
+year: 2023
+venue: Transactions on Efficient Inference
+identifiers:
+  doi: 10.4444/tei.2023.0077

@@ -1,0 +1,50 @@
+name: Feature request
+description: Something PhDude should be able to do and cannot.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Start with the research problem, not the command. The most useful requests describe a
+        moment in a real project where PhDude got in the way or was silent.
+
+        Some things are deliberately out of scope — no cloud, no accounts, no web UI, no vector
+        database, no detector score. See
+        [docs/non-goals.md](https://github.com/LucioY250/phdude/blob/main/docs/non-goals.md)
+        before filing.
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What were you trying to establish, and what did PhDude not help with?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like it to do
+      description: If you have a command shape in mind, write it out. If not, that is fine.
+    validations:
+      required: true
+  - type: dropdown
+    id: shape
+    attributes:
+      label: Where do you think this belongs?
+      description: >-
+        A capability that needs no memory, no provenance and no approval gate is usually a skill or
+        a pack, and you can write one today without changing PhDude. See docs/extending.md.
+      options:
+        - Core — it has to still be true tomorrow, for another researcher
+        - A skill — the agent needs to know how to do something
+        - A pack — a field, method or venue needs its own vocabulary or rules
+        - An adapter — a new parser, renderer, search provider, agent host or analysis runner
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do instead today
+      description: The workaround, or the tool you leave PhDude for.
+    validations:
+      required: false

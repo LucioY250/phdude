@@ -1,0 +1,32 @@
+schema: phdude.source
+version: 1
+id: SRC-5f66943b0a
+created: 2026-09-01T00:00:37.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Local Media Repertoires and Attendance at Municipal Assemblies
+authors:
+  - N. Quispe
+  - O. Ramires
+type: article
+artifacts: []
+state: candidate
+year: 2024
+venue: Journal of Civic Studies
+abstract: Across eleven municipalities we relate the news media households rely on to their attendance at participatory budgeting assemblies, and find the association survives adjustment for district income.
+identifiers:
+  doi: 10.5555/jcs.2024.0188
+  url: https://example.org/articles/local-media-repertoires
+provenance:
+  method: imported
+  derived_from: []
+ext:
+  research:
+    candidate: CAND-737f519e18
+    provider: openalex
+    external_id: W4392007311
+    accepted_by:
+      researcher: example
+      agent: script

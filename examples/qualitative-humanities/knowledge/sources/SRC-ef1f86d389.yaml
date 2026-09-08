@@ -1,0 +1,17 @@
+schema: phdude.source
+version: 1
+id: SRC-ef1f86d389
+created: 2026-09-01T00:00:06.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Devane Papers, Correspondence Series 1871-1879
+authors:
+  - Diocesan Archive
+type: other
+artifacts:
+  - ART-0b66fb01e7
+  - ART-ad21c3d2f2
+state: candidate
+year: 1879

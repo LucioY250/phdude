@@ -12,6 +12,20 @@ ADAPTERS = how PhDude interacts with an agent or external system.
 A capability that needs no memory, no provenance and no approval gate is a Skill. Anything
 that must still be true tomorrow, for another researcher on another agent, belongs in Core.
 
+This page is the guide: where a change belongs, and how to build each kind of extension. The
+reference pages go deeper on one thing each.
+
+| Page | What it is for |
+|---|---|
+| [extension-api.md](extension-api.md) | The seven ports as a reference: signatures, lifecycle, error codes, stability, and how to run each contract suite. |
+| [skills-authoring.md](skills-authoring.md) | Writing a SKILL.md: the `phdude:` contract, permissions, fixtures, installing and bundling. |
+| [packs-authoring.md](packs-authoring.md) | Field, method and venue packs, detection, profiles and CSL licensing. |
+| [agents.md](agents.md) | Setting up Claude Code, Codex, OpenCode or anything that reads `AGENTS.md`. |
+| [versioning.md](versioning.md) | What 1.0 froze, what it did not, and what a deprecation costs. |
+| [migration.md](migration.md) | Workspace versions, what each step does, and how to write the next one. |
+| [non-goals.md](non-goals.md) | What PhDude will not become, so an idea can be checked in a minute. |
+| [examples.md](examples.md) | The four generated example workspaces and what each one demonstrates. |
+
 ## Packs
 
 A pack is a directory holding `pack.yaml` and, for a field or method pack, its own skill
@@ -414,7 +428,8 @@ needs judgement is a research decision and belongs to the researcher.
 Cover the step in `tests/unit/application/migrate.test.js` and, if it rewrites entities, add a
 workspace at the old version under `tests/fixtures/workspaces/`. See
 [ADR 6](adr/0006-workspace-versioning-and-migrations.md) for why the workspace is versioned
-rather than each object.
+rather than each object, and [migration.md](migration.md) for what every step so far does, what a
+migration promises a researcher, and the paperwork a shape change owes.
 
 ## Ports and contract suites
 
@@ -466,7 +481,8 @@ import { agentHostContract } from '../../src/ports/agent-host.js';
 agentHostContract(test, assert, { mkdtemp: mkroot, readFile }, myHost);
 ```
 
-Then register the host in `src/adapters/cli/commands/init.js` so `--agents` accepts its name.
+Then register the host in `HOSTS` in `src/adapters/agents/hosts.js` so `--agents` accepts its
+name. The three shipped hosts are documented in [agents.md](agents.md).
 
 ### SearchProvider
 

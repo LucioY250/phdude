@@ -1,0 +1,80 @@
+# One case per rule: text that must be caught, and the exact rule that must catch it.
+lang: en
+cases:
+  - name: vague-literature-without-a-citation
+    expect: [vague-literature]
+    text: |
+      Recent studies report the same gap in the undergraduate population.
+
+  - name: the-same-claim-with-its-sources-named
+    expect: []
+    text: |
+      Recent studies report the same gap in the undergraduate population [@lopez2023;
+      @bell2021].
+
+  - name: unsupported-intensifier
+    expect: [unsupported-intensifier]
+    text: |
+      The contribution is a novel approach to lecture capture.
+
+  - name: generic-register
+    expect: [banned-phrase]
+    text: |
+      The work delves into the question of how students take notes.
+
+  - name: filler-phrase
+    expect: [empty-phrase]
+    text: |
+      It is important to note that the response rate was 68 percent [@lopez2023].
+
+  - name: transition-density
+    expect: [transition-density]
+    text: |
+      Furthermore, adoption rose. Moreover, retention held steady across the term. Additionally,
+      the instrument was unchanged. The cohort was recruited from one faculty [@bell2021].
+
+  - name: sentence-monotony
+    expect: [sentence-monotony]
+    text: |
+      Participants completed the questionnaire during the first week.
+      Instructors distributed the consent forms before each lecture.
+      Assistants collected the paper responses after every session.
+      Coders reviewed the free-text answers in two passes.
+      Analysts merged the two datasets on the identifier.
+      Reviewers checked the merged file against the register.
+
+  - name: repeated-openings
+    expect: [repeated-openings]
+    text: |
+      The model predicts adoption from three variables. The model was fitted on the 2024 cohort
+      and validated on the 2023 cohort. The model reports an intercept close to zero.
+
+  - name: symmetrical-lists
+    expect: [symmetrical-lists]
+    text: |
+      The instrument covers four areas:
+
+      - Frequency of use across a typical week.
+      - Frequency in examination periods.
+      - Frequency before a graded assessment.
+      - Frequency across shared study groups.
+
+  - name: excessive-hedging
+    expect: [excessive-hedging]
+    text: |
+      The intervention may possibly indicate that engagement could improve somewhat under
+      conditions that are typically favourable.
+
+  - name: spanish-generic-register-and-filler
+    lang: es
+    expect: [banned-phrase, empty-phrase, unsupported-intensifier, vague-literature]
+    text: |
+      Es importante señalar que investigaciones recientes han demostrado el papel crucial de la
+      escritura digital en un mundo cada vez más conectado.
+
+  - name: spanish-hedging
+    lang: es
+    expect: [excessive-hedging]
+    text: |
+      Nuestro estudio quizás puede mostrar que los estudiantes probablemente prefieren el
+      teléfono.

@@ -1,0 +1,21 @@
+schema: phdude.review
+version: 1
+id: REVIEW-cf38db2bc7
+created: 2026-09-01T00:01:11.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+kind: methodology
+target: METH-4270240d26
+severity: major
+message: Households were not assigned to a news source and the design records no adjustment for district, so the reported ordering cannot be read as an effect of the medium.
+evidence:
+  - EVID-20104ab040
+  - EVID-47d31ee737
+status: open
+by:
+  researcher: example
+  agent: script
+mode: full
+suggested_command: phdude decide propose --title "Adjust the attendance comparison for district" --affects ANALYSIS-206365cc2e

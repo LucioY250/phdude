@@ -1,8 +1,24 @@
 {
   "name": "phdude",
-  "version": "0.7.0",
+  "version": "1.0.0",
   "description": "The senior researcher in your terminal. A field-agnostic research co-author harness for AI coding agents.",
   "license": "MIT",
+  "keywords": [
+    "research",
+    "academic-writing",
+    "thesis",
+    "literature-review",
+    "citations",
+    "reproducibility",
+    "knowledge-graph",
+    "provenance",
+    "agents-md",
+    "claude-code",
+    "codex",
+    "opencode",
+    "ai-agent",
+    "cli"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LucioY250/phdude.git"
@@ -14,6 +30,9 @@
   "type": "module",
   "engines": {
     "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "bin": {
     "phdude": "bin/phdude.js"
@@ -28,24 +47,36 @@
     "commands",
     "packs",
     "generators",
+    "docs/agents.md",
     "docs/cli.md",
-    "docs/workspace.md",
+    "docs/examples.md",
     "docs/extending.md",
+    "docs/extension-api.md",
+    "docs/migration.md",
+    "docs/non-goals.md",
+    "docs/packs-authoring.md",
+    "docs/skills-authoring.md",
+    "docs/versioning.md",
+    "docs/workspace.md",
     "docs/adr",
     "docs/assets",
     "!docs/assets/diagrams/*.excalidraw",
     "!docs/assets/fonts",
     "README.md",
     "LICENSE",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "SECURITY.md"
   ],
   "scripts": {
     "test": "node --test \"tests/**/*.test.js\"",
     "test:unit": "node --test \"tests/unit/**/*.test.js\"",
+    "validate": "node --test tests/unit/schemas.test.js tests/unit/skills.test.js tests/contracts/schema-stability.test.js tests/contracts/skills.test.js tests/contracts/packs.test.js",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "example": "node scripts/make-example.mjs",
+    "examples": "node scripts/make-examples.mjs",
+    "example:all": "npm run example && npm run examples",
     "fixtures": "node scripts/make-fixtures.mjs",
     "diagrams": "node scripts/make-diagrams.mjs"
   },

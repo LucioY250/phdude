@@ -1,0 +1,112 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Do everything except publishing to npm and creating the GitHub release.
+        type: boolean
+        default: true
+permissions:
+  contents: read
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # gh release create
+      id-token: write # npm publish --provenance
+    env:
+      # A tag push is always the real thing. A manual run is a dry run unless someone unticks it.
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: sudo apt-get update && sudo apt-get install -y poppler-utils pandoc
+      - run: npm ci
+
+      - name: resolve the version
+        id: version
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      # A tag that does not match the manifest would publish something other than what the tag
+      # names, and the GitHub release notes would come from the wrong CHANGELOG section.
+      - name: the tag and the manifest must agree
+        if: github.event_name == 'push'
+        run: |
+          if [ "${{ github.ref_name }}" != "${{ steps.version.outputs.tag }}" ]; then
+            echo "tag ${{ github.ref_name }} but package.json says ${{ steps.version.outputs.version }}"
+            exit 1
+          fi
+
+      - run: npm test
+      - run: npm pack
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: phdude-${{ steps.version.outputs.version }}-tarball
+          path: phdude-*.tgz
+          if-no-files-found: error
+
+      # Keep a Changelog: everything between this version's heading and the next one.
+      - name: release notes from the CHANGELOG
+        id: notes
+        run: |
+          awk -v v="${{ steps.version.outputs.version }}" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "CHANGELOG.md has no ## [${{ steps.version.outputs.version }}] section"
+            exit 1
+          fi
+          cat release-notes.md >> "$GITHUB_STEP_SUMMARY"
+
+      # `secrets` cannot be read from an `if:` expression, so the presence of the token becomes a
+      # step output. The token itself is never printed.
+      - name: is there a token to publish with
+        id: token
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: echo "present=${NPM_TOKEN:+yes}" >> "$GITHUB_OUTPUT"
+
+      - name: publish to npm
+        if: env.DRY_RUN != 'true' && steps.token.outputs.present == 'yes'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
+
+      - name: no token, nothing published
+        if: env.DRY_RUN != 'true' && steps.token.outputs.present != 'yes'
+        run: |
+          echo "NPM_TOKEN is not set, so ${{ steps.version.outputs.tag }} was built and tested but not published." \
+            >> "$GITHUB_STEP_SUMMARY"
+          echo "Add the secret and re-run this workflow to publish it." >> "$GITHUB_STEP_SUMMARY"
+
+      # Only a tag push has a tag to hang a release on, and the releases for 0.1 through 0.7 were
+      # created by hand, so this has to tolerate finding one already there rather than failing.
+      - name: GitHub release
+        if: env.DRY_RUN != 'true' && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "release $TAG already exists, leaving it alone" >> "$GITHUB_STEP_SUMMARY"
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file release-notes.md --verify-tag
+          fi
+
+      - name: dry run, nothing was published
+        if: env.DRY_RUN == 'true'
+        run: |
+          echo "Dry run for ${{ steps.version.outputs.tag }}: tests, pack and release notes ran; nothing was published and no release was created." \
+            >> "$GITHUB_STEP_SUMMARY"

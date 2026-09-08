@@ -1,0 +1,69 @@
+{
+  "items": [
+    {
+      "id": "ex:2024-0001",
+      "title": "Preregistration and the credibility of open science claims",
+      "authors": ["Ada Okonkwo", "Bruno Salazar"],
+      "year": 2024,
+      "venue": "Journal of Open Research Practice",
+      "doi": "https://doi.org/10.5555/EX.2024.0001",
+      "url": "https://example.org/works/2024-0001",
+      "abstract": "A survey of preregistered studies and the claims their reports make.",
+      "type": "journal-article",
+      "open_access": true,
+      "cited_by": 41
+    },
+    {
+      "id": "ex:2023-0044",
+      "title": "Data availability statements as a weak signal of reproducibility",
+      "authors": ["Chen Wei"],
+      "year": 2023,
+      "venue": "Open Science Reports",
+      "doi": "10.5555/ex.2023.0044",
+      "url": "https://example.org/works/2023-0044",
+      "abstract": null,
+      "type": "preprint",
+      "open_access": true,
+      "cited_by": 7
+    },
+    {
+      "id": "ex:2022-0117",
+      "title": "Reviewer incentives under open peer review",
+      "authors": [],
+      "year": 2022,
+      "venue": null,
+      "doi": null,
+      "url": null,
+      "abstract": "A chapter on what reviewers are paid in, when they are not paid.",
+      "type": "book-chapter",
+      "open_access": null,
+      "cited_by": null
+    },
+    {
+      "id": "ex:2021-0009",
+      "title": "Ten years of registered reports",
+      "authors": ["Dara Fitzgerald", "Emil Novak"],
+      "year": 2021,
+      "venue": "Metascience Quarterly",
+      "doi": "10.5555/ex.2021.0009",
+      "url": "https://example.org/works/2021-0009",
+      "abstract": "What changed in the decade after the first registered report.",
+      "type": "conference-paper",
+      "open_access": false,
+      "cited_by": 128
+    },
+    {
+      "id": "ex:2023-0210",
+      "title": "",
+      "authors": ["Nobody Atall"],
+      "year": 2023,
+      "venue": "Journal of Untitled Records",
+      "doi": null,
+      "url": null,
+      "abstract": null,
+      "type": "other",
+      "open_access": null,
+      "cited_by": null
+    }
+  ]
+}

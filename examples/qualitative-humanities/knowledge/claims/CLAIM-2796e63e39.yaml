@@ -1,0 +1,21 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-2796e63e39
+created: 2026-09-01T00:00:31.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: The reading society was founded by the parish schoolmaster.
+kind: empirical
+state: disputed
+supported_by:
+  - EVID-622d23e063
+questions: []
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-0b66fb01e7
+contradicts:
+  - CLAIM-2d2237b335

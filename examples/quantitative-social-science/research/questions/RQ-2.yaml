@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-2
+created: 2026-09-01T00:00:12.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Does assembly attendance change between survey waves within the same district?
+objectives:
+  - Compare attendance across the two waves district by district.
+state: candidate

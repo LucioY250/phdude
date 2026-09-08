@@ -1,0 +1,14 @@
+schema: phdude.project
+version: 1
+workspace_version: 5
+title: Participatory Budgeting Attendance Study
+language: en
+fields: []
+methods:
+  - quantitative
+venues:
+  - generic-thesis
+outputs:
+  - thesis
+mode: full
+agents: []

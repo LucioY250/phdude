@@ -1,0 +1,12 @@
+schema: phdude.hypothesis
+version: 1
+id: H-1
+created: 2026-09-01T00:00:14.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Acquisitions followed the occupations of the subscribers rather than the catalogue the schoolmaster drew up.
+questions:
+  - RQ-2
+state: candidate

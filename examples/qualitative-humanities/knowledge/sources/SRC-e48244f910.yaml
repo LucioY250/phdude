@@ -1,0 +1,31 @@
+schema: phdude.source
+version: 1
+id: SRC-e48244f910
+created: 2026-09-01T00:00:38.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Subscription Lists and the Founding of Provincial Reading Societies
+authors:
+  - Q. Fitzmaurice
+type: article
+artifacts: []
+state: candidate
+year: 2023
+venue: Studies in Book History
+abstract: Surviving subscription lists are read against the correspondence of five provincial reading societies to show how founding narratives were revised by their members.
+identifiers:
+  doi: 10.6666/sbh.2023.0121
+  url: https://example.org/articles/subscription-lists
+provenance:
+  method: imported
+  derived_from: []
+ext:
+  research:
+    candidate: CAND-147a25d71b
+    provider: openalex
+    external_id: W4385512900
+    accepted_by:
+      researcher: example
+      agent: script

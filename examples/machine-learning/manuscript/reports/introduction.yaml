@@ -1,0 +1,33 @@
+schema: phdude.section-report
+version: 1
+section: introduction
+hash: 2272c193319e6e60273cda960ba7cc1133ff45d01dc33319e37ea7fdf6410c8b
+at: 2026-09-01T00:00:49.000Z
+gates:
+  - gate: gate-citations
+    findings: 0
+    blocked: false
+  - gate: gate-evidence
+    findings: 1
+    blocked: false
+  - gate: gate-prose
+    findings: 0
+    blocked: false
+  - gate: gate-voice
+    findings: 0
+    blocked: false
+  - gate: gate-meaning
+    findings: 0
+    blocked: false
+  - gate: gate-profile
+    findings: 0
+    blocked: false
+scores:
+  specificity: 100
+  evidenceAlignment: 95
+  epistemicPrecision: 100
+  structuralVariation: 96
+  authorVoice: 91
+  conciseness: 100
+warnings: 1
+blocks: 0

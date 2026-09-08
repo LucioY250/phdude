@@ -1,0 +1,17 @@
+schema: phdude.evidence
+version: 1
+id: EVID-84772d95c1
+created: 2026-09-01T00:00:20.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: ART-ad21c3d2f2
+locator: box 5, folio 3
+excerpt: The society "was got up by the subscribing merchants of the quay, who put their names to the first list before ever the schoolmaster was applied to."
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-ad21c3d2f2

@@ -1,5 +1,5 @@
 ---
-description: Venue profiles: what the venue expects, what the manuscript does not meet yet, and which venue it targets.
+description: "Venue profiles: what the venue expects, what the manuscript does not meet yet, and which venue it targets."
 allowed-tools: Bash(phdude:*), Bash(npx:*)
 phdude-managed: true
 ---

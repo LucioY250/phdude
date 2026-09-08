@@ -1,0 +1,45 @@
+{"ts":"2026-09-01T00:00:00.000Z","op":"init","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"workspace initialized"}
+{"ts":"2026-09-01T00:00:04.000Z","op":"ingest","actor":{"researcher":"example","agent":"script"},"ids":["ART-f4e6774a3e","ART-d6be23332e","ART-fa084130f1"],"summary":"ingested 3, skipped 0"}
+{"ts":"2026-09-01T00:00:05.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["ART-fa084130f1"],"summary":"artifact role set to notes"}
+{"ts":"2026-09-01T00:00:07.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["SRC-ae77970deb"],"summary":"source added"}
+{"ts":"2026-09-01T00:00:09.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["SRC-70fcdb80e9"],"summary":"source added"}
+{"ts":"2026-09-01T00:00:11.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["SRC-cbc2790e9f"],"summary":"source added"}
+{"ts":"2026-09-01T00:00:13.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["RQ-1"],"summary":"question added"}
+{"ts":"2026-09-01T00:00:15.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["RQ-2"],"summary":"question added"}
+{"ts":"2026-09-01T00:00:17.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["RQ-3"],"summary":"question added"}
+{"ts":"2026-09-01T00:00:19.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["H-1"],"summary":"hypothesis added"}
+{"ts":"2026-09-01T00:00:21.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["METH-8a4ba177c0"],"summary":"method added"}
+{"ts":"2026-09-01T00:00:23.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-89f97b3771"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:00:25.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-9495d5d2af"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:00:27.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-ed8844509d"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:00:29.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-e7323833c0"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:00:31.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-4b634ae3b0"],"summary":"claim added"}
+{"ts":"2026-09-01T00:00:32.000Z","op":"promote","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-4b634ae3b0"],"summary":"CLAIM-4b634ae3b0 candidate → supported"}
+{"ts":"2026-09-01T00:00:34.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-6e71302587"],"summary":"claim added"}
+{"ts":"2026-09-01T00:00:36.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-d0ac24ffa0"],"summary":"claim added"}
+{"ts":"2026-09-01T00:00:38.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-6988534f7f"],"summary":"claim added"}
+{"ts":"2026-09-01T00:00:40.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-79c11966df"],"summary":"claim added"}
+{"ts":"2026-09-01T00:00:41.000Z","op":"link","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-6988534f7f","CLAIM-79c11966df"],"summary":"CLAIM-6988534f7f contradicts CLAIM-79c11966df"}
+{"ts":"2025-03-01T00:00:00Z","op":"search","actor":{"researcher":"example","agent":"script"},"ids":["SEARCH-442c0cdcb0"],"summary":"arxiv: \"post-training quantization extractive question answering\" → 2 results"}
+{"ts":"2026-09-01T00:00:42.000Z","op":"research","actor":{"researcher":"example","agent":"script"},"ids":["CAND-19176c0235","SRC-9a56723890"],"summary":"accepted CAND-19176c0235 as SRC-9a56723890"}
+{"ts":"2026-09-01T00:00:43.000Z","op":"authors","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"author profile researcher-c added"}
+{"ts":"2026-09-01T00:00:45.000Z","op":"authors","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"author profile researcher-c learned from 1 sample(s)"}
+{"ts":"2026-09-01T00:00:46.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"manuscript initialized (6 sections)"}
+{"ts":"2026-09-01T00:00:47.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"submitted introduction (draft)"}
+{"ts":"2026-09-01T00:00:48.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"submitted introduction (revised)"}
+{"ts":"2026-09-01T00:00:51.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-497d708e6b"],"summary":"decision proposed"}
+{"ts":"2026-09-01T00:00:53.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-497d708e6b"],"summary":"decision approved by example"}
+{"ts":"2026-09-01T00:00:54.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":["DEC-497d708e6b"],"summary":"approved introduction (DEC-497d708e6b)"}
+{"ts":"2026-09-01T00:00:56.000Z","op":"data","actor":{"researcher":"example","agent":"script"},"ids":["DATASET-0240995739"],"summary":"dataset added: data/benchmark-runs.csv"}
+{"ts":"2026-09-01T00:00:58.000Z","op":"analyze","actor":{"researcher":"example","agent":"script"},"ids":["ANALYSIS-19e42e3957"],"summary":"analysis declared: benchmark summary"}
+{"ts":"2026-09-01T00:01:00.000Z","op":"analyze","actor":{"researcher":"example","agent":"script"},"ids":["ANALYSIS-19e42e3957","RESULT-d53111b0f2","RESULT-d87b1ffbab"],"summary":"analysis run: benchmark summary → 2 new, 0 unchanged, 0 superseded"}
+{"ts":"2026-09-01T00:01:02.000Z","op":"table","actor":{"researcher":"example","agent":"script"},"ids":["TABLE-3589b9e04c"],"summary":"table declared: accuracy-by-precision"}
+{"ts":"2026-09-01T00:01:03.000Z","op":"table","actor":{"researcher":"example","agent":"script"},"ids":["TABLE-3589b9e04c"],"summary":"table built: accuracy-by-precision (md, latex, csv)"}
+{"ts":"2026-09-01T00:01:05.000Z","op":"figure","actor":{"researcher":"example","agent":"script"},"ids":["FIG-359202df9b"],"summary":"figure declared: latency-by-precision"}
+{"ts":"2026-09-01T00:01:06.000Z","op":"figure","actor":{"researcher":"example","agent":"script"},"ids":["FIG-359202df9b"],"summary":"figure built: latency-by-precision (figures/out/latency-by-precision.svg)"}
+{"ts":"2026-09-01T00:01:08.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-d48ddd631a"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:01:09.000Z","op":"link","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-6e71302587","EVID-d48ddd631a"],"summary":"CLAIM-6e71302587 linked to 1 object(s)"}
+{"ts":"2026-09-01T00:01:10.000Z","op":"packs","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"applied computer-science"}
+{"ts":"2026-09-01T00:01:11.000Z","op":"packs","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"applied ieee"}
+{"ts":"2026-09-01T00:01:12.000Z","op":"profile","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"target profile ieee"}
+{"ts":"2026-09-01T00:01:15.000Z","op":"review","actor":{"researcher":"example","agent":"script"},"ids":["REVIEW-2e988f9a52"],"summary":"reproducibility review: 1 finding(s) recorded"}

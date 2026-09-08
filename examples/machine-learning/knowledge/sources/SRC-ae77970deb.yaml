@@ -1,0 +1,19 @@
+schema: phdude.source
+version: 1
+id: SRC-ae77970deb
+created: 2026-09-01T00:00:06.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Post-Training Quantization Without Accuracy Loss
+authors:
+  - R. Aoki
+  - S. Berhane
+type: preprint
+artifacts:
+  - ART-f4e6774a3e
+state: candidate
+year: 2024
+identifiers:
+  arxiv: "2402.09113"

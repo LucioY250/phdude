@@ -4,7 +4,194 @@ All notable changes to PhDude are recorded here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and PhDude adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] — 2026-09-08
+
+Public release. Nothing here is a new research capability; all of it is a promise. Every schema
+carries a stability marker and a snapshot that refuses a silent change to its required fields or
+enums. Every command in `docs/cli.md` is marked stable, and the exit codes and the `--json` error
+envelope are held there by a contract test. The seven extension ports are documented with their
+lifecycles, their error behaviour and the contract suites an implementation runs against, and four
+example third-party extensions run through those suites in CI. Three more example workspaces — a
+social-science survey, a machine-learning benchmark and an archival humanities study — prove the
+claim the whole design rests on: the core never branches on the field. What it would cost to break
+any of this is written down in [docs/versioning.md](docs/versioning.md).
+
+### Breaking changes since 0.1
+
+Everything below happened between 0.1.0 and 1.0.0, while the surface was still being built. It
+is collected here because a workspace started on an early release has to cross all of it at once,
+and because from 1.0 on none of it may happen again outside a major release —
+[docs/versioning.md](docs/versioning.md) says what is now frozen and what a deprecation costs.
+
+**The workspace format moved four times, and one command carries every step.** `phdude migrate`
+walks a workspace from wherever it is to version 5. Since 0.2.0 a read on an out-of-date
+workspace still works and warns `workspace needs migration (n → 5)`; a write exits 1 with the
+same message and the hint `run phdude migrate`.
+
+| Step | Release | What the workspace gains |
+|---|---|---|
+| 1 → 2 | 0.2.0 | `provenance` on claims and evidence, `contradicts` on claims (`migrations/0001-workspace-v2.mjs`). |
+| 2 → 3 | 0.5.0 | The `execution` block in `.phdude/research-policy.yaml`, the `analysis/` directories, and the derived-output `.gitignore` rules (`migrations/0002-workspace-v3.mjs`). |
+| 3 → 4 | 0.6.0 | The venue list in `phdude.yaml` and the empty `.phdude/templates.yaml` registry (`migrations/0003-workspace-v4.mjs`). |
+| 4 → 5 | 0.7.0 | `reviews/`, and the `health.weights` and `ready` blocks in the research policy (`migrations/0004-workspace-v5.mjs`). |
+
+Every step is idempotent, writes through the store, appends one `migrate` event, and previews
+itself under `--dry-run`. None of them renames an id.
+
+**One object type changed its identity.** In 0.5.0 a `RESULT-` id became derived from its summary
+*and* the analysis that produced it, so two analyses can reach the same finding and each keep its
+own record. `from` is id material only when it names an analysis: a 0.4.0 result whose `from` held
+prose keeps the id computed from its summary alone, migration 0002 rewrites no ids, and re-adding
+such a result after migrating finds the record already on disk rather than minting a duplicate.
+Every other type's material is unchanged from 0.1.0 — a claim from its statement, evidence from
+its source, locator and excerpt, a fact from its key, value and artifact, a decision from its
+title, rationale, sorted `affects` and stable `change`.
+
+**Flags renamed, removed or made strict.**
+
+- `phdude decide supersede` takes the replacing decision in `--with`, not `--by` (0.2.0). `--by`
+  is the researcher on every subcommand. The old form exits 1 naming the correction rather than
+  reporting a missing decision.
+- An unrecognised option is refused (0.2.0). `phdude knowledge list --stat candidate` used to
+  return the unfiltered list, which reads as an answer; it now exits 1 naming the flag and listing
+  what that command accepts.
+- `phdude ingest .` walks `sources/` only (0.2.0). An explicit path into `knowledge/`,
+  `research/`, `decisions/` or `.phdude/` exits 1 with `not a source path`.
+- `phdude edit` treats a result's `from` as an identity field and refuses it (0.5.0). It was
+  editable in 0.4.0, when `from` was not part of the id.
+- `phdude table build` with no `--format` builds every format the table declares (0.6.0). It used
+  to intersect the declaration with the three text defaults, so a table declaring only `xlsx`
+  built nothing.
+- The venue profile's whole-profile `max_words` fallback is gone (0.6.0). An abstract's limit is
+  written once, under `abstract.max_words`, and `schemas/profile.json` is strict about it.
+
+**Reports that changed what they say.** `gate-profile` stopped reporting section order on
+`phdude manuscript submit` (0.6.0) — a gate that sees one section cannot tell a reordered
+manuscript from an incomplete one, so it warned about sections that were merely absent.
+`phdude profile check` reports order and is the only reporter of it.
+
+**What did not change.** Every object schema is still `version: 1`, and every field added since
+0.1.0 is optional or carries a default, so a document written by 0.1.0 still validates. No exit
+code was renumbered or given a new meaning: 0.5.0 added `EXECUTION`, which shares exit 4 with
+`TOOL_MISSING` because both mean PhDude did its part and the thing it called did not come back.
+The `--json` error envelope — `{"error":{"code","message","hint","details"}}` — has been the same
+since 0.1.0 and is now held there by `tests/contracts/cli-json-shape.test.js`.
+
+### Added
+
+- **The schema freeze.** Every one of the 29 schemas carries
+  `"x-phdude": { "stability": "stable", "since": "0.x" }`, where `since` names the release its
+  shape landed in. `tests/fixtures/schema-snapshot.json` records each schema's `$id`, its
+  `required` sets, its enums, its `const`s, its `$ref`s and how it is closed;
+  `tests/contracts/schema-stability.test.js` fails on any drift unless `x-phdude.since` moved with
+  it, and refuses a `since` that moves while the shape stands still. Re-recording is deliberate
+  (`UPDATE_SNAPSHOT=1`), never automatic.
+- **The CLI contract, frozen by test.** `tests/contracts/cli-json-shape.test.js` raises each error
+  code from the smallest real invocation and asserts the envelope and the exit code, twice — once
+  against a literal and once against `EXIT_CODES` — so renumbering a code fails. A companion test
+  asserts every code the CLI can exit with has a case.
+- **`docs/versioning.md`.** SemVer for PhDude: the public surface, the explicit non-surface,
+  schemas, workspace versions, ports, skills and packs, the deprecation policy, and the checklist
+  a breaking change has to walk.
+- **`docs/extension-api.md`.** The seven ports — `SearchProvider`, `DocumentParser`,
+  `DocumentRenderer`, `AgentHost`, `AnalysisRunner`, `ResearchPack`, `ResearchSkill` — each with
+  its signature, lifecycle, error codes, stability, `since`, and the contract-suite invocation.
+  It is also explicit about the boundary: PhDude executes no JavaScript from outside the package,
+  so five of the seven are extended in-tree and only packs and skills are installable by a
+  workspace.
+- **`examples/extensions/`.** A third-party search provider against a fictional API (with the
+  retry, timeout and typed-error handling the port actually requires), a plain-text document
+  parser, a `txt` renderer, and a field pack laid out as a real discovery root. Each is a
+  standalone MIT ESM package that imports nothing from PhDude, and
+  `tests/contracts/example-extensions.test.js` runs all four through the shipped contract suites.
+- **`docs/skills-authoring.md` and `docs/packs-authoring.md`.** The SKILL.md convention, the
+  `phdude:` contract, the permission model and what asking for more costs at each install path;
+  and field, method and venue packs, detection, publication profiles and CSL licensing.
+- **The OpenCode host.** `phdude init --agents opencode` writes the compact `AGENTS.md` index and
+  `.opencode/command/phdude*.md`, one per shipped slash-command template, under the same
+  `phdude-managed` marker every other host uses. `agentHostContract` covers it.
+- **`docs/agents.md`.** Claude Code, Codex, OpenCode and Gemini CLI: what each one reads, the two
+  shapes of `AGENTS.md`, the permission difference between them, and what is and is not
+  smoke-tested.
+- **Three cross-field example workspaces.** `examples/quantitative-social-science` (a two-wave
+  household survey with a dataset, an analysis, a table, a figure and an open fact conflict),
+  `examples/machine-learning` (a quantization benchmark with two contradicting preprints and both
+  claims disputed) and `examples/qualitative-humanities` (an archival study with no statistics, a
+  disputed pair and an open decision proposing a survivor). Each is generated by
+  `scripts/make-examples.mjs`, and each has golden `status`, `next`, `gaps`, `health` and `ready`
+  reports. A test asserts the core mentions none of them, nor any field pack name — the field
+  agnosticism claim, checked rather than asserted.
+- **`docs/examples.md`.** What each of the four examples is, how to read one, how to regenerate
+  them, and why they are the field-agnosticism test.
+- **`docs/migration.md`.** The workspace version model, what every step from 1 → 5 actually does
+  to your files, what a migration promises a researcher, what to do when one goes wrong, and how
+  to write the next one.
+- **`docs/non-goals.md`.** PRD §119 for contributors: what PhDude will not become, the detector
+  rule in full, and the difference between extending PhDude and loading code into it.
+- **Community files.** `CONTRIBUTING.md` (dev setup, the rules the code follows, what a new
+  command owes, what a frozen-surface change costs), `CODE_OF_CONDUCT.md` (Contributor Covenant
+  2.1), `SECURITY.md` (private reporting through GitHub advisories, and what counts as a
+  vulnerability in a local tool), issue forms for bugs and features, a pull-request checklist and
+  a Dependabot configuration for npm and actions.
+- **A release workflow.** `.github/workflows/release.yml` runs on a `v*` tag: it checks the tag
+  against the manifest, tests, packs, uploads the tarball, cuts the release notes out of this
+  file, and publishes with `npm publish --provenance --access public` when `NPM_TOKEN` is
+  present — with a notice instead of a failure when it is not. `workflow_dispatch` with
+  `dry_run: true` runs everything except publishing and creating the release.
+- **`npm run validate`.** The schema and skill validation subset — object fixtures, the stability
+  snapshot, the skill contracts and the pack contracts — as one fast command, run in CI ahead of
+  the full suite.
+
+### Changed
+
+- **CI is harder.** The `test` job adds an advisory `npm audit --audit-level=high`, `npm run
+  validate`, and a parity step that regenerates all four example workspaces and fails if the tree
+  is dirty. A new `windows` job runs the unit and contract suites on `windows-latest` under Node
+  22, which is where path handling lives; the tool-dependent suites stay on ubuntu.
+- **`docs/cli.md` marks all 43 commands `Stability: stable`,** and states what that promises,
+  with a paragraph under **Exit codes** freezing the error envelope.
+- **`package.json` ships the documentation.** `files` gains `docs/versioning.md`,
+  `docs/extension-api.md`, `docs/skills-authoring.md`, `docs/packs-authoring.md`,
+  `docs/migration.md`, `docs/non-goals.md` and `docs/examples.md`; the manifest gains
+  `publishConfig.access: public` and keywords.
+- **`scripts/make-example.mjs` was split.** The field-agnostic mechanics — fixed clock, stubbed
+  git and fetch, pinned execution runner, and the helpers that write sources, record searches,
+  accept candidates, submit drafts and approve sections — moved to
+  `scripts/lib/example-builder.mjs`. `generic-thesis` is now a profile consumed by
+  `buildExample`, and the committed example regenerates byte-for-byte.
+- **`listCommandFiles` moved to `src/adapters/agents/shared.js`,** so both command-writing hosts
+  enumerate the same template directory, and `snapshotAgentHostFiles` now watches
+  `.opencode/command` as well as `.claude/commands` — without which a refreshed OpenCode command
+  would be reported as created rather than updated.
+- **The README had its 1.0 pass:** a 90-second tour, an install path that is honest about npm, the
+  optional-tools table, a documentation index, and the roadmap closed out.
+- **`docs/extending.md`** opens with a table pointing at the eight reference pages, and its
+  migration section defers the detail to `docs/migration.md`.
+
+### Fixed
+
+- **Two slash-command templates were never refreshed after an upgrade.** `commands/manuscript.md`
+  and `commands/profile.md` carried an unquoted `: ` in their front-matter description, which made
+  the block invalid YAML, so `isPhdudeManaged` returned false and `phdude init` refused to
+  overwrite files it had written itself. A researcher who upgraded PhDude silently kept the old
+  `/phdude-manuscript` and `/phdude-profile`. Both are quoted, and the surface test now requires
+  every template's front matter to parse rather than merely to match a regular expression.
+
+### Notes
+
+- **Still three runtime dependencies** (`yaml`, `ajv`, `fflate`) and no new network path. The
+  OpenCode host writes files; the example extensions ship no dependencies at all.
+- **What "stable" means here.** Schemas may gain optional fields; commands may gain flags; ports
+  may gain optional capabilities. A required field, an enum value, an exit code, the error
+  envelope, a command's meaning or a port's required shape may not change before 2.0, and
+  `docs/versioning.md` carries the deprecation policy for when one has to.
+- **PhDude still has no AI-detector, "humanity" or AI score, and never will** (PRD §30c). The
+  refusal is in the argument parser, before any command-specific parsing, and the rule is now
+  stated on a page of its own as well as in the README, `docs/cli.md`, ADR 8 and the
+  `academic-prose` skill.
+- **Not on npm yet.** The package, the manifest and the workflow are ready; publishing waits on
+  the `NPM_TOKEN` secret. Until then the README's install path is clone, `npm ci`, `npm link`, and
+  the release job says so rather than failing.
 
 ## [0.7.0] — 2026-09-08
 
@@ -713,7 +900,7 @@ First release: the deterministic harness. No model is involved in anything below
 - Requires Node 22 or newer. `pdftotext` (poppler-utils) is optional.
 - No network access and no shell interpolation anywhere in the runtime.
 
-[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.7.0...HEAD
+[1.0.0]: https://github.com/LucioY250/phdude/compare/v0.7.0...v1.0.0
 [0.7.0]: https://github.com/LucioY250/phdude/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/LucioY250/phdude/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/LucioY250/phdude/compare/v0.4.0...v0.5.0

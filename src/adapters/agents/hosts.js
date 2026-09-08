@@ -1,11 +1,12 @@
 import { PhdudeError } from '../../domain/errors.js';
 import { claudeCodeHost } from './claude-code.js';
 import { codexHost } from './codex.js';
+import { opencodeHost } from './opencode.js';
 
 // The agent hosts PhDude can write for, in one place: `init` names them on the command line and
 // records the choice in `phdude.yaml`, and every later command that has to refresh AGENTS.md
 // reads that record rather than asking again.
-export const HOSTS = { 'claude-code': claudeCodeHost, codex: codexHost };
+export const HOSTS = { 'claude-code': claudeCodeHost, codex: codexHost, opencode: opencodeHost };
 
 export const DEFAULT_AGENTS = ['claude-code', 'codex'];
 

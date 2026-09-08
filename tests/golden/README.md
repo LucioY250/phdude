@@ -27,6 +27,12 @@ honestly where Pandoc is absent.
 `examples/generic-thesis` is itself generated (not hand-authored) by `scripts/make-example.mjs`;
 see that file and `tests/integration/make-example.test.js` for how it stays reproducible.
 
+`examples.test.js` is the same idea over the three cross-field workspaces
+(`quantitative-social-science`, `machine-learning`, `qualitative-humanities`): five reports each,
+pinned under `expected/<example>/`, rendered against the same fixed present. It is parametrised
+over the profiles `scripts/make-examples.mjs` exports, so an example added there gets its goldens
+by running the update command below. See `docs/examples.md`.
+
 The example's `analysis/out/`, `tables/out/` and `figures/out/` files are **committed**, even
 though a real workspace's `.gitignore` excludes them. They were added with `git add -f` on
 purpose: the example is a finished workspace a reader clones and looks at, `repro.test.js` asserts

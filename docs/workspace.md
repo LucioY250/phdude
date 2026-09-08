@@ -9,6 +9,7 @@ my-research/
 ├── AGENTS.md                     # shared agent instructions (Codex and any other host)
 ├── CLAUDE.md                     # Claude Code entry point
 ├── .claude/commands/phdude*.md   # slash commands wrapping the CLI
+├── .opencode/command/phdude*.md  # the same commands, for OpenCode
 ├── .phdude/
 │   ├── constitution.yaml         # non-negotiable research rules
 │   ├── research-policy.yaml      # evidence, sources, methodology preferences
@@ -115,7 +116,7 @@ something that happens to your files while you were asking for something else.
 |---|---|
 | `phdude.yaml`, `.phdude/*.yaml`, and everything under `knowledge/`, `research/`, `decisions/`, `sources/`, `authors/`, `manuscript/` | yours; never overwritten |
 | `.gitignore` | yours; only the missing default lines are appended |
-| `AGENTS.md`, `CLAUDE.md`, `.claude/commands/*` | rewritten only while they carry the `phdude:managed` marker on the first line or in their front matter |
+| `AGENTS.md`, `CLAUDE.md`, `.claude/commands/*`, `.opencode/command/*` | rewritten only while they carry the `phdude:managed` marker on the first line or in their front matter |
 | the installed skills under `.phdude/skills/` | PhDude-managed; refreshed every time, and a changed file is reported under `updated` |
 
 So a local edit to a shipped skill is overwritten by the next `init` or upgrade. Project

@@ -1,0 +1,30 @@
+schema: phdude.analysis
+version: 1
+id: ANALYSIS-206365cc2e
+created: 2026-09-01T00:00:54.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: attendance descriptives
+runtime: node
+script: analysis/attendance.mjs
+args: []
+inputs:
+  - DATASET-8959b01e5d
+outputs:
+  results: analysis/out/attendance-descriptives/results.json
+  files: []
+params: {}
+runs:
+  - at: 2026-09-01T00:00:56.000Z
+    exit: 0
+    duration_ms: 0
+    input_hashes:
+      DATASET-8959b01e5d: 8959b01e5da40b7ea4714f8f03b0d49a590e3d0489f5ba573a4a0be0a93c0010
+    output_hashes:
+      analysis/out/attendance-descriptives/results.json: 281a72de2a5f4f6bfe8a0aa4b4a33e0b30e54de1dfc87c002b188400fdd01b91
+    results:
+      - RESULT-3a5d6d9b5b
+      - RESULT-2b62947ad9
+state: candidate

@@ -1,0 +1,15 @@
+schema: phdude.fact
+version: 1
+id: FACT-3e5ca78442
+created: 2026-09-01T00:00:33.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+key: households_surveyed
+value: 1204
+from:
+  artifact: ART-5dd74562a3
+  locator: Methods
+state: candidate
+unit: households

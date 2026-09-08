@@ -1,0 +1,20 @@
+schema: phdude.result
+version: 1
+id: RESULT-3a5d6d9b5b
+created: 2026-09-01T00:00:56.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+summary: Reported assembly attendance is highest among households whose primary news source is the community radio station.
+from: ANALYSIS-206365cc2e
+values:
+  community radio: 0.75
+  municipal bulletin: 0.5
+  social platform: 0.375
+state: candidate
+ext:
+  analysis:
+    key: attendance_by_news_source
+    run_at: 2026-09-01T00:00:56.000Z
+    unit: proportion

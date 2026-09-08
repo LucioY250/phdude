@@ -1,0 +1,10 @@
+{
+  "name": "phdude-document-parser-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A third-party PhDude DocumentParser that reads a plain-text note into one titled section.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": "./index.js"
+}

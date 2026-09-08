@@ -1,0 +1,22 @@
+schema: phdude.method
+version: 1
+id: METH-4270240d26
+created: 2026-09-01T00:00:16.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: Two-wave household survey
+design: Repeated cross-sectional survey of the municipal household register, two waves twelve months apart.
+paradigm: quantitative
+instruments:
+  - participatory budgeting attendance questionnaire
+analysis:
+  - descriptive comparison of reported attendance by primary news source
+limitations:
+  - self-reported attendance
+  - one municipality
+questions:
+  - RQ-1
+state: candidate
+sampling: Stratified random sample from the municipal household register, four districts.

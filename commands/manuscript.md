@@ -1,5 +1,5 @@
 ---
-description: The manuscript: plan its sections, submit a draft through the writing gates, approve or reopen a section.
+description: "The manuscript: plan its sections, submit a draft through the writing gates, approve or reopen a section."
 allowed-tools: Bash(phdude:*), Bash(npx:*)
 phdude-managed: true
 ---
