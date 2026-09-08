@@ -1,0 +1,68 @@
+src/domain/skills.js
+  s_946fc7502759d8::t_99ca032b89f23e 1-152
+tests/fixtures/objects/valid/skills-lock.1.json
+  s_946fc7502759d8::t_99ca032b89f23e 1-18
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_99ca032b89f23e 91-93
+src/adapters/cli/commands/skills.js
+  s_946fc7502759d8::t_99ca032b89f23e 1-103
+tests/unit/domain/skills.test.js
+  s_946fc7502759d8::t_99ca032b89f23e 1-140
+src/adapters/skills/install.js
+  s_946fc7502759d8::t_99ca032b89f23e 1-137
+README.md
+  s_946fc7502759d8::t_99ca032b89f23e 973
+  s_946fc7502759d8::t_9031fd5b08e6b8 211
+src/schemas/index.js
+  s_946fc7502759d8::t_99ca032b89f23e 39
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_99ca032b89f23e 30,135-145
+  s_946fc7502759d8::t_70f7f88dd9bd89 146
+schemas/skills-lock.json
+  s_946fc7502759d8::t_99ca032b89f23e 1-25
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_99ca032b89f23e 240-245
+src/application/skills.js
+  s_946fc7502759d8::t_99ca032b89f23e 3-14,140-377,379
+  s_946fc7502759d8::t_b8431f13109475 378
+docs/cli.md
+  s_946fc7502759d8::t_99ca032b89f23e 1698-1746,1832-1837
+  s_946fc7502759d8::t_359fadef27f7a3 1838
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_99ca032b89f23e 25-31,72,115,189-193
+docs/workspace.md
+  s_946fc7502759d8::t_99ca032b89f23e 22,338-340,448-460
+  s_946fc7502759d8::t_f9d1c5128601ce 461
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_99ca032b89f23e 114
+src/adapters/cli/commands/doctor.js
+  s_946fc7502759d8::t_99ca032b89f23e 86-93,113
+src/application/doctor.js
+  s_946fc7502759d8::t_99ca032b89f23e 12,24-25,30,42,147-157,185
+docs/extending.md
+  s_946fc7502759d8::t_99ca032b89f23e 327-371
+tests/integration/skills.test.js
+  s_946fc7502759d8::t_99ca032b89f23e 1-430
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_1cbe13d221685b 2918
+  s_946fc7502759d8::t_99ca032b89f23e 2919-3025
+  s_946fc7502759d8::t_f3f9f76f2a06bb 3026
+commands/skills.md
+  s_946fc7502759d8::t_99ca032b89f23e 1-19
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "e475029e6a21f124b3d8d7e0b327e6f147182608",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
