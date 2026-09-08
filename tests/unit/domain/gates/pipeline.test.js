@@ -91,7 +91,7 @@ test('gate-profile is silent without a target profile', () => {
   assert.deepEqual(profileGate.run('any text', EMPTY), []);
 });
 
-test('gate-profile warns on a section the venue does not list, or lists elsewhere', () => {
+test('gate-profile warns on a section the venue does not list, and leaves the order alone', () => {
   const venueProfile = {
     name: 'generic-thesis',
     sections: [
@@ -100,32 +100,19 @@ test('gate-profile warns on a section the venue does not list, or lists elsewher
     ],
   };
 
-  assert.deepEqual(
-    profileGate.run('Short.', { venueProfile, section: 'appendix', sectionOrder: 7 }),
-    [
-      {
-        gate: 'gate-profile',
-        severity: 'warn',
-        line: 1,
-        message: 'generic-thesis does not list a "appendix" section',
-        hint: 'generic-thesis expects: abstract, introduction',
-      },
-    ],
-  );
+  assert.deepEqual(profileGate.run('Short.', { venueProfile, section: 'appendix' }), [
+    {
+      gate: 'gate-profile',
+      severity: 'warn',
+      line: 1,
+      message: 'generic-thesis does not list a "appendix" section',
+      hint: 'generic-thesis expects: abstract, introduction',
+    },
+  ]);
 
-  const misordered = profileGate.run('Short.', {
-    venueProfile,
-    section: 'introduction',
-    sectionOrder: 5,
-  });
-  assert.equal(misordered.length, 1);
-  assert.equal(misordered[0].severity, 'warn');
-  assert.match(misordered[0].message, /puts introduction at position 2/);
-
-  assert.deepEqual(
-    profileGate.run('Short.', { venueProfile, section: 'introduction', sectionOrder: 2 }),
-    [],
-  );
+  // Where the venue puts a section is a fact about the whole manuscript, and a gate that sees one
+  // section cannot tell a reordered manuscript from one that is simply missing a section.
+  assert.deepEqual(profileGate.run('Short.', { venueProfile, section: 'introduction' }), []);
 });
 
 test('gate-profile blocks a section over the venue word limit', () => {
@@ -133,7 +120,6 @@ test('gate-profile blocks a section over the venue word limit', () => {
   const findings = profileGate.run('one two three four five six seven', {
     venueProfile,
     section: 'abstract',
-    sectionOrder: 1,
   });
   assert.equal(findings.length, 1);
   assert.equal(findings[0].severity, 'block');
