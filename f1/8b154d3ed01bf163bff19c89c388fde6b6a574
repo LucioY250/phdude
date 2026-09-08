@@ -1,0 +1,175 @@
+tests/fixtures/objects/valid/review.1.json
+  s_946fc7502759d8::t_10a0e4cbfb4660 1-17
+src/application/snapshot.js
+  s_946fc7502759d8::t_1d10df628adfd3 27
+tests/unit/domain/reviews.test.js
+  s_946fc7502759d8::t_4eb471f52edb38 1-216
+examples/generic-thesis/.phdude/skills/reproducibility-reviewer/references/analysis-contracts.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-37
+tests/unit/domain/entities.test.js
+  s_946fc7502759d8::t_f278ee663b07d4 18,678-723,726-727
+  s_946fc7502759d8::t_430dd23ad6f6ca 724-725
+tests/integration/review.test.js
+  s_946fc7502759d8::t_6246ae8e6ff627 1-194,196-352,354-392,399-427
+  s_946fc7502759d8::t_8cc84b931c0b2f 195,353,393-398
+src/adapters/cli/commands/review.js
+  s_946fc7502759d8::t_e8ffc8a805ffc8 1-51,53-136
+  s_946fc7502759d8::t_920a86ec26c1b6 52
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_1d10df628adfd3 26
+  s_946fc7502759d8::t_7a630bbc5f22ff 34,292-307,310
+  s_946fc7502759d8::t_cea63d63abaf68 308-309,311
+tests/unit/domain/review-context.test.js
+  s_946fc7502759d8::t_6275d900fb082a 1-12,14-107,109-217
+  s_946fc7502759d8::t_8352ba331fd425 13,108
+skills/review-modes/SKILL.md
+  s_946fc7502759d8::t_2b5783ab18dcef 30-46
+docs/cli.md
+  s_946fc7502759d8::t_9c58fbda28ea49 1645,1648,1654,1666
+  s_946fc7502759d8::t_95ad244eaba542 1555-1635
+src/domain/next.js
+  s_946fc7502759d8::t_5aa33b2099f00b 7,28,506-551,626
+examples/generic-thesis/.phdude/skills/reproducibility-reviewer/SKILL.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-81
+skills/reproducibility-reviewer/references/data-availability.md
+  s_946fc7502759d8::t_1f4df197c1ca9b 1-39
+src/application/init.js
+  s_946fc7502759d8::t_1d10df628adfd3 27
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_935f49996053ff 63-64,81-82,99-114
+  s_946fc7502759d8::t_50ab257cb4b6b5 115
+src/domain/ids.js
+  s_946fc7502759d8::t_1d10df628adfd3 20
+examples/generic-thesis/.phdude/skills/reviewer2/SKILL.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-90
+examples/generic-thesis/.phdude/skills/reviewer2/references/overclaiming.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-36
+skills/methodologist/references/design-question-fit.md
+  s_946fc7502759d8::t_3345d1abb38e87 1-25
+examples/generic-thesis/.phdude/skills/methodologist/references/design-question-fit.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-25
+examples/generic-thesis/.phdude/research-policy.yaml
+  s_946fc7502759d8::t_ba2da55fa20350 51-72
+docs/workspace.md
+  s_946fc7502759d8::t_4afbf9798629c3 44,145,211-233
+  s_946fc7502759d8::t_9c58fbda28ea49 79,100,104
+  s_946fc7502759d8::t_6562752060767b 234
+tests/unit/cli/args.test.js
+  s_946fc7502759d8::t_2156ba3f889733 159-193,393
+examples/generic-thesis/.phdude/skills/methodologist/references/validity-threats.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-37
+skills/methodologist/references/validity-threats.md
+  s_946fc7502759d8::t_3345d1abb38e87 1-37
+src/application/review.js
+  s_946fc7502759d8::t_5aa33b2099f00b 32-35
+  s_946fc7502759d8::t_82b6d4b1b4eaa9 152-159
+  s_946fc7502759d8::t_d38bdfca396893 1-31,36-151,160-265,267-268,271-291
+  s_946fc7502759d8::t_d41cafc4ab7921 266,269-270
+tests/unit/domain/ids.test.js
+  s_946fc7502759d8::t_6d7bba6116e8a7 42,44
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_ca7c97f4ea3afb 551,564,573,578,585,596,628,631,651,655
+  s_946fc7502759d8::t_80b406a3827610 2768-2790,2792-2802,2804-2808,2810-2845,2847-2848,2850-2917
+  s_946fc7502759d8::t_6c51b88a51f7f9 2791,2803,2809,2846,2849
+tests/integration/migrate.test.js
+  s_946fc7502759d8::t_b7d802dc4cb0c2 358-362
+  s_946fc7502759d8::t_adc296e72c91dc 373-439
+  s_946fc7502759d8::t_8ad31bfeb8fbbd 15,23,87,89,103-106,123,125,140,144,156,159,186,190,205,219,232,241,251,303-304,315,331,334,346
+src/schemas/index.js
+  s_946fc7502759d8::t_1d10df628adfd3 35
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_6921166a960592 116-122,345-346
+packs/fields/medicine/skills/medicine/references/reporting-standards.md
+  s_946fc7502759d8::t_1f4df197c1ca9b 1-54
+examples/generic-thesis/.phdude/skills/reproducibility-reviewer/references/data-availability.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-39
+examples/generic-thesis/.phdude/skills/reviewer2/references/adversarial-checks.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-39
+schemas/review.json
+  s_946fc7502759d8::t_0eb13f49ca8070 1-31
+skills/reproducibility-reviewer/references/analysis-contracts.md
+  s_946fc7502759d8::t_1f4df197c1ca9b 1-37
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_ba2da55fa20350 63-64,81-82,99-114
+  s_946fc7502759d8::t_ff026137fe4057 115
+tests/integration/profile.test.js
+  s_946fc7502759d8::t_ca7c97f4ea3afb 272,275
+migrations/0004-workspace-v5.mjs
+  s_946fc7502759d8::t_0913df08da722c 1-118
+defaults/research-policy.yaml
+  s_946fc7502759d8::t_fe2c94fc3cd381 51-72
+tests/fixtures/objects/invalid/review.1.json
+  s_946fc7502759d8::t_10a0e4cbfb4660 1-15
+examples/generic-thesis/.phdude/skills/methodologist/references/reporting-standards.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-29
+examples/generic-thesis/.phdude/skills/methodologist/SKILL.md
+  s_946fc7502759d8::t_ba2da55fa20350 1-88
+src/domain/reviews.js
+  s_946fc7502759d8::t_11b6d3783ba1f2 1-182
+tests/integration/write.test.js
+  s_946fc7502759d8::t_ca7c97f4ea3afb 155
+tests/unit/domain/versioning.test.js
+  s_946fc7502759d8::t_6d7bba6116e8a7 13-14,33,35,39-40
+skills/methodologist/references/reporting-standards.md
+  s_946fc7502759d8::t_3345d1abb38e87 1-29
+tests/unit/domain/next.test.js
+  s_946fc7502759d8::t_becde6cdfc9042 683-760
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_4afbf9798629c3 155,198-201
+examples/generic-thesis/.phdude/skills/review-modes/SKILL.md
+  s_946fc7502759d8::t_ba2da55fa20350 30-46
+src/domain/entities.js
+  s_946fc7502759d8::t_d96036bc4eb535 677-728
+  s_946fc7502759d8::t_268244e51579e7 676
+skills/reproducibility-reviewer/SKILL.md
+  s_946fc7502759d8::t_1f4df197c1ca9b 1-81
+skills/reviewer2/references/adversarial-checks.md
+  s_946fc7502759d8::t_e6c4b58e52eca0 1-39
+tests/integration/manuscript.test.js
+  s_946fc7502759d8::t_5e8254c4260121 239
+  s_946fc7502759d8::t_cf6d1ee41c7677 6,13-15,199-238
+  s_946fc7502759d8::t_544f2ad8671370 240-241
+README.md
+  s_946fc7502759d8::t_593932fc4f025d 211,970
+tests/fixtures/objects/invalid/review.2.json
+  s_946fc7502759d8::t_10a0e4cbfb4660 1-15
+schemas/common.json
+  s_946fc7502759d8::t_0eb13f49ca8070 7
+src/domain/versioning.js
+  s_946fc7502759d8::t_1d10df628adfd3 6
+skills/reviewer2/SKILL.md
+  s_946fc7502759d8::t_e6c4b58e52eca0 1-90
+src/domain/context-budget.js
+  s_946fc7502759d8::t_95562d60a48708 112,287-294,303,313
+  s_946fc7502759d8::t_6368822955b2aa 317-606
+commands/review.md
+  s_946fc7502759d8::t_2b5783ab18dcef 1-51
+skills/reviewer2/references/overclaiming.md
+  s_946fc7502759d8::t_e6c4b58e52eca0 1-36
+examples/generic-thesis/phdude.yaml
+  s_946fc7502759d8::t_ba2da55fa20350 3
+skills/methodologist/SKILL.md
+  s_946fc7502759d8::t_3345d1abb38e87 1-88
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_a5f5fd521d818a 226-231
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_eb38afbf02d4f4 82-87
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_4dcaf868b7efbe 63,104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "f18b154d3ed01bf163bff19c89c388fde6b6a574",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
