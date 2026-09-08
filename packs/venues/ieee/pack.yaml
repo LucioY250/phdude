@@ -1,0 +1,22 @@
+schema: phdude.pack
+version: 1
+name: ieee
+kind: venue
+description: >-
+  IEEE conference papers: the IEEEtran class, IEEE numbered references, and the eight-page
+  two-column budget most IEEE conferences set.
+terminology:
+  - index terms
+  - camera-ready
+  - two-column
+  - conference track
+detect:
+  keywords: []
+reviewers:
+  - venue-fit
+recommended_checks:
+  - page-limit
+  - required-sections
+  - word-limits
+skills: []
+schemas: []

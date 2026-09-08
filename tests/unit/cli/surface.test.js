@@ -167,6 +167,7 @@ test('the phdude-core skill lists every write command as CLI-only', () => {
     'research accept',
     'research dismiss',
     'packs apply',
+    'profile use',
     'mode',
     'authors add',
     'authors learn',

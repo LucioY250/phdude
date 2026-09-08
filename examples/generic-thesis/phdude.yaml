@@ -1,10 +1,11 @@
 schema: phdude.project
 version: 1
-workspace_version: 3
+workspace_version: 4
 title: Generic Thesis Example
 language: en
 fields: []
 methods: []
+venues: []
 outputs:
   - thesis
 mode: full

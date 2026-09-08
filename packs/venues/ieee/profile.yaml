@@ -1,13 +1,12 @@
 schema: phdude.profile
 version: 1
-name: generic-thesis
-display: Generic thesis
+name: ieee
+display: IEEE conference paper
 description: >-
-  A university thesis or dissertation: IMRaD plus conclusions, APA references, and limits
-  generous enough that only a runaway section trips them. The default when a manuscript has no
-  venue in mind yet.
-document_class: report
-citation_style: csl/apa.csl
+  The IEEE conference template: IEEEtran, numbered references in IEEE style, and a word budget
+  that fits the eight two-column pages most IEEE conferences allow.
+document_class: IEEEtran
+citation_style: csl/ieee.csl
 sections:
   - id: abstract
     title: Abstract
@@ -17,38 +16,41 @@ sections:
     title: Introduction
     required: true
     order: 2
-    max_words: 6000
+    max_words: 1200
   - id: methods
-    title: Methods
+    title: Method
     required: true
     order: 3
-    max_words: 8000
+    max_words: 2000
   - id: results
     title: Results
     required: true
     order: 4
-    max_words: 8000
+    max_words: 1800
   - id: discussion
     title: Discussion
     required: true
     order: 5
-    max_words: 8000
+    max_words: 1200
   - id: conclusions
-    title: Conclusions
+    title: Conclusion
     required: true
     order: 6
-    max_words: 3000
+    max_words: 500
 abstract:
-  max_words: 500
+  max_words: 250
+page_limit: 8
 figures:
   formats: [pdf, png]
   min_dpi: 300
 tables:
-  style: booktabs
+  style: ieeetran
 references:
-  style: APA 7th edition
+  style: IEEE
 templates:
-  latex: templates/report.tex
+  latex: templates/IEEEtran.tex
 writing:
   first_person: sparing
   tense_abstract: past
+  terminology_map:
+    Figure: Fig.

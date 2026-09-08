@@ -54,6 +54,7 @@ export const COMMAND_OPTIONS = {
     id: { type: 'string' },
   },
   packs: {},
+  profile: { profile: { type: 'string' } },
   cite: { format: { type: 'string' } },
   research: {
     question: { type: 'string' },
@@ -332,6 +333,7 @@ function build(
       to: variadicTo ? to : values.to,
       contradicts: values.contradicts,
       format: values.format,
+      profile: values.profile,
       lang: values.lang,
       question: values.question,
       language: values.language,

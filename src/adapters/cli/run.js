@@ -6,7 +6,12 @@ import { PhdudeError, exitCodeFor } from '../../domain/errors.js';
 import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
 import { detectKind, parseTable, parserFor, PARSERS } from '../documents/index.js';
-import { DEFAULT_PACKS_DIR, discoverPacks, loadProfile } from '../packs/loader.js';
+import {
+  DEFAULT_PACKS_DIR,
+  discoverPacks,
+  discoverProfiles,
+  loadProfile,
+} from '../packs/loader.js';
 import { localRunner } from '../execution/local.js';
 import { DEFAULT_GENERATORS_DIR } from '../execution/generators.js';
 import { buildRenderers } from '../render/index.js';
@@ -43,6 +48,7 @@ import migrate from './commands/migrate.js';
 import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
+import profileCommand from './commands/profile.js';
 import promote from './commands/promote.js';
 import prose from './commands/prose.js';
 import repro from './commands/repro.js';
@@ -78,6 +84,7 @@ const COMMANDS = {
   mode,
   next,
   packs,
+  profile: profileCommand,
   promote,
   prose,
   repro,
@@ -148,6 +155,7 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     loadPacks: () => discoverPacks([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     loadProfile: (name) =>
       loadProfile(name, [DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
+    loadProfiles: () => discoverProfiles([DEFAULT_PACKS_DIR, join(workspace, '.phdude', 'packs')]),
     discoverSkills,
     loadSkill,
     skillsDir: DEFAULT_SKILLS_DIR,

@@ -1,0 +1,21 @@
+schema: phdude.pack
+version: 1
+name: generic-thesis
+kind: venue
+description: >-
+  The default venue: a university thesis or dissertation, IMRaD plus conclusions, APA
+  references, and generous word limits.
+terminology:
+  - chapter
+  - dissertation
+  - supervisor
+  - viva
+detect:
+  keywords: []
+reviewers:
+  - venue-fit
+recommended_checks:
+  - required-sections
+  - word-limits
+skills: []
+schemas: []

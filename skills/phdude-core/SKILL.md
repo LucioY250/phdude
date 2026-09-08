@@ -53,7 +53,8 @@ under `knowledge/`, `research/`, `decisions/`, or `phdude.yaml`. Propose changes
 
 Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude link CLAIM-a
 --contradicts CLAIM-b`), `phdude edit`, `phdude decide`, `phdude promote`,
-`phdude research accept`, `phdude research dismiss`, `phdude packs apply`, `phdude mode`,
+`phdude research accept`, `phdude research dismiss`, `phdude packs apply`,
+`phdude profile use`, `phdude mode`,
 `phdude authors add`, `phdude authors learn`, `phdude authors consensus`,
 `phdude data add`, `phdude analyze add`, `phdude analyze run`, `phdude table add`,
 `phdude table build`, `phdude figure add`, `phdude figure build`, `phdude manuscript init`,
