@@ -1,0 +1,14 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "DOI": "10.5555/recharge",
+    "type": "journal-article",
+    "title": ["Groundwater recharge in arid basins"],
+    "container-title": ["Hydrology Letters"],
+    "author": [{ "given": "R.", "family": "Rho" }],
+    "issued": { "date-parts": [[2015]] },
+    "URL": "https://doi.org/10.5555/recharge"
+  }
+}

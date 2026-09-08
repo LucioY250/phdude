@@ -23,13 +23,16 @@ const ENTITY_DIRS = {
   method: join('research', 'methods'),
   search: join('research', 'searches'),
   decision: 'decisions',
+  review: 'reviews',
 };
 
 const TEMPLATES_FILE = join('.phdude', 'templates.yaml');
+const SKILLS_LOCK_FILE = join('.phdude', 'skills-lock.yaml');
 const MANUSCRIPT_DIR = 'manuscript';
 const MANUSCRIPT_FILE = join(MANUSCRIPT_DIR, 'manuscript.yaml');
 const REPORTS_DIR = join(MANUSCRIPT_DIR, 'reports');
 const SECTION_ID_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const REVIEW_KIND_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 export class FsStore {
   constructor(root) {
@@ -127,6 +130,18 @@ export class FsStore {
     assertValid('templates-registry', registry);
     await this.writeYamlAtomic(TEMPLATES_FILE, registry);
     return join(this.root, TEMPLATES_FILE);
+  }
+
+  async readSkillsLock() {
+    const obj = await this.readYaml(SKILLS_LOCK_FILE);
+    if (obj !== null) assertValid('skills-lock', obj);
+    return obj;
+  }
+
+  async writeSkillsLock(lock) {
+    assertValid('skills-lock', lock);
+    await this.writeYamlAtomic(SKILLS_LOCK_FILE, lock);
+    return join(this.root, SKILLS_LOCK_FILE);
   }
 
   async readProject() {
@@ -283,6 +298,26 @@ export class FsStore {
 
   async writeWritingContext(section, text) {
     const rel = join(this.writingDir(section), 'context.md');
+    await this.writeTextAtomic(rel, text);
+    return join(this.root, rel);
+  }
+
+  // Where `phdude review` leaves the assembled review context. Cache like the writing context:
+  // gitignored, rebuildable, and never what a finding rests on - the findings file the reviewer
+  // writes back is, and `review submit` turns that into records.
+  reviewDir(kind) {
+    if (!REVIEW_KIND_RE.test(String(kind ?? ''))) {
+      throw new PhdudeError(
+        'VALIDATION',
+        `invalid review kind: ${kind}`,
+        'review kinds are lowercase words joined by "-"',
+      );
+    }
+    return join('.phdude', 'cache', 'review', kind);
+  }
+
+  async writeReviewContext(kind, text) {
+    const rel = join(this.reviewDir(kind), 'context.md');
     await this.writeTextAtomic(rel, text);
     return join(this.root, rel);
   }

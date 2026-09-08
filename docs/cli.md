@@ -450,6 +450,52 @@ A source may carry `bibkey` (`^[a-z0-9-]+$`, wins over the derived key), `abstra
 (a string array), and `identifiers: { doi?, isbn?, arxiv?, pmid?, url? }`. The top-level `doi`
 and `url` fields from v0.1 still work; `identifiers.doi` takes precedence when both are set.
 
+### `phdude audit citations [--allow-network] [--json]`
+
+```
+phdude audit citations
+phdude audit citations --allow-network
+```
+
+The citation auditor (PRD §37, spec §3.1). It reads the manuscript and the registry, records
+what it found as `citation` REVIEW objects, and exits 0 whatever it found — a `block` finding
+is reported here, and stops a submission in `phdude ready`, not in the exit code of the audit.
+
+Offline, it applies four rules:
+
+| Rule | Severity | What it means |
+|---|---|---|
+| `unresolved-citation` | `block` | A `[@key]` in a drafted section resolves to neither a SRC id nor a bibkey. |
+| `unsourced-claim` | `major` | A claim the prose asserts with `<!-- claim: … -->` has no evidence behind it citing a recorded source. Evidence quoting a raw artifact is not one yet. |
+| `dismissed-source` | `major` | A source cited in the prose was accepted from — or shares a DOI with — a candidate the researcher dismissed. |
+| `unreviewed-source` | `minor` | The same, for a candidate still awaiting review: the prose cites a paper nobody has ruled on. |
+
+Every `phdude cite check` finding is recorded too, at its own weight:
+`evidence-missing-source` blocks; `invalid-doi`, `duplicate-source` and `duplicate-bibkey` are
+`major`; `missing-field` is `minor`; `uncited-source` is a `note`, because it is a gap in the
+argument rather than a fault in the registry.
+
+With the network open — `--allow-network`, or `network.enabled: true` in
+`.phdude/research-policy.yaml` — each source's DOI is also resolved against Crossref's
+`works/<DOI>` endpoint, one at a time, carrying the author profile's email as the polite
+contact when one is recorded:
+
+| Rule | Severity | What it means |
+|---|---|---|
+| `retracted-source` | `block` | Crossref's `update-to` names a retraction of that DOI. |
+| `doi-unresolved` | `major` | Crossref answers 404: the identifier does not exist. |
+| `title-mismatch` | `major` | The Crossref title and the recorded one share less than 0.8 of their words (normalized token Jaccard). |
+| `year-mismatch` | `minor` | The years differ by more than one. Online-first publication routinely costs a year. |
+
+A lookup that fails — a timeout, a 5xx — is reported as a warning and checked nothing; only a
+404 is the finding `doi-unresolved`. Sources with no DOI are not looked up. Nothing but the DOI
+leaves the machine.
+
+Findings are identified by kind, target and message, so **re-running the audit records nothing
+new and writes no event when it finds what is already on file**, and a finding the researcher
+dismissed is never reopened. Rule on them with `phdude review accept|dismiss|resolve <REVIEW-id>`
+(see `phdude review`); `phdude health` charges the open ones against Citation Quality.
+
 ### `phdude research "<query>" | list | show | accept | dismiss`
 
 ```
@@ -734,6 +780,63 @@ once one high-severity gap or 3 gaps of any severity exist; the ranking decides 
 among the higher-impact rules. `next`'s closing `consistent` line reads
 `N open gap(s); run phdude gaps` whenever the report is not empty, and claims the workspace is
 consistent only when it is.
+
+### `phdude health [--save] [--trend] [--json]`
+
+```
+phdude health
+phdude health --save
+phdude health --trend
+phdude health --json
+```
+
+Research Health (PRD §39, spec §3.3): eight dimensions, each scored 0-100 from what the
+workspace recorded about itself, each printed with the observations its number came from. A
+dimension the workspace cannot answer for scores `null` — printed as `n/a` — rather than a
+number nobody measured, and is left out of the overall.
+
+| Dimension | Formula | Null when |
+|---|---|---|
+| Literature Coverage | Mean of three shares of the research questions: those with a `supported` or `canonical` claim, those with a source behind them (through a claim's evidence), and those whose search is not stale. | No research question is recorded. |
+| Evidence Strength | The mean claim-state score (`canonical` 100, `supported` 80, `candidate` 40, `disputed` 20, `rejected` 0) times the evidence strength factor (`strong` 1, `moderate` 0.75, `weak` and `unknown` 0.5, averaged over every evidence item). With claims recorded and no evidence at all the factor is 0. | No claim is recorded. |
+| Methodological Integrity | Mean of the share of questions that have a method and the share of methods that declare `limitations`, minus 20 per open `methodology` review, floored at 0. | Neither a question nor a method is recorded. |
+| Citation Quality | 100 minus 10 per citation fault, floored at 0: every `cite check` finding that fails the check, plus every open `citation` review above `note` severity. `uncited-source` is informational there and costs nothing here — it is reported, and `phdude gaps` raises it as a gap; a `citation` review at `note` is the same statement in review form and is not charged either. | No source and no citation review is recorded. |
+| Freshness | 100 minus the share of research questions whose search has gone stale, a question nobody searched included. | No research question is recorded. |
+| Reproducibility | The share of declared analyses, tables and figures that `repro check` calls `up-to-date`. | Nothing reproducible is declared, so a free 100 cannot carry the overall. |
+| Consistency | 100 minus 25 per open fact conflict and 25 per disputed claim pair, floored at 0. | No fact and no claim is recorded. |
+| Academic Prose Quality | The mean of the section prose reports' aggregate scores, from `manuscript/reports/`. | There is no manuscript, or no section has a prose report yet. |
+
+The overall is the weighted mean over the dimensions that scored, with the weights read from
+`health.weights` in `.phdude/research-policy.yaml`. Every dimension defaults to `1`; a weight of
+`0` drops a dimension from the overall while still printing its score, and a weight that is not
+a number at or above zero falls back to `1` rather than poisoning the mean.
+
+```yaml
+health:
+  weights:
+    literature-coverage: 1
+    evidence-strength: 1
+    methodological-integrity: 1
+    citation-quality: 1
+    freshness: 1
+    reproducibility: 1
+    consistency: 1
+    prose-quality: 1
+```
+
+`--save` writes the latest score to `reports/health.yaml` — the overall, and each dimension's
+key, score and weight, and nothing else, because the observations are recomputed on every run —
+and records one `health` event. It is the only writing form of the command: it refuses on a
+workspace that needs `phdude migrate`, the way every other mutating command does. There is one
+saved report, not a series: each save replaces the last.
+
+`--trend` compares this run to that saved report and prints the overall delta and every
+dimension that moved. With nothing saved yet it says so instead of inventing a baseline. The two
+flags combine: the trend is measured against the report that was on disk before the save.
+
+PhDude has no AI-detector, "humanity" or AI score, and never will (PRD §30c). Every flag naming
+one is refused with exit 3, on this command and on every other, before the command is reached.
+See ADR 0011 for the formulas and that rule.
 
 ### `phdude data add <path> | list | show <id> | profile <id>`
 
@@ -1552,25 +1655,217 @@ venue it renders against is the one that build was given or the manuscript targe
 for IEEE puts the canonical sections in IEEE's order, under IEEE's headings, in IEEE's citation
 style. `manuscript.<venue>.yaml` is the record of the mapping and the work list it implies.
 
+### `phdude review <kind> | submit | list | show <id> | accept|dismiss|resolve <id>`
+
+```
+phdude review methodology
+phdude review reviewer2 --target manuscript:discussion
+phdude review reproducibility --target project --budget 8000
+phdude review submit --file findings.json --kind methodology
+phdude review list --status open --kind reviewer2
+phdude review show REVIEW-4a1c9e7b02
+phdude review accept REVIEW-4a1c9e7b02
+phdude review dismiss REVIEW-4a1c9e7b02 --reason "the sample is defended in the methods"
+phdude review resolve REVIEW-4a1c9e7b02
+```
+
+A review is judgment, and judgment is the reviewer's; what PhDude owns is the context the review
+is done from and the record of what it said. So the command is in two halves.
+
+**Assembling the context.** `phdude review <kind>` builds a bounded view of what the workspace
+records about the target and writes it to `.phdude/cache/review/<kind>/context.md`, then prints
+the findings contract. It writes cache, records no event, and changes nothing. The kinds are
+`methodology`, `reviewer2`, `reproducibility`, `citation` and `custom`; each orders the context
+differently — a methodology review reads the methods before the claims, a reproducibility review
+reads what reproduces before either.
+
+`--target` takes an object id, `manuscript:<section>`, or `project` (the default). `--budget`
+takes a number of characters; the default is 12000, the same budget `phdude write` uses. The
+instruction and the checklist are always included — they are the contract, not context — and
+whatever does not fit after them is reported as left out rather than shortened.
+
+**Recording what came back.** `phdude review submit --file findings.json [--kind <kind>]` reads a
+JSON file shaped like this:
+
+```json
+{
+  "findings": [
+    {
+      "target": "CLAIM-bb244df965",
+      "severity": "major",
+      "message": "The claim generalizes past the sampled region.",
+      "evidence": ["EVID-02756876a5"],
+      "suggested_command": "phdude edit CLAIM-bb244df965 --json '{\"statement\":\"…\"}'"
+    }
+  ]
+}
+```
+
+Every `target` must be an id the workspace records, a `manuscript:<section>` that exists, or
+`project`; every `evidence` id must exist; `severity` is `block`, `major`, `minor` or `note`; an
+unknown field is refused rather than dropped. Every problem in the file is reported at once, one
+line each, and nothing is written when any of them fails — a reviewer handed one error at a time
+would re-run the whole review each round.
+
+Each finding becomes a `REVIEW-` object under `reviews/`, whose id is derived from its kind, its
+target and its message. Submitting the same finding twice therefore lands on the record that
+already exists and leaves it exactly as it is, verdict included: re-running a review never
+reopens something the researcher has already dismissed. One `review` event records the run,
+listing the ids it created; a submit that created nothing records none.
+
+The workspace's review mode is recorded on each finding as `mode`. A finding written under
+`ruthless` and one written under `lite` do not mean the same thing, and a mode changed later must
+not rewrite that history.
+
+**Deciding.** `list` filters by `--status` and `--kind`; `show <id>` prints the record.
+`accept`, `dismiss` and `resolve` are the verdicts, and they are the researcher's:
+
+| From | To | Meaning |
+|---|---|---|
+| `open` | `accepted` | The finding stands and something will be done about it. |
+| `open` | `dismissed` | The finding does not stand. `--reason` records why. |
+| `accepted` | `resolved` | It was dealt with. |
+
+Anything else exits 2 with what the review can become instead: a dismissed or resolved finding is
+closed, and a finding nobody accepted cannot be resolved. Re-running a transition the review is
+already in changes nothing and records no event.
+
+`phdude next` picks open findings up as its `reviews-open` recommendation, ranked `high` when any
+open finding blocks or would need changes. In `ruthless` mode a `minor` finding counts as
+`major` and a `major` one as blocking — the promotion happens where the verdict is computed, so
+raising the mode raises the recommendation without rewriting a single stored severity, and
+lowering it again restores the old reading.
+
+### `phdude ready [--profile <venue>] [--json]`
+
+```
+phdude ready
+phdude ready --profile ieee
+phdude ready --json
+```
+
+The submission verdict (PRD §42, spec §3.4). It composes what the rest of PhDude already knows
+about the workspace into one answer: can this go out, and if not, what is in the way and what
+fixes it. It reads only — no file is written and no event is recorded — and exits 0 when nothing
+blocks, 2 while anything does.
+
+The venue is `--profile`, or the one `manuscript.yaml` targets. A workspace that has chosen
+neither is still given a verdict, with a warning that the venue rules went unchecked; a venue
+PhDude does not ship exits 1.
+
+| Check | Blocks when | Severity |
+|---|---|---|
+| `profile-<rule>` | The venue profile reports a `block` finding: a required section missing, a section or abstract over its word limit, two sections in the venue's wrong order. One item per rule. | block |
+| `no-open-conflicts` | A fact conflict is open. The command is the one `phdude gaps` gives for it. | major |
+| `no-disputed-pairs` | Two claims contradict each other and neither has been rejected. | major |
+| `no-block-reviews` | An open `REVIEW-` finding is `block` after the mode's promotion. | block |
+| `all-sections-approved` | A manuscript section is not `approved` — or there is no manuscript at all. | block |
+| `figures-alt` | A declared figure has no alt text (PRD §100). | block |
+| `repro-clean` | An analysis, table or figure is not `up-to-date`. | major |
+| `citations-clean` | The offline `cite check` reports a `block` finding, or an open `citation` review is `block` or `major`. | block or major |
+| `min-health` | Research Health is below `ready.min_health`. A workspace that scores nothing at all has no health to check, and this passes. | major |
+| `gaps-high` | A high-severity gap is open that no requirement above already reports. | major |
+
+Which requirements run is `ready.require` in `.phdude/research-policy.yaml`, and the threshold is
+`ready.min_health`. The venue check, the health threshold and the gap check always run; the seven
+named requirements run only while the policy lists them. A key the policy invents is reported as
+a warning rather than silently ignored.
+
+```yaml
+ready:
+  min_health: 70
+  require:
+    - no-open-conflicts
+    - no-disputed-pairs
+    - no-block-reviews
+    - all-sections-approved
+    - figures-alt
+    - repro-clean
+    - citations-clean
+```
+
+The review mode changes the verdict without changing a record. `ruthless` promotes an open
+`major` finding to `block`, so `no-block-reviews` catches it. `lite` blocks only on the
+`block`-severity items and lists the rest under `relaxed` — set aside, never hidden, because a
+lighter gate that quietly dropped findings would be a worse gate than none. `full` and `off` run
+the whole set: `off` means do not review unasked, and running this command is asking.
+
+`ready` never runs the citation auditor, because the auditor writes. It reads the `citation`
+reviews a previous `phdude audit citations` recorded, plus the offline `cite check`, which only
+reads. A finding the researcher dismissed stops blocking, which is the point of a verdict.
+
 ### `phdude mode lite|full|ruthless|off`
 
 Sets the review mode in `phdude.yaml`. Setting the mode it already has changes nothing and
 records no event.
 
+### `phdude skills list|install <path|git-url>|remove <name>`
+
+The agent skills this workspace loads, and where each of them came from.
+
+```
+phdude skills list
+phdude skills install ../lab-skills/prisma-screening
+phdude skills install https://example.org/lab/prisma-screening.git --allow-network
+phdude skills remove prisma-screening
+```
+
+`list` names every skill discovery would find - the shipped set, each applied pack's, and
+everything under `.phdude/skills/` - with its source. A skill installed from outside is listed as
+`external` with the path or URL it came from, and marked `(edited)` when its files no longer hash
+to what was recorded.
+
+`install <path>` copies a directory holding `SKILL.md` into `.phdude/skills/<name>/`, where
+`<name>` is the front matter's `name`. Nothing in a skill is ever executed: PhDude reads the files
+and writes copies of them.
+
+The tree is staged and validated outside the workspace first, so a skill that fails any of these
+leaves nothing behind:
+
+- Its `phdude:` block must validate against the [skill contract](extending.md#skill-contract).
+- Its `name` and `description` must not describe a detector-evasion or humanizer purpose. One that
+  does exits 3 with a `POLICY` error naming the phrase — PhDude has no detector score and will not
+  install a skill that offers one (PRD §30c).
+- Its declared permissions go through the same gate as a shipped skill's: a skill asking for
+  network access or script execution the research policy has not opened exits 3 and names the
+  setting that would install it, rather than being installed and then withheld.
+- A name PhDude already ships is refused: `phdude init` mirrors the shipped skills into
+  `.phdude/skills/`, so the copy would not survive. A name already installed is refused too,
+  unless `--force` replaces it.
+- A symlink anywhere in the source directory is refused, because following it would copy bytes
+  from outside the directory you named.
+
+`install <git-url>` clones first — a shallow clone of one commit, run through `execFile` with an
+argument array and never a shell — and installs from the clone. It needs `network.enabled: true` in
+`.phdude/research-policy.yaml` or `--allow-network`, and the URL must be `https` without
+credentials; every other transport exits 2. The clone's `.git` is not copied.
+
+Each install records `{ name, source, hash, installed_at }` in `.phdude/skills-lock.yaml` (schema
+`phdude.skills-lock` v1) and writes one `skills` event. The `hash` is one sha256 over the tree's
+sorted `<path> <sha256>` lines, so an edited byte and a renamed file both move it and
+`phdude doctor` can report a skill that changed after it was reviewed.
+
+`remove <name>` deletes `.phdude/skills/<name>/` and its lock entry, and writes one `skills`
+event. A skill PhDude ships is refused: `phdude init` would put it straight back.
+
+Both `install` and `remove` rewrite the skill index in `AGENTS.md` and `CLAUDE.md`, so the agent
+sees an installed skill the next time it reads the workspace and stops seeing a removed one; the
+rest of those files is left as it was.
+
 ### `phdude migrate [--dry-run] [--force]`
 
 Upgrades a workspace written by an older PhDude to the current workspace version.
 `phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
-current version is 4. Migration steps ship with the package, one module per step, and run in
+current version is 5. Migration steps ship with the package, one module per step, and run in
 order through the store; each applied step appends one `migrate` event.
 
-Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 4)`
+Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 5)`
 as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
 `packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
 
 A workspace written by a *newer* PhDude is the same problem from the other end, and this build
 cannot migrate its way out of it. Reads warn with
-`workspace version 5 is newer than this PhDude (4)`; the same writes exit 1 with that message
+`workspace version 6 is newer than this PhDude (5)`; the same writes exit 1 with that message
 and the hint `upgrade phdude`.
 
 `--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
@@ -1582,7 +1877,7 @@ an up-to-date workspace prints `Workspace is up to date (4)` and records no even
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
-that version is `(current)`, `(needs migration → 4)` or `(newer than this phdude)`, whether
+that version is `(current)`, `(needs migration → 5)` or `(newer than this phdude)`, whether
 network access is enabled and the configured search providers, whether script execution is
 enabled and under what limits, which document formats this machine can render, the cache
 entry count, the discoverable packs and the schema
@@ -1641,6 +1936,13 @@ array of `{ name, source, permissions, reads, writes, warnings }`.
 `source` is `workspace` only when the workspace's copy actually differs from the shipped file.
 `init` copies every core skill into `.phdude/skills/`, so an untouched workspace would otherwise
 report all of them as its own; the bytes are compared, and an unmodified copy stays `core`.
+
+An `External skills:` block follows for anything `phdude skills install` brought in, read from
+`.phdude/skills-lock.yaml`: one line per entry with the source it came from, when it was
+installed, and whether its files still hash to what was recorded — `ok`, `edited since install`,
+or `missing` when the lock names a skill that is no longer on disk. The last two are warnings too.
+`--json` carries it as an `externalSkills` array of
+`{ name, source, hash, installed_at, present, drifted }`.
 
 Being the command you run when something is wrong, `doctor` degrades rather than fails. A skill
 whose `SKILL.md` cannot be loaded costs one warning naming that skill, and every other skill is

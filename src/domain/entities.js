@@ -674,6 +674,59 @@ export function newAnalysis({
 }
 
 /**
+ * One reviewer finding, stored as its own record (spec §3.2). Its identity is what was said
+ * about what: the same finding submitted twice - a review re-run, a second reviewer reaching the
+ * same conclusion - lands on the record that already exists rather than minting a second one,
+ * and `submit` therefore never rewrites the verdict a researcher already gave it.
+ * @param {object} p
+ * @param {string} p.kind - citation|methodology|reviewer2|reproducibility|custom
+ * @param {string} p.target - an object id, `manuscript:<section>`, or `project`
+ * @param {string} p.severity - block|major|minor|note
+ * @param {string} p.message
+ * @param {string[]} [p.evidence] - the ids the finding rests on
+ * @param {string} [p.suggested_command]
+ * @param {object} p.by - the actor the review is recorded against
+ * @param {string} p.mode - the workspace review mode at the time of the review
+ * @param {string[]} [p.tags]
+ * @param {object} p.actor
+ * @param {string} p.created
+ * @returns {object} a schema-valid `phdude.review`
+ */
+export function newReview({
+  kind,
+  target,
+  severity,
+  message,
+  evidence = [],
+  suggested_command,
+  by,
+  mode,
+  tags = [],
+  actor,
+  created,
+}) {
+  const text = requireText('message', message);
+  const review = {
+    schema: 'phdude.review',
+    version: 1,
+    id: makeId('review', `${kind}\n${target}\n${text}`),
+    created,
+    actor,
+    tags,
+    kind,
+    target,
+    severity,
+    message: text,
+    evidence,
+    status: 'open',
+    by,
+    mode,
+  };
+  if (suggested_command !== undefined) review.suggested_command = suggested_command;
+  return review;
+}
+
+/**
  * A rendered table. Its name is its identity — a study has one "mean weight by group" table,
  * and changing its caption or its columns must correct that record rather than mint a second
  * one whose file would sit next to the first under `tables/out/`.

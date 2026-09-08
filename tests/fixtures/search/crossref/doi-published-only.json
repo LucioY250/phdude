@@ -1,0 +1,12 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "DOI": "10.4444/published-only",
+    "type": "posted-content",
+    "title": ["A preprint with no issued date"],
+    "published": { "date-parts": [[2024, 6]] },
+    "URL": "https://doi.org/10.4444/published-only"
+  }
+}

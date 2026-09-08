@@ -24,8 +24,8 @@ function citedSourceId(evidenceItem) {
   return parseId(evidenceItem.source)?.type === 'source' ? evidenceItem.source : null;
 }
 
-async function loadRegistry(store) {
-  const snapshot = await loadSnapshot(store);
+async function loadRegistry(store, preloaded) {
+  const snapshot = preloaded ?? (await loadSnapshot(store));
   const sources = [...snapshot.sources].sort(byId);
   const evidence = [...snapshot.evidence].sort(byId);
   const keys = assignBibkeys(sources);
@@ -65,12 +65,13 @@ export async function list({ store }) {
  * least one evidence item, every evidence item's source exists, DOI format, missing
  * title/authors/year, duplicate sources (normalized title+year), and duplicate explicit
  * bibkeys. `uncited-source` is informational only - it never fails `ok`.
- * @param {{store: object}} deps
+ * @param {{store: object, snapshot?: object}} deps - `snapshot` lets a caller that has already
+ *   loaded the workspace (`phdude health`) reuse it instead of loading it a second time
  * @returns {Promise<{ok: boolean, findings: {kind: string, id: string, message: string,
  *   hint: string}[]}>}
  */
-export async function check({ store }) {
-  const { sources, evidence, citedBy } = await loadRegistry(store);
+export async function check({ store, snapshot }) {
+  const { sources, evidence, citedBy } = await loadRegistry(store, snapshot);
   const findings = [];
 
   for (const source of sources) {

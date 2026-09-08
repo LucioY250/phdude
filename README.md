@@ -9,7 +9,7 @@
 Your AI can write. PhDude helps make the research worth publishing.
 
 [![CI](https://github.com/LucioY250/phdude/actions/workflows/ci.yml/badge.svg)](https://github.com/LucioY250/phdude/actions/workflows/ci.yml)
-[![version](https://img.shields.io/badge/version-0.6.0-blue)](CHANGELOG.md)
+[![version](https://img.shields.io/badge/version-0.7.0-blue)](CHANGELOG.md)
 [![node](https://img.shields.io/badge/node-%E2%89%A5%2022-339933?logo=node.js&logoColor=white)](package.json)
 [![license: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 [![works with Claude Code and Codex](https://img.shields.io/badge/works%20with-Claude%20Code%20%C2%B7%20Codex-8A2BE2)](#set-up-your-agent)
@@ -37,80 +37,76 @@ It makes no assumptions about your field. A clinical trial, an archival history 
 empirical software-engineering paper get the same treatment; discipline-specific vocabulary
 and review questions arrive as packs.
 
-> **Where things stand.** This is v0.6. The deterministic core is done and tested: workspace,
+> **Where things stand.** This is v0.7. The deterministic core is done and tested: workspace,
 > ingestion, the knowledge graph, decisions, conflict detection, packs, `status` and `next`, the
 > citation registry, the literature matrix and gap report, workspace migrations, five literature
-> search providers, and the Claude Code and Codex adapters. v0.4 taught PhDude to help *write*:
-> a manuscript with per-section status, a bounded writing context, six deterministic gates every
-> draft goes through, and a prose report that shows its arithmetic. v0.5 taught it to run the
-> *analysis* — datasets, scripts under an execution policy, results with lineage, tables and
-> figures. New in this release, it produces the *documents*: DOCX, PDF, LaTeX, HTML, slides and
-> spreadsheets, built from the approved sections against the venue you are writing for. The
-> reviewer skills come next; see the [roadmap](#roadmap).
+> search providers, and the Claude Code and Codex adapters. v0.4 taught PhDude to help *write*,
+> v0.5 to run the *analysis*, v0.6 to produce the *documents*. New in this release, it *reviews*:
+> a citation auditor, a methodologist, a Reviewer #2, a reproducibility reviewer, an explainable
+> Research Health score, and `phdude ready` — the verdict on whether the work can go out. What is
+> left is stabilization for v1.0; see the [roadmap](#roadmap).
 
-## What's new in 0.6
+## What's new in 0.7
 
-v0.6 is the Document Factory. Until now the manuscript lived in `manuscript/` as a set of
-Markdown files and a YAML plan. Now it comes out the other end as the file you have to send
-somebody — and it comes out the same way twice.
+v0.7 is the Reviewer. Every release until now helped you build the argument. This one argues
+back — and then tells you whether the thing is ready to send.
 
-- **`phdude build`.** One command turns the approved sections into `outputs/<slug>/manuscript.md`,
-  `.docx`, `.tex`, `.html` or `.pdf`, in the order the venue puts them, under the headings the
-  venue calls them, with `references.bib` regenerated from the citation registry and the figures
-  the prose shows copied in beside the document. Markdown is built in and needs nothing installed.
-  Everything else goes through Pandoc, and PDF through a TeX engine; when one is missing the
-  command exits 4 and names the package, and never quietly produces a different format instead.
-- **Builds that skip themselves.** Every input is hashed — each section body, the bibliography,
-  each figure and table, the venue profile, the template, and the renderer's own version. A build
-  whose inputs all match the last one, and whose output file is still the one that build wrote,
-  reports `up to date`, renders nothing and records nothing. Running it twice is the cheap way to
-  ask whether the DOCX on disk is current.
-- **The same bytes tomorrow.** A build never reads the clock: the date on the title page comes
-  from `manuscript.yaml` or from the approval the workspace recorded. Identical inputs and an
-  identical Pandoc produce identical Markdown, LaTeX and HTML. DOCX and PDF are containers with
-  timestamps inside, so those are best-effort, and
-  [ADR 10](docs/adr/0010-renderer-adapters-and-reproducible-builds.md) says exactly how far the
-  promise goes.
-- **Venue packs.** `generic-thesis`, `ieee` and `acm` ship as packs, each carrying the sections
-  the venue expects, its word limits, its CSL citation style (vendored, licence intact) and a
-  minimal LaTeX template for its document class. `phdude profile check` reports the manuscript
-  against one: a required section that is missing, an abstract over the limit, two sections in the
-  wrong order, a figure in a format the venue does not take. It exits 2 while anything blocks.
-- **`phdude adapt --to <venue>`.** What moving the work would cost, before anything is changed:
-  which section becomes which, how many words each one is over, which figures need converting,
-  which words the venue renames, and which citation style takes over. `--apply` writes a second
-  manuscript for that venue, marking the sections that no longer fit as `revised`. It never
-  rewrites a line of prose — that goes back through `phdude deslop` and the gates, like every
-  other revision.
-- **Slides and spreadsheets.** `phdude present outline` writes the talk from the research: one
-  slide per approved section, or per claim the evidence supports, with its strongest excerpts as
-  bullets, and a PPTX too when Pandoc is installed. `phdude table build --format xlsx` writes a
-  real spreadsheet with numbers typed as numbers, using no external tool at all.
-- **A templates registry.** `phdude template add <path>` files your university's DOCX or your
-  conference's LaTeX template under `templates/`, `template use <name> --for <venue>` binds it to
-  a venue, and `template check` unzips a DOCX to say whether it actually declares the styles
-  Pandoc writes with. A template you registered outranks the one the venue pack ships.
-- **Migration 0003** brings an older workspace to version 4: an empty `venues` list in
-  `phdude.yaml` and an empty template registry under `.phdude/`.
+- **Reviews you can act on.** `phdude review methodology` (or `reviewer2`, `reproducibility`,
+  `citation`, `custom`) hands the agent a bounded view of the claims, evidence, methods and prose
+  the review is about, plus the contract it has to answer in. What it finds comes back through
+  `phdude review submit --file findings.json` as `REVIEW-` objects: a severity, a message, and
+  the ids the finding rests on. A finding with no id behind it is a question for you, not a
+  record. Accepting, dismissing and resolving them is yours, exactly like a Decision — and
+  re-running a review never reopens something you already dismissed.
+- **Three reviewers.** A methodologist that asks whether the design can answer the question, a
+  Reviewer #2 that hunts the overclaim you stopped seeing three drafts ago, and a reproducibility
+  reviewer that reads `repro check` and the analysis contracts before it says anything. The
+  medicine pack brings CONSORT, STROBE and PRISMA summaries for the reviewers that want them.
+- **`phdude audit citations`.** Every `[@key]` in the prose resolves to a source, every asserted
+  claim rests on one, no cited source is still unreviewed or was dismissed, plus every
+  `cite check` finding. With `--allow-network` it also asks Crossref about each DOI: whether it
+  resolves, whether the title matches, whether the year is within one, and whether the paper has
+  been retracted. Findings land as `citation` reviews for you to rule on.
+- **`phdude health`.** Eight dimensions — literature coverage, evidence strength, methodological
+  integrity, citation quality, freshness, reproducibility, consistency and academic prose quality
+  — each scored out of 100 and each printed with the observations its number came from, so you
+  can argue with it. A dimension the workspace cannot answer for reads `n/a` rather than a number
+  nobody measured. `--save` records the score and `--trend` says what moved since.
+- **`phdude ready`.** One command for the question you actually have: can this go out? It
+  composes the venue's own rules, Research Health against your threshold, the requirements your
+  policy lists, and the high-severity gaps, and prints what is in the way with the command that
+  fixes each. It exits 0 when nothing blocks and 2 while something does, and it never writes.
+- **Skills from outside, under the same permissions.** `phdude skills install <path|https url>`
+  copies a lab's own skill into `.phdude/skills/`, validates its contract, records where it came
+  from in `.phdude/skills-lock.yaml`, and indexes it where your agent will actually see it. It is
+  a file copy: nothing in a skill is ever executed, a skill wanting network or execution the
+  policy has not opened is refused rather than quietly withheld, and a skill whose stated purpose
+  is detector evasion is refused outright.
+- **Review modes that finally bite.** `ruthless` promotes an open `major` finding to blocking
+  where the verdict is computed, so `phdude ready` and `phdude next` both harden without a single
+  stored severity being rewritten. `lite` blocks only on what is already blocking, and lists the
+  rest as set aside rather than hiding it.
+- **Migration 0004** brings an older workspace to version 5: the `reviews/` directory, and the
+  `health.weights` and `ready.*` keys in the research policy.
 
-### What 0.5 added: analysis with lineage
+### What 0.6 added: the document factory
 
-- **Datasets and analyses.** `phdude data add` makes a file's bytes its identity and profiles its
-  columns; `phdude analyze run` runs a script with an argument array, no shell and a timeout, and
-  records the hash of every input and output. Execution is closed by default.
-- **Results you can cite.** Each entry in a script's `results.json` becomes a `RESULT` pointing
-  back at the analysis that produced it, so a number in the thesis has a chain behind it.
-- **Tables and figures as objects.** `phdude table build` renders a result or a dataset
-  deterministically; `phdude figure build` runs a generator through the same execution policy, and
-  a figure without alt text never becomes a record at all.
-- **`phdude repro check`.** One line per analysis, table and figure, saying whether what is on
-  disk still follows from what is recorded, and naming the input that moved.
+- **`phdude build`.** The approved sections become `outputs/<slug>/manuscript.md`, `.docx`,
+  `.tex`, `.html` or `.pdf`, in the venue's order, with the bibliography regenerated from the
+  citation registry. Markdown needs nothing installed; everything else names the tool it wants.
+- **Builds that skip themselves.** Every input is hashed, so a build whose inputs have not moved
+  renders nothing and records nothing — and identical inputs produce identical bytes.
+- **Venue packs and `phdude adapt --to <venue>`.** `generic-thesis`, `ieee` and `acm` ship with
+  their sections, word limits and CSL styles; `adapt` says what moving the work would cost before
+  anything changes.
+- **Slides, spreadsheets and a templates registry.** `present outline`, `table build --format
+  xlsx`, and your university's DOCX filed under `templates/`.
 
 See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
 
 ## Contents
 
-- [What's new in 0.6](#whats-new-in-06)
+- [What's new in 0.7](#whats-new-in-07)
 - [How it works](#how-it-works)
 - [Install](#install)
 - [Set up your agent](#set-up-your-agent) (Claude Code, Codex, anything else)
@@ -119,6 +115,7 @@ See [why there is no detector score](#the-one-number-phdude-will-not-give-you).
 - [Analysis and figures](#analysis-and-figures)
 - [Writing with PhDude](#writing-with-phdude)
 - [Building documents](#building-documents)
+- [Reviewing and readiness](#reviewing-and-readiness)
 - [What's in the box](#whats-in-the-box)
 - [Your workspace](#your-workspace)
 - [Commands](#commands)
@@ -165,7 +162,7 @@ talk its way around it, and neither can a tired researcher at 2 a.m.
 
 ### How "what next?" is decided
 
-<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, thirteen rules, ranking, top action with reasons" width="900"></p>
+<p align="center"><img src="docs/assets/diagrams/next.svg" alt="How the next action is chosen: snapshot, the rules, ranking, top action with reasons" width="900"></p>
 
 Every rule is deterministic and every recommendation carries its reasons, its impact, and the
 command that does it. There is no hidden score.
@@ -208,7 +205,7 @@ This writes:
 |---|---|
 | `CLAUDE.md` | Entry point. Imports `AGENTS.md` and adds Claude-specific notes. |
 | `AGENTS.md` | Operating rules, the command reference, and an *index* of skills. Skills are loaded on demand, not up front, to keep your context small. |
-| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-data`, `/phdude-analyze`, `/phdude-table`, `/phdude-present`, `/phdude-template`, `/phdude-figure`, `/phdude-repro`, `/phdude-authors`, `/phdude-write`, `/phdude-deslop`, `/phdude-manuscript`, `/phdude-prose`, `/phdude-packs`, `/phdude-profile`, `/phdude-build`, `/phdude-adapt`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
+| `.claude/commands/phdude*.md` | Slash commands, one per CLI command: `/phdude` (the dispatcher), `/phdude-init`, `/phdude-bootstrap`, `/phdude-ingest`, `/phdude-status`, `/phdude-next`, `/phdude-knowledge`, `/phdude-add`, `/phdude-link`, `/phdude-decide`, `/phdude-promote`, `/phdude-cite`, `/phdude-audit`, `/phdude-research`, `/phdude-research-fresh`, `/phdude-freshness`, `/phdude-edit`, `/phdude-matrix`, `/phdude-gaps`, `/phdude-health`, `/phdude-review`, `/phdude-data`, `/phdude-analyze`, `/phdude-table`, `/phdude-present`, `/phdude-template`, `/phdude-figure`, `/phdude-repro`, `/phdude-authors`, `/phdude-write`, `/phdude-deslop`, `/phdude-manuscript`, `/phdude-prose`, `/phdude-packs`, `/phdude-profile`, `/phdude-build`, `/phdude-adapt`, `/phdude-skills`, `/phdude-ready`, `/phdude-mode`, `/phdude-migrate`, `/phdude-doctor`, `/phdude-help`. |
 | `.phdude/skills/*/SKILL.md` | The skills themselves, in the open `SKILL.md` convention. |
 
 Open Claude Code in the directory and start with:
@@ -857,6 +854,195 @@ It is derived, it is gitignored, and the next build overwrites it. A typo you fi
 sent say different things. Fix the prose with `phdude deslop <section> --file`, the reference
 with `phdude edit` on the source, the figure with `phdude figure build` — then build again.
 
+## Reviewing and readiness
+
+You can read your own results section twenty times and not see the sentence that claims more
+than the data allows. That is not carelessness, it is familiarity. PhDude reviews the work the
+way a demanding colleague would — and, unlike a colleague, it writes down what it found so the
+finding survives the conversation it came from.
+
+### A review is a record, not a chat message
+
+Ask for a review and PhDude assembles the context for it and prints the contract the reviewer has
+to answer in. It records nothing yet:
+
+```
+$ phdude review reviewer2 --target manuscript:results
+Review context: reviewer2 on manuscript:results (section)
+  .phdude/cache/review/reviewer2/context.md
+  8 block(s) within 12000 characters
+
+What to send back:
+  - Answer as JSON: {"findings": [{"target": "…", "severity": "…", "message": "…", "evidence": ["…"]}]}.
+  - target is an object id the context lists, manuscript:<section>, or project.
+  - severity is block, major, minor or note - block means the work cannot go out as it stands.
+  - evidence lists the ids the finding rests on. A finding you cannot attach to a recorded id is a question for the researcher, not a finding.
+  …
+```
+
+The agent reads the context, writes its findings to a JSON file, and hands them back:
+
+```
+$ phdude review submit --file findings.json --kind reviewer2
+```
+
+Each finding becomes a `REVIEW-` object under `reviews/`: its kind, its target, its severity, the
+message, and the ids it rests on. That last part is the rule that makes the whole thing useful —
+**a finding with no recorded id behind it is a question for you, not a record.** A reviewer that
+cannot point at the claim it doubts is guessing, and PhDude will not file a guess.
+
+Then the verdict is yours, exactly as it is for a Decision:
+
+```
+phdude review list --status open
+phdude review show REVIEW-e5ebf39e98
+phdude review accept REVIEW-e5ebf39e98      # it stands, and something will be done
+phdude review dismiss REVIEW-… --reason "…" # it does not stand, and here is why
+phdude review resolve REVIEW-…              # it was dealt with
+```
+
+An agent that submits a review and then accepts it is making the same mistake as one that
+approves its own decision. Re-running the review later finds the finding already on file and
+leaves your verdict alone — a dismissal is permanent unless you reopen it yourself.
+
+Three reviewers ship: `methodologist` asks whether the design can answer the question,
+`reviewer2` goes looking for the overclaim, and `reproducibility-reviewer` reads `repro check`
+and the analysis contracts first. A field pack can add its own: the medicine pack brings CONSORT,
+STROBE and PRISMA summaries for the reviews that want them.
+
+### The citations, audited
+
+`phdude audit citations` is the review nobody enjoys doing by hand:
+
+```
+$ phdude audit citations
+Citation audit: 5 source(s), offline only
+
+2 new finding(s):
+  REVIEW-d6e5295a75 note   SRC-70ee4dce27   SRC-70ee4dce27 is not cited by any evidence
+  REVIEW-0eba261993 note   SRC-8295946d20   SRC-8295946d20 is not cited by any evidence
+
+Rule on each with phdude review accept|dismiss <REVIEW-id>
+```
+
+Offline it checks that every `[@key]` in the prose resolves to a source, that every claim the
+prose asserts rests on a recorded one, and that nothing cites a paper you dismissed or never
+reviewed. With `--allow-network` it also asks Crossref about each DOI: does it resolve, does the
+title match what you recorded, is the year within one, and has the paper been retracted. A
+retraction is a blocking finding, because citing a retracted paper is not a style problem.
+
+Nothing leaves your machine without the flag or an open network policy, and a lookup Crossref
+does not answer is a warning, not an accusation: "Crossref is down" and "Crossref has never heard
+of this DOI" are different sentences and PhDude will not file the second when it means the first.
+
+### Research Health, with the arithmetic shown
+
+```
+$ phdude health
+Research Health: 59/100 (weighted mean of 8 scored dimension(s), of 8)
+
+Literature Coverage       33/100   weight 1
+  - 1/3 question(s) have a supported or canonical claim (33%): RQ-2, RQ-3
+  - 2/3 question(s) have a source behind them (67%): RQ-2
+  - 0/3 question(s) have a search that is not stale (0%): RQ-1, RQ-2, RQ-3
+Methodological Integrity  63/100   weight 1
+  - 2/3 question(s) have a method (67%): RQ-2
+  - 1/1 method(s) declare limitations (100%)
+  - 1 open methodology review(s), 20 points each: REVIEW-e5ebf39e98
+…
+```
+
+Eight dimensions, each out of 100, each printed with the observations its number came from and
+the ids behind them. Nothing here is a judgement about your writing: every number is a count of
+something the workspace recorded about itself, and you can re-derive all of it by hand. A
+dimension the workspace cannot answer for reads `n/a` and stays out of the overall — an empty
+project must not outscore a real one. Weights live in `health.weights` in your research policy,
+so a theoretical thesis can weight Reproducibility to 0 and a systematic review can weight
+Literature Coverage to 3. `--save` records the score; `--trend` says what has moved since.
+
+### Can this go out?
+
+```
+$ phdude ready
+Not ready to submit: 5 blocking item(s)
+Venue: generic-thesis   Mode: full   Research Health: 59/100 (needs 70)
+
+Blocking (5):
+  - [no-open-conflicts] 1 open fact conflict(s): sample_size
+    Fix: phdude decide propose --title "Resolve sample_size" …
+  - [no-disputed-pairs] 1 disputed claim pair(s): CLAIM-84dc3cdd04/CLAIM-9f7abf99e9
+    Fix: phdude decide propose --title "Resolve contradiction between …" …
+  - [all-sections-approved] 5 of 6 section(s) are not approved: abstract, methods, results, discussion, conclusions
+    Fix: phdude manuscript status
+  - [min-health] Research Health is 59/100, below the required 70
+    Fix: phdude health
+  - [gaps-high] 2 high-severity gap(s): claim-without-evidence CLAIM-3d035aa05b, question-without-claims RQ-2
+    Fix: phdude gaps
+
+Passed (5):
+  - [profile-check] generic-thesis blocks nothing
+  - [no-block-reviews] 1 open review finding(s), none blocking
+  - [figures-alt] 1 figure(s) have alt text
+  - [repro-clean] 3 declared item(s) are up to date
+  - [citations-clean] the citations resolve and no citation finding is open
+```
+
+`phdude ready` is the one command for the question you actually have. It composes the venue's own
+blocking rules, Research Health against your threshold, each requirement your policy lists, and
+the high-severity gaps, and prints what is in the way with the command that fixes it. It exits 0
+when nothing blocks and 2 while something does, so it drops straight into a pre-submission
+script. It never writes: a verdict is a reading of the record, not a change to it.
+
+What it requires is yours to set, in `.phdude/research-policy.yaml`:
+
+```yaml
+ready:
+  min_health: 70
+  require:
+    - no-open-conflicts
+    - no-disputed-pairs
+    - no-block-reviews
+    - all-sections-approved
+    - figures-alt
+    - repro-clean
+    - citations-clean
+```
+
+Take a line out and that check stops running; the report prints what passed as well as what
+blocked, so the gate you are actually enforcing is never a mystery.
+
+### The mode decides how hard it pushes
+
+`phdude mode` has been in PhDude since v0.1 as a posture. In v0.7 it changes the arithmetic:
+
+- **`ruthless`** promotes an open `major` finding to blocking where the verdict is computed. The
+  same workspace that is five items from ready under `full` is six under `ruthless`, and the
+  stored severity never changes — go back to `full` and the old reading returns.
+- **`lite`** blocks only on what is already blocking and lists the rest as *set aside*. Set
+  aside, never hidden: a gate that quietly dropped findings would be worse than no gate.
+- **`full`** is the default, and **`off`** means do not review unasked — running `phdude ready`
+  is asking, so it reports everything.
+
+### Skills from outside
+
+A lab that has its own screening protocol should not have to fork PhDude to use it:
+
+```
+phdude skills install ../lab-skills/prisma-screening
+phdude skills install https://example.org/lab/prisma-screening.git --allow-network
+phdude skills list
+phdude skills remove prisma-screening
+```
+
+Install copies files and nothing else — no install hook, no script, nothing in a skill is ever
+executed. The skill's contract is validated before a byte lands in your workspace; one that asks
+for network or execution your policy has not opened is refused rather than installed and quietly
+withheld; and one whose stated purpose is detector evasion or "humanizing" is refused outright
+(see [the one number PhDude will not give you](#the-one-number-phdude-will-not-give-you)). Where
+it came from and what it hashed to go into `.phdude/skills-lock.yaml`, so `phdude doctor` can
+tell you when an installed skill has been edited since. Installing also re-indexes `AGENTS.md`
+and `CLAUDE.md`, because a skill your agent cannot see is a skill it will not use.
+
 ## What's in the box
 
 ```
@@ -870,7 +1056,7 @@ phdude/
 │   └── schemas/           the JSON Schema validator
 ├── schemas/               one JSON Schema per research object, plus the skill contract
 ├── migrations/            one module per workspace-version step
-├── skills/                the fourteen core skills, one SKILL.md directory each
+├── skills/                the seventeen core skills, one SKILL.md directory each
 ├── generators/            the figure generators PhDude ships (bar-chart.mjs, plain Node)
 ├── commands/              the Claude Code slash-command templates
 ├── packs/                 ten starter packs: fields/, methods/ and venues/
@@ -896,6 +1082,7 @@ my-research/
 ├── .phdude/
 │   ├── constitution.yaml, research-policy.yaml, writing-policy.yaml, …
 │   ├── skills/          # installed skills
+│   ├── skills-lock.yaml # where every externally installed skill came from
 │   ├── events.jsonl     # append-only audit log
 │   └── cache/           # extracted text, gitignored, rebuildable
 ├── sources/             # the raw materials you drop in
@@ -912,6 +1099,8 @@ my-research/
 ├── research/            # questions/ RQ-*.yaml · hypotheses/ H-*.yaml · methods/ METH-*.yaml
 │                        # searches/  SEARCH-*.yaml  what was asked, of whom, and when
 ├── decisions/           # DEC-*.yaml
+├── reviews/             # REVIEW-*.yaml  what a reviewer found, and what you decided about it
+├── reports/             # health.yaml    the last `phdude health --save`, for `--trend`
 ├── manuscript/          # manuscript.yaml, one .md per section, reports/ per section
 │                        # manuscript.<venue>.yaml is what `phdude adapt --apply` writes
 ├── references.bib       # written by `phdude cite export`; derived, not knowledge
@@ -945,12 +1134,14 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude decide propose\|approve\|reject\|supersede` | Research decisions. The agent proposes; the researcher decides. |
 | `phdude promote <id> --decision <DEC-id>` | Make an object canonical, with an approved decision behind it. |
 | `phdude cite list\|check\|export` | Citation registry: list sources, verify them, export BibTeX/CSL-JSON. |
+| `phdude audit citations [--allow-network]` | Audit the citations: keys that resolve to nothing, claims with no recorded source behind them, cited sources nobody reviewed or that were dismissed, plus every `cite check` finding. With the network open it verifies each DOI at Crossref (title, year, retractions). Findings are recorded as `citation` reviews. |
 | `phdude research "<query>"\|list\|show\|accept\|dismiss` | Search the literature through the configured providers and record what came back as candidates to review. Refuses unless the network policy allows it. `accept` turns a reviewed candidate into a source; `dismiss` records why one is not going in. |
 | `phdude research-fresh [--question RQ-n] [--all]` | Re-run the recorded searches that have gone stale, and report only what is new. |
 | `phdude freshness` | Last search per research question, age per source, and what the policy calls stale. |
 | `phdude edit <id> --json '<fields>'` | Correct the non-identity fields of a non-canonical object. Identity fields are never editable. |
 | `phdude matrix [--format md\|csv] [--question RQ-n]` | Literature matrix: one row per source, which questions and claims it reaches. |
 | `phdude gaps` | Research gaps: questions, claims, sources, artifacts and conflicts that need attention. |
+| `phdude health [--save] [--trend]` | Research Health: eight explainable dimensions - literature coverage, evidence strength, methodological integrity, citation quality, freshness, reproducibility, consistency and academic prose quality - each with the observations behind its score. Never a detector or humanity score. |
 | `phdude data add <path>\|list\|show <id>\|profile <id>` | Register a file under `data/` as a dataset: its bytes are its identity, and its profile reports rows, column types, missing cells and distinct values. `sensitive: true` keeps cell values out of the profile. |
 | `phdude analyze add\|list\|show <id>\|run <id>\|runs <id>` | Declare an analysis: a script under `analysis/`, the datasets it reads, and where it writes `results.json`. `run` executes it through the runner, records the run with input and output hashes, and turns every finding into a `RESULT-`. It refuses unless the execution policy allows it. |
 | `phdude table add --json\|list\|show <id>\|build <id>` | Declare a table over a `RESULT` or a `DATASET` and render it as Markdown, LaTeX (`booktabs`) and CSV under `tables/out/`. Each build records the hash of what it read and what it wrote. A table that declares them also builds `xlsx` (no external tool) and `docx` (through Pandoc). |
@@ -967,7 +1158,10 @@ using it you keep a folder, not a database dump. Details in [docs/workspace.md](
 | `phdude profile list\|show\|check\|use <venue>` | Venue profiles: what IEEE, ACM or a thesis expects of the manuscript, and which of those rules it does not meet yet. |
 | `phdude build [--format md\|docx\|pdf\|latex\|html] [--profile <venue>]` | Build the manuscript from its approved sections, in the venue's order, with the bibliography regenerated from the citation registry. A build whose inputs have not moved renders nothing. |
 | `phdude adapt --to <venue> [--apply]` | What moving the manuscript to another venue would take: which section becomes which, how far over its word limits each one is, which figures need converting, which words the venue renames. `--apply` writes a second manuscript for that venue; it never rewrites prose. |
+| `phdude review <kind>\|submit\|list\|show <id>\|accept\|dismiss\|resolve <id>` | Assemble a bounded review context for a methodology, Reviewer #2, reproducibility, citation or custom review, then record what the reviewer found as `REVIEW-` objects. Every finding names the ids it rests on; accepting, dismissing and resolving them is yours. |
+| `phdude ready [--profile <venue>]` | Can this go out? The venue's blocking rules, Research Health against your threshold, every requirement in `ready.require`, and the high-severity gaps, each with the command that fixes it. Exits 2 while anything blocks; it never writes. |
 | `phdude mode lite\|full\|ruthless\|off` | How hard the agent pushes back. |
+| `phdude skills list\|install\|remove` | The agent skills this workspace loads; `install <path\|https url>` copies an external one in under the same permissions as a shipped one. |
 | `phdude migrate [--dry-run]` | Upgrade a workspace written by an older PhDude. |
 | `phdude doctor` | Adapters, cache, schema versions, skill permissions, git state, and the manuscript: sections by status, reports on file, sections edited outside PhDude. |
 | `phdude help` | The command list, the global options, and what each exit code means. |
@@ -1016,8 +1210,8 @@ The reasoning behind the big calls is in [docs/adr/](docs/adr/).
 | v0.3 | Research Engine | fresh literature search, five provider adapters, candidate review, freshness tracking, `phdude edit` |
 | v0.4 | Co-Author | the manuscript model, the writing context, six writing gates, `deslop`, author voice profiles, the Academic Prose Quality report |
 | v0.5 | Analysis & Visualization | datasets with profiles, declared analyses, results with lineage, tables, figures with alt text, `repro check` |
-| **v0.6** | Document Factory | incremental reproducible builds to DOCX, PDF, LaTeX, HTML and Markdown, venue packs (thesis, IEEE, ACM), venue adaptation, PPTX outlines, XLSX tables, a templates registry |
-| v0.7 | Reviewer | citation auditor, methodology reviewer, Reviewer #2, Research Health, submission readiness |
+| v0.6 | Document Factory | incremental reproducible builds to DOCX, PDF, LaTeX, HTML and Markdown, venue packs (thesis, IEEE, ACM), venue adaptation, PPTX outlines, XLSX tables, a templates registry |
+| **v0.7** | Reviewer | review objects and the review workflow, methodologist, Reviewer #2 and reproducibility skills, the citation auditor with Crossref DOI verification, explainable Research Health, `phdude ready`, external skills under least privilege |
 | v1.0 | Public Release | stable workspace schema, extension API and skill contract, a third agent, cross-field examples, migration docs |
 
 ## Contributing

@@ -19,6 +19,7 @@ my-research/
 │   ├── author-profile.yaml
 │   ├── templates.yaml            # the registered document templates
 │   ├── skills/<name>/SKILL.md    # installed agent skills (PhDude-managed)
+│   ├── skills-lock.yaml          # where every externally installed skill came from
 │   ├── events.jsonl              # append-only audit log (committed)
 │   └── cache/                    # extracted text, gitignored and disposable
 ├── authors/                      # per-researcher voice profiles (phdude authors)
@@ -41,6 +42,7 @@ my-research/
 │   ├── methods/    METH-*.yaml
 │   └── searches/   SEARCH-*.yaml # what was asked, of whom, and when
 ├── decisions/      DEC-*.yaml
+├── reviews/        REVIEW-*.yaml  # what a reviewer found, and what was decided about it
 ├── tables/         TABLE-*.yaml  # table declarations
 │   └── out/                      # the rendered .md/.tex/.csv, generated
 ├── figures/        FIG-*.yaml    # figure declarations, alt text included
@@ -50,6 +52,7 @@ my-research/
 │   ├── manuscript.<venue>.yaml   # the same sections adapted to a venue, by `phdude adapt --apply`
 │   ├── <section>.md              # the prose, front matter + Markdown body
 │   └── reports/<section>.yaml    # schema phdude.section-report v1: the last gate run
+├── reports/health.yaml           # the last `phdude health --save`; latest only, for --trend
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
 ├── analysis/       ANALYSIS-*.yaml # declared analysis scripts and their runs
 │   └── out/                      # where a run's results.json and files land
@@ -75,7 +78,7 @@ else in the tree is meant to be read in a diff.
 ```yaml
 schema: phdude.project
 version: 1
-workspace_version: 4
+workspace_version: 5
 title: Adaptive scheduling in edge clusters
 language: en
 fields: [computer-science]
@@ -96,11 +99,11 @@ detect` suggested; it is a recommendation until you run `phdude packs apply`. A 
 
 `version: 1` is the schema of this file. `workspace_version` is the shape of the whole
 directory, and it is what `phdude migrate` moves forward. A workspace without the field is
-version 1 (everything v0.1 wrote); the current version is 4. Versioning the workspace rather
+version 1 (everything v0.1 wrote); the current version is 5. Versioning the workspace rather
 than each object keeps an additive field — `provenance`, `contradicts` — from turning into a
 breaking change for every reader; see [ADR 6](adr/0006-workspace-versioning-and-migrations.md).
 
-Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 4)`.
+Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 5)`.
 Writes stop until you run `phdude migrate`, which is deliberately a command you run rather than
 something that happens to your files while you were asking for something else.
 
@@ -141,6 +144,7 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Decision | `DEC-<hash10>` | `title`, `rationale`, `proposed_by`, `approved_by[]`, `status`, `change`, `affects[]` |
 | Candidate | `CAND-<hash10>` | `provider`, `providers[]`, `external_id`, `title`, `authors[]`, `year`, `venue`, `doi`, `url`, `abstract`, `type`, `open_access`, `cited_by`, `query`, `question`, `search`, `score`, `score_parts`, `needs_approval`, `state`, `reason?`, `accepted_as?` |
 | Search | `SEARCH-<hash10>` | `query`, `question`, `providers[]`, `filters`, `runs[]`, `last_run` |
+| Review | `REVIEW-<hash10>` | `kind`, `target`, `severity`, `message`, `evidence[]`, `suggested_command?`, `status`, `by`, `mode`, `reason?`, `resolved?` |
 
 Ids are derived from content, so the same claim added twice is one file. See
 [ADR 3](adr/0003-content-derived-ids.md). A candidate's identity is the **work**, not the
@@ -205,6 +209,30 @@ ext:
 from a provider, not from a document in `sources/`. The candidate moves to `accepted` and
 records `accepted_as`. If the workspace already records that Source — the same normalized title
 and year — the candidate is linked to it and the existing record is left exactly as it is.
+
+## Reviews
+
+`phdude review <kind>` assembles the context a review is done from; `phdude review submit` records
+what the reviewer said as `REVIEW-` objects under `reviews/`. A review is not knowledge: it has no
+`state` from the knowledge lifecycle, only its own `status`, and nothing downstream ever rests on
+it the way a claim rests on evidence.
+
+A review's identity is what was said about what — its `kind`, its `target` and its `message` —
+so the same finding submitted twice lands on the record that already exists. Submitting never
+rewrites one, verdict included: re-running a review must not reopen a finding the researcher
+already dismissed.
+
+`target` is an object id, `manuscript:<section>`, or `project`. `evidence[]` lists the ids the
+finding rests on, and `review submit` refuses a file naming an id or a section the workspace does
+not have. `by` is the actor the review is recorded against and `mode` the workspace review mode
+at the time, because a finding written under `ruthless` and one written under `lite` do not mean
+the same thing.
+
+`status` moves one way: `open` becomes `accepted` or `dismissed`, and only an `accepted` finding
+becomes `resolved`. Those verdicts are the researcher's, exactly like a Decision's approval.
+`severity` is `block`, `major`, `minor` or `note` and is never rewritten — `ruthless` mode
+promotes `minor` to `major` and `major` to `block` where a verdict is computed (`phdude next`,
+`phdude ready`), so changing the mode changes the reading and not one record.
 
 ## Author voice profiles
 
@@ -307,6 +335,9 @@ Accepting or dismissing a candidate writes one `research` event
 (`accepted CAND-… as SRC-…`, or `dismissed CAND-…: <reason>`), and `phdude edit` writes one
 `edit` event naming the fields that changed.
 
+Installing or removing an external skill writes one `skills` event
+(`installed <name> from <source>`, or `removed <name>`).
+
 A network call is audited the same way, one `search` event per provider call:
 
 ```json
@@ -319,6 +350,29 @@ machine, so the log still says so.
 
 It is committed, append-only, and independent of git history, so a rebase cannot erase who
 recorded what. Git history complements it with the full content of each change.
+
+## The Research Health report
+
+`phdude health` computes the eight-dimension Research Health score from the workspace on every
+run and prints the observations behind each number; nothing is stored unless the researcher
+asks. `phdude health --save` writes `reports/health.yaml` and records one `health` event:
+
+```yaml
+schema: phdude.health
+version: 1
+at: 2026-09-07T12:00:00Z
+overall: 62
+dimensions:
+  - key: literature-coverage
+    score: 67
+    weight: 1
+```
+
+The overall, and each dimension's key, score and weight — and nothing else. The observations are
+recomputed from the workspace every run, so storing them would only be storing a second copy of
+something that can go out of date. There is one saved report, not a series: each save replaces
+the last, and `phdude health --trend` measures this run against it. The formulas, and the rule
+that none of them is ever a detector or "humanity" score, are in ADR 0011.
 
 ## The manuscript
 
@@ -391,6 +445,20 @@ The registry is a record, not a cache: it is committed, and `phdude template che
 template whose bytes no longer hash to what was registered. The templates themselves are yours —
 a university's thesis DOCX, a conference's LaTeX class — and PhDude never edits one.
 
+## The skills lock
+
+`.phdude/skills-lock.yaml` (schema `phdude.skills-lock` v1) records the provenance of every skill
+`phdude skills install` brought in from outside the workspace: its `name`, the `source` it came
+from (an absolute directory or an https URL), the `hash` of its files, and `installed_at`. The
+shipped skills and the ones a pack carries are not in it — those come with PhDude and with the
+pack, and `phdude init` and `phdude packs apply` keep them in step.
+
+The `hash` is one sha256 over the tree's sorted `<path> <sha256>` lines, so an edited byte and a
+renamed file both move it. `phdude doctor` and `phdude skills list` compare it against what is on
+disk and report a skill that changed after it was installed — an edited skill is not the skill
+that was reviewed. Like the templates registry, the lock is a record rather than a cache: it is
+committed, and PhDude never runs anything inside a skill it copied.
+
 ## Adapted manuscripts
 
 `phdude adapt --to <venue> --apply` writes `manuscript/manuscript.<venue>.yaml`: a second
@@ -435,6 +503,11 @@ and `phdude ingest --force` rebuilds it.
 assembled, and `report.json`, the full gate report behind the last accepted `submit` or
 `deslop` — every finding, warnings included, where `manuscript/reports/<section>.yaml` keeps
 only the canonical summary. A blocked run writes neither: it leaves the workspace as it was.
+
+`.phdude/cache/review/<kind>/` holds `context.md`, the bounded review context
+`phdude review <kind>` assembled and the findings contract it printed. Like the writing context
+it is disposable: nothing is recorded until `phdude review submit` turns a findings file into
+`REVIEW-` objects, and the next `phdude review <kind>` rebuilds it.
 
 `.phdude/cache/build/<slug>/` holds one `<format>.json` and one `<format>.md` per format
 built: the record of every input hash behind the last build, and the Markdown that build handed

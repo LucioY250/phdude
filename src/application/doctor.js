@@ -9,7 +9,7 @@ import {
 } from '../domain/policy.js';
 import { CURRENT_WORKSPACE_VERSION, workspaceVersionOf } from '../domain/versioning.js';
 import { migrationWarning } from './guard.js';
-import { listSkills } from './skills.js';
+import { externalSkills, listSkills } from './skills.js';
 
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
 
@@ -21,12 +21,13 @@ const SCHEMA_VERSION = 1;
  * Reports what the runtime can and cannot do here. Diagnostic only: never writes.
  * @param {{store: object, git: object, parsers: object[], renderers?: object[],
  *   loadPacks: () => Promise<object[]>, schemaTypes: string[], node: string,
- *   discoverSkills: (roots: object[]) => Promise<object[]>, skillsDir: string}} deps
+ *   discoverSkills: (roots: object[]) => Promise<object[]>, skillsDir: string,
+ *   readSkillSource: (dir: string) => Promise<object>}} deps
  * @returns {Promise<{node: string, pdftotext: boolean, git: boolean, workspace: boolean,
  *   workspaceVersion: number|null, workspaceVersionCurrent: number, parsers: object,
  *   renderers: object[], policyError: string|null, network: boolean|null, providers: string[],
  *   execution: object|null, schemaVersions: object, cacheEntries: number, packsAvailable: string[],
- *   skills: object[], manuscript: object|null, warnings: string[]}>}
+ *   skills: object[], externalSkills: object[], manuscript: object|null, warnings: string[]}>}
  */
 export async function doctor({
   store,
@@ -38,6 +39,7 @@ export async function doctor({
   node,
   discoverSkills,
   skillsDir,
+  readSkillSource,
 }) {
   const warnings = [];
 
@@ -142,6 +144,17 @@ export async function doctor({
     warnings.push(`skills could not be loaded: ${err.message}`);
   }
 
+  // Where each externally installed skill came from, and whether its files still hash to what
+  // the lock recorded: an edited skill is not the skill the researcher reviewed.
+  let external = [];
+  try {
+    const locked = await externalSkills({ store, readSkillSource });
+    external = locked.skills;
+    warnings.push(...locked.warnings);
+  } catch (err) {
+    warnings.push(`the skills lock could not be read: ${err.message}`);
+  }
+
   return {
     node,
     pdftotext,
@@ -169,6 +182,7 @@ export async function doctor({
     cacheEntries: (await store.listCacheEntries()).length,
     packsAvailable,
     skills,
+    externalSkills: external,
     manuscript,
     warnings,
   };

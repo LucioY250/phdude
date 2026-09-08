@@ -56,6 +56,7 @@ export const COMMAND_OPTIONS = {
   packs: {},
   profile: { profile: { type: 'string' } },
   cite: { format: { type: 'string' } },
+  audit: { 'allow-network': { type: 'boolean' } },
   research: {
     question: { type: 'string' },
     provider: { type: 'string' },
@@ -91,6 +92,7 @@ export const COMMAND_OPTIONS = {
     'allow-additions': { type: 'boolean' },
   },
   gaps: {},
+  health: { save: { type: 'boolean' }, trend: { type: 'boolean' } },
   data: {},
   analyze: { 'allow-exec': { type: 'boolean' } },
   table: { format: { type: 'string' } },
@@ -105,14 +107,23 @@ export const COMMAND_OPTIONS = {
   template: { kind: { type: 'string' }, for: { type: 'string' } },
   figure: { 'allow-exec': { type: 'boolean' } },
   repro: {},
+  ready: { profile: { type: 'string' } },
   authors: {
     from: { type: 'string', multiple: true },
     approved: { type: 'boolean' },
   },
   mode: {},
+  skills: { 'allow-network': { type: 'boolean' } },
   migrate: {},
   doctor: {},
   prose: { lang: { type: 'string' } },
+  review: {
+    target: { type: 'string' },
+    kind: { type: 'string' },
+    status: { type: 'string' },
+    budget: { type: 'string' },
+    reason: { type: 'string' },
+  },
   help: {},
 };
 
@@ -120,7 +131,7 @@ export const COMMAND_OPTIONS = {
 // take a flag that names one. The guard is global and matches on the option name alone, before
 // any command-specific parsing: refusing `--humanize-to` only where it was expected would leave
 // every other command to answer for it.
-const DETECTOR_OPTION = /detect|humaniz/i;
+const DETECTOR_OPTION = /detect|humaniz|humanity|ai-score/i;
 
 function optionName(arg) {
   if (typeof arg !== 'string' || !arg.startsWith('--') || arg === '--') return null;
@@ -335,6 +346,8 @@ function build(
       title: values.title,
       type: values.type,
       state: values.state,
+      status: values.status,
+      target: values.target,
       query: values.query,
       by: values.by,
       with: values.with,
@@ -362,6 +375,8 @@ function build(
       change: values.change,
       noGit: values['no-git'] === true,
       dryRun: values['dry-run'] === true,
+      save: values.save === true,
+      trend: values.trend === true,
       help: values.help === true,
       version: values.version === true,
     },

@@ -90,6 +90,24 @@ test('fetchWithPolicy: a 4xx that is not 429 is a VALIDATION carrying the status
   assert.equal(fetch.calls.length, 1, 'a 404 is not retried');
 });
 
+test('fetchWithPolicy: an allowed status comes back to the caller instead of throwing', async () => {
+  const fetch = fakeFetch([{ match: URL_OK, status: 404, body: 'nope' }]);
+  const res = await fetchWithPolicy(fetch, URL_OK, { provider: 'demo', allowStatus: [404] });
+  assert.equal(res.status, 404);
+  assert.equal(res.ok, false);
+});
+
+test('fetchWithPolicy: allowing one status does not allow the others', async () => {
+  const fetch = fakeFetch([{ match: URL_OK, status: 410, body: 'gone' }]);
+  await assert.rejects(
+    fetchWithPolicy(fetch, URL_OK, { provider: 'demo', allowStatus: [404] }),
+    (err) => {
+      assert.equal(err.code, 'VALIDATION');
+      return true;
+    },
+  );
+});
+
 test('fetchWithPolicy: a 5xx is a TOOL_MISSING', async () => {
   const fetch = fakeFetch([{ match: URL_OK, status: 500, body: 'boom' }]);
   await assert.rejects(fetchWithPolicy(fetch, URL_OK, { provider: 'demo' }), (err) => {

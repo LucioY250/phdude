@@ -1,0 +1,21 @@
+Not ready to submit: 5 blocking item(s)
+Venue: generic-thesis   Mode: full   Research Health: 59/100 (needs 70)
+
+Blocking (5):
+  - [no-open-conflicts] 1 open fact conflict(s): sample_size
+    Fix: phdude decide propose --title "Resolve sample_size" --rationale "…" --affects FACT-2bc4462edb FACT-54af7fa906 FACT-f62e1a2f34 --change '{"fact_key":"sample_size","canonical_value":…}'
+  - [no-disputed-pairs] 1 disputed claim pair(s): CLAIM-84dc3cdd04/CLAIM-9f7abf99e9
+    Fix: phdude decide propose --title "Resolve contradiction between CLAIM-84dc3cdd04 and CLAIM-9f7abf99e9" --rationale "…" --affects CLAIM-84dc3cdd04 CLAIM-9f7abf99e9 --change '{"resolves_contradiction":["CLAIM-84dc3cdd04","CLAIM-9f7abf99e9"],"survivor":"CLAIM-84dc3cdd04"}'
+  - [all-sections-approved] 5 of 6 section(s) are not approved: abstract, methods, results, discussion, conclusions
+    Fix: phdude manuscript status
+  - [min-health] Research Health is 59/100, below the required 70
+    Fix: phdude health
+  - [gaps-high] 2 high-severity gap(s): claim-without-evidence CLAIM-3d035aa05b, question-without-claims RQ-2
+    Fix: phdude gaps
+
+Passed (5):
+  - [profile-check] generic-thesis blocks nothing
+  - [no-block-reviews] 1 open review finding(s), none blocking
+  - [figures-alt] 1 figure(s) have alt text
+  - [repro-clean] 3 declared item(s) are up to date
+  - [citations-clean] the citations resolve and no citation finding is open

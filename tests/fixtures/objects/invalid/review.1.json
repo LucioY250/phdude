@@ -1,0 +1,15 @@
+{
+  "schema": "phdude.review",
+  "version": 1,
+  "id": "REVIEW-4a1c9e7b02",
+  "created": "2026-09-07T10:00:00Z",
+  "actor": { "researcher": "lucio.yen@yavendio.com" },
+  "kind": "reviewer2",
+  "target": "CLAIM-bb244df965",
+  "severity": "critical",
+  "message": "A severity the vocabulary does not have.",
+  "evidence": [],
+  "status": "open",
+  "by": { "researcher": "lucio.yen@yavendio.com" },
+  "mode": "full"
+}

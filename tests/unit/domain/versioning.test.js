@@ -10,8 +10,8 @@ import {
 
 const step = (from, to) => ({ from, to, describe: () => `${from} → ${to}` });
 
-test('the current workspace version is 4', () => {
-  assert.equal(CURRENT_WORKSPACE_VERSION, 4);
+test('the current workspace version is 5', () => {
+  assert.equal(CURRENT_WORKSPACE_VERSION, 5);
 });
 
 test('a workspace without workspace_version is version 1', () => {
@@ -30,12 +30,14 @@ test('needsMigration is true below the current version and false at or above it'
   assert.equal(needsMigration({ workspace_version: 1 }), true);
   assert.equal(needsMigration({ workspace_version: 2 }), true);
   assert.equal(needsMigration({ workspace_version: 3 }), true);
-  assert.equal(needsMigration({ workspace_version: 4 }), false);
+  assert.equal(needsMigration({ workspace_version: 4 }), true);
   assert.equal(needsMigration({ workspace_version: 5 }), false);
+  assert.equal(needsMigration({ workspace_version: 6 }), false);
 });
 
 test('isNewerThanRuntime is true only above the current version', () => {
-  assert.equal(isNewerThanRuntime({ workspace_version: 5 }), true);
+  assert.equal(isNewerThanRuntime({ workspace_version: 6 }), true);
+  assert.equal(isNewerThanRuntime({ workspace_version: 5 }), false);
   assert.equal(isNewerThanRuntime({ workspace_version: 4 }), false);
   assert.equal(isNewerThanRuntime({ workspace_version: 3 }), false);
   assert.equal(isNewerThanRuntime({ workspace_version: 2 }), false);

@@ -109,7 +109,7 @@ function instructionBlock(snapshot, section) {
     `Section: ${section.id} (${section.status}), position ${section.order}`,
   ];
   if (purpose) lines.push('', `Purpose: ${purpose}`);
-  return { kind: 'instruction', id: section.id, markdown: lines.join('\n') };
+  return { kind: 'instruction', id: section.id, mandatory: true, markdown: lines.join('\n') };
 }
 
 function factsBlock(snapshot) {
@@ -284,6 +284,14 @@ export function assembleContext(snapshot, sectionId, options = {}) {
     epistemicBlock(new Set(claims.map((claim) => claim.state)), epistemicTable),
   ];
 
+  return { ...takeWithinBudget(items, budgetChars), section };
+}
+
+// Items are taken in priority order while the budget holds. The first item that does not fit,
+// and every item after it, is reported in `truncated` rather than silently shortened - a
+// half-quoted excerpt would be worse than a missing one. A `mandatory` item is always included:
+// it is the contract, not context.
+function takeWithinBudget(items, budgetChars) {
   const included = [];
   const truncated = [];
   const parts = [];
@@ -292,8 +300,7 @@ export function assembleContext(snapshot, sectionId, options = {}) {
 
   for (const item of items) {
     const chars = item.markdown.length;
-    const mandatory = item.kind === 'instruction';
-    if (!mandatory && (full || used + chars > budgetChars)) {
+    if (!item.mandatory && (full || used + chars > budgetChars)) {
       full = true;
       truncated.push({ kind: item.kind, id: item.id });
       continue;
@@ -303,7 +310,297 @@ export function assembleContext(snapshot, sectionId, options = {}) {
     included.push({ kind: item.kind, id: item.id, chars });
   }
 
-  return { markdown: parts.join('\n\n') + '\n', included, truncated, section };
+  return { markdown: parts.join('\n\n') + '\n', included, truncated };
 }
 
 export { PRIORITY, EPISTEMIC_TABLE };
+
+// The review context (spec §3.2). Same budgeting as the writing context and the same ledger,
+// but assembled around what is being reviewed rather than what is being written: the reviewer
+// is handed the target, the claims and evidence behind it, the methods, what reproduces and
+// what does not, and the findings already recorded, so a review cannot repeat itself.
+
+const REVIEW_CHECKLISTS = {
+  citation: [
+    'Does every `[@key]` in the prose resolve to a source the workspace records?',
+    'Does every source carry a title, at least one author, and a year?',
+    'Is every identifier well-formed, and does it name the work it claims to?',
+    'Is any source cited while still a candidate, or dismissed and cited anyway?',
+  ],
+  methodology: [
+    'Does the design answer the question it is attached to, or a neighbouring one?',
+    'Is the sampling strategy stated, and does it support the population the claims speak about?',
+    'Are the instruments named, and is their validity or reliability recorded anywhere?',
+    'Which validity threats are declared as limitations, and which are visible but undeclared?',
+    'Does the reporting follow the standard the field pack recommends for this design?',
+  ],
+  reviewer2: [
+    'Which claim asserts more than the evidence behind it supports?',
+    'Which finding is stated as established when its state is candidate or disputed?',
+    'Which alternative explanation is never considered?',
+    'Which comparison is made against a weak or absent baseline?',
+    'Which recorded contradiction does the argument walk past?',
+  ],
+  reproducibility: [
+    'Which analysis, table or figure is stale, never run, or missing its output?',
+    'Does every analysis declare the datasets it reads and where it writes results?',
+    'Is every number in the prose traceable to a RESULT or a FACT that still holds?',
+    'Is the data behind each claim registered, or only described?',
+  ],
+  custom: [
+    'State what you were asked to look at, and answer only that.',
+    'Every finding names the ids it rests on.',
+  ],
+};
+
+// Which blocks a kind of review needs first. Every kind gets every block; the order decides
+// what survives when the budget runs out.
+const REVIEW_ORDER = {
+  citation: [
+    'instruction',
+    'checklist',
+    'target',
+    'facts',
+    'claims',
+    'methods',
+    'reviews',
+    'repro',
+  ],
+  methodology: [
+    'instruction',
+    'checklist',
+    'target',
+    'facts',
+    'methods',
+    'claims',
+    'reviews',
+    'repro',
+  ],
+  reviewer2: [
+    'instruction',
+    'checklist',
+    'target',
+    'facts',
+    'claims',
+    'methods',
+    'reviews',
+    'repro',
+  ],
+  reproducibility: [
+    'instruction',
+    'checklist',
+    'target',
+    'facts',
+    'repro',
+    'claims',
+    'methods',
+    'reviews',
+  ],
+  custom: ['instruction', 'checklist', 'target', 'facts', 'claims', 'methods', 'reviews', 'repro'],
+};
+
+/**
+ * What a review target names: the whole project, one manuscript section, or one object.
+ * @param {object} snapshot
+ * @param {string} target
+ * @returns {{kind: 'project'|'section'|'entity', id: string, object?: object, section?: object}|null}
+ */
+export function resolveReviewTarget(snapshot, target) {
+  if (target === 'project') return { kind: 'project', id: 'project' };
+
+  const section = /^manuscript:([a-z0-9]+(?:-[a-z0-9]+)*)$/.exec(String(target ?? ''));
+  if (section) {
+    const entry = (snapshot.manuscript?.sections ?? []).find((s) => s.id === section[1]);
+    return entry === undefined ? null : { kind: 'section', id: target, section: entry };
+  }
+
+  const object = (snapshot.graph?.nodes ?? new Map()).get(target);
+  return object === undefined ? null : { kind: 'entity', id: target, object };
+}
+
+function reviewInstructionBlock(snapshot, kind, resolved) {
+  const lines = [
+    `# Review context: ${kind}`,
+    '',
+    `Project: ${snapshot.project?.title ?? '(untitled)'}`,
+    `Review mode: ${snapshot.project?.mode ?? 'full'}`,
+    `Target: ${resolved.id} (${resolved.kind})`,
+    '',
+    'You are reviewing what the workspace records, not what you remember. Every finding names',
+    'the ids it rests on, and a finding you cannot attach to a recorded id is a question for the',
+    'researcher rather than a finding.',
+  ];
+  return { kind: 'instruction', id: kind, mandatory: true, markdown: lines.join('\n') };
+}
+
+function reviewChecklistBlock(kind) {
+  const questions = REVIEW_CHECKLISTS[kind] ?? REVIEW_CHECKLISTS.custom;
+  const lines = ['## What this review asks', ''];
+  for (const question of questions) lines.push(`- ${question}`);
+  return { kind: 'checklist', id: kind, mandatory: true, markdown: lines.join('\n') };
+}
+
+function targetBlock(snapshot, resolved) {
+  const lines = ['## Under review', ''];
+
+  if (resolved.kind === 'project') {
+    const sections = snapshot.manuscript?.sections ?? [];
+    lines.push(`- Objects recorded: ${(snapshot.graph?.nodes ?? new Map()).size}`);
+    if (sections.length === 0) {
+      lines.push('- Manuscript: none planned');
+    } else {
+      lines.push('- Manuscript sections:');
+      for (const section of [...sections].sort((a, b) => a.order - b.order)) {
+        lines.push(`  - ${section.id} (${section.status})`);
+      }
+    }
+  } else if (resolved.kind === 'section') {
+    const body = snapshot.sectionBodies?.[resolved.section.id] ?? null;
+    lines.push(`- Section: ${resolved.section.id} (${resolved.section.status})`);
+    lines.push(`- Title: ${resolved.section.title}`);
+    lines.push('');
+    lines.push(body === null ? '(no prose written yet)' : body.trim());
+  } else {
+    const object = resolved.object;
+    lines.push(`- ${object.id} (${object.schema})`);
+    for (const [key, value] of Object.entries(object)) {
+      if (['schema', 'version', 'id', 'created', 'actor'].includes(key)) continue;
+      if (value === null || value === undefined) continue;
+      const rendered = Array.isArray(value) ? value.join(', ') : String(value);
+      if (rendered === '' || rendered === '[object Object]') continue;
+      lines.push(`- ${key}: ${rendered}`);
+    }
+  }
+
+  return { kind: 'target', id: resolved.id, markdown: lines.join('\n') };
+}
+
+function reviewClaimsBlock(snapshot, resolved) {
+  const evidenceById = byId(snapshot.evidence);
+  const sourcesById = byId(snapshot.sources);
+  const claims = reviewClaims(snapshot, resolved);
+
+  const lines = ['## Claims in scope', ''];
+  if (claims.length === 0) {
+    lines.push('None recorded for this target.');
+    return { kind: 'claims', id: resolved.id, markdown: lines.join('\n') };
+  }
+
+  for (const claim of claims) {
+    lines.push(`### ${claim.id} (${claim.state})`, '', claim.statement, '');
+    const items = (claim.supported_by ?? []).map((id) => evidenceById.get(id)).filter(Boolean);
+    if (items.length === 0) {
+      lines.push('- Evidence: none recorded');
+    } else {
+      for (const item of items) {
+        const source = sourcesById.get(item.source);
+        const where = source ? `${source.title} (${source.year ?? 'n.d.'})` : item.source;
+        lines.push(`- ${item.id} (${item.strength}) from ${where}: "${item.excerpt}"`);
+      }
+    }
+    if ((claim.questions ?? []).length > 0) lines.push(`- Answers: ${claim.questions.join(', ')}`);
+    if ((claim.contradicts ?? []).length > 0) {
+      lines.push(`- Contradicts: ${claim.contradicts.join(', ')}`);
+    }
+    lines.push('');
+  }
+
+  return { kind: 'claims', id: resolved.id, markdown: lines.join('\n').trimEnd() };
+}
+
+// Which claims a review of this target is about: the section's own claims, the claim itself
+// when one is under review, and otherwise every claim the project asserts.
+function reviewClaims(snapshot, resolved) {
+  if (resolved.kind === 'section') return sectionClaims(resolved.section, snapshot);
+  if (resolved.kind === 'entity' && resolved.object.schema === 'phdude.claim') {
+    return [resolved.object];
+  }
+  return [...(snapshot.claims ?? [])].sort((a, b) => (a.id < b.id ? -1 : 1));
+}
+
+function methodsBlock(snapshot) {
+  const methods = snapshot.methods ?? [];
+  const lines = ['## Methods as recorded', ''];
+  if (methods.length === 0) {
+    lines.push('None recorded. A study with no recorded method cannot be reviewed for one.');
+    return { kind: 'methods', id: 'methods', markdown: lines.join('\n') };
+  }
+  for (const method of methods) {
+    lines.push(`### ${method.id}: ${method.name} (${method.paradigm})`, '');
+    lines.push(`- Design: ${method.design || '(not stated)'}`);
+    lines.push(`- Sampling: ${method.sampling || '(not stated)'}`);
+    lines.push(`- Instruments: ${(method.instruments ?? []).join(', ') || '(none listed)'}`);
+    lines.push(`- Analysis: ${(method.analysis ?? []).join(', ') || '(none listed)'}`);
+    lines.push(`- Limitations: ${(method.limitations ?? []).join('; ') || '(none declared)'}`);
+    lines.push(`- Answers: ${(method.questions ?? []).join(', ') || '(no question attached)'}`);
+    lines.push('');
+  }
+  return { kind: 'methods', id: 'methods', markdown: lines.join('\n').trimEnd() };
+}
+
+function reproBlock(snapshot) {
+  const items = snapshot.repro ?? [];
+  const lines = ['## What reproduces, and what does not', ''];
+  if (items.length === 0) {
+    lines.push('Nothing is declared as an analysis, table or figure.');
+    return { kind: 'repro', id: 'repro', markdown: lines.join('\n') };
+  }
+  for (const item of items) {
+    lines.push(`- ${item.id} (${item.kind}) ${item.name}: ${item.status}`);
+    for (const reason of item.reasons ?? []) {
+      lines.push(`  - ${reason.kind}${reason.input ? ` ${reason.input}` : ''}`);
+    }
+  }
+  return { kind: 'repro', id: 'repro', markdown: lines.join('\n') };
+}
+
+function openReviewsBlock(snapshot, resolved) {
+  const open = (snapshot.reviews ?? []).filter(
+    (review) => review.status === 'open' || review.status === 'accepted',
+  );
+  const lines = ['## Findings already recorded', ''];
+  if (open.length === 0) {
+    lines.push('None. Nothing has been said about this project yet.');
+    return { kind: 'reviews', id: resolved.id, markdown: lines.join('\n') };
+  }
+  lines.push('Do not repeat these; say so only if you disagree, and say why.', '');
+  for (const review of open) {
+    lines.push(
+      `- ${review.id} [${review.severity}/${review.status}] ${review.kind} on ${review.target}: ${review.message}`,
+    );
+  }
+  return { kind: 'reviews', id: resolved.id, markdown: lines.join('\n') };
+}
+
+/**
+ * Assembles the review context for one target.
+ *
+ * @param {object} snapshot - a WorkspaceSnapshot (see application/snapshot.js)
+ * @param {{kind: string, target: string, budgetChars?: number}} options
+ * @returns {{markdown: string, included: object[], truncated: object[],
+ *   target: {kind: string, id: string}}|null} null when the target names nothing recorded
+ */
+export function assembleReviewContext(snapshot, { kind, target, budgetChars } = {}) {
+  const resolved = resolveReviewTarget(snapshot, target);
+  if (resolved === null) return null;
+
+  const blocks = {
+    instruction: reviewInstructionBlock(snapshot, kind, resolved),
+    checklist: reviewChecklistBlock(kind),
+    target: targetBlock(snapshot, resolved),
+    facts: factsBlock(snapshot),
+    claims: reviewClaimsBlock(snapshot, resolved),
+    methods: methodsBlock(snapshot),
+    repro: reproBlock(snapshot),
+    reviews: openReviewsBlock(snapshot, resolved),
+  };
+  const order = REVIEW_ORDER[kind] ?? REVIEW_ORDER.custom;
+  const items = order.map((name) => blocks[name]);
+
+  return {
+    ...takeWithinBudget(items, budgetChars ?? DEFAULT_BUDGET_CHARS),
+    target: { kind: resolved.kind, id: resolved.id },
+  };
+}
+
+export { REVIEW_CHECKLISTS };

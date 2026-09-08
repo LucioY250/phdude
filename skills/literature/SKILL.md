@@ -1,9 +1,9 @@
 ---
 name: literature
-description: Verify the citation registry before writing, and read the literature matrix and research gaps it feeds.
+description: Verify and audit the citation registry before writing, and read the literature matrix and research gaps it feeds.
 phdude:
   version: 1
-  reads: [knowledge/**, research/**, decisions/**]
+  reads: [knowledge/**, research/**, decisions/**, manuscript/**, reviews/**]
   writes: []
   permissions:
     network: none
@@ -12,8 +12,9 @@ phdude:
 
 # Literature
 
-Follow `[[phdude-core]]`: this skill is read-only, and every source is only as trustworthy as
-the evidence and provenance behind it.
+Follow `[[phdude-core]]`: every source is only as trustworthy as the evidence and provenance
+behind it. Everything here reads, except `phdude audit citations`, which records what it found
+as review findings for the researcher to rule on.
 
 ## Citations
 
@@ -51,6 +52,37 @@ finding kind must be resolved first (the command exits 2 while any of them remai
 | `missing-field` | A source is missing `title`, `authors`, or `year`. | `authors` is editable in place (`phdude edit SRC-… --json '{"authors":["…"]}'`). `title` and `year` are the source's identity, so correcting either means adding a corrected source and leaving the original as the history of what was believed. |
 | `duplicate-source` | Two or more sources share the same normalized `title` + `year`. | Confirm with the researcher which one is canonical, then stop citing the other; do not silently pick one yourself. |
 | `duplicate-bibkey` | Two or more sources declare the same explicit `bibkey`. | Give each a distinct `bibkey`, or drop the explicit one so it is derived instead. |
+
+### Audit the citations before the draft goes anywhere
+
+```
+phdude audit citations --json
+```
+
+`cite check` verifies the registry on its own terms; the audit reads the registry *and* the
+manuscript together, and records what it finds as `citation` REVIEW objects the researcher
+rules on. Run it once the prose exists — before a build, a `phdude ready`, or handing the
+manuscript to a human reader.
+
+| Rule | Severity | What it means |
+| --- | --- | --- |
+| `unresolved-citation` | `block` | A `[@key]` in a drafted section names nothing the registry records. Find the right key with `phdude cite list`, or accept the candidate first. |
+| `unsourced-claim` | `major` | A claim the prose asserts rests on no evidence citing a recorded source. Record the evidence and `phdude link CLAIM-… --to EV-…`; **never invent a source to close it.** |
+| `dismissed-source` | `major` | The prose cites a paper the researcher already dismissed. Report it and ask — do not quietly re-accept the candidate. |
+| `unreviewed-source` | `minor` | The prose cites a paper still sitting in the candidate list. The researcher accepts it, not you (`[[research]]`). |
+| `cite:…` | as above | Every `cite check` finding, recorded at its own weight; `cite:uncited-source` is a `note`. |
+
+On a workspace whose policy already opens the network, the audit also resolves each DOI at
+Crossref and adds `retracted-source` (`block`), `doi-unresolved` (`major`), `title-mismatch`
+(`major`) and `year-mismatch` (`minor`). That half belongs to `[[research]]`'s rules:
+**never pass `--allow-network` yourself** — say the audit can also verify the DOIs, and let the
+researcher decide (`[[phdude-core]]`). A `retracted-source` finding is the one to lead with:
+nothing else in the report matters as much as a citation to a retracted paper.
+
+Re-running is safe: a finding already on file is left as it is, verdict included, and a run
+that finds nothing new records no event. The command exits 0 even when it records a `block` —
+it reports; `phdude ready` is where a block stops a submission. Rule on findings with
+`phdude review accept|dismiss|resolve <REVIEW-id>`, which is the researcher's call, not yours.
 
 `phdude cite export --format bibtex|csl-json` writes `references.bib` / `references.json` at
 the workspace root. It is a derived artifact, not knowledge — it records no event, and citing

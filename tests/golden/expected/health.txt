@@ -1,0 +1,26 @@
+Research Health: 59/100 (weighted mean of 8 scored dimension(s), of 8)
+
+Literature Coverage       33/100   weight 1
+  - 1/3 question(s) have a supported or canonical claim (33%): RQ-2, RQ-3
+  - 2/3 question(s) have a source behind them (67%): RQ-2
+  - 0/3 question(s) have a search that is not stale (0%): RQ-1, RQ-2, RQ-3
+Evidence Strength         27/100   weight 1
+  - 7 claim(s) average 40/100 by state: 1 supported, 4 candidate, 2 disputed
+  - 6 evidence item(s) give a strength factor of 0.67: 4 moderate, 2 weak
+Methodological Integrity  63/100   weight 1
+  - 2/3 question(s) have a method (67%): RQ-2
+  - 1/1 method(s) declare limitations (100%)
+  - 1 open methodology review(s), 20 points each: REVIEW-e5ebf39e98
+Citation Quality          100/100  weight 1
+  - 5 source(s), 0 finding(s) charged at 10 points each
+  - 2 source(s) are cited by no evidence; that is a gap, not a citation fault, and costs nothing here: SRC-70ee4dce27, SRC-8295946d20
+Freshness                 0/100    weight 1
+  - 3/3 question(s) have a stale search (stale after 180 day(s)): RQ-1, RQ-2, RQ-3
+  - 2 question(s) have never been searched: RQ-2, RQ-3
+Reproducibility           100/100  weight 1
+  - 3/3 declared item(s) are up to date
+Consistency               50/100   weight 1
+  - 1 open fact conflict(s), 25 points each: sample_size
+  - 1 disputed claim pair(s), 25 points each: CLAIM-84dc3cdd04/CLAIM-9f7abf99e9
+Academic Prose Quality    98/100   weight 1
+  - introduction: 98/100

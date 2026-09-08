@@ -548,7 +548,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   // Reads work on a v0.1 workspace and say what is wrong with it.
   const before = await runJson(ws, ['status']);
   assert.equal(before.knowledge.byType.claim.total, 1);
-  assert.ok(before.warnings.includes('workspace needs migration (1 → 4)'));
+  assert.ok(before.warnings.includes('workspace needs migration (1 → 5)'));
 
   // Writes do not, and they name the command that fixes it.
   const refused = await phdude(ws, [
@@ -561,7 +561,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.equal(refused.code, 1);
   const refusal = JSON.parse(refused.stderr).error;
   assert.equal(refusal.code, 'USAGE');
-  assert.equal(refusal.message, 'workspace needs migration (1 → 4)');
+  assert.equal(refusal.message, 'workspace needs migration (1 → 5)');
   assert.equal(refusal.hint, 'run phdude migrate');
 
   const dryRun = await runJson(ws, ['migrate', '--dry-run']);
@@ -570,19 +570,19 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.ok(dryRun.steps[0].changed.includes('phdude.yaml'));
   const stillBehind = await runJson(ws, ['status']);
   assert.ok(
-    stillBehind.warnings.includes('workspace needs migration (1 → 4)'),
+    stillBehind.warnings.includes('workspace needs migration (1 → 5)'),
     'a dry run writes nothing',
   );
 
   const applied = await run(ws, ['migrate']);
-  assert.match(applied.stdout, /Migrated workspace 1 → 4/);
+  assert.match(applied.stdout, /Migrated workspace 1 → 5/);
 
   const after = await runJson(ws, ['status']);
   assert.deepEqual(after.warnings, []);
   assert.ok(after.recentEvents.some((e) => e.op === 'migrate'));
 
   const doctor = await runJson(ws, ['doctor']);
-  assert.equal(doctor.workspaceVersion, 4);
+  assert.equal(doctor.workspaceVersion, 5);
 
   // The write that was refused now goes through.
   await run(ws, [
@@ -593,7 +593,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   ]);
 
   const second = await run(ws, ['migrate']);
-  assert.match(second.stdout, /Workspace is up to date \(4\)/);
+  assert.match(second.stdout, /Workspace is up to date \(5\)/);
 });
 
 test('e2e: add artifact-role reports the update in text mode', async (t) => {
@@ -625,10 +625,10 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   const config = join(ws, 'phdude.yaml');
   await writeFile(
     config,
-    (await readFile(config, 'utf8')).replace('workspace_version: 4', 'workspace_version: 5'),
+    (await readFile(config, 'utf8')).replace('workspace_version: 5', 'workspace_version: 6'),
   );
 
-  const message = 'workspace version 5 is newer than this PhDude (4)';
+  const message = 'workspace version 6 is newer than this PhDude (5)';
 
   // Reads keep working and say what is wrong, the same way an older workspace does.
   const read = await runJson(ws, ['status']);
@@ -648,11 +648,11 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   assert.equal(refusal.hint, 'upgrade phdude');
 
   const report = await runJson(ws, ['doctor']);
-  assert.equal(report.workspaceVersion, 5);
+  assert.equal(report.workspaceVersion, 6);
   assert.ok(report.warnings.includes(message));
 
   const text = await run(ws, ['doctor']);
-  assert.match(text.stdout, /workspace version: 5 \(newer than this phdude\)/);
+  assert.match(text.stdout, /workspace version: 6 \(newer than this phdude\)/);
 });
 
 test('e2e: methods, provenance and the trace line that reports them', async (t) => {
@@ -2764,4 +2764,381 @@ test('e2e: adapt plans a venue move, then --apply writes a manuscript for it', a
     .filter(Boolean)
     .map((line) => JSON.parse(line));
   assert.equal(events.filter((event) => event.op === 'adapt').length, 1);
+});
+
+test('e2e: a review context, a findings file, and the verdicts the researcher gives it', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-review-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await run(ws, ['init', '--title', 'Reviewed thesis', '--no-git']);
+
+  await run(ws, [
+    'add',
+    'question',
+    '--json',
+    JSON.stringify({ text: 'How fast do small firms adopt AI?' }),
+  ]);
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({ title: 'Adoption in SMEs', authors: ['Z. Zeta'], year: 2020 }),
+  ]);
+  const evidence = await runJson(ws, [
+    'add',
+    'evidence',
+    '--json',
+    JSON.stringify({
+      source: source.id,
+      locator: 'p. 3',
+      excerpt: 'Adoption is slower among small firms.',
+      strength: 'moderate',
+    }),
+  ]);
+  const claim = await runJson(ws, [
+    'add',
+    'claim',
+    '--json',
+    JSON.stringify({
+      statement: 'Small firms adopt AI more slowly than large ones.',
+      supported_by: [evidence.id],
+      questions: ['RQ-1'],
+    }),
+  ]);
+
+  // Assembling the context writes cache and nothing else.
+  const context = await runJson(ws, ['review', 'reviewer2', '--target', claim.id]);
+  assert.equal(context.target.kind, 'entity');
+  assert.ok(
+    await exists(join(ws, '.phdude', 'cache', 'review', 'reviewer2', 'context.md')),
+    'the review context is written to cache',
+  );
+  const contextText = await run(ws, ['review', 'reviewer2']);
+  assert.match(contextText.stdout, /What to send back:/);
+  assert.match(contextText.stdout, /phdude review submit --file/);
+
+  // A findings file naming an id nothing records is refused, with one line per problem.
+  await writeFile(
+    join(ws, 'bad.json'),
+    JSON.stringify({
+      findings: [{ target: 'CLAIM-9999999999', severity: 'major', message: 'Gone.' }],
+    }),
+  );
+  const refused = await phdude(ws, [
+    'review',
+    'submit',
+    '--file',
+    'bad.json',
+    '--kind',
+    'reviewer2',
+    '--json',
+    ...ACTOR,
+  ]);
+  assert.equal(refused.code, 2);
+  const refusal = JSON.parse(refused.stderr).error;
+  assert.equal(refusal.code, 'VALIDATION');
+  assert.match(refusal.details[0], /findings\[0\] unknown target/);
+
+  await writeFile(
+    join(ws, 'findings.json'),
+    JSON.stringify({
+      findings: [
+        {
+          target: claim.id,
+          severity: 'block',
+          message: 'The claim generalizes past the sampled firms.',
+          evidence: [evidence.id],
+        },
+        { target: 'project', severity: 'note', message: 'No preregistration is recorded.' },
+      ],
+    }),
+  );
+  const submitted = await runJson(ws, [
+    'review',
+    'submit',
+    '--file',
+    'findings.json',
+    '--kind',
+    'reviewer2',
+  ]);
+  assert.equal(submitted.created.length, 2);
+  const blocking = submitted.created.find((item) => item.severity === 'block');
+  assert.ok(await exists(join(ws, 'reviews', `${blocking.id}.yaml`)));
+
+  // `next` picks the open findings up, and ranks them high because one of them blocks.
+  const next = await runJson(ws, ['next']);
+  const action = next.actions.find((item) => item.rule === 'reviews-open');
+  assert.equal(action.impact, 'high');
+  assert.equal(action.command, `phdude review show ${blocking.id}`);
+
+  assert.equal((await runJson(ws, ['review', 'list', '--status', 'open'])).length, 2);
+  assert.equal((await runJson(ws, ['review', 'list', '--kind', 'methodology'])).length, 0);
+  assert.equal((await runJson(ws, ['review', 'show', blocking.id])).id, blocking.id);
+
+  // Resolving one that nobody accepted is refused; accepting it first is not.
+  const early = await phdude(ws, ['review', 'resolve', blocking.id, '--json', ...ACTOR]);
+  assert.equal(early.code, 2);
+  assert.match(JSON.parse(early.stderr).error.message, /cannot move .* from open to resolved/);
+
+  await run(ws, ['review', 'accept', blocking.id]);
+  const resolved = await runJson(ws, ['review', 'resolve', blocking.id]);
+  assert.equal(resolved.review.status, 'resolved');
+
+  const note = submitted.created.find((item) => item.severity === 'note');
+  const dismissed = await runJson(ws, [
+    'review',
+    'dismiss',
+    note.id,
+    '--reason',
+    'the protocol is filed with the ethics board',
+  ]);
+  assert.equal(dismissed.review.status, 'dismissed');
+  assert.equal(dismissed.review.reason, 'the protocol is filed with the ethics board');
+
+  // Re-submitting the same findings reopens nothing.
+  const again = await runJson(ws, [
+    'review',
+    'submit',
+    '--file',
+    'findings.json',
+    '--kind',
+    'reviewer2',
+  ]);
+  assert.deepEqual(again.created, []);
+  assert.equal(again.existing.length, 2);
+  assert.deepEqual(again.existing.map((item) => item.status).sort(), ['dismissed', 'resolved']);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'review');
+  assert.equal(events.length, 4, 'one submit, one accept, one resolve, one dismiss');
+  assert.deepEqual(events[0].ids.sort(), submitted.created.map((item) => item.id).sort());
+});
+
+test('e2e: skills list, install from a directory, the detector refusal, and remove', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-skills-'));
+  const src = await mkdtemp(join(tmpdir(), 'phdude-e2e-src-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  t.after(() => rm(src, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Skills', '--no-git']);
+
+  const skill = (name, description) =>
+    [
+      '---',
+      `name: ${name}`,
+      `description: ${description}`,
+      'phdude:',
+      '  version: 1',
+      '  reads: []',
+      '  writes: []',
+      '  permissions:',
+      '    network: none',
+      '    workspace: [read]',
+      '---',
+      '',
+      `# ${name}`,
+      '',
+    ].join('\n');
+
+  await writeFile(join(src, 'SKILL.md'), skill('lab-checklist', 'The lab reporting checklist.'));
+
+  const before = await runJson(ws, ['skills', 'list']);
+  assert.ok(before.skills.every((s) => s.external === false));
+
+  const installed = await runJson(ws, ['skills', 'install', src]);
+  assert.equal(installed.name, 'lab-checklist');
+  assert.equal(installed.source, src);
+  assert.ok(await exists(join(ws, '.phdude', 'skills', 'lab-checklist', 'SKILL.md')));
+  assert.ok(await exists(join(ws, '.phdude', 'skills-lock.yaml')));
+
+  const listed = await runJson(ws, ['skills', 'list']);
+  const entry = listed.skills.find((s) => s.name === 'lab-checklist');
+  assert.equal(entry.external, true);
+  assert.equal(entry.origin, src);
+
+  const doctorReport = await runJson(ws, ['doctor']);
+  assert.deepEqual(
+    doctorReport.externalSkills.map((s) => [s.name, s.source, s.drifted]),
+    [['lab-checklist', src, false]],
+  );
+
+  // A second install of the same name is refused; --force replaces it.
+  const twice = await phdude(ws, ['skills', 'install', src, '--json', ...ACTOR]);
+  assert.equal(twice.code, 2);
+  assert.match(JSON.parse(twice.stderr).error.message, /already installed/);
+  await run(ws, ['skills', 'install', src, '--force']);
+
+  // A git URL without the network policy is a policy refusal, and never reaches git.
+  const remote = await phdude(ws, [
+    'skills',
+    'install',
+    'https://example.org/lab/x.git',
+    '--json',
+    ...ACTOR,
+  ]);
+  assert.equal(remote.code, 3);
+  assert.equal(JSON.parse(remote.stderr).error.message, 'network access is disabled');
+
+  // Anything but https is refused before the policy is even consulted.
+  const scp = await phdude(ws, [
+    'skills',
+    'install',
+    'git@example.org:lab/x.git',
+    '--json',
+    ...ACTOR,
+  ]);
+  assert.equal(scp.code, 2);
+  assert.match(JSON.parse(scp.stderr).error.message, /unsupported skill source/);
+
+  // PRD §30c: a skill that says it is a humanizer is refused, and nothing is copied.
+  const banned = await mkdtemp(join(tmpdir(), 'phdude-e2e-banned-'));
+  t.after(() => rm(banned, { recursive: true, force: true }));
+  await writeFile(
+    join(banned, 'SKILL.md'),
+    skill('polisher', 'Humanize a draft before you submit it.'),
+  );
+  const refused = await phdude(ws, ['skills', 'install', banned, '--json', ...ACTOR]);
+  assert.equal(refused.code, 3);
+  assert.match(JSON.parse(refused.stderr).error.hint, /§30c/);
+  assert.equal(await exists(join(ws, '.phdude', 'skills', 'polisher')), false);
+
+  const shipped = await phdude(ws, ['skills', 'remove', 'literature', '--json', ...ACTOR]);
+  assert.equal(shipped.code, 2);
+
+  await run(ws, ['skills', 'remove', 'lab-checklist']);
+  assert.equal(await exists(join(ws, '.phdude', 'skills', 'lab-checklist')), false);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'skills');
+  assert.deepEqual(
+    events.map((event) => event.summary),
+    [
+      `installed lab-checklist from ${src}`,
+      `installed lab-checklist from ${src}`,
+      'removed lab-checklist',
+    ],
+  );
+});
+
+test('e2e: audit citations records findings, verifies a DOI, and never reopens a verdict', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-audit-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Audited thesis', '--no-git']);
+  const source = await runJson(ws, [
+    'add',
+    'source',
+    '--json',
+    JSON.stringify({
+      title: 'Adoption of AI in Small Firms',
+      authors: ['Z. Zeta'],
+      year: 2020,
+      type: 'article',
+      identifiers: { doi: '10.1234/adoption' },
+    }),
+  ]);
+
+  // Offline: nothing cites the source yet, which is a note rather than a fault.
+  const offline = await runJson(ws, ['audit', 'citations']);
+  assert.equal(offline.network, false);
+  assert.equal(offline.checked, 0);
+  assert.equal(offline.created.length, 1);
+  assert.equal(offline.created[0].kind, 'citation');
+  assert.equal(offline.created[0].severity, 'note');
+  assert.equal(offline.created[0].target, source.id);
+
+  // The same audit again finds what is already on file, and records no second event.
+  const again = await runJson(ws, ['audit', 'citations']);
+  assert.deepEqual(again.created, []);
+  assert.equal(again.existing.length, 1);
+
+  // With the network open, Crossref answers with a different paper's title.
+  const routes = join(REPO_ROOT, 'tests', 'fixtures', 'search', 'audit-routes.json');
+  const online = await runJson(ws, ['audit', 'citations', '--allow-network'], {
+    PHDUDE_FAKE_FETCH: routes,
+  });
+  assert.equal(online.network, true);
+  assert.equal(online.checked, 1);
+  const mismatch = online.created.find((item) => item.message.includes('Groundwater'));
+  assert.ok(mismatch, 'the title mismatch is recorded');
+  assert.equal(mismatch.severity, 'major');
+  const year = online.created.find((item) => item.message.includes('dates'));
+  assert.ok(year, 'the year mismatch is recorded');
+  assert.equal(year.severity, 'minor');
+
+  const listed = await runJson(ws, ['review', 'list', '--kind', 'citation']);
+  assert.equal(listed.length, 3);
+
+  // A verdict the researcher gave survives the next audit.
+  await run(ws, ['review', 'dismiss', mismatch.id, '--reason', 'Crossref has the wrong record']);
+  const afterVerdict = await runJson(ws, ['audit', 'citations', '--allow-network'], {
+    PHDUDE_FAKE_FETCH: routes,
+  });
+  assert.deepEqual(afterVerdict.created, []);
+  assert.equal(afterVerdict.existing.find((item) => item.id === mismatch.id).status, 'dismissed');
+
+  const usage = await phdude(ws, ['audit', '--json', ...ACTOR]);
+  assert.equal(usage.code, 1);
+  assert.match(JSON.parse(usage.stderr).error.message, /unknown audit target/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .filter((event) => event.op === 'audit');
+  assert.equal(events.length, 2, 'one event per audit that recorded something');
+  assert.match(events[0].summary, /offline/);
+  assert.match(events[1].summary, /1 DOI\(s\) verified/);
+});
+
+test('e2e: ready exits 2 while anything blocks, 0 once nothing does, and never writes', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-ready-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Readiness', '--agents', 'claude-code', '--no-git']);
+  await run(ws, ['packs', 'apply', 'generic-thesis']);
+  await run(ws, ['manuscript', 'init']);
+  await run(ws, ['profile', 'use', 'generic-thesis']);
+
+  const eventsPath = join(ws, '.phdude', 'events.jsonl');
+  const before = await readFile(eventsPath, 'utf8');
+
+  // A fresh workspace: nothing is written and nothing is approved, so the gate refuses.
+  const blocked = await phdude(ws, ['ready', '--json', ...ACTOR]);
+  assert.equal(blocked.code, 2);
+  const report = JSON.parse(blocked.stdout);
+  assert.equal(report.ready, false);
+  assert.equal(report.profile, 'generic-thesis');
+  const codes = report.blocking.map((item) => item.code);
+  assert.ok(codes.includes('all-sections-approved'), codes.join(', '));
+  assert.equal(await readFile(eventsPath, 'utf8'), before, 'ready recorded an event');
+
+  // Human output leads with the verdict and names a command for each blocking item.
+  const human = await phdude(ws, ['ready', ...ACTOR]);
+  assert.equal(human.code, 2);
+  assert.match(human.stdout, /^Not ready to submit: \d+ blocking item\(s\)\n/);
+  assert.match(human.stdout, /\n {4}Fix: phdude /);
+
+  // A venue the workspace does not have is a usage error, not a verdict.
+  const unknown = await phdude(ws, ['ready', '--profile', 'nope', '--json', ...ACTOR]);
+  assert.equal(unknown.code, 1);
+  assert.match(JSON.parse(unknown.stderr).error.message, /unknown venue: nope/);
+
+  // The policy is the gate: with every requirement taken out of it, the same workspace passes.
+  const policyPath = join(ws, '.phdude', 'research-policy.yaml');
+  const policy = await readFile(policyPath, 'utf8');
+  await writeFile(
+    policyPath,
+    policy.replace(/\nready:\n[\s\S]*$/, '\nready:\n  min_health: 0\n  require: []\n'),
+  );
+
+  const passed = await phdude(ws, ['ready', '--json', ...ACTOR]);
+  assert.equal(passed.code, 0);
+  assert.equal(JSON.parse(passed.stdout).ready, true);
+  assert.equal(await readFile(eventsPath, 'utf8'), before, 'ready recorded an event');
 });

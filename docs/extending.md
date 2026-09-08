@@ -324,6 +324,54 @@ that, so a broken skill costs one warning instead of the entire report.
 `.phdude/skills/`, `source` compares the copy against the shipped bytes: identical is still
 `core`, and only an edited copy is `workspace`. See [`phdude doctor`](cli.md#phdude-doctor).
 
+### External skills
+
+A skill that is neither PhDude's nor a pack's is installed with
+[`phdude skills install`](cli.md#phdude-skills-listinstall-pathgit-url-removename), from a
+directory on this machine or from an https repository. PhDude copies the files and records where
+they came from; it never runs anything inside a skill, and a skill is not code PhDude executes.
+
+```
+phdude skills install ../lab-skills/prisma-screening
+phdude skills install https://example.org/lab/prisma-screening.git --allow-network
+phdude skills list
+phdude skills remove prisma-screening
+```
+
+Installing or removing a skill also rewrites the skill index in `AGENTS.md` and `CLAUDE.md`, so
+an external skill reaches the agent through the same file the shipped ones do.
+
+The tree is staged and validated outside the workspace before anything lands in
+`.phdude/skills/`, so a refusal leaves nothing behind. Four rules decide whether a skill is
+installed at all:
+
+- **The contract.** The `phdude:` block validates against the schema above, or the install fails
+  with a `VALIDATION` error naming the fields.
+- **Purpose.** A skill whose front matter `name` or `description` matches
+  `/detect(or|ion)\s+(evasion|bypass)|humaniz|humanity score/i` exits 3 with a `POLICY` error.
+  PhDude has no detector score and will not install a skill that offers one (PRD §30c). The regex
+  reads the purpose the skill declares about itself and not the whole file, so a skill that
+  *states the prohibition* — as the shipped `academic-prose` skill does — stays installable.
+- **Permissions.** The same gate a shipped skill goes through, applied before installation rather
+  than after: a skill declaring `permissions.network: allowed` or `permissions.execution: allowed`
+  that the research policy has not opened is refused with the setting that would install it,
+  instead of being installed and then withheld.
+- **Names.** A name PhDude ships is refused, because `phdude init` mirrors the shipped set into
+  `.phdude/skills/` and would overwrite the copy. A name already installed is refused unless
+  `--force` replaces it.
+
+A symlink anywhere in the source directory is refused too: following it would copy bytes from
+outside the directory the researcher named, exactly as a pack's skill paths may not resolve
+outside the pack.
+
+A git source is cloned with `execFile('git', [...])` — an argument array, never a shell — as a
+shallow clone of one commit, and only over `https` without credentials; every other transport is
+refused before git is called. The clone's `.git` is not copied.
+
+Each install writes `{ name, source, hash, installed_at }` into `.phdude/skills-lock.yaml` and one
+`skills` event; `remove` deletes the directory and its lock entry and writes one more. See
+[the skills lock](workspace.md#the-skills-lock) for the hash and what `doctor` does with it.
+
 ## Adding a migration
 
 A change to the shape of the workspace — a new required field, a renamed one, a file that moves

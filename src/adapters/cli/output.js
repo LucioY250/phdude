@@ -337,6 +337,129 @@ export function renderFreshness(report) {
   return lines.join('\n') + '\n';
 }
 
+const HEALTH_LABEL_WIDTH = 26;
+const HEALTH_SCORE_WIDTH = 9;
+
+function healthScore(score) {
+  return score === null ? 'n/a' : `${score}/100`;
+}
+
+function healthRow(dimension) {
+  return (
+    dimension.label.padEnd(HEALTH_LABEL_WIDTH) +
+    healthScore(dimension.score).padEnd(HEALTH_SCORE_WIDTH) +
+    `weight ${dimension.weight}`
+  );
+}
+
+function healthTrend(trend, overall) {
+  if (trend.at === null) {
+    return ['', 'Trend: nothing saved yet; run phdude health --save.'];
+  }
+
+  const signed = (delta) => (delta > 0 ? `+${delta}` : `${delta}`);
+  const moved = trend.dimensions.filter((d) => d.delta !== null && d.delta !== 0);
+  const change =
+    trend.overall.delta === null
+      ? `was ${healthScore(trend.overall.previous)}`
+      : trend.overall.delta === 0
+        ? 'unchanged'
+        : signed(trend.overall.delta);
+
+  const lines = ['', `Trend since ${trend.at}: overall ${healthScore(overall)} (${change})`];
+  if (moved.length === 0) return [...lines, '  (no dimension moved)'];
+  for (const d of moved) {
+    lines.push(
+      `  ${d.label.padEnd(HEALTH_LABEL_WIDTH)}${healthScore(d.score).padEnd(HEALTH_SCORE_WIDTH)}(${signed(d.delta)})`,
+    );
+  }
+  return lines;
+}
+
+/**
+ * The Research Health report of `phdude health` (spec §3.3): the overall, then every dimension
+ * with the observations its number was derived from, so the score is arguable rather than
+ * merely asserted.
+ * @param {object} report - see application/health.js
+ * @returns {string}
+ */
+export function renderHealth(report) {
+  const scored = report.dimensions.filter((d) => d.score !== null && d.weight > 0);
+  const overall =
+    report.overall === null
+      ? 'Research Health: n/a (nothing recorded scores yet)'
+      : `Research Health: ${report.overall}/100 (weighted mean of ${scored.length} scored dimension(s), of ${report.dimensions.length})`;
+
+  const lines = [overall, ''];
+  for (const dimension of report.dimensions) {
+    lines.push(healthRow(dimension));
+    for (const observation of dimension.observations) {
+      const ids = observation.ids ?? [];
+      lines.push(`  - ${observation.message}${ids.length === 0 ? '' : `: ${ids.join(', ')}`}`);
+    }
+  }
+
+  if (report.trend) lines.push(...healthTrend(report.trend, report.overall));
+  if (report.saved) lines.push('', `Saved to ${report.saved}`);
+
+  return lines.join('\n') + '\n';
+}
+
+function readyItems(items) {
+  const lines = [];
+  for (const item of items) {
+    lines.push(`  - [${item.code}] ${item.message}`);
+    lines.push(`    Fix: ${item.command}`);
+  }
+  return lines;
+}
+
+/**
+ * The submission-readiness verdict of `phdude ready` (spec §3.4): the answer first, then what is
+ * in the way and the command that fixes each, then the checks that passed - a gate that only
+ * ever printed its complaints would leave the researcher guessing what it looked at.
+ * @param {object} report - see application/ready.js
+ * @returns {string}
+ */
+export function renderReady(report) {
+  const passed = report.checks.filter((check) => check.ok);
+  const health =
+    report.health.overall === null
+      ? `Research Health: n/a (needs ${report.health.min})`
+      : `Research Health: ${report.health.overall}/100 (needs ${report.health.min})`;
+
+  const lines = [
+    report.ready
+      ? 'Ready to submit: nothing is blocking'
+      : `Not ready to submit: ${report.blocking.length} blocking item(s)`,
+    `Venue: ${report.profile ?? '(none)'}   Mode: ${report.mode}   ${health}`,
+  ];
+
+  if (report.blocking.length > 0) {
+    lines.push('', `Blocking (${report.blocking.length}):`, ...readyItems(report.blocking));
+  }
+
+  if (passed.length > 0) {
+    lines.push('', `Passed (${passed.length}):`);
+    for (const check of passed) lines.push(`  - [${check.code}] ${check.message}`);
+  }
+
+  if (report.relaxed.length > 0) {
+    lines.push(
+      '',
+      `Set aside by lite mode (${report.relaxed.length}):`,
+      ...readyItems(report.relaxed),
+    );
+  }
+
+  if (report.warnings.length > 0) {
+    lines.push('', 'Warnings:');
+    for (const warning of report.warnings) lines.push(`  - ${warning}`);
+  }
+
+  return lines.join('\n') + '\n';
+}
+
 const PROSE_SCORES = [
   ['specificity', 'Specificity'],
   ['evidenceAlignment', 'Evidence Alignment'],

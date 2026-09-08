@@ -60,7 +60,9 @@ Write to the workspace ONLY via `phdude add`, `phdude link` (including `phdude l
 `phdude table build`, `phdude figure add`, `phdude figure build`, `phdude present outline`,
 `phdude template add`, `phdude template use`, `phdude manuscript init`,
 `phdude manuscript submit`, `phdude manuscript approve`, `phdude manuscript reopen`,
-`phdude build`, `phdude adapt --apply`, or
+`phdude build`, `phdude adapt --apply`, `phdude audit citations`, `phdude review submit`,
+`phdude review accept`, `phdude review dismiss`, `phdude review resolve`,
+`phdude health --save`, `phdude skills install`, `phdude skills remove`, or
 `phdude deslop <section> --file <revised.md>`.
 (`phdude init` creates the workspace and `phdude ingest` writes the artifact inventory and its
 cache; `phdude bootstrap` runs that ingest, scores the packs and hands off to `[[bootstrap]]`, so
@@ -77,7 +79,9 @@ Every other command —
 `packs list|detect`, `authors list|show`, `data list|show|profile`, `analyze list|show|runs`,
 `table list|show`, `figure list|show|check`, `template list|check`, `repro check`,
 `manuscript list|show|status`, `profile list|show|check`, `adapt` without `--apply`, `prose`,
-`doctor`, `help` — only reads or derives from what is already recorded. (`phdude write` and
+`review list|show`, `health` (without `--save`), `ready`, `skills list`, `doctor`, `help` —
+only reads or derives from what is already recorded.
+(`phdude write`, `phdude review <kind>` and
 `phdude deslop <section>` without a file write only `.phdude/cache/`, and
 `phdude prose <section>` stores the section's scores in `manuscript/reports/`, a derived file.)
 Never write YAML files directly, even to "fix a typo", and never edit a file under
@@ -93,6 +97,33 @@ gates, meaning preservation included; `phdude prose <section>` is the quality re
 `[[write]]` and `[[academic-prose]]`. A blocking finding means nothing was written: fix the
 draft, never the gate. And PhDude has no AI-detector score and never will (PRD §30c) — if a
 researcher asks for one, say so plainly and offer the prose report instead.
+
+### Reviewing the work
+
+`phdude review <kind>` assembles a bounded review context for `methodology`, `reviewer2`,
+`reproducibility`, `citation` or `custom` and prints the findings contract; it records nothing.
+`phdude review submit --file <findings.json> --kind <kind>` turns those findings into `REVIEW-`
+objects. Follow `[[methodologist]]`, `[[reviewer2]]` and `[[reproducibility-reviewer]]`, and
+`[[review-modes]]` for how hard to push.
+
+Every finding names the ids it rests on. A finding with no id behind it is a question for the
+researcher, not a record. And the verdict is never yours: `phdude review accept`,
+`phdude review dismiss` and `phdude review resolve` are the researcher's calls, exactly like a
+Decision. Submitting a review and then accepting it yourself is the same error as approving your
+own decision.
+
+A finding already recorded — the same kind, target and message — is left as it is, verdict
+included, so re-running a review never reopens something the researcher has already dismissed.
+
+### Before it goes out
+
+`phdude ready` is the submission gate: the venue profile's blocking rules, Research Health
+against `ready.min_health`, every requirement in `ready.require`, and the high-severity gaps,
+each with the command that fixes it. It reads and writes nothing, and exits 2 while anything
+blocks. Report the blocking items and let the researcher choose which to fix — several of the
+fixes are decisions (`phdude manuscript approve`, `phdude review accept|dismiss|resolve`) that
+are never yours. Under `lite` only the blocking-severity items count; the rest are listed as
+relaxed and still stand.
 
 ### Running a script
 
