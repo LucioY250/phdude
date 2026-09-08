@@ -1,0 +1,14 @@
+schema: phdude.fact
+version: 1
+id: FACT-dfc50bbec8
+created: 2026-09-01T00:00:36.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+key: archive_reference
+value: Devane papers, box 4, folio 18
+from:
+  artifact: ART-0b66fb01e7
+  locator: Provenance
+state: candidate

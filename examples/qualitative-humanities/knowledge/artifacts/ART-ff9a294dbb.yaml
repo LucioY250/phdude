@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-ff9a294dbb
+created: 2026-09-01T00:00:01.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/finding-aid.md
+paths:
+  - sources/finding-aid.md
+hash: ff9a294dbbe6e420078a91aaaf2459d92d75d1ab07230901a420724f4fa5349e
+bytes: 190
+mime: text/markdown
+kind: md
+role: notes
+extracted:
+  status: ok
+  method: text
+  text_chars: 190
+  sections: 1
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

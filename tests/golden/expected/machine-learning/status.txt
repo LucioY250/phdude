@@ -1,0 +1,50 @@
+Project: Quantized Inference Benchmark Study
+Fields: computer-science
+Methods: (none)
+Outputs: thesis
+Mode: full
+
+Inventory:
+  Total artifacts: 3
+  By kind: md=3
+  By extraction: ok=3
+  Unknown role: 2
+
+Knowledge:
+  source: total=4 (candidate=4)
+  claim: total=5 (candidate=2, disputed=2, supported=1)
+  evidence: total=5 (candidate=5)
+  fact: total=0 ((none))
+  result: total=2 (candidate=2)
+  question: total=3 (candidate=3)
+  hypothesis: total=1 (candidate=1)
+  method: total=1 (candidate=1)
+
+Analysis:
+  Datasets: 1
+  Analyses: 1
+  Results (from analyses): 2
+  Tables: 1
+  Figures: 1
+  Stale or unbuilt: 0 of 3
+
+Literature:
+  Candidates: total=2 (accepted=1, candidate=1)
+  Searches: 1
+  Questions with a stale or missing search: 3 of 3
+
+Conflicts (0 open of 0 total):
+  (none)
+
+Disputed claims (1 pair):
+  - CLAIM-6988534f7f ⟷ CLAIM-79c11966df: "Quantized accuracy is stable across evaluation prompt sets." vs "Quantized accuracy drops once the evaluation prompts are hel…"
+
+Pending decisions (0):
+  (none)
+
+Recent events:
+  link: CLAIM-6e71302587 linked to 1 object(s)
+  packs: applied computer-science
+  packs: applied ieee
+  profile: target profile ieee
+  review: reproducibility review: 1 finding(s) recorded

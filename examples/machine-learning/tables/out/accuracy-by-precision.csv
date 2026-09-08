@@ -1,0 +1,4 @@
+Precision,Exact match
+fp16,81.0%
+int8,80.6%
+int4,77.1%

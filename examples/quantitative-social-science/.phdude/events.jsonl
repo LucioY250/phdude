@@ -1,0 +1,43 @@
+{"ts":"2026-09-01T00:00:00.000Z","op":"init","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"workspace initialized"}
+{"ts":"2026-09-01T00:00:04.000Z","op":"ingest","actor":{"researcher":"example","agent":"script"},"ids":["ART-a360b7f2ef","ART-5dd74562a3","ART-81017a69c6"],"summary":"ingested 3, skipped 0"}
+{"ts":"2026-09-01T00:00:05.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["ART-a360b7f2ef"],"summary":"artifact role set to notes"}
+{"ts":"2026-09-01T00:00:07.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["SRC-b56a303ca1"],"summary":"source added"}
+{"ts":"2026-09-01T00:00:09.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["SRC-3c94c2a3c2"],"summary":"source added"}
+{"ts":"2026-09-01T00:00:11.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["RQ-1"],"summary":"question added"}
+{"ts":"2026-09-01T00:00:13.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["RQ-2"],"summary":"question added"}
+{"ts":"2026-09-01T00:00:15.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["H-1"],"summary":"hypothesis added"}
+{"ts":"2026-09-01T00:00:17.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["METH-4270240d26"],"summary":"method added"}
+{"ts":"2026-09-01T00:00:19.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-20104ab040"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:00:21.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-47d31ee737"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:00:23.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-be73a89c98"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:00:25.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-e1bdcbc7f1"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:00:27.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-8909ac5b5b"],"summary":"claim added"}
+{"ts":"2026-09-01T00:00:28.000Z","op":"promote","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-8909ac5b5b"],"summary":"CLAIM-8909ac5b5b candidate → supported"}
+{"ts":"2026-09-01T00:00:30.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-26abd01106"],"summary":"claim added"}
+{"ts":"2026-09-01T00:00:32.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-83e492f314"],"summary":"claim added"}
+{"ts":"2026-09-01T00:00:34.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-3e5ca78442"],"summary":"fact added"}
+{"ts":"2026-09-01T00:00:36.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["FACT-f2d0423334"],"summary":"fact added"}
+{"ts":"2025-04-01T00:00:00Z","op":"search","actor":{"researcher":"example","agent":"script"},"ids":["SEARCH-8ab72c7e15"],"summary":"openalex: \"participatory budgeting attendance local media\" → 2 results"}
+{"ts":"2026-09-01T00:00:37.000Z","op":"research","actor":{"researcher":"example","agent":"script"},"ids":["CAND-737f519e18","SRC-5f66943b0a"],"summary":"accepted CAND-737f519e18 as SRC-5f66943b0a"}
+{"ts":"2026-09-01T00:00:38.000Z","op":"authors","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"author profile researcher-b added"}
+{"ts":"2026-09-01T00:00:40.000Z","op":"authors","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"author profile researcher-b learned from 1 sample(s)"}
+{"ts":"2026-09-01T00:00:42.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-883e2adf46"],"summary":"decision proposed"}
+{"ts":"2026-09-01T00:00:43.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"manuscript initialized (6 sections)"}
+{"ts":"2026-09-01T00:00:44.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"submitted introduction (draft)"}
+{"ts":"2026-09-01T00:00:45.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"submitted introduction (revised)"}
+{"ts":"2026-09-01T00:00:48.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-0ed7bb2068"],"summary":"decision proposed"}
+{"ts":"2026-09-01T00:00:50.000Z","op":"decide","actor":{"researcher":"example","agent":"script"},"ids":["DEC-0ed7bb2068"],"summary":"decision approved by example"}
+{"ts":"2026-09-01T00:00:51.000Z","op":"manuscript","actor":{"researcher":"example","agent":"script"},"ids":["DEC-0ed7bb2068"],"summary":"approved introduction (DEC-0ed7bb2068)"}
+{"ts":"2026-09-01T00:00:53.000Z","op":"data","actor":{"researcher":"example","agent":"script"},"ids":["DATASET-8959b01e5d"],"summary":"dataset added: data/attendance.csv"}
+{"ts":"2026-09-01T00:00:55.000Z","op":"analyze","actor":{"researcher":"example","agent":"script"},"ids":["ANALYSIS-206365cc2e"],"summary":"analysis declared: attendance descriptives"}
+{"ts":"2026-09-01T00:00:57.000Z","op":"analyze","actor":{"researcher":"example","agent":"script"},"ids":["ANALYSIS-206365cc2e","RESULT-3a5d6d9b5b","RESULT-2b62947ad9"],"summary":"analysis run: attendance descriptives → 2 new, 0 unchanged, 0 superseded"}
+{"ts":"2026-09-01T00:00:59.000Z","op":"table","actor":{"researcher":"example","agent":"script"},"ids":["TABLE-5bfe190861"],"summary":"table declared: attendance-by-news-source"}
+{"ts":"2026-09-01T00:01:00.000Z","op":"table","actor":{"researcher":"example","agent":"script"},"ids":["TABLE-5bfe190861"],"summary":"table built: attendance-by-news-source (md, latex, csv)"}
+{"ts":"2026-09-01T00:01:02.000Z","op":"figure","actor":{"researcher":"example","agent":"script"},"ids":["FIG-15eee39ece"],"summary":"figure declared: households-by-district"}
+{"ts":"2026-09-01T00:01:03.000Z","op":"figure","actor":{"researcher":"example","agent":"script"},"ids":["FIG-15eee39ece"],"summary":"figure built: households-by-district (figures/out/households-by-district.svg)"}
+{"ts":"2026-09-01T00:01:05.000Z","op":"add","actor":{"researcher":"example","agent":"script"},"ids":["EVID-3c57b4b86c"],"summary":"evidence added"}
+{"ts":"2026-09-01T00:01:06.000Z","op":"link","actor":{"researcher":"example","agent":"script"},"ids":["CLAIM-26abd01106","EVID-3c57b4b86c"],"summary":"CLAIM-26abd01106 linked to 1 object(s)"}
+{"ts":"2026-09-01T00:01:07.000Z","op":"packs","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"applied quantitative"}
+{"ts":"2026-09-01T00:01:08.000Z","op":"packs","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"applied generic-thesis"}
+{"ts":"2026-09-01T00:01:09.000Z","op":"profile","actor":{"researcher":"example","agent":"script"},"ids":[],"summary":"target profile generic-thesis"}
+{"ts":"2026-09-01T00:01:12.000Z","op":"review","actor":{"researcher":"example","agent":"script"},"ids":["REVIEW-cf38db2bc7"],"summary":"methodology review: 1 finding(s) recorded"}

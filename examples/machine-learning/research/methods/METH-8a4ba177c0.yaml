@@ -1,0 +1,26 @@
+schema: phdude.method
+version: 1
+id: METH-8a4ba177c0
+created: 2026-09-01T00:00:20.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: Benchmark comparison across numeric precisions
+design: Three precisions scored on one held-out benchmark split, five seeds each, batch size fixed.
+paradigm: computational
+instruments:
+  - exact-match scorer
+  - fixed-batch latency harness
+analysis:
+  - mean exact-match accuracy per precision
+  - mean latency per precision
+limitations:
+  - one benchmark
+  - one hardware configuration
+  - published prompts only
+questions:
+  - RQ-1
+  - RQ-2
+state: candidate
+sampling: The benchmark's published held-out split, unmodified.

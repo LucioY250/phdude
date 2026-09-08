@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-fa084130f1
+created: 2026-09-01T00:00:03.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/benchmark-card.md
+paths:
+  - sources/benchmark-card.md
+hash: fa084130f1bcd8e4b67b45ba96b77937c2d7203d4e430d249479014be095e2b9
+bytes: 200
+mime: text/markdown
+kind: md
+role: notes
+extracted:
+  status: ok
+  method: text
+  text_chars: 200
+  sections: 1
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

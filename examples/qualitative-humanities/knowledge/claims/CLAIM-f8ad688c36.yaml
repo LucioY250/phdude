@@ -1,0 +1,20 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-f8ad688c36
+created: 2026-09-01T00:00:29.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Provincial reading societies of the period were ordinarily founded by subscribing tradesmen.
+kind: literature
+state: candidate
+supported_by:
+  - EVID-c4928cf2cd
+questions:
+  - RQ-1
+sections:
+  - Discussion
+provenance:
+  method: agent-extraction
+  derived_from: []

@@ -1,0 +1,24 @@
+{
+  "results": [
+    {
+      "key": "accuracy_by_precision",
+      "summary": "Mean exact-match accuracy falls by less than half a point from half precision to eight-bit, and by more than three points at four-bit.",
+      "values": {
+        "fp16": 0.81,
+        "int8": 0.806,
+        "int4": 0.771
+      },
+      "unit": "proportion"
+    },
+    {
+      "key": "latency_by_precision",
+      "summary": "Mean latency at a fixed batch size falls with every step down in precision.",
+      "values": {
+        "fp16": 240,
+        "int8": 150,
+        "int4": 120
+      },
+      "unit": "milliseconds"
+    }
+  ]
+}

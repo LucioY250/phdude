@@ -1,0 +1,12 @@
+schema: phdude.hypothesis
+version: 1
+id: H-1
+created: 2026-09-01T00:00:14.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Districts covered by the community radio station sustain attendance between waves.
+questions:
+  - RQ-2
+state: candidate

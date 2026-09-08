@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-3
+created: 2026-09-01T00:00:16.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Does the accuracy cost of quantization depend on the calibration set?
+objectives:
+  - Compare calibration sets drawn from the training split and from the wild.
+state: candidate

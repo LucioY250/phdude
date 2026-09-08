@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-2
+created: 2026-09-01T00:00:14.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: How much latency does each step down in precision buy at a fixed batch size?
+objectives:
+  - Record median latency per precision under one hardware configuration.
+state: candidate

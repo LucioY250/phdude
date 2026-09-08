@@ -1,0 +1,21 @@
+Highest-impact next action:
+
+Answer the open review findings
+
+Why:
+- 1 review finding(s) are open: major=1
+- 1 of them block or need changes before this can go out: REVIEW-aa0e2882cf
+
+Expected impact:
+HIGH
+
+Command:
+phdude review show REVIEW-aa0e2882cf
+
+Other candidates:
+1. (medium) Review the research gaps report
+2. (medium) Classify artifacts with unknown role
+3. (medium) Refresh the literature behind the research questions
+4. (medium) Approve or reject pending decisions
+5. (medium) Close the evidence gap for unaddressed research questions
+6. (low) 9 open gap(s); run phdude gaps

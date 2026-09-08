@@ -1,0 +1,17 @@
+schema: phdude.evidence
+version: 1
+id: EVID-20104ab040
+created: 2026-09-01T00:00:18.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: ART-5dd74562a3
+locator: Results
+excerpt: Attendance was reported most often by households whose primary news source is the community radio station (wave one).
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-5dd74562a3

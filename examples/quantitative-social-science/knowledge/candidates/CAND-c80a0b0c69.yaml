@@ -1,0 +1,33 @@
+schema: phdude.candidate
+version: 1
+id: CAND-c80a0b0c69
+created: 2025-04-01T00:00:00Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+provider: openalex
+providers:
+  - openalex
+external_id: W4306612077
+title: Who Shows Up? Attendance Registers Versus Self-Reported Participation
+authors:
+  - P. Salazar
+year: 2022
+venue: Open Governance Preprints
+doi: null
+url: https://example.org/preprints/who-shows-up
+abstract: null
+type: preprint
+open_access: true
+cited_by: 6
+query: participatory budgeting attendance local media
+question: RQ-1
+search: SEARCH-8ab72c7e15
+score: 1.411
+score_parts:
+  rank: 0.5
+  citations: 0.211
+  recency: 0.7
+needs_approval: true
+state: candidate

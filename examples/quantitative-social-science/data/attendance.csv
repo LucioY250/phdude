@@ -1,0 +1,25 @@
+household_id,district,news_source,attended
+H01,Centro,community radio,yes
+H02,Centro,community radio,yes
+H03,Norte,community radio,yes
+H04,Norte,community radio,no
+H05,Ribera,community radio,yes
+H06,Ribera,community radio,yes
+H07,Alto,community radio,yes
+H08,Alto,community radio,no
+H09,Centro,municipal bulletin,yes
+H10,Centro,municipal bulletin,no
+H11,Centro,municipal bulletin,yes
+H12,Norte,municipal bulletin,no
+H13,Norte,municipal bulletin,yes
+H14,Ribera,municipal bulletin,no
+H15,Ribera,municipal bulletin,yes
+H16,Alto,municipal bulletin,no
+H17,Centro,social platform,yes
+H18,Centro,social platform,no
+H19,Centro,social platform,no
+H20,Norte,social platform,yes
+H21,Norte,social platform,no
+H22,Norte,social platform,no
+H23,Alto,social platform,yes
+H24,Alto,social platform,no

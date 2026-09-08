@@ -1,0 +1,18 @@
+schema: phdude.source
+version: 1
+id: SRC-3c94c2a3c2
+created: 2026-09-01T00:00:08.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Local Media Ecologies and Civic Participation
+authors:
+  - M. Okonjo
+type: article
+artifacts: []
+state: candidate
+year: 2023
+venue: Journal of Civic Studies
+identifiers:
+  doi: 10.5555/jcs.2023.0311

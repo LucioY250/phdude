@@ -1,0 +1,18 @@
+schema: phdude.source
+version: 1
+id: SRC-70fcdb80e9
+created: 2026-09-01T00:00:08.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Re-Evaluating Quantized Question Answering Under Held-Out Prompts
+authors:
+  - T. Camara
+type: preprint
+artifacts:
+  - ART-d6be23332e
+state: candidate
+year: 2024
+identifiers:
+  arxiv: "2406.02871"

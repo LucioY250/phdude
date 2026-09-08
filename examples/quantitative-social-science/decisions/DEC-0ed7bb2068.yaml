@@ -1,0 +1,20 @@
+schema: phdude.decision
+version: 1
+id: DEC-0ed7bb2068
+created: 2026-09-01T00:00:47.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Approve the introduction as revised
+rationale: The section asserts one supported claim with the two waves behind it, and the revision replaced the appeal to the literature with what the workspace can show.
+proposed_by:
+  researcher: example
+  agent: script
+approved_by:
+  - example
+status: approved
+change: {}
+affects:
+  - manuscript:introduction
+resolved: 2026-09-01T00:00:49.000Z

@@ -1,0 +1,20 @@
+schema: phdude.result
+version: 1
+id: RESULT-d53111b0f2
+created: 2026-09-01T00:00:59.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+summary: Mean exact-match accuracy falls by less than half a point from half precision to eight-bit, and by more than three points at four-bit.
+from: ANALYSIS-19e42e3957
+values:
+  fp16: 0.81
+  int8: 0.806
+  int4: 0.771
+state: candidate
+ext:
+  analysis:
+    key: accuracy_by_precision
+    run_at: 2026-09-01T00:00:59.000Z
+    unit: proportion

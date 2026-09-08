@@ -1,0 +1,20 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-83e492f314
+created: 2026-09-01T00:00:31.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Locally produced broadcast media are associated with municipal participation.
+kind: literature
+state: candidate
+supported_by:
+  - EVID-be73a89c98
+questions:
+  - RQ-1
+sections:
+  - Discussion
+provenance:
+  method: agent-extraction
+  derived_from: []

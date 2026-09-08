@@ -1,0 +1,15 @@
+schema: phdude.project
+version: 1
+workspace_version: 5
+title: Provincial Reading Societies Study
+language: en
+fields:
+  - humanities
+methods:
+  - qualitative
+venues:
+  - generic-thesis
+outputs:
+  - thesis
+mode: full
+agents: []

@@ -1,0 +1,30 @@
+schema: phdude.analysis
+version: 1
+id: ANALYSIS-19e42e3957
+created: 2026-09-01T00:00:57.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: benchmark summary
+runtime: node
+script: analysis/benchmark.mjs
+args: []
+inputs:
+  - DATASET-0240995739
+outputs:
+  results: analysis/out/benchmark-summary/results.json
+  files: []
+params: {}
+runs:
+  - at: 2026-09-01T00:00:59.000Z
+    exit: 0
+    duration_ms: 0
+    input_hashes:
+      DATASET-0240995739: 0240995739a45963faa97fdb00551871b2f96d17df26f5d36e14df6e593656e7
+    output_hashes:
+      analysis/out/benchmark-summary/results.json: 4f80ae1154860f3032d8dad1788e49037943e8d324f36f601b8d13f1b651b780
+    results:
+      - RESULT-d53111b0f2
+      - RESULT-d87b1ffbab
+state: candidate

@@ -1,0 +1,23 @@
+Highest-impact next action:
+
+Resolve the conflicting value(s) for "households_surveyed"
+
+Why:
+- households_surveyed: 1204 households (ART-5dd74562a3) vs 1180 households (ART-81017a69c6)
+- 1 claim(s) depend on the conflicting artifacts
+
+Expected impact:
+HIGH
+
+Command:
+phdude decide propose --title "Resolve households_surveyed" --rationale "…" --affects FACT-3e5ca78442 FACT-f2d0423334 --change '{"fact_key":"households_surveyed","canonical_value":…}'
+
+Other candidates:
+1. (high) Answer the open review findings
+2. (medium) Review the research gaps report
+3. (medium) Classify artifacts with unknown role
+4. (medium) Refresh the literature behind the research questions
+5. (medium) Approve or reject pending decisions
+6. (medium) Close the evidence gap for unaddressed research questions
+7. (medium) Draft the manuscript sections whose evidence is already in
+8. (low) 10 open gap(s); run phdude gaps

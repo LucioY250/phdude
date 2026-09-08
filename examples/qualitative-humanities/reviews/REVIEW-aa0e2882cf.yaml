@@ -1,0 +1,21 @@
+schema: phdude.review
+version: 1
+id: REVIEW-aa0e2882cf
+created: 2026-09-01T00:00:58.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+kind: reviewer2
+target: CLAIM-b7b061f8fa
+severity: major
+message: Both attributions rest on a single surviving witness written years after the events, and the endorsement on the later letter is undated, so the chapter should say what would have to be found before either reading could be preferred.
+evidence:
+  - EVID-622d23e063
+  - EVID-84772d95c1
+status: open
+by:
+  researcher: example
+  agent: script
+mode: full
+suggested_command: phdude decide propose --title "State the evidential standard for the founding attribution" --affects METH-deb95d210e

@@ -1,0 +1,39 @@
+schema: phdude.figure
+version: 1
+id: FIG-15eee39ece
+created: 2026-09-01T00:01:01.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: households-by-district
+caption: Surveyed households by district.
+alt: "Bar chart: Centro contributed 8 of the 24 surveyed households, Norte 7, Ribera 4 and Alto 5."
+generator:
+  runtime: node
+  script: phdude:bar-chart
+  args:
+    - --input
+    - analysis/out/attendance-descriptives/results.json
+    - --key
+    - households_by_district
+    - --out
+    - figures/out/households-by-district.svg
+    - --title
+    - Surveyed households by district
+    - --alt
+    - "Bar chart: Centro contributed 8 of the 24 surveyed households, Norte 7, Ribera 4 and Alto 5."
+inputs:
+  - RESULT-2b62947ad9
+outputs:
+  - path: figures/out/households-by-district.svg
+    format: svg
+runs:
+  - at: 2026-09-01T00:01:03.000Z
+    exit: 0
+    duration_ms: 0
+    input_hashes:
+      RESULT-2b62947ad9: ab80d1bc8da3db8e6b37bf29a02feae140f257549d50d46e034441c48741e84f
+    output_hashes:
+      figures/out/households-by-district.svg: e0b7f88994373094c9a2f7aa9aa785e7666dc01c288504405a854ad2a9f7817f
+state: candidate

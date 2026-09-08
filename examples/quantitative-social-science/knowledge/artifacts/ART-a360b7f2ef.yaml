@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-a360b7f2ef
+created: 2026-09-01T00:00:01.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/instrument-codebook.md
+paths:
+  - sources/instrument-codebook.md
+hash: a360b7f2efe5768ee629f54059eff537ee9b380366590a3a8199ff5c7f995c4f
+bytes: 209
+mime: text/markdown
+kind: md
+role: notes
+extracted:
+  status: ok
+  method: text
+  text_chars: 209
+  sections: 1
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

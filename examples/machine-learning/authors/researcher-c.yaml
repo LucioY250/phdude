@@ -1,0 +1,53 @@
+schema: phdude.author-profile
+version: 1
+id: researcher-c
+name: Researcher C
+language: en
+tone:
+  academic: true
+  assertiveness: moderate
+  first_person: sparing
+sentences:
+  length: short
+  openings: varied
+paragraphs:
+  density: high
+transitions: minimal
+terminology:
+  preserve:
+    - exact match
+    - held-out split
+    - post-training quantization
+  avoid:
+    - state-of-the-art
+    - novel
+    - seamless
+samples:
+  - path: authors/samples/researcher-c/intro-approved.md
+    approved: true
+learned:
+  sentence_length_mean: 21.2
+  sentence_length_sd: 8.46
+  opening_diversity: 1
+  transition_rate: 0
+  first_person_rate: 0.1
+  hedge_rate: 0
+  paragraph_density: 3.33
+  preserved_terms:
+    - accuracy
+    - configuration
+    - prompts
+    - benchmark
+    - hardware
+    - held-out
+    - latency
+    - rather
+    - recorded
+    - analysis
+    - another
+    - argued
+    - calibrated
+    - checked
+    - column
+  sample_count: 1
+  learned_at: 2026-09-01T00:00:44.000Z

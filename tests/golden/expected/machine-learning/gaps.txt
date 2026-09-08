@@ -1,0 +1,44 @@
+HIGH (3):
+  - [claim-without-evidence] CLAIM-d0ac24ffa0
+    Why: CLAIM-d0ac24ffa0 has no evidence
+    Command: phdude link CLAIM-d0ac24ffa0 --to <EVID-id>
+  - [disputed-pair] CLAIM-6988534f7f/CLAIM-79c11966df
+    Why: CLAIM-6988534f7f and CLAIM-79c11966df contradict each other and neither has been rejected
+    Command: phdude decide propose --title "Resolve contradiction between CLAIM-6988534f7f and CLAIM-79c11966df" --rationale "…" --affects CLAIM-6988534f7f CLAIM-79c11966df --change '{"resolves_contradiction":["CLAIM-6988534f7f","CLAIM-79c11966df"],"survivor":"CLAIM-6988534f7f"}'
+  - [question-without-claims] RQ-3
+    Why: RQ-3 has 0 claims addressing it
+    Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-3"]}'
+
+MEDIUM (3):
+  - [hypothesis-untested] H-1
+    Why: H-1 has no claim addressing any of its question(s): RQ-3
+    Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-3"]}'
+  - [question-only-candidates] RQ-2
+    Why: RQ-2's 1 claim(s) are all still candidate: CLAIM-d0ac24ffa0
+    Command: phdude promote CLAIM-d0ac24ffa0 --to supported
+  - [question-without-method] RQ-3
+    Why: RQ-3 has no method addressing it
+    Command: phdude add method --json '{"name":"…","design":"…","paradigm":"quantitative","questions":["RQ-3"]}'
+
+LOW (7):
+  - [artifact-unmined] ART-fa084130f1
+    Why: ART-fa084130f1 (role: notes) is not referenced by any source, fact, or evidence
+    Command: phdude add fact --json '{"key":"…","value":"…","from":{"artifact":"ART-fa084130f1"}}'
+  - [question-never-searched] RQ-2
+    Why: RQ-2 has never been searched for literature
+    Command: set network.enabled: true in .phdude/research-policy.yaml, then phdude research "How much latency does each step down in precision buy at a fixed batch size?" --question RQ-2
+  - [question-never-searched] RQ-3
+    Why: RQ-3 has never been searched for literature
+    Command: set network.enabled: true in .phdude/research-policy.yaml, then phdude research "Does the accuracy cost of quantization depend on the calibration set?" --question RQ-3
+  - [result-uncited] RESULT-d87b1ffbab
+    Why: RESULT-d87b1ffbab is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"RESULT-d87b1ffbab","excerpt":"…","strength":"moderate"}'
+  - [stale-search] RQ-1
+    Why: RQ-1's last search ran 555 day(s) ago (stale after 180)
+    Command: phdude research-fresh --question RQ-1
+  - [uncited-source] SRC-70fcdb80e9
+    Why: SRC-70fcdb80e9 is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"SRC-70fcdb80e9","excerpt":"…","strength":"moderate"}'
+  - [uncited-source] SRC-9a56723890
+    Why: SRC-9a56723890 is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"SRC-9a56723890","excerpt":"…","strength":"moderate"}'

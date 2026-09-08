@@ -1,0 +1,17 @@
+schema: phdude.source
+version: 1
+id: SRC-b56a303ca1
+created: 2026-09-01T00:00:06.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Municipal Household Survey, Waves One and Two
+authors:
+  - L. Ibarra
+type: report
+artifacts:
+  - ART-5dd74562a3
+  - ART-81017a69c6
+state: candidate
+year: 2025

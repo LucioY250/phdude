@@ -1,0 +1,4 @@
+schema: phdude.methodology-policy
+version: 1
+require_design_statement: true
+require_limitations: true
