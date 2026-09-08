@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-1
+created: 2026-09-01T00:00:12.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: What does eight-bit post-training quantization cost in exact-match accuracy on extractive question answering?
+objectives:
+  - Score three numeric precisions on one held-out benchmark split across five seeds each.
+state: candidate

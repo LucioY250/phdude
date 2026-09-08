@@ -1,0 +1,18 @@
+schema: phdude.evidence
+version: 1
+id: EVID-71046fcc21
+created: 2026-09-01T00:00:24.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: SRC-ef1f86d389
+locator: series description
+excerpt: The correspondence series preserves letters exchanged between the officers of the society between 1871 and 1879.
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-0b66fb01e7
+    - ART-ad21c3d2f2

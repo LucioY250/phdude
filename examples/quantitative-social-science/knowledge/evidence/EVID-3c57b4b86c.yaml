@@ -1,0 +1,16 @@
+schema: phdude.evidence
+version: 1
+id: EVID-3c57b4b86c
+created: 2026-09-01T00:01:04.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: RESULT-3a5d6d9b5b
+locator: attendance_by_news_source
+excerpt: Attendance is reported by 75% of households relying on the community radio station, 50% of those relying on the municipal bulletin and 38% of those relying on a social platform.
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from: []

@@ -1,0 +1,35 @@
+HIGH (2):
+  - [open-conflict] households_surveyed
+    Why: households_surveyed has an open conflict: 1204 households (ART-5dd74562a3) vs 1180 households (ART-81017a69c6)
+    Command: phdude decide propose --title "Resolve households_surveyed" --rationale "…" --affects FACT-3e5ca78442 FACT-f2d0423334 --change '{"fact_key":"households_surveyed","canonical_value":…}'
+  - [question-without-claims] RQ-2
+    Why: RQ-2 has 0 claims addressing it
+    Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-2"]}'
+
+MEDIUM (3):
+  - [claim-weak-evidence] CLAIM-83e492f314
+    Why: CLAIM-83e492f314 is supported only by weak evidence: EVID-be73a89c98
+    Command: phdude add evidence --json '{"source":"<SRC-id>","excerpt":"…","strength":"strong"}'
+  - [hypothesis-untested] H-1
+    Why: H-1 has no claim addressing any of its question(s): RQ-2
+    Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-2"]}'
+  - [question-without-method] RQ-2
+    Why: RQ-2 has no method addressing it
+    Command: phdude add method --json '{"name":"…","design":"…","paradigm":"quantitative","questions":["RQ-2"]}'
+
+LOW (5):
+  - [artifact-unmined] ART-a360b7f2ef
+    Why: ART-a360b7f2ef (role: notes) is not referenced by any source, fact, or evidence
+    Command: phdude add fact --json '{"key":"…","value":"…","from":{"artifact":"ART-a360b7f2ef"}}'
+  - [question-never-searched] RQ-2
+    Why: RQ-2 has never been searched for literature
+    Command: set network.enabled: true in .phdude/research-policy.yaml, then phdude research "Does assembly attendance change between survey waves within the same district?" --question RQ-2
+  - [result-uncited] RESULT-2b62947ad9
+    Why: RESULT-2b62947ad9 is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"RESULT-2b62947ad9","excerpt":"…","strength":"moderate"}'
+  - [stale-search] RQ-1
+    Why: RQ-1's last search ran 524 day(s) ago (stale after 180)
+    Command: phdude research-fresh --question RQ-1
+  - [uncited-source] SRC-5f66943b0a
+    Why: SRC-5f66943b0a is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"SRC-5f66943b0a","excerpt":"…","strength":"moderate"}'

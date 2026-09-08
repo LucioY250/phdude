@@ -1,0 +1,55 @@
+schema: phdude.dataset
+version: 1
+id: DATASET-8959b01e5d
+created: 2026-09-01T00:00:52.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+path: data/attendance.csv
+hash: 8959b01e5da40b7ea4714f8f03b0d49a590e3d0489f5ba573a4a0be0a93c0010
+bytes: 783
+format: csv
+profile:
+  rows: 24
+  columns:
+    - name: household_id
+      inferred_type: string
+      missing: 0
+      distinct: 24
+      distinct_truncated: false
+      samples:
+        - H01
+        - H02
+        - H03
+        - H04
+        - H05
+    - name: district
+      inferred_type: string
+      missing: 0
+      distinct: 4
+      distinct_truncated: false
+      samples:
+        - Centro
+        - Norte
+        - Ribera
+        - Alto
+    - name: news_source
+      inferred_type: string
+      missing: 0
+      distinct: 3
+      distinct_truncated: false
+      samples:
+        - community radio
+        - municipal bulletin
+        - social platform
+    - name: attended
+      inferred_type: boolean
+      missing: 0
+      distinct: 2
+      distinct_truncated: false
+      samples:
+        - yes
+        - no
+sensitive: false
+state: candidate

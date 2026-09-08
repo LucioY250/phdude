@@ -1,0 +1,20 @@
+Not ready to submit: 4 blocking item(s)
+Venue: generic-thesis   Mode: full   Research Health: 62/100 (needs 70)
+
+Blocking (4):
+  - [no-open-conflicts] 1 open fact conflict(s): households_surveyed
+    Fix: phdude decide propose --title "Resolve households_surveyed" --rationale "…" --affects FACT-3e5ca78442 FACT-f2d0423334 --change '{"fact_key":"households_surveyed","canonical_value":…}'
+  - [all-sections-approved] 5 of 6 section(s) are not approved: abstract, methods, results, discussion, conclusions
+    Fix: phdude manuscript status
+  - [min-health] Research Health is 62/100, below the required 70
+    Fix: phdude health
+  - [gaps-high] 1 high-severity gap(s): question-without-claims RQ-2
+    Fix: phdude gaps
+
+Passed (6):
+  - [profile-check] generic-thesis blocks nothing
+  - [no-disputed-pairs] no claim pair is disputed
+  - [no-block-reviews] 1 open review finding(s), none blocking
+  - [figures-alt] 1 figure(s) have alt text
+  - [repro-clean] 3 declared item(s) are up to date
+  - [citations-clean] the citations resolve and no citation finding is open

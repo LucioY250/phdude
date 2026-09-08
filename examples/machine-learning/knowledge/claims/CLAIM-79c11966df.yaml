@@ -1,0 +1,21 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-79c11966df
+created: 2026-09-01T00:00:39.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Quantized accuracy drops once the evaluation prompts are held out.
+kind: empirical
+state: disputed
+supported_by:
+  - EVID-9495d5d2af
+questions: []
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-d6be23332e
+contradicts:
+  - CLAIM-6988534f7f

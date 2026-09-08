@@ -1,0 +1,21 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-2d2237b335
+created: 2026-09-01T00:00:33.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: The reading society was founded by a committee of subscribing merchants.
+kind: empirical
+state: disputed
+supported_by:
+  - EVID-84772d95c1
+questions: []
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-ad21c3d2f2
+contradicts:
+  - CLAIM-2796e63e39

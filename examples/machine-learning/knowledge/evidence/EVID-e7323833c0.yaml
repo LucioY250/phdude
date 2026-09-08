@@ -1,0 +1,17 @@
+schema: phdude.evidence
+version: 1
+id: EVID-e7323833c0
+created: 2026-09-01T00:00:28.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: SRC-ae77970deb
+locator: Abstract
+excerpt: The recipe is evaluated on one benchmark with three seeds per configuration and no held-out prompt set.
+strength: weak
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-f4e6774a3e

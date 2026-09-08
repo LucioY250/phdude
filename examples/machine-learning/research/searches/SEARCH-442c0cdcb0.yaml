@@ -1,0 +1,26 @@
+schema: phdude.search
+version: 1
+id: SEARCH-442c0cdcb0
+created: 2025-03-01T00:00:00Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+query: post-training quantization extractive question answering
+question: RQ-1
+providers:
+  - arxiv
+filters:
+  from: 2021
+  limit: 20
+  languages:
+    - en
+    - es
+  peer_reviewed: preferred
+  preprints_require_approval: true
+runs:
+  - at: 2025-03-01T00:00:00Z
+    provider: arxiv
+    count: 2
+    new: 2
+last_run: 2025-03-01T00:00:00Z

@@ -1,0 +1,70 @@
+schema: phdude.dataset
+version: 1
+id: DATASET-0240995739
+created: 2026-09-01T00:00:55.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+path: data/benchmark-runs.csv
+hash: 0240995739a45963faa97fdb00551871b2f96d17df26f5d36e14df6e593656e7
+bytes: 390
+format: csv
+profile:
+  rows: 15
+  columns:
+    - name: run_id
+      inferred_type: string
+      missing: 0
+      distinct: 15
+      distinct_truncated: false
+      samples:
+        - run01
+        - run02
+        - run03
+        - run04
+        - run05
+    - name: precision
+      inferred_type: string
+      missing: 0
+      distinct: 3
+      distinct_truncated: false
+      samples:
+        - fp16
+        - int8
+        - int4
+    - name: seed
+      inferred_type: number
+      missing: 0
+      distinct: 5
+      distinct_truncated: false
+      samples:
+        - "1"
+        - "2"
+        - "3"
+        - "4"
+        - "5"
+    - name: exact_match
+      inferred_type: number
+      missing: 0
+      distinct: 12
+      distinct_truncated: false
+      samples:
+        - "0.812"
+        - "0.808"
+        - "0.810"
+        - "0.814"
+        - "0.806"
+    - name: latency_ms
+      inferred_type: number
+      missing: 0
+      distinct: 15
+      distinct_truncated: false
+      samples:
+        - "240"
+        - "236"
+        - "244"
+        - "238"
+        - "242"
+sensitive: false
+state: candidate

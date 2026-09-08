@@ -1,0 +1,21 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-6988534f7f
+created: 2026-09-01T00:00:37.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Quantized accuracy is stable across evaluation prompt sets.
+kind: empirical
+state: disputed
+supported_by:
+  - EVID-89f97b3771
+questions: []
+sections: []
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-f4e6774a3e
+contradicts:
+  - CLAIM-79c11966df

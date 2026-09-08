@@ -1,0 +1,47 @@
+# Prose that must pass clean: grounded, cited, varied. A rule that fires here is a false
+# positive, and a false positive costs a researcher their trust in the whole report.
+lang: en
+cases:
+  - name: cited-finding-with-numbers
+    expect: []
+    text: |
+      Of the 312 respondents, 214 took lecture notes on a phone rather than a laptop
+      [@lopez2023]. That preference held across all four faculties. Handwritten notes persisted
+      in mathematics, where 61 of 78 students still wrote on paper [@nakamura2022].
+
+  - name: limitations-paragraph
+    expect: []
+    text: |
+      Two limits follow. Recruitment ran through a single mailing list, so students who ignore
+      university mail are absent from the sample. The survey asked about a typical week rather
+      than a specific one, and recall over a week is weaker than a diary entry [@bell2021].
+
+  - name: one-hedge-is-not-hedging
+    expect: []
+    text: |
+      The 2024 data suggest a shift toward mobile capture, though the confidence interval spans
+      zero [@lopez2023]. A replication with a larger cohort would settle it. The instrument
+      itself has not changed since 2021.
+
+  - name: intensifier-with-a-result-marker
+    expect: []
+    text: |
+      The difference between cohorts was significant at the 5% level.
+      <!-- result: RESULT-1 -->
+
+  - name: one-transition-in-four-sentences
+    expect: []
+    text: |
+      Adoption rose in the first term and fell in the second. The drop coincided with the
+      examination period, when students reported reading their notes rather than writing new
+      ones [@bell2021]. However, the survey cannot separate the two behaviours. A diary study
+      would.
+
+  - name: spanish-cited-finding
+    lang: es
+    expect: []
+    text: |
+      De los 312 encuestados, 214 utilizaron el teléfono en lugar del portátil durante las
+      clases [@lopez2023]. Esa preferencia se mantuvo en las cuatro facultades. Las notas
+      manuscritas persistieron en matemáticas, donde 61 de 78 estudiantes escribieron en papel
+      [@nakamura2022].

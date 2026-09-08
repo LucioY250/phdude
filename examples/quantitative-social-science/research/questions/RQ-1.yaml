@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-1
+created: 2026-09-01T00:00:10.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Does attendance at participatory budgeting assemblies differ by the primary news source a household relies on?
+objectives:
+  - Compare reported assembly attendance across households grouped by primary news source.
+state: candidate

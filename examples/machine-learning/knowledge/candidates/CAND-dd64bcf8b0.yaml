@@ -1,0 +1,33 @@
+schema: phdude.candidate
+version: 1
+id: CAND-dd64bcf8b0
+created: 2025-03-01T00:00:00Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+provider: arxiv
+providers:
+  - arxiv
+external_id: "2312.11044"
+title: Prompt Sensitivity in Quantized Extractive Question Answering
+authors:
+  - X. Duarte
+year: 2023
+venue: null
+doi: null
+url: http://arxiv.org/pdf/2312.11044v2
+abstract: Quantized models score close to their full-precision baselines under published prompts and lose accuracy under paraphrased ones.
+type: preprint
+open_access: true
+cited_by: null
+query: post-training quantization extractive question answering
+question: RQ-1
+search: SEARCH-442c0cdcb0
+score: 1.3
+score_parts:
+  rank: 0.5
+  citations: 0
+  recency: 0.8
+needs_approval: true
+state: candidate

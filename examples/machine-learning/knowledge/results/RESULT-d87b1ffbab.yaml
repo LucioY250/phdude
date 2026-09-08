@@ -1,0 +1,20 @@
+schema: phdude.result
+version: 1
+id: RESULT-d87b1ffbab
+created: 2026-09-01T00:00:59.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+summary: Mean latency at a fixed batch size falls with every step down in precision.
+from: ANALYSIS-19e42e3957
+values:
+  fp16: 240
+  int8: 150
+  int4: 120
+state: candidate
+ext:
+  analysis:
+    key: latency_by_precision
+    run_at: 2026-09-01T00:00:59.000Z
+    unit: milliseconds

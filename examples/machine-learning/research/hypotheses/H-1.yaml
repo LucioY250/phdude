@@ -1,0 +1,12 @@
+schema: phdude.hypothesis
+version: 1
+id: H-1
+created: 2026-09-01T00:00:18.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: A calibration set drawn from the evaluation distribution hides the accuracy cost of quantization.
+questions:
+  - RQ-3
+state: candidate

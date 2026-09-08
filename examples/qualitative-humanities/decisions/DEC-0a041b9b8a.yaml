@@ -1,0 +1,20 @@
+schema: phdude.decision
+version: 1
+id: DEC-0a041b9b8a
+created: 2026-09-01T00:00:48.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+title: Approve the introduction as revised
+rationale: The section asserts one supported claim with both folios behind it, and the revision replaced the appeal to the literature with what the two letters actually say.
+proposed_by:
+  researcher: example
+  agent: script
+approved_by:
+  - example
+status: approved
+change: {}
+affects:
+  - manuscript:introduction
+resolved: 2026-09-01T00:00:50.000Z

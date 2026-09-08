@@ -46,6 +46,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "example": "node scripts/make-example.mjs",
+    "examples": "node scripts/make-examples.mjs",
+    "example:all": "npm run example && npm run examples",
     "fixtures": "node scripts/make-fixtures.mjs",
     "diagrams": "node scripts/make-diagrams.mjs"
   },

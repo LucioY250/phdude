@@ -1,0 +1,18 @@
+schema: phdude.evidence
+version: 1
+id: EVID-e1bdcbc7f1
+created: 2026-09-01T00:00:24.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: SRC-b56a303ca1
+locator: Methods
+excerpt: Both waves drew a stratified sample from the same municipal household register across four districts.
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-5dd74562a3
+    - ART-81017a69c6

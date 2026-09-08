@@ -1,0 +1,41 @@
+# Human academic prose with its ordinary quirks: long sentences, first person, a hedge, a
+# semicolon, a dash, an abbreviation. None of these is slop, and none may be reported as slop.
+lang: en
+cases:
+  - name: first-person-methods
+    absent:
+      [banned-phrase, empty-phrase, vague-literature, unsupported-intensifier, excessive-hedging]
+    text: |
+      We recruited through the university mailing list because it was the only channel that
+      reached all four faculties; we knew at the time that it would miss students who never
+      read university mail, and it did [@bell2021]. I coded the free-text answers myself, then
+      re-coded a tenth of them a month later to check my own drift.
+
+  - name: long-and-short-sentences-together
+    absent: [sentence-monotony, repeated-openings]
+    text: |
+      The effect held. It held across every subgroup we could form from the demographic
+      questions, including the two smallest faculties, where the cell sizes were low enough
+      that we report them only as a direction rather than an estimate [@nakamura2022]. That is
+      as far as this design goes.
+
+  - name: abbreviations-and-initials
+    absent: [sentence-monotony, repeated-openings, symmetrical-lists]
+    text: |
+      The coding scheme follows J. R. Nakamura's categories, e.g. capture, review and share,
+      with one addition. See Fig. 2 and pp. 14-16 for the full scheme [@nakamura2022]. The
+      inter-rater agreement was 0.81.
+
+  - name: a-single-hedge-per-sentence
+    absent: [excessive-hedging]
+    text: |
+      The pattern may reflect the examination calendar rather than a change in preference. A
+      diary study would separate the two. We report it as an open question.
+
+  - name: spanish-first-person-plural
+    lang: es
+    absent: [banned-phrase, empty-phrase, vague-literature, unsupported-intensifier]
+    text: |
+      Reclutamos a través de la lista de correo institucional porque era el único canal que
+      llegaba a las cuatro facultades [@bell2021]. Codificamos las respuestas abiertas dos
+      veces, con un mes de diferencia, para comprobar nuestra propia deriva.

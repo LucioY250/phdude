@@ -1,0 +1,6 @@
+schema: phdude.citation-policy
+version: 1
+require_doi: preferred
+verify_existence: true
+allow_preprints: with-approval
+style: apa

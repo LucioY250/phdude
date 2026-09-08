@@ -1,0 +1,52 @@
+schema: phdude.author-profile
+version: 1
+id: researcher-b
+name: Researcher B
+language: en
+tone:
+  academic: true
+  assertiveness: low
+  first_person: never
+sentences:
+  length: varied
+  openings: varied
+paragraphs:
+  density: medium
+transitions: minimal
+terminology:
+  preserve:
+    - participatory budgeting
+    - primary news source
+  avoid:
+    - impactful
+    - game-changing
+    - synergy
+samples:
+  - path: authors/samples/researcher-b/intro-approved.md
+    approved: true
+learned:
+  sentence_length_mean: 26.13
+  sentence_length_sd: 13.65
+  opening_diversity: 1
+  transition_rate: 0
+  first_person_rate: 0
+  hedge_rate: 0.25
+  paragraph_density: 2.67
+  preserved_terms:
+    - attendance
+    - households
+    - municipal
+    - reported
+    - assemblies
+    - budgeting
+    - community
+    - districts
+    - instrument
+    - medium
+    - ordering
+    - pattern
+    - relying
+    - single
+    - source
+  sample_count: 1
+  learned_at: 2026-09-01T00:00:39.000Z

@@ -1,0 +1,50 @@
+Project: Provincial Reading Societies Study
+Fields: humanities
+Methods: qualitative
+Outputs: thesis
+Mode: full
+
+Inventory:
+  Total artifacts: 3
+  By kind: md=3
+  By extraction: ok=3
+  Unknown role: 2
+
+Knowledge:
+  source: total=3 (candidate=3)
+  claim: total=4 (candidate=1, disputed=2, supported=1)
+  evidence: total=4 (candidate=4)
+  fact: total=1 (candidate=1)
+  result: total=0 ((none))
+  question: total=2 (candidate=2)
+  hypothesis: total=1 (candidate=1)
+  method: total=1 (candidate=1)
+
+Analysis:
+  Datasets: 0
+  Analyses: 0
+  Results (from analyses): 0
+  Tables: 0
+  Figures: 0
+  Stale or unbuilt: 0 of 0
+
+Literature:
+  Candidates: total=2 (accepted=1, candidate=1)
+  Searches: 1
+  Questions with a stale or missing search: 2 of 2
+
+Conflicts (0 open of 0 total):
+  (none)
+
+Disputed claims (1 pair):
+  - CLAIM-2796e63e39 ⟷ CLAIM-2d2237b335: "The reading society was founded by the parish schoolmaster." vs "The reading society was founded by a committee of subscribin…"
+
+Pending decisions (1):
+  - DEC-292a91d92e: Resolve the disputed attribution of the founding
+
+Recent events:
+  packs: applied humanities
+  packs: applied qualitative
+  packs: applied generic-thesis
+  profile: target profile generic-thesis
+  review: reviewer2 review: 1 finding(s) recorded

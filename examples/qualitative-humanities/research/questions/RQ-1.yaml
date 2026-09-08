@@ -1,0 +1,12 @@
+schema: phdude.question
+version: 1
+id: RQ-1
+created: 2026-09-01T00:00:10.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+text: Who established the reading society recorded in the Devane correspondence?
+objectives:
+  - Read the founding attributions in the correspondence series against the finding aid.
+state: candidate

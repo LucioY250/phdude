@@ -1,0 +1,19 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-d0ac24ffa0
+created: 2026-09-01T00:00:35.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: The latency saving from quantization is larger than the accuracy cost it charges.
+kind: empirical
+state: candidate
+supported_by: []
+questions:
+  - RQ-2
+sections:
+  - Discussion
+provenance:
+  method: agent-extraction
+  derived_from: []

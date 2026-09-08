@@ -1,0 +1,11 @@
+schema: phdude.author-profile
+version: 1
+name: ''
+
+# The polite contact OpenAlex and Crossref ask for. Filled in, it is sent as `mailto` on
+# searches to those two providers only; left empty, nothing is sent.
+email: ''
+
+affiliation: ''
+orcid: ''
+voice_samples: []

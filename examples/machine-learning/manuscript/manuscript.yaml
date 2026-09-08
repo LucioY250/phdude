@@ -1,0 +1,58 @@
+schema: phdude.manuscript
+version: 1
+title: Quantized Inference Benchmark Study
+language: en
+voice:
+  kind: author
+  author: researcher-c
+sections:
+  - id: abstract
+    title: Abstract
+    file: manuscript/abstract.md
+    order: 1
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: introduction
+    title: Introduction
+    file: manuscript/introduction.md
+    order: 2
+    status: approved
+    hash: 2272c193319e6e60273cda960ba7cc1133ff45d01dc33319e37ea7fdf6410c8b
+    claims: []
+    questions: []
+    approved_by: DEC-497d708e6b
+  - id: methods
+    title: Methods
+    file: manuscript/methods.md
+    order: 3
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: results
+    title: Results
+    file: manuscript/results.md
+    order: 4
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: discussion
+    title: Discussion
+    file: manuscript/discussion.md
+    order: 5
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: conclusions
+    title: Conclusions
+    file: manuscript/conclusions.md
+    order: 6
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+target_profile: ieee

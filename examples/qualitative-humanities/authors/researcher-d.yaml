@@ -1,0 +1,53 @@
+schema: phdude.author-profile
+version: 1
+id: researcher-d
+name: Researcher D
+language: en
+tone:
+  academic: true
+  assertiveness: low
+  first_person: never
+sentences:
+  length: long
+  openings: varied
+paragraphs:
+  density: medium
+transitions: moderate
+terminology:
+  preserve:
+    - reading society
+    - subscription list
+    - folio
+  avoid:
+    - showcase
+    - compelling
+    - rich tapestry
+samples:
+  - path: authors/samples/researcher-d/intro-approved.md
+    approved: true
+learned:
+  sentence_length_mean: 28.5
+  sentence_length_sd: 11.08
+  opening_diversity: 1
+  transition_rate: 0
+  first_person_rate: 0
+  hedge_rate: 0
+  paragraph_density: 2.67
+  preserved_terms:
+    - founding
+    - society
+    - correspondence
+    - correspondents
+    - credits
+    - finding
+    - letter
+    - letters
+    - question
+    - reading
+    - schoolmaster
+    - written
+    - account
+    - accounts
+    - addressed
+  sample_count: 1
+  learned_at: 2026-09-01T00:00:40.000Z

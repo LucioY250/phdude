@@ -1,0 +1,34 @@
+schema: phdude.table
+version: 1
+id: TABLE-3589b9e04c
+created: 2026-09-01T00:01:01.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+name: accuracy-by-precision
+caption: Mean exact-match accuracy on the held-out split, by numeric precision.
+source:
+  result: RESULT-d53111b0f2
+columns:
+  - key: key
+    label: Precision
+  - key: value
+    label: Exact match
+    format: percent:1
+formats:
+  - md
+  - latex
+  - csv
+outputs:
+  md: tables/out/accuracy-by-precision.md
+  latex: tables/out/accuracy-by-precision.tex
+  csv: tables/out/accuracy-by-precision.csv
+runs:
+  - at: 2026-09-01T00:01:03.000Z
+    source_hash: e43b6acbaf1674ab0bb82391a227931c0f51c917bb1ce026e66615a979f18bec
+    output_hashes:
+      tables/out/accuracy-by-precision.md: e990cb9c8c0933fc1eb0013344dfb2fd2b8163a61f667c0ea6910323b30f7580
+      tables/out/accuracy-by-precision.tex: b0e81bc4a9a9bd6d31c4fbf305752945347660afd325e609426cbc0b2fb0b5ca
+      tables/out/accuracy-by-precision.csv: 323c6e90d420828296f5847bfb9c5affc5ea37758e870fb3e8a3f36fbe315c7c
+state: candidate

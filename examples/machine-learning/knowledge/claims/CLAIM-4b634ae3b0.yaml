@@ -1,0 +1,23 @@
+schema: phdude.claim
+version: 1
+id: CLAIM-4b634ae3b0
+created: 2026-09-01T00:00:30.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+statement: Eight-bit post-training quantization changes exact-match accuracy on this benchmark by less than half a point.
+kind: empirical
+state: supported
+supported_by:
+  - EVID-89f97b3771
+  - EVID-ed8844509d
+questions:
+  - RQ-1
+sections:
+  - Introduction
+  - Results
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-f4e6774a3e

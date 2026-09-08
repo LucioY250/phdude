@@ -1,0 +1,16 @@
+run_id,precision,seed,exact_match,latency_ms
+run01,fp16,1,0.812,240
+run02,fp16,2,0.808,236
+run03,fp16,3,0.810,244
+run04,fp16,4,0.814,238
+run05,fp16,5,0.806,242
+run06,int8,1,0.806,152
+run07,int8,2,0.802,148
+run08,int8,3,0.808,150
+run09,int8,4,0.804,154
+run10,int8,5,0.810,146
+run11,int4,1,0.771,118
+run12,int4,2,0.769,122
+run13,int4,3,0.773,120
+run14,int4,4,0.767,116
+run15,int4,5,0.775,124

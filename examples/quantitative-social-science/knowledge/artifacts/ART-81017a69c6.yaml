@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-81017a69c6
+created: 2026-09-01T00:00:03.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/wave-two-report.md
+paths:
+  - sources/wave-two-report.md
+hash: 81017a69c6c3ee3cf4e51e3aa4f0158690f9d01577db974197101b385e817a4e
+bytes: 270
+mime: text/markdown
+kind: md
+role: unknown
+extracted:
+  status: ok
+  method: text
+  text_chars: 270
+  sections: 3
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

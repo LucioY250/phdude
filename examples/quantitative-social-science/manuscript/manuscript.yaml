@@ -1,0 +1,58 @@
+schema: phdude.manuscript
+version: 1
+title: Participatory Budgeting Attendance Study
+language: en
+voice:
+  kind: author
+  author: researcher-b
+sections:
+  - id: abstract
+    title: Abstract
+    file: manuscript/abstract.md
+    order: 1
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: introduction
+    title: Introduction
+    file: manuscript/introduction.md
+    order: 2
+    status: approved
+    hash: e10c1bc810ee19fc3dcae7c162b85c16e1014e58ab1bdda983e63d645de11416
+    claims: []
+    questions: []
+    approved_by: DEC-0ed7bb2068
+  - id: methods
+    title: Methods
+    file: manuscript/methods.md
+    order: 3
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: results
+    title: Results
+    file: manuscript/results.md
+    order: 4
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: discussion
+    title: Discussion
+    file: manuscript/discussion.md
+    order: 5
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+  - id: conclusions
+    title: Conclusions
+    file: manuscript/conclusions.md
+    order: 6
+    status: planned
+    hash: null
+    claims: []
+    questions: []
+target_profile: generic-thesis

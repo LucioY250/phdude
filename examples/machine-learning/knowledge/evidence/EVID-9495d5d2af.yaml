@@ -1,0 +1,17 @@
+schema: phdude.evidence
+version: 1
+id: EVID-9495d5d2af
+created: 2026-09-01T00:00:24.000Z
+actor:
+  researcher: example
+  agent: script
+tags: []
+source: ART-d6be23332e
+locator: Claim
+excerpt: The same recipe costs accuracy once the evaluation prompts are held out rather than reused from the calibration set.
+strength: moderate
+state: candidate
+provenance:
+  method: agent-extraction
+  derived_from:
+    - ART-d6be23332e

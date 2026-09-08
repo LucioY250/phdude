@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-d6be23332e
+created: 2026-09-01T00:00:02.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/arxiv-2406-02871.md
+paths:
+  - sources/arxiv-2406-02871.md
+hash: d6be23332ef7e2041121037e6f7c562dc304bad028d4755fae149933e6c4cda4
+bytes: 284
+mime: text/markdown
+kind: md
+role: unknown
+extracted:
+  status: ok
+  method: text
+  text_chars: 284
+  sections: 3
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

@@ -1,0 +1,15 @@
+schema: phdude.writing-policy
+version: 1
+
+writing:
+  language: en
+
+  tone:
+    academic: true
+    concise: true
+    assertiveness: moderate
+
+  avoid:
+    - generic_ai_phrases
+    - unsupported_superlatives
+    - rhetorical_filler

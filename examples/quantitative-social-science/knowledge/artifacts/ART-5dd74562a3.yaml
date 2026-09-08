@@ -1,0 +1,23 @@
+schema: phdude.artifact
+version: 1
+id: ART-5dd74562a3
+created: 2026-09-01T00:00:02.000Z
+actor:
+  researcher: example
+  agent: script
+path: sources/wave-one-report.md
+paths:
+  - sources/wave-one-report.md
+hash: 5dd74562a3b90f07889483fb90a85b902532f9a0593c3285b0158186916aa79f
+bytes: 353
+mime: text/markdown
+kind: md
+role: unknown
+extracted:
+  status: ok
+  method: text
+  text_chars: 353
+  sections: 3
+  tables: 0
+  warnings: []
+mtime: 2026-08-15T00:00:00.000Z

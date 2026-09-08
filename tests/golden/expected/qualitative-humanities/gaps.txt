@@ -1,0 +1,32 @@
+HIGH (2):
+  - [disputed-pair] CLAIM-2796e63e39/CLAIM-2d2237b335
+    Why: CLAIM-2796e63e39 and CLAIM-2d2237b335 contradict each other and neither has been rejected
+    Command: phdude decide propose --title "Resolve contradiction between CLAIM-2796e63e39 and CLAIM-2d2237b335" --rationale "…" --affects CLAIM-2796e63e39 CLAIM-2d2237b335 --change '{"resolves_contradiction":["CLAIM-2796e63e39","CLAIM-2d2237b335"],"survivor":"CLAIM-2796e63e39"}'
+  - [question-without-claims] RQ-2
+    Why: RQ-2 has 0 claims addressing it
+    Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-2"]}'
+
+MEDIUM (3):
+  - [claim-weak-evidence] CLAIM-f8ad688c36
+    Why: CLAIM-f8ad688c36 is supported only by weak evidence: EVID-c4928cf2cd
+    Command: phdude add evidence --json '{"source":"<SRC-id>","excerpt":"…","strength":"strong"}'
+  - [hypothesis-untested] H-1
+    Why: H-1 has no claim addressing any of its question(s): RQ-2
+    Command: phdude add claim --json '{"statement":"…","kind":"empirical","questions":["RQ-2"]}'
+  - [question-without-method] RQ-2
+    Why: RQ-2 has no method addressing it
+    Command: phdude add method --json '{"name":"…","design":"…","paradigm":"quantitative","questions":["RQ-2"]}'
+
+LOW (4):
+  - [artifact-unmined] ART-ff9a294dbb
+    Why: ART-ff9a294dbb (role: notes) is not referenced by any source, fact, or evidence
+    Command: phdude add fact --json '{"key":"…","value":"…","from":{"artifact":"ART-ff9a294dbb"}}'
+  - [question-never-searched] RQ-2
+    Why: RQ-2 has never been searched for literature
+    Command: set network.enabled: true in .phdude/research-policy.yaml, then phdude research "How did the subscription lists shape what the society acquired?" --question RQ-2
+  - [stale-search] RQ-1
+    Why: RQ-1's last search ran 583 day(s) ago (stale after 180)
+    Command: phdude research-fresh --question RQ-1
+  - [uncited-source] SRC-e48244f910
+    Why: SRC-e48244f910 is not cited by any evidence
+    Command: phdude add evidence --json '{"source":"SRC-e48244f910","excerpt":"…","strength":"moderate"}'

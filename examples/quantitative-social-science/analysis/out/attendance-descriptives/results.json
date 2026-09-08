@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "key": "attendance_by_news_source",
+      "summary": "Reported assembly attendance is highest among households whose primary news source is the community radio station.",
+      "values": {
+        "community radio": 0.75,
+        "municipal bulletin": 0.5,
+        "social platform": 0.375
+      },
+      "unit": "proportion"
+    },
+    {
+      "key": "households_by_district",
+      "summary": "The four districts contributed unequal numbers of households.",
+      "values": {
+        "Centro": 8,
+        "Norte": 7,
+        "Ribera": 4,
+        "Alto": 5
+      },
+      "unit": "households"
+    }
+  ]
+}
