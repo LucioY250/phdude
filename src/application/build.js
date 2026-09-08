@@ -14,7 +14,7 @@ import {
 } from '../domain/build.js';
 import { PhdudeError } from '../domain/errors.js';
 import { sha256 } from '../domain/hash.js';
-import { parseSectionFile } from '../domain/manuscript.js';
+import { driftNote, parseSectionFile, sectionDrift } from '../domain/manuscript.js';
 import { rendererFor } from '../domain/renderers.js';
 import { assertUpToDate } from './guard.js';
 import { list as listAuthors } from './authors.js';
@@ -196,7 +196,8 @@ async function readSections(store, chosen) {
         `phdude write ${entry.id}, or reopen the section`,
       );
     }
-    sections.push({ ...entry, body: parseSectionFile(text).body });
+    const body = parseSectionFile(text).body;
+    sections.push({ ...entry, body, drifted: sectionDrift(entry, body).drifted });
   }
   return sections;
 }
@@ -308,7 +309,11 @@ export async function build(deps, opts = {}) {
   const record = await readRecord(store, paths.record);
   const onDisk = { path: paths.document, hash: await hashOf(store, paths.document) };
   const plan = planBuild(record, inputs, rendererVersion, onDisk);
-  const warnings = [...figures.warnings, ...tables.warnings];
+  const warnings = [
+    ...sections.filter((section) => section.drifted).map((section) => driftNote(section.id)),
+    ...figures.warnings,
+    ...tables.warnings,
+  ];
 
   if (plan.upToDate && !force) {
     return {

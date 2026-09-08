@@ -102,7 +102,7 @@ export function buildPaths(slug, format) {
  * @param {object} manuscript
  * @param {object|null} profile
  * @param {{includeDrafts?: boolean, only?: string[]|null}} [opts]
- * @returns {{id: string, title: string, file: string, status: string, order: number}[]}
+ * @returns {{id: string, title: string, file: string, hash: string|null, status: string, order: number}[]}
  */
 export function selectSections(manuscript, profile, { includeDrafts = false, only = null } = {}) {
   const entries = [...(manuscript?.sections ?? [])].sort((a, b) => a.order - b.order);
@@ -148,6 +148,7 @@ export function selectSections(manuscript, profile, { includeDrafts = false, onl
       id: entry.id,
       title: titles.get(entry.id) ?? entry.title,
       file: entry.file,
+      hash: entry.hash ?? null,
       status: entry.status,
       order: entry.order,
     }));

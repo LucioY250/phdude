@@ -133,6 +133,22 @@ test('a Markdown build writes the document, the bibliography and one event', asy
   assert.equal((await buildEvents(deps.store)).length, 1);
 });
 
+test('a section edited outside PhDude since its submit is built with a drift warning', async (t) => {
+  const deps = await workspace(t);
+  await section(deps, 'introduction', 'The problem is scheduling under load.');
+  const entry = (await deps.store.readManuscript()).sections.find((s) => s.id === 'introduction');
+  const file = join(deps.store.root, entry.file);
+  await writeFile(file, (await readFile(file, 'utf8')) + '\nOne more sentence nobody approved.\n');
+
+  const result = await build(deps, {});
+
+  assert.equal(result.built, true);
+  assert.deepEqual(result.warnings, [
+    'section introduction was edited outside PhDude since its last submit',
+  ]);
+  assert.match(await deps.store.readText(result.output.path), /nobody approved/);
+});
+
 test('the build event names the file and carries the output hash', async (t) => {
   const deps = await workspace(t);
   await section(deps, 'introduction', 'One paragraph.');

@@ -109,3 +109,6 @@ CI installs Pandoc (`apt-get install -y pandoc`) so the DOCX, PPTX, HTML and LaT
 exercised on every push. It does not install TeX: that is minutes of install for one format, so
 the PDF tests skip there and say so. A renderer test that quietly passes on a machine without the
 tool would be worse than no test at all.
+
+
+Renderer children (Pandoc, latexmk, pdflatex, bibtex, rsvg-convert) inherit the parent environment on purpose: they are system tools that need `PATH`, `HOME`, `TEXMFHOME` and the locale, unlike analysis scripts, which are user-supplied code and run under the minimal environment ADR 0009 sets. The `PHDUDE_*` variables only choose which binary runs.
