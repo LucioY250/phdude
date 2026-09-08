@@ -1,0 +1,105 @@
+src/ports/store.js
+  s_946fc7502759d8::t_dc6e5fd29e7d26 12-13
+tests/integration/build.test.js
+  s_946fc7502759d8::t_426b675addf0fc 1-70,87-290,296-366,371-392,394-409,411-468,470-544,546-549,551,555-558,570,591-620,668
+  s_946fc7502759d8::t_6ef9d0bac58054 71-86,393,410
+  s_946fc7502759d8::t_cbdc2e5de334bb 291-295,367-370
+  s_946fc7502759d8::t_f689901653ecce 469,621-667
+  s_946fc7502759d8::t_d959dfc9541980 562,567-568,669-679
+  s_946fc7502759d8::t_8d56226296de01 545,550,552-554,559-561,563-566,569,571-590
+skills/build/SKILL.md
+  s_946fc7502759d8::t_fbc364b468f74b 1-79
+src/adapters/store/fs-store.js
+  s_946fc7502759d8::t_e00d6c41e971ad 107-118
+src/adapters/cli/commands/help.js
+  s_946fc7502759d8::t_1b1204abd00943 67-70
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_3f7f6df4128234 186
+docs/workspace.md
+  s_946fc7502759d8::t_9c1e31dd9fff61 56-60,64-65,381-383,403-408
+  s_946fc7502759d8::t_611088e7a71775 409
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_75bd23f27506e2 201-206
+src/application/build.js
+  s_946fc7502759d8::t_3fe52ed01eb36a 120-121,123-128
+  s_946fc7502759d8::t_a3660fd7cf8353 26-27
+  s_946fc7502759d8::t_ef97ff2071391c 139
+  s_946fc7502759d8::t_7776c63a33b0d0 175-187
+  s_946fc7502759d8::t_c1905d46181cfa 1-25,28-32,50-87,93-119,122,129-138,140-174,188-274,280-287,292-304,307,309-331,333-334,339-347,349-399
+  s_946fc7502759d8::t_8c624dc5bfa892 275-279
+  s_946fc7502759d8::t_58518618b6c971 33-49
+  s_946fc7502759d8::t_cbdc2e5de334bb 88-92,305-306,335-338
+  s_946fc7502759d8::t_217446529d2b4e 332
+  s_946fc7502759d8::t_5e7ee3e54030ae 308
+  s_946fc7502759d8::t_e801abe67ab7d8 288-291,348
+src/domain/build.js
+  s_946fc7502759d8::t_a838401226037b 1-39,41-189,191-207,209-280,283-284,289-329,331-342
+  s_946fc7502759d8::t_05727067e458b8 208
+  s_946fc7502759d8::t_c90e31f7a9342b 281-282,285-288
+  s_946fc7502759d8::t_cbdc2e5de334bb 330
+  s_946fc7502759d8::t_a7e0c34aa26dd1 190
+  s_946fc7502759d8::t_6d99c000290eb2 40
+docs/cli.md
+  s_946fc7502759d8::t_4b2341407246ca 1398-1399
+  s_946fc7502759d8::t_996498951d700c 1363-1397,1400-1436
+src/adapters/cli/args.js
+  s_946fc7502759d8::t_58bd8b667a9228 97-102,343-344
+src/adapters/render/svg.js
+  s_946fc7502759d8::t_a090e2470e4ba6 1-65
+src/application/cite.js
+  s_946fc7502759d8::t_73f0e5cdfa7e4b 167-168,170-172,174,176,189-203,206
+tests/golden/build.test.js
+  s_946fc7502759d8::t_ad4725a1553e38 57
+  s_946fc7502759d8::t_3792fd5f526ce7 1-56,58-63,65,69-100
+  s_946fc7502759d8::t_2b38c519e08587 64,66-68
+commands/build.md
+  s_946fc7502759d8::t_e920fc7607afd2 1-36
+src/domain/renderers.js
+  s_946fc7502759d8::t_eee7da0cf8f6eb 1-13
+skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_3f7f6df4128234 61-62,70
+  s_946fc7502759d8::t_f2fc2cd114c010 71-72
+examples/generic-thesis/.phdude/skills/build/SKILL.md
+  s_946fc7502759d8::t_31f51b8f371a41 1-79
+docs/adr/0010-renderer-adapters-and-reproducible-builds.md
+  s_946fc7502759d8::t_f00dbcea951dee 76-99
+src/adapters/cli/commands/build.js
+  s_946fc7502759d8::t_efb5f9df4cca0d 1-2,9-23,29-53
+  s_946fc7502759d8::t_d2d58c1669130c 24-28
+  s_946fc7502759d8::t_7616c564494ae8 3-8
+examples/generic-thesis/.phdude/skills/phdude-core/SKILL.md
+  s_946fc7502759d8::t_31f51b8f371a41 61-62,70-72
+tests/golden/expected/build-ieee-source.md
+  s_946fc7502759d8::t_f364d742d336de 1-12
+tests/unit/domain/build.test.js
+  s_946fc7502759d8::t_e5cbeeb32ad9a5 130
+  s_946fc7502759d8::t_ad4725a1553e38 368
+  s_946fc7502759d8::t_e82fa359ec6d59 1-129,131-181,186-354,361-363,366-367,372-385,388-397
+  s_946fc7502759d8::t_cbdc2e5de334bb 182-185,355-360,364-365,369-371,386-387
+tests/golden/README.md
+  s_946fc7502759d8::t_f00dbcea951dee 18-26
+README.md
+  s_946fc7502759d8::t_ea5b37352fba47 204,789
+tests/golden/expected/build-manuscript.md
+  s_946fc7502759d8::t_f364d742d336de 1-23
+src/adapters/cli/run.js
+  s_946fc7502759d8::t_b88f842c9acd6e 18,32,70,157
+tests/e2e/cli.test.js
+  s_946fc7502759d8::t_3369054dc278c2 2515-2598
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "b566b337f0905e723c5ef18b884ba9581955d2d6",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
