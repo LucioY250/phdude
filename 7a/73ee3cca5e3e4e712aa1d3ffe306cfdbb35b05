@@ -1,0 +1,44 @@
+docs/assets/demo.svg
+  s_946fc7502759d8::t_66977cc1728d81 1-217
+tests/integration/make-demo.test.js
+  s_946fc7502759d8::t_d6ffd0573ca303 81-82
+  s_946fc7502759d8::t_0bfaede231aca0 45
+  s_946fc7502759d8::t_00dd2e3e13abaf 1-44,46-71,76-77,83-104
+  s_946fc7502759d8::t_e9b16fa9b803fb 72-75,78-80
+package.json
+  s_946fc7502759d8::t_8da6aa7a6b9ed7 52,64,83-84
+README.md
+  s_946fc7502759d8::t_18efa401d849d9 35-36
+  s_946fc7502759d8::t_9c8bc4e10cb290 7-8,14,16,28,43,46,49,53,55,57,59,62-66
+  s_946fc7502759d8::t_8a0f887219c62a 26,31-32,34,37-38,41,61
+  s_946fc7502759d8::t_3e0458b16c81db 33
+tests/unit/skills.test.js
+  s_946fc7502759d8::t_ef64e7ff0cc060 47
+scripts/make-demo.mjs
+  s_946fc7502759d8::t_94c34f01125db1 143-144,146,149-150,177-178,205
+  s_946fc7502759d8::t_45e94a694e3179 53-55,181-182
+  s_946fc7502759d8::t_96b3bd0c296327 1-52,56-74,76-80,82-142,145,147-148,151-163,167-176,179-180,183-204,206-238
+  s_946fc7502759d8::t_280a2b962ec434 75,81,164-166
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_27710276675c43 88-90,92,96-97,100-101,106-114,130-135,140,151
+docs/guide.md
+  s_946fc7502759d8::t_f34b2bcadc731e 1-1337
+CHANGELOG.md
+  s_946fc7502759d8::t_e1c1ecfdbb48d1 7-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "7a73ee3cca5e3e4e712aa1d3ffe306cfdbb35b05",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
