@@ -1,0 +1,26 @@
+src/application/build.js
+  s_946fc7502759d8::t_8c156b2cad1331 17,199-200,312-316
+tests/integration/build.test.js
+  s_946fc7502759d8::t_8c156b2cad1331 136-138,141-151
+  s_946fc7502759d8::t_8f2b4c20a42d03 139-140
+src/domain/build.js
+  s_946fc7502759d8::t_bd7220c9b42e02 105,151
+docs/adr/0010-renderer-adapters-and-reproducible-builds.md
+  s_946fc7502759d8::t_8f2b4c20a42d03 112-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "81da0d52081b098ab01b314f7b79a99590f753b1",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
