@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  DEFAULT_TABLE_FORMATS,
   TABLE_FORMATS,
+  TEXT_TABLE_FORMATS,
   escapeLatex,
   formatValue,
   renderCsv,
@@ -12,6 +14,7 @@ import {
   tableFormats,
   tableName,
   tableOutputs,
+  tableSheet,
 } from '../../../src/domain/tables.js';
 
 const RESULT = {
@@ -43,12 +46,20 @@ test('tableName accepts a slug and refuses anything that could leave tables/out'
   }
 });
 
-test('tableFormats defaults to every format and refuses an unknown one', () => {
-  assert.deepEqual(tableFormats(undefined), TABLE_FORMATS);
-  assert.deepEqual(tableFormats([]), TABLE_FORMATS);
+test('tableFormats defaults to the three text formats and refuses an unknown one', () => {
+  assert.deepEqual(tableFormats(undefined), DEFAULT_TABLE_FORMATS);
+  assert.deepEqual(tableFormats([]), DEFAULT_TABLE_FORMATS);
   assert.deepEqual(tableFormats(['csv', 'md']), ['md', 'csv']);
   assert.deepEqual(tableFormats(['md', 'md']), ['md']);
-  assert.throws(() => tableFormats(['xlsx']), { code: 'VALIDATION' });
+  assert.deepEqual(tableFormats(['docx', 'xlsx']), ['xlsx', 'docx']);
+  assert.throws(() => tableFormats(['pdf']), { code: 'VALIDATION' });
+});
+
+// A spreadsheet is a package and a DOCX needs a renderer, so neither is something a declaration
+// that named no format at all can be read as having asked for.
+test('the default formats are the three a table renders on its own', () => {
+  assert.deepEqual(DEFAULT_TABLE_FORMATS, TEXT_TABLE_FORMATS);
+  assert.deepEqual(TABLE_FORMATS, [...TEXT_TABLE_FORMATS, 'xlsx', 'docx']);
 });
 
 test('tableOutputs names one file per format under tables/out', () => {
@@ -56,6 +67,8 @@ test('tableOutputs names one file per format under tables/out', () => {
     md: 'tables/out/mean-weight.md',
     latex: 'tables/out/mean-weight.tex',
     csv: 'tables/out/mean-weight.csv',
+    xlsx: 'tables/out/mean-weight.xlsx',
+    docx: 'tables/out/mean-weight.docx',
   });
   assert.deepEqual(tableOutputs('mean-weight', ['csv']), { csv: 'tables/out/mean-weight.csv' });
 });
@@ -290,8 +303,9 @@ test('renderTable dispatches on the format and is deterministic', () => {
   assert.equal(renderTable(SPEC, ROWS, 'latex'), renderLatex(SPEC, ROWS));
   assert.equal(renderTable(SPEC, ROWS, 'csv'), renderCsv(SPEC, ROWS));
   assert.throws(() => renderTable(SPEC, ROWS, 'xlsx'), { code: 'VALIDATION' });
+  assert.throws(() => renderTable(SPEC, ROWS, 'nonsense'), { code: 'VALIDATION' });
 
-  for (const format of TABLE_FORMATS) {
+  for (const format of TEXT_TABLE_FORMATS) {
     assert.equal(renderTable(SPEC, ROWS, format), renderTable(SPEC, ROWS, format));
   }
 });
@@ -311,4 +325,41 @@ test('a cell a row never had renders as empty rather than undefined', () => {
     ),
     'A,B\n1,\n',
   );
+});
+
+test('a sheet keeps a value that is already a number, and leaves a numeric-looking string alone', () => {
+  const spec = {
+    name: 'ids',
+    caption: '',
+    columns: [
+      { key: 'id', label: 'Id' },
+      { key: 'n', label: 'N' },
+    ],
+  };
+  assert.deepEqual(tableSheet(spec, [{ id: '007', n: 42 }]).rows[1], ['007', 42]);
+});
+
+test('a sheet is the labels and then the rows, with numeric cells left as numbers', () => {
+  const spec = {
+    name: 'mean-weight',
+    caption: 'ignored by the sheet',
+    columns: [
+      { key: 'key', label: 'Group' },
+      { key: 'value', label: 'Mean weight', format: 'number:2' },
+      { key: 'share', label: 'Share', format: 'percent:1' },
+    ],
+  };
+  const rows = [
+    { key: 'a', value: 71.4, share: 0.4237 },
+    { key: 'b', value: 'not measured', share: null },
+  ];
+
+  assert.deepEqual(tableSheet(spec, rows), {
+    name: 'mean-weight',
+    rows: [
+      ['Group', 'Mean weight', 'Share'],
+      ['a', 71.4, 42.4],
+      ['b', 'not measured', ''],
+    ],
+  });
 });

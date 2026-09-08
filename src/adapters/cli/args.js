@@ -93,6 +93,8 @@ export const COMMAND_OPTIONS = {
   data: {},
   analyze: { 'allow-exec': { type: 'boolean' } },
   table: { format: { type: 'string' } },
+  present: { from: { type: 'string' }, profile: { type: 'string' } },
+  template: { kind: { type: 'string' }, for: { type: 'string' } },
   figure: { 'allow-exec': { type: 'boolean' } },
   repro: {},
   authors: {
@@ -332,6 +334,9 @@ function build(
       to: variadicTo ? to : values.to,
       contradicts: values.contradicts,
       format: values.format,
+      kind: values.kind,
+      profile: values.profile,
+      for: values.for,
       lang: values.lang,
       question: values.question,
       language: values.language,

@@ -9,6 +9,10 @@
  * @property {(relPath: string) => Promise<Buffer|null>} readBytes
  * @property {(relPath: string, obj: object) => Promise<void>} writeYamlAtomic
  * @property {(relPath: string, text: string) => Promise<void>} writeTextAtomic
+ * @property {(relPath: string, bytes: Buffer|Uint8Array) => Promise<void>} writeBytesAtomic
+ * @property {(relPath: string) => Promise<void>} ensureDir
+ * @property {() => Promise<object|null>} readTemplates
+ * @property {(registry: object) => Promise<string>} writeTemplates
  * @property {(evt: object) => Promise<void>} appendEvent
  * @property {(limit?: number) => Promise<object[]>} readEvents
  * @property {(artId: string) => string} cacheDir

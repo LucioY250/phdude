@@ -1,4 +1,5 @@
 import { unzipSync, strFromU8 } from 'fflate';
+import { PhdudeError } from '../../domain/errors.js';
 import { tags, textOf } from './xml.js';
 
 function extOf(path) {
@@ -179,6 +180,31 @@ function parseXlsx(files) {
     .join('\n');
 
   return { text, sections: [], tables };
+}
+
+/**
+ * The styles a DOCX declares, as both the id a document references and the name Word shows -
+ * they differ ("Heading1" against "heading 1"), and a template may be built under either.
+ * @param {Buffer|Uint8Array} buffer - a `.docx` package
+ * @returns {string[]} every style id and style name, in the order the template declares them
+ */
+export function ooxmlStyleNames(buffer) {
+  let files;
+  try {
+    files = unzipSync(new Uint8Array(buffer));
+  } catch {
+    throw new PhdudeError(
+      'VALIDATION',
+      'not a valid OOXML package (zip could not be opened)',
+      'a DOCX template is a Word file, not a renamed one',
+    );
+  }
+  const xml = readText(files, 'word/styles.xml');
+  return tags(xml, 'w:style').flatMap((style) => {
+    const id = style.attrs['w:styleId'];
+    const name = tags(style.inner, 'w:name')[0]?.attrs['w:val'];
+    return [id, name].filter((value) => typeof value === 'string' && value !== '');
+  });
 }
 
 export const ooxmlParser = {

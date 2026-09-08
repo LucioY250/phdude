@@ -2444,3 +2444,102 @@ test('e2e: data, analyze, table, figure and repro check through the binary', asy
   assert.equal(unknown.code, 1);
   assert.match(unknown.stderr, /unknown repro subcommand/);
 });
+
+test('e2e: xlsx tables, the templates registry and the presentation outline', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-outputs-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+  await run(ws, ['init', '--title', 'Coffee and Sleep', '--no-git']);
+
+  const survey = ['group,weight', 'a,71.4', 'b,75.5'].join('\n') + '\n';
+  await writeFile(join(ws, 'data', 'survey.csv'), survey);
+  const dataset = (await runJson(ws, ['data', 'add', 'data/survey.csv'])).dataset;
+
+  // A spreadsheet needs no external tool, so it is built by the binary itself.
+  const declared = await runJson(ws, [
+    'table',
+    'add',
+    '--json',
+    JSON.stringify({
+      name: 'mean-weight',
+      caption: 'Mean weight by group.',
+      source: { dataset: dataset.id },
+      formats: ['md', 'xlsx'],
+    }),
+  ]);
+  const built = await runJson(ws, ['table', 'build', declared.table.id]);
+  assert.deepEqual(
+    built.outputs.map((o) => o.format),
+    ['md', 'xlsx'],
+  );
+
+  const { ooxmlParser } = await import('../../src/adapters/documents/ooxml.js');
+  const workbook = await ooxmlParser.parse(
+    await readFile(join(ws, 'tables', 'out', 'mean-weight.xlsx')),
+    { path: 'mean-weight.xlsx' },
+  );
+  assert.deepEqual(workbook.tables[0].rows, [
+    ['group', 'weight'],
+    ['a', '71.4'],
+    ['b', '75.5'],
+  ]);
+  assert.match((await run(ws, ['table', 'build', declared.table.id])).stdout, /is up to date/);
+
+  // A docx table needs a renderer, and says so rather than writing nothing quietly.
+  const noRenderer = await phdude(ws, ['table', 'build', declared.table.id, '--format', 'docx']);
+  assert.equal(noRenderer.code, 2);
+  assert.match(noRenderer.stderr, /does not declare format\(s\): docx/);
+
+  // The templates registry.
+  assert.match((await run(ws, ['template', 'list'])).stdout, /\(no templates\)/);
+  await writeFile(join(ws, 'templates', 'slides.pptx'), 'not really a deck');
+  const added = await runJson(ws, ['template', 'add', 'templates/slides.pptx']);
+  assert.equal(added.template.name, 'slides');
+  assert.equal(added.template.path, 'templates/pptx/slides.pptx');
+  assert.ok(await exists(join(ws, 'templates', 'pptx', 'slides.pptx')));
+
+  await run(ws, ['template', 'use', 'slides', '--for', 'generic-thesis']);
+  assert.match((await run(ws, ['template', 'list'])).stdout, /for generic-thesis/);
+
+  const check = await phdude(ws, ['template', 'check', 'slides']);
+  assert.equal(check.code, 0);
+  assert.match(check.stdout, /declares no Word styles/);
+
+  const outside = await phdude(ws, ['template', 'add', '../escape.docx']);
+  assert.equal(outside.code, 1);
+  assert.match(outside.stderr, /outside the workspace/);
+
+  // The outline, once a section is approved.
+  const noManuscript = await phdude(ws, ['present', 'outline']);
+  assert.equal(noManuscript.code, 2);
+  assert.match(noManuscript.stderr, /manuscript init/);
+
+  await run(ws, ['manuscript', 'init']);
+  const nothingApproved = await phdude(ws, ['present', 'outline']);
+  assert.equal(nothingApproved.code, 2);
+  assert.match(nothingApproved.stderr, /--from claims/);
+
+  const manuscriptPath = join(ws, 'manuscript', 'manuscript.yaml');
+  await writeFile(
+    manuscriptPath,
+    (await readFile(manuscriptPath, 'utf8')).replace('status: planned', 'status: approved'),
+  );
+
+  const outline = await runJson(ws, ['present', 'outline']);
+  assert.equal(outline.written, true);
+  assert.deepEqual(
+    outline.outputs.map((o) => o.path),
+    ['outputs/coffee-and-sleep/outline.md'],
+  );
+  assert.match(
+    await readFile(join(ws, 'outputs', 'coffee-and-sleep', 'outline.md'), 'utf8'),
+    /^# Coffee and Sleep$/m,
+  );
+  assert.match((await run(ws, ['present', 'outline'])).stdout, /up to date/);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.filter((e) => e.op === 'present').length, 1);
+  assert.equal(events.filter((e) => e.op === 'template').length, 2);
+});

@@ -1,10 +1,16 @@
 import { PhdudeError } from './errors.js';
 import { stableStringify } from './normalize.js';
 
-export const TABLE_FORMATS = ['md', 'latex', 'csv'];
+export const TABLE_FORMATS = ['md', 'latex', 'csv', 'xlsx', 'docx'];
+
+// The formats a table renders itself, and the three a declaration takes when it names none.
+// `xlsx` and `docx` are opt-in: the first is a package rather than text, and the second needs a
+// renderer that may not be installed, so neither belongs in what a bare declaration promises.
+export const TEXT_TABLE_FORMATS = ['md', 'latex', 'csv'];
+export const DEFAULT_TABLE_FORMATS = ['md', 'latex', 'csv'];
 
 const OUT_DIR = 'tables/out';
-const EXTENSIONS = { md: 'md', latex: 'tex', csv: 'csv' };
+const EXTENSIONS = { md: 'md', latex: 'tex', csv: 'csv', xlsx: 'xlsx', docx: 'docx' };
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const NUMERIC_FORMAT_RE = /^(number|percent):([0-9])$/;
 
@@ -28,10 +34,13 @@ export function tableName(input) {
 
 /**
  * @param {string[]|undefined} formats
- * @returns {string[]} the requested formats in the canonical order, all three when none was asked for
+ * @returns {string[]} the requested formats in the canonical order, the default three when none
+ *   was asked for
  */
 export function tableFormats(formats) {
-  if (formats === undefined || formats === null || formats.length === 0) return [...TABLE_FORMATS];
+  if (formats === undefined || formats === null || formats.length === 0) {
+    return [...DEFAULT_TABLE_FORMATS];
+  }
   const unknown = [...new Set(formats)].filter((f) => !TABLE_FORMATS.includes(f)).sort();
   if (unknown.length > 0) {
     throw new PhdudeError(
@@ -263,6 +272,38 @@ export function renderCsv(table, rows) {
   );
 }
 
+// A spreadsheet cell that a column's format reads as a number is written as a number, so the
+// spreadsheet can compute with it; a percent column carries the number the other formats print,
+// without the sign. A value that already is a number stays one. A string is left a string even
+// when it looks numeric: "007" is an identifier in some datasets and 7 in none of them.
+function sheetCell(value, format) {
+  const text = formatValue(value, format);
+  if (!NUMERIC_FORMAT_RE.test(format ?? '')) {
+    return typeof value === 'number' && Number.isFinite(value) ? value : text;
+  }
+  const n = Number(text.endsWith('%') ? text.slice(0, -1) : text);
+  return text !== '' && Number.isFinite(n) ? n : text;
+}
+
+/**
+ * The one sheet a table becomes: the column labels, then one row per record. The caption is not
+ * a row - a spreadsheet's first row is its header, and a title above it would displace every
+ * reader that expects one.
+ * @param {{name?: string, columns: object[]}} table
+ * @param {object[]} rows
+ * @returns {{name: string, rows: (string|number)[][]}}
+ */
+export function tableSheet(table, rows) {
+  const { columns, name } = table;
+  return {
+    name: name ?? 'Sheet1',
+    rows: [
+      columns.map((c) => c.label),
+      ...rows.map((row) => columns.map((c) => sheetCell(row[c.key], c.format))),
+    ],
+  };
+}
+
 const RENDERERS = { md: renderMarkdown, latex: renderLatex, csv: renderCsv };
 
 /**
@@ -276,8 +317,10 @@ export function renderTable(table, rows, format) {
   if (!render) {
     throw new PhdudeError(
       'VALIDATION',
-      `unknown table format: ${format}`,
-      `formats are ${TABLE_FORMATS.join(', ')}`,
+      TABLE_FORMATS.includes(format)
+        ? `${format} is not text: it is written as a file, not rendered`
+        : `unknown table format: ${format}`,
+      `text formats are ${TEXT_TABLE_FORMATS.join(', ')}`,
     );
   }
   return render(table, rows);
