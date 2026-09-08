@@ -1,0 +1,51 @@
+docs/agents.md
+  s_946fc7502759d8::t_f370676923da16 1-125
+src/adapters/agents/opencode.js
+  s_946fc7502759d8::t_7dd8b7ac0f5866 1-65
+README.md
+  s_946fc7502759d8::t_4b53b600ee4f30 15,112,239-257,263-267,272-274,1104
+commands/init.md
+  s_946fc7502759d8::t_fda7429d418ee9 15-16
+commands/manuscript.md
+  s_946fc7502759d8::t_3da0e494bbba67 2
+commands/profile.md
+  s_946fc7502759d8::t_79f4d63a34b22e 2
+docs/cli.md
+  s_946fc7502759d8::t_20676c3a6296e1 115,120-122
+docs/extending.md
+  s_946fc7502759d8::t_a2ce4d6f0d0a67 469-470
+docs/workspace.md
+  s_946fc7502759d8::t_b2ae8525363360 12,119
+package.json
+  s_946fc7502759d8::t_6dad0b5ba4d3bf 31
+src/adapters/agents/claude-code.js
+  s_946fc7502759d8::t_d772a35d20ddc2 1,7
+src/adapters/agents/hosts.js
+  s_946fc7502759d8::t_4984317d46fa3c 4,9
+src/adapters/agents/shared.js
+  s_946fc7502759d8::t_e06159a46273fe 45-56
+src/application/init.js
+  s_946fc7502759d8::t_1a9bae5e8f80aa 59-63,70-77
+tests/contracts/agent-host.test.js
+  s_946fc7502759d8::t_082b4c8d69369b 3-4,6-7,11,13,18,92-163
+tests/integration/init.test.js
+  s_946fc7502759d8::t_79c264867186b6 11-12,126-184
+tests/unit/cli/surface.test.js
+  s_946fc7502759d8::t_46a3936e1a5625 10,68-79
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "a23316acdc8688714f3754d798a3a1a463372258",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
