@@ -39,6 +39,12 @@ const DIRS = [
   '.phdude/cache',
 ];
 
+const TEMPLATES_PATH = join('.phdude', 'templates.yaml');
+
+// Kept in step with migrations/0003-workspace-v4.mjs: a workspace created at version 4 and one
+// migrated to it hold the same registry.
+const EMPTY_TEMPLATE_REGISTRY = { schema: 'phdude.templates', version: 1, templates: [] };
+
 const POLICY_FILES = [
   'constitution.yaml',
   'research-policy.yaml',
@@ -193,6 +199,7 @@ export async function initWorkspace(
       language: 'en',
       fields: [],
       methods: [],
+      venues: [],
       outputs: ['thesis'],
       mode: 'full',
       agents,
@@ -211,6 +218,13 @@ export async function initWorkspace(
     const text = await readFile(join(DEFAULTS_DIR, file), 'utf8');
     await store.writeTextAtomic(rel, text);
     created.push(rel);
+  }
+
+  if (await store.exists(TEMPLATES_PATH)) {
+    skipped.push(TEMPLATES_PATH);
+  } else {
+    await store.writeYamlAtomic(TEMPLATES_PATH, EMPTY_TEMPLATE_REGISTRY);
+    created.push(TEMPLATES_PATH);
   }
 
   const defaultGitignore = await readFile(join(DEFAULTS_DIR, 'workspace.gitignore'), 'utf8');

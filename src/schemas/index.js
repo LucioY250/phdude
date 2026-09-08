@@ -64,6 +64,20 @@ export function assertValid(type, obj) {
     );
 }
 
+// A venue profile ships inside a pack rather than being an object PhDude stores, so like
+// `results.json` it has a schema and no place in SCHEMA_TYPES. The loader turns a failure here
+// into a typed error naming the file (adapters/packs/loader.js).
+let profileValidator;
+export function validateProfile(profile) {
+  profileValidator ??= ajv.getSchema('phdude://profile');
+  return profileValidator(profile)
+    ? { ok: true }
+    : {
+        ok: false,
+        errors: profileValidator.errors.map((e) => `${e.instancePath || '/'} ${e.message}`),
+      };
+}
+
 // `results.json` is a file a researcher's script writes, not an entity PhDude stores, so it has
 // a schema but no place in SCHEMA_TYPES. The shape is the published contract (docs/extending.md);
 // what it cannot express - a summary that is blank once trimmed, a repeated key - is checked in

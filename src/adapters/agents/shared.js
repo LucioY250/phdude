@@ -189,7 +189,15 @@ export const COMMAND_ROWS = [
     'Per-researcher voice profiles: tone, sentence style, and terminology, learned from ' +
       'approved samples; consensus merges them for collaborative projects.',
   ],
-  ['packs list|detect|apply', 'List, recommend, or apply field/method research packs.'],
+  [
+    'packs list|detect|apply',
+    'List, recommend, or apply field, method and venue packs; applying a venue records it in phdude.yaml.',
+  ],
+  [
+    'profile list|show|check|use',
+    'Venue profiles: what a venue expects of the manuscript, which of its rules the manuscript ' +
+      'does not meet yet, and which venue it targets. `check` exits 2 on a blocking finding.',
+  ],
   ['mode', 'Set the review mode: lite, full, ruthless, or off.'],
   ['migrate', 'Upgrade the workspace to the current version. The researcher runs this, never you.'],
   ['doctor', 'Report adapter availability, cache state, schema versions, and skill permissions.'],

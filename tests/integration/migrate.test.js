@@ -11,11 +11,13 @@ import { status } from '../../src/application/status.js';
 import { validate } from '../../src/schemas/index.js';
 import migration0001 from '../../migrations/0001-workspace-v2.mjs';
 import migration0002 from '../../migrations/0002-workspace-v3.mjs';
+import migration0003 from '../../migrations/0003-workspace-v4.mjs';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const FIXTURE = join(REPO_ROOT, 'tests', 'fixtures', 'workspaces', 'v0.1-minimal');
 const FIXTURE_V2 = join(REPO_ROOT, 'tests', 'fixtures', 'workspaces', 'v0.2-minimal');
 const POLICY_PATH = join('.phdude', 'research-policy.yaml');
+const TEMPLATES_PATH = '.phdude/templates.yaml';
 const NEW_DIRS = ['analysis/out', 'figures/out', 'knowledge/datasets', 'tables/out'];
 
 const ACTOR = { researcher: 'tester', agent: 'test' };
@@ -80,9 +82,9 @@ test('migrate --dry-run lists the files that would change and writes nothing', a
   const result = await migrate(deps(root), { dryRun: true });
 
   assert.equal(result.from, 1);
-  assert.equal(result.to, 3);
+  assert.equal(result.to, 4);
   assert.equal(result.applied, false);
-  assert.equal(result.steps.length, 2);
+  assert.equal(result.steps.length, 3);
   assert.deepEqual(result.steps[0].changed.sort(), [
     'knowledge/claims/CLAIM-bb244df965.yaml',
     'knowledge/evidence/EVID-02756876a5.yaml',
@@ -94,6 +96,8 @@ test('migrate --dry-run lists the files that would change and writes nothing', a
     [...NEW_DIRS.map((dir) => `${dir}/.gitkeep`), '.gitignore', 'phdude.yaml'].sort(),
   );
   assert.match(result.steps[1].description, /execution/);
+  assert.deepEqual(result.steps[2].changed.sort(), [TEMPLATES_PATH, 'phdude.yaml'].sort());
+  assert.match(result.steps[2].description, /venue/);
 
   assert.deepEqual([...(await snapshotFiles(root))], [...before], 'dry run changes no file');
 });
@@ -110,7 +114,8 @@ test('migrate rewrites claims and evidence, sets workspace_version and records o
   ]);
 
   const store = new FsStore(root);
-  assert.equal((await store.readProject()).workspace_version, 3);
+  assert.equal((await store.readProject()).workspace_version, 4);
+  assert.deepEqual((await store.readProject()).venues, []);
 
   const [claim] = await store.listEntities('claim');
   assert.deepEqual(claim.provenance, { method: 'imported', derived_from: [] });
@@ -125,9 +130,10 @@ test('migrate rewrites claims and evidence, sets workspace_version and records o
   assert.equal(evidence.contradicts, undefined, 'contradicts belongs to claims only');
 
   const events = await migrateEvents(root);
-  assert.equal(events.length, 2);
+  assert.equal(events.length, 3);
   assert.equal(events[0].summary, `1 → 2: ${result.steps[0].description}`);
   assert.equal(events[1].summary, `2 → 3: ${result.steps[1].description}`);
+  assert.equal(events[2].summary, `3 → 4: ${result.steps[2].description}`);
   assert.deepEqual(events[0].ids, []);
 });
 
@@ -139,10 +145,10 @@ test('migrating an already-current workspace changes nothing and records no even
   const second = await migrate(deps(root));
   assert.equal(second.applied, false);
   assert.deepEqual(second.steps, []);
-  assert.equal(second.from, 3);
+  assert.equal(second.from, 4);
 
   assert.deepEqual([...(await snapshotFiles(root))], [...after]);
-  assert.equal((await migrateEvents(root)).length, 2);
+  assert.equal((await migrateEvents(root)).length, 3);
 });
 
 test('migration 0001 is idempotent: applying it twice reports no second change', async (t) => {
@@ -169,11 +175,11 @@ test('migrate refuses on a dirty git tree and --force overrides it', async (t) =
   assert.equal((await new FsStore(root).readProject()).workspace_version, undefined);
 
   const dryRun = await migrate(deps(root, { dirty: true }), { dryRun: true });
-  assert.equal(dryRun.steps.length, 2, 'a dry run is a read and stays available on a dirty tree');
+  assert.equal(dryRun.steps.length, 3, 'a dry run is a read and stays available on a dirty tree');
 
   const forced = await migrate(deps(root, { dirty: true }), { force: true });
   assert.equal(forced.applied, true);
-  assert.equal((await new FsStore(root).readProject()).workspace_version, 3);
+  assert.equal((await new FsStore(root).readProject()).workspace_version, 4);
 });
 
 test('migrate outside a workspace is a usage error', async (t) => {
@@ -188,7 +194,7 @@ test('a mutating use case refuses an un-migrated workspace and points at migrate
 
   await assert.rejects(() => addEntity(deps(root), 'claim', { statement: 'A brand new claim.' }), {
     code: 'USAGE',
-    message: 'workspace needs migration (1 → 3)',
+    message: 'workspace needs migration (1 → 4)',
     hint: 'run phdude migrate',
   });
 
@@ -202,7 +208,7 @@ test('reads still work on an un-migrated workspace and carry the migration warni
 
   const before = await status({ store: new FsStore(root) });
   assert.equal(before.knowledge.byType.claim.total, 1);
-  assert.ok(before.warnings.includes('workspace needs migration (1 → 3)'));
+  assert.ok(before.warnings.includes('workspace needs migration (1 → 4)'));
 
   await migrate(deps(root));
 
@@ -215,7 +221,7 @@ async function newerFixture(t) {
   t.after(() => rm(root, { recursive: true, force: true }));
   await cp(FIXTURE, root, { recursive: true });
   const store = new FsStore(root);
-  await store.writeProject({ ...(await store.readProject()), workspace_version: 4 });
+  await store.writeProject({ ...(await store.readProject()), workspace_version: 5 });
   return root;
 }
 
@@ -224,7 +230,7 @@ test('a mutating use case refuses a workspace newer than the runtime', async (t)
 
   await assert.rejects(() => addEntity(deps(root), 'claim', { statement: 'From an old build.' }), {
     code: 'USAGE',
-    message: 'workspace version 4 is newer than this PhDude (3)',
+    message: 'workspace version 5 is newer than this PhDude (4)',
     hint: 'upgrade phdude',
   });
 });
@@ -234,7 +240,7 @@ test('reads still work on a workspace newer than the runtime and carry the warni
 
   const report = await status({ store: new FsStore(root) });
   assert.equal(report.knowledge.byType.claim.total, 1);
-  assert.ok(report.warnings.includes('workspace version 4 is newer than this PhDude (3)'));
+  assert.ok(report.warnings.includes('workspace version 5 is newer than this PhDude (4)'));
 });
 
 test('migrate adds the out/ ignore rules to an existing .gitignore and only the missing ones', async (t) => {
@@ -286,8 +292,8 @@ test('migrate 2 → 3 adds the execution policy keys and the analysis output dir
 
   const result = await migrate(deps(root));
   assert.equal(result.from, 2);
-  assert.equal(result.to, 3);
-  assert.equal(result.steps.length, 1);
+  assert.equal(result.to, 4);
+  assert.equal(result.steps.length, 2);
   assert.deepEqual(
     result.steps[0].changed.sort(),
     [
@@ -298,7 +304,7 @@ test('migrate 2 → 3 adds the execution policy keys and the analysis output dir
     ].sort(),
   );
 
-  assert.equal((await store.readProject()).workspace_version, 3);
+  assert.equal((await store.readProject()).workspace_version, 4);
   for (const dir of NEW_DIRS) {
     assert.equal(await store.exists(`${dir}/.gitkeep`), true, `${dir} was created`);
   }
@@ -314,8 +320,41 @@ test('migrate 2 → 3 adds the execution policy keys and the analysis output dir
   assert.deepEqual(policy.providers, ['openalex']);
 
   const events = await migrateEvents(root);
-  assert.equal(events.length, 1);
+  assert.equal(events.length, 2);
   assert.equal(events[0].summary, `2 → 3: ${result.steps[0].description}`);
+  assert.equal(events[1].summary, `3 → 4: ${result.steps[1].description}`);
+});
+
+test('migrate 3 → 4 adds the venue list and the empty template registry', async (t) => {
+  const root = await fixtureCopy(t, FIXTURE_V2);
+  const store = new FsStore(root);
+
+  const result = await migrate(deps(root));
+  assert.deepEqual(result.steps[1].changed.sort(), [TEMPLATES_PATH, 'phdude.yaml'].sort());
+
+  const project = await store.readProject();
+  assert.deepEqual(project.venues, []);
+  assert.equal(project.workspace_version, 4);
+  assert.deepEqual(await store.readYaml(TEMPLATES_PATH), {
+    schema: 'phdude.templates',
+    version: 1,
+    templates: [],
+  });
+});
+
+test('migration 0003 is idempotent and leaves a venue list the researcher wrote alone', async (t) => {
+  const root = await fixtureCopy(t, FIXTURE_V2);
+  const store = new FsStore(root);
+
+  await migrate(deps(root));
+  await store.writeProject({ ...(await store.readProject()), venues: ['ieee'] });
+  const after = await snapshotFiles(root);
+
+  assert.deepEqual(await migration0003.preview(store), []);
+  const second = await migration0003.apply(store);
+  assert.deepEqual(second.changed, []);
+  assert.deepEqual([...(await snapshotFiles(root))], [...after]);
+  assert.deepEqual((await store.readProject()).venues, ['ieee']);
 });
 
 test('migration 0002 is idempotent: applying it twice reports no second change', async (t) => {

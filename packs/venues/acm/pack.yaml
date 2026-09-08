@@ -1,0 +1,22 @@
+schema: phdude.pack
+version: 1
+name: acm
+kind: venue
+description: >-
+  ACM conference papers: the acmart class in its sigconf format, ACM SIG Proceedings
+  references, and a ten-page budget.
+terminology:
+  - ccs concepts
+  - author keywords
+  - artifact evaluation
+  - sigconf
+detect:
+  keywords: []
+reviewers:
+  - venue-fit
+recommended_checks:
+  - page-limit
+  - required-sections
+  - word-limits
+skills: []
+schemas: []

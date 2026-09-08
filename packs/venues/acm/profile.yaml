@@ -1,0 +1,56 @@
+schema: phdude.profile
+version: 1
+name: acm
+display: ACM conference paper
+description: >-
+  The ACM conference template: acmart in sigconf format, ACM SIG Proceedings references, and a
+  word budget that fits the ten pages a full ACM paper usually gets.
+document_class: acmart
+citation_style: csl/acm-sig-proceedings.csl
+sections:
+  - id: abstract
+    title: Abstract
+    required: true
+    order: 1
+  - id: introduction
+    title: Introduction
+    required: true
+    order: 2
+    max_words: 1500
+  - id: methods
+    title: Method
+    required: true
+    order: 3
+    max_words: 2500
+  - id: results
+    title: Evaluation
+    required: true
+    order: 4
+    max_words: 2200
+  - id: discussion
+    title: Discussion
+    required: true
+    order: 5
+    max_words: 1500
+  - id: conclusions
+    title: Conclusion
+    required: true
+    order: 6
+    max_words: 600
+abstract:
+  max_words: 250
+page_limit: 10
+figures:
+  formats: [pdf, png]
+  min_dpi: 300
+tables:
+  style: booktabs
+references:
+  style: ACM SIG Proceedings
+templates:
+  latex: templates/acmart.tex
+writing:
+  first_person: natural
+  tense_abstract: present
+  terminology_map:
+    Fig.: Figure

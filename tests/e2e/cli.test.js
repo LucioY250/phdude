@@ -548,7 +548,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   // Reads work on a v0.1 workspace and say what is wrong with it.
   const before = await runJson(ws, ['status']);
   assert.equal(before.knowledge.byType.claim.total, 1);
-  assert.ok(before.warnings.includes('workspace needs migration (1 → 3)'));
+  assert.ok(before.warnings.includes('workspace needs migration (1 → 4)'));
 
   // Writes do not, and they name the command that fixes it.
   const refused = await phdude(ws, [
@@ -561,7 +561,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.equal(refused.code, 1);
   const refusal = JSON.parse(refused.stderr).error;
   assert.equal(refusal.code, 'USAGE');
-  assert.equal(refusal.message, 'workspace needs migration (1 → 3)');
+  assert.equal(refusal.message, 'workspace needs migration (1 → 4)');
   assert.equal(refusal.hint, 'run phdude migrate');
 
   const dryRun = await runJson(ws, ['migrate', '--dry-run']);
@@ -570,19 +570,19 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   assert.ok(dryRun.steps[0].changed.includes('phdude.yaml'));
   const stillBehind = await runJson(ws, ['status']);
   assert.ok(
-    stillBehind.warnings.includes('workspace needs migration (1 → 3)'),
+    stillBehind.warnings.includes('workspace needs migration (1 → 4)'),
     'a dry run writes nothing',
   );
 
   const applied = await run(ws, ['migrate']);
-  assert.match(applied.stdout, /Migrated workspace 1 → 3/);
+  assert.match(applied.stdout, /Migrated workspace 1 → 4/);
 
   const after = await runJson(ws, ['status']);
   assert.deepEqual(after.warnings, []);
   assert.ok(after.recentEvents.some((e) => e.op === 'migrate'));
 
   const doctor = await runJson(ws, ['doctor']);
-  assert.equal(doctor.workspaceVersion, 3);
+  assert.equal(doctor.workspaceVersion, 4);
 
   // The write that was refused now goes through.
   await run(ws, [
@@ -593,7 +593,7 @@ test('e2e: migrate upgrades a committed v0.1 workspace', async (t) => {
   ]);
 
   const second = await run(ws, ['migrate']);
-  assert.match(second.stdout, /Workspace is up to date \(3\)/);
+  assert.match(second.stdout, /Workspace is up to date \(4\)/);
 });
 
 test('e2e: add artifact-role reports the update in text mode', async (t) => {
@@ -625,10 +625,10 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   const config = join(ws, 'phdude.yaml');
   await writeFile(
     config,
-    (await readFile(config, 'utf8')).replace('workspace_version: 3', 'workspace_version: 4'),
+    (await readFile(config, 'utf8')).replace('workspace_version: 4', 'workspace_version: 5'),
   );
 
-  const message = 'workspace version 4 is newer than this PhDude (3)';
+  const message = 'workspace version 5 is newer than this PhDude (4)';
 
   // Reads keep working and say what is wrong, the same way an older workspace does.
   const read = await runJson(ws, ['status']);
@@ -648,11 +648,11 @@ test('e2e: a workspace newer than this phdude refuses writes and doctor says so'
   assert.equal(refusal.hint, 'upgrade phdude');
 
   const report = await runJson(ws, ['doctor']);
-  assert.equal(report.workspaceVersion, 4);
+  assert.equal(report.workspaceVersion, 5);
   assert.ok(report.warnings.includes(message));
 
   const text = await run(ws, ['doctor']);
-  assert.match(text.stdout, /workspace version: 4 \(newer than this phdude\)/);
+  assert.match(text.stdout, /workspace version: 5 \(newer than this phdude\)/);
 });
 
 test('e2e: methods, provenance and the trace line that reports them', async (t) => {
@@ -2443,4 +2443,72 @@ test('e2e: data, analyze, table, figure and repro check through the binary', asy
   const unknown = await phdude(ws, ['repro', 'rebuild', ...ACTOR]);
   assert.equal(unknown.code, 1);
   assert.match(unknown.stderr, /unknown repro subcommand/);
+});
+
+test('e2e: packs apply a venue, profile list, show, use and a blocking check', async (t) => {
+  const ws = await mkdtemp(join(tmpdir(), 'phdude-e2e-profile-'));
+  t.after(() => rm(ws, { recursive: true, force: true }));
+
+  await run(ws, ['init', '--title', 'Venue thesis', '--no-git']);
+  await run(ws, ['manuscript', 'init', '--title', 'Venue thesis']);
+
+  const before = await runJson(ws, ['profile', 'list']);
+  assert.deepEqual(
+    before.map((venue) => venue.name),
+    ['acm', 'generic-thesis', 'ieee'],
+  );
+  assert.equal(
+    before.every((venue) => venue.applied === false && venue.active === false),
+    true,
+  );
+
+  const applied = await run(ws, ['packs', 'apply', 'ieee']);
+  assert.equal(applied.stdout, 'Applied ieee\n');
+  assert.match(await readFile(join(ws, 'phdude.yaml'), 'utf8'), /venues:\n {2}- ieee/);
+
+  // Applying a venue does not target it; `profile use` does, and without either there is
+  // nothing to report on.
+  const beforeUse = await phdude(ws, ['profile', 'check', '--json', ...ACTOR]);
+  assert.equal(beforeUse.code, 1);
+  assert.equal(JSON.parse(beforeUse.stderr).error.code, 'USAGE');
+
+  // A 300-word abstract is written under the thesis profile, which allows 500.
+  await run(ws, ['profile', 'use', 'generic-thesis']);
+  const draft = join(ws, 'abstract.md');
+  await writeFile(draft, `${'word '.repeat(300)}\n`);
+  await run(ws, ['manuscript', 'submit', 'abstract', '--file', draft]);
+  assert.equal((await phdude(ws, ['profile', 'check', ...ACTOR])).code, 0);
+
+  const used = await run(ws, ['profile', 'use', 'ieee']);
+  assert.equal(used.stdout, 'The manuscript now targets ieee\n');
+  assert.match(
+    await readFile(join(ws, 'manuscript', 'manuscript.yaml'), 'utf8'),
+    /target_profile: ieee/,
+  );
+
+  const shown = await runJson(ws, ['profile', 'show']);
+  assert.equal(shown.document_class, 'IEEEtran');
+  assert.equal(shown.active, true);
+  assert.equal(shown.applied, true);
+
+  const text = await run(ws, ['profile', 'show', '--profile', 'acm']);
+  assert.match(text.stdout, /document_class: acmart/);
+  assert.equal(text.stdout.includes('cslPath'), false, 'the human view hides resolved paths');
+
+  // The prose the thesis profile allowed is over IEEE's 250-word limit, which is exactly what
+  // `profile check` is for: the gates never saw this section against this venue.
+  const blocked = await phdude(ws, ['profile', 'check', ...ACTOR]);
+  assert.equal(blocked.code, 2);
+  assert.match(blocked.stdout, /300 words exceeds the 250-word limit/);
+  assert.match(blocked.stdout, /1 block,/);
+
+  const stillFine = await phdude(ws, ['profile', 'check', '--profile', 'generic-thesis', ...ACTOR]);
+  assert.equal(stillFine.code, 0);
+
+  const events = (await readFile(join(ws, '.phdude', 'events.jsonl'), 'utf8'))
+    .split('\n')
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  assert.equal(events.filter((event) => event.op === 'profile').length, 2);
+  assert.equal(events.filter((event) => event.op === 'packs').length, 1);
 });

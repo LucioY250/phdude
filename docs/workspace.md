@@ -17,6 +17,7 @@ my-research/
 │   ├── methodology-policy.yaml
 │   ├── publication-policy.yaml
 │   ├── author-profile.yaml
+│   ├── templates.yaml            # the registered document templates
 │   ├── skills/<name>/SKILL.md    # installed agent skills (PhDude-managed)
 │   ├── events.jsonl              # append-only audit log (committed)
 │   └── cache/                    # extracted text, gitignored and disposable
@@ -66,29 +67,32 @@ else in the tree is meant to be read in a diff.
 ```yaml
 schema: phdude.project
 version: 1
-workspace_version: 3
+workspace_version: 4
 title: Adaptive scheduling in edge clusters
 language: en
 fields: [computer-science]
 methods: [quantitative]
+venues: [ieee]
 outputs: [thesis]
 mode: full
 agents: [claude-code, codex]
 packs_recommended: [quantitative]
 ```
 
-`fields` and `methods` are applied packs. `packs_recommended` is what `phdude packs detect`
-suggested; it is a recommendation until you run `phdude packs apply`.
+`fields`, `methods` and `venues` are applied packs. `packs_recommended` is what `phdude packs
+detect` suggested; it is a recommendation until you run `phdude packs apply`. A venue in
+`venues` is one the project is aiming at; which one the manuscript actually targets is
+`target_profile` in `manuscript.yaml`, set by `phdude profile use`.
 
 ### `workspace_version`
 
 `version: 1` is the schema of this file. `workspace_version` is the shape of the whole
 directory, and it is what `phdude migrate` moves forward. A workspace without the field is
-version 1 (everything v0.1 wrote); the current version is 3. Versioning the workspace rather
+version 1 (everything v0.1 wrote); the current version is 4. Versioning the workspace rather
 than each object keeps an additive field — `provenance`, `contradicts` — from turning into a
 breaking change for every reader; see [ADR 6](adr/0006-workspace-versioning-and-migrations.md).
 
-Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 3)`.
+Reads keep working on an out-of-date workspace and say `workspace needs migration (1 → 4)`.
 Writes stop until you run `phdude migrate`, which is deliberately a command you run rather than
 something that happens to your files while you were asking for something else.
 

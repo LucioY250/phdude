@@ -3,7 +3,7 @@ import { PhdudeError } from './errors.js';
 // The workspace, not the individual object, carries the version. Object schemas stay at
 // `version: 1` while every field added since v0.1 is additive with a default, so a reader only
 // has to ask one question - "is this workspace current?" - before trusting the fields it expects.
-export const CURRENT_WORKSPACE_VERSION = 3;
+export const CURRENT_WORKSPACE_VERSION = 4;
 
 /**
  * @param {object|null} project - a parsed phdude.yaml

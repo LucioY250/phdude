@@ -1301,10 +1301,64 @@ Decision on the researcher's behalf.
 
 `list` shows every discoverable pack and whether it is applied. `detect` scores each pack's
 keywords against the cached text and records the recommendation in `phdude.yaml` without
-applying anything. `apply` adds the pack to `fields` or `methods` and writes an event; it first
-checks each of the pack's skills against the [skill contract](extending.md#skill-contract) and
-exits 3 with a `POLICY` error if one requests network access the workspace policy has not
-allowed. All three need a workspace: outside one they exit 1 and point at `phdude init`.
+applying anything. Venue packs declare no keywords, so `detect` never scores or recommends one:
+a venue is a decision about where the work is going, not something to read off the corpus.
+`apply` adds the pack to `fields`, `methods` or `venues` and writes an event; it first checks
+each of the pack's skills against the [skill contract](extending.md#skill-contract) and exits 3
+with a `POLICY` error if one requests network access the workspace policy has not allowed. A
+venue pack that ships no `profile.yaml` is refused with a `VALIDATION` error, because there
+would be nothing to check the manuscript against. All three need a workspace: outside one they
+exit 1 and point at `phdude init`.
+
+Applying a venue records that the project is aiming at it. It does not make the manuscript
+target it - `phdude profile use <venue>` does that, and the two are separate because a project
+can be shopping a paper at three venues while one manuscript targets one of them.
+
+### `phdude profile list|show|check|use <venue>`
+
+The venue side of the manuscript: what the venue expects, and what the manuscript does not meet
+yet. Three venues ship with PhDude - `generic-thesis`, `ieee` and `acm` - each a pack under
+`packs/venues/<name>/` carrying its profile, its CSL citation style and a minimal LaTeX
+template. A workspace adds its own under `.phdude/packs/venues/<name>/`, and a workspace venue
+of the same name overrides the shipped one.
+
+```
+phdude profile list
+phdude profile show --profile ieee
+phdude profile check
+phdude profile check --profile acm --json
+phdude profile use ieee
+```
+
+`list` names every venue that ships a profile, whether the project has applied it (`phdude packs
+apply`) and whether the manuscript targets it. `show` prints the profile: the document class,
+the citation style, the sections with their word limits, the abstract limit, the page limit, the
+figure formats and the writing preferences. `check` reports the manuscript against it.
+
+Both `show` and `check` take `--profile <venue>` to report against a venue the manuscript does
+not target - which is how you find out what adapting to it would cost before committing. Without
+the flag they use `manuscript.yaml`'s `target_profile`, and a workspace with neither exits 1.
+
+`check` reports findings with a severity:
+
+| Severity | What it means | Example |
+|---|---|---|
+| `block` | The manuscript cannot go to this venue as it stands | a section over its word limit; a required section the manuscript does not have |
+| `warn` | Something the venue would notice | a section the venue does not list, or lists elsewhere; a figure in a format the venue does not take |
+| `info` | Reported so the number is on the record | a section with no prose yet; the reference style in force |
+
+`check` exits 2 when anything blocks, and 0 otherwise. It reads and reports; it never edits the
+manuscript and never relaxes a limit to fit the prose.
+
+Word counts are taken from the section body with its citations, evidence markers and Markdown
+stripped, the same reading `gate-profile` uses on every `manuscript submit` - so a section the
+gate lets through is a section `profile check` lets through. The abstract's limit comes from the
+profile's `abstract.max_words` unless the abstract section states its own.
+
+`use <venue>` sets `target_profile` in `manuscript.yaml` and records one `profile` event. It
+needs a manuscript, and it refuses a venue that ships no profile rather than recording a target
+nothing can check. Setting the venue the manuscript already targets changes nothing and records
+no event.
 
 ### `phdude mode lite|full|ruthless|off`
 
@@ -1315,28 +1369,28 @@ records no event.
 
 Upgrades a workspace written by an older PhDude to the current workspace version.
 `phdude.yaml` carries `workspace_version`; a workspace without the field is version 1, and the
-current version is 3. Migration steps ship with the package, one module per step, and run in
+current version is 4. Migration steps ship with the package, one module per step, and run in
 order through the store; each applied step appends one `migrate` event.
 
-Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 3)`
+Reads keep working on an out-of-date workspace and report `workspace needs migration (1 → 4)`
 as a warning. Writes do not: `add`, `link`, `ingest`, `decide`, `promote`, `packs detect`,
 `packs apply` and `mode` exit 1 with that message and the hint `run phdude migrate`.
 
 A workspace written by a *newer* PhDude is the same problem from the other end, and this build
 cannot migrate its way out of it. Reads warn with
-`workspace version 4 is newer than this PhDude (3)`; the same writes exit 1 with that message
+`workspace version 5 is newer than this PhDude (4)`; the same writes exit 1 with that message
 and the hint `upgrade phdude`.
 
 `--dry-run` writes nothing and lists the files each step would rewrite. Because git is the only
 undo for an in-place rewrite, `migrate` exits 3 on a dirty git tree unless `--force` is given; a
 dry run is a read and stays available either way. Steps are idempotent, so running `migrate` on
-an up-to-date workspace prints `Workspace is up to date (3)` and records no event.
+an up-to-date workspace prints `Workspace is up to date (4)` and records no event.
 
 ### `phdude doctor`
 
 Reports the Node version, whether git and `pdftotext` are available, per-parser
 availability, whether the current directory is a workspace, its workspace version and whether
-that version is `(current)`, `(needs migration → 3)` or `(newer than this phdude)`, whether
+that version is `(current)`, `(needs migration → 4)` or `(newer than this phdude)`, whether
 network access is enabled and the configured search providers, whether script execution is
 enabled and under what limits, the cache
 entry count, the discoverable packs and the schema

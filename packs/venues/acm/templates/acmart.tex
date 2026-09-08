@@ -1,0 +1,55 @@
+% Minimal Pandoc LaTeX template for the ACM class in its sigconf format.
+% Rendered by `phdude build --format latex --profile acm`; edit a copy under
+% templates/ in the workspace rather than this one, which ships with PhDude.
+\documentclass[sigconf,nonacm]{acmart}
+
+% A draft carries no conference, no DOI and no copyright block; the venue adds those at
+% camera-ready time, and inventing them here would put a claim in the PDF that is not true.
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+$if(csl-refs)$
+% The environment `pandoc --citeproc` wraps a CSL bibliography in.
+\newlength{\cslhangindent}
+\setlength{\cslhangindent}{1.5em}
+\newlength{\csllabelwidth}
+\setlength{\csllabelwidth}{3em}
+\newenvironment{CSLReferences}[2]
+  {\begin{list}{}{%
+    \setlength{\itemindent}{0pt}
+    \setlength{\leftmargin}{0pt}
+    \setlength{\parsep}{0pt}
+    \ifodd #1
+      \setlength{\leftmargin}{\cslhangindent}
+      \setlength{\itemindent}{-1\cslhangindent}
+    \fi}}
+  {\end{list}}
+\newcommand{\CSLBlock}[1]{#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth-\csllabelwidth}{#1}}
+\newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
+$endif$
+
+\begin{document}
+
+\title{$title$}
+
+$for(author)$
+\author{$author$}
+$endfor$
+
+$if(abstract)$
+\begin{abstract}
+$abstract$
+\end{abstract}
+$endif$
+
+\maketitle
+
+$body$
+
+\end{document}
