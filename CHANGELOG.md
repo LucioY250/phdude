@@ -6,6 +6,115 @@ All notable changes to PhDude are recorded here. The format follows
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-09-08
+
+The Reviewer. Every release until now helped build the argument; this one argues back, and then
+says whether the work can go out. Reviews are records rather than chat messages: an agent reads a
+bounded context, writes findings that each name the ids they rest on, and hands them back through
+the CLI as `REVIEW-` objects the researcher accepts, dismisses or resolves. The citation auditor
+checks the prose against the registry and, when the policy allows it, each DOI against Crossref.
+Research Health scores eight dimensions and prints the observations behind every number.
+`phdude ready` composes all of it into one verdict with the command that fixes each blocking item.
+See [ADR 11](docs/adr/0011-research-health-formulas.md).
+
+### Added
+
+- **`REVIEW-` objects and the review workflow.** `schemas/review.json` (`phdude.review` v1):
+  `kind` (citation, methodology, reviewer2, reproducibility, custom), `target` (an object id,
+  `manuscript:<section>` or `project`), `severity` (block, major, minor, note), `message`,
+  `evidence` ids, optional `suggested_command`, `status` (open, accepted, dismissed, resolved),
+  `by` and the `mode` the review ran under. The id is derived from kind, target and message, so
+  re-running a review finds its own finding rather than filing a second one.
+  `phdude review <kind> [--target …] [--budget …]` assembles a bounded review context into
+  `.phdude/cache/review/<kind>/context.md` and prints the findings contract, recording nothing;
+  `phdude review submit --file findings.json [--kind k]` validates the whole file — every
+  problem at once, located by index — and writes the objects with one `review` event;
+  `review list|show|accept|dismiss|resolve` carry the verdict, which is the researcher's.
+  `phdude next` gains a `reviews-open` rule, `high` while anything serious is open.
+- **Three reviewer skills.** `skills/methodologist` (design-question fit, sampling, instruments,
+  validity threats, reporting standards), `skills/reviewer2` (unsupported claims, overclaiming,
+  missing alternatives, weak comparisons, contradictions ignored — every finding cites ids), and
+  `skills/reproducibility-reviewer` (`repro check`, the analysis contracts, data availability),
+  each with `references/` checklists. The medicine pack gains CONSORT, STROBE and PRISMA
+  summaries.
+- **`phdude audit citations [--allow-network] [--json]`.** Offline: every `[@key]` in every
+  section resolves, every claim the prose asserts rests on a recorded source, no cited source is
+  still an unreviewed or dismissed candidate, plus every `cite check` finding weighted into a
+  severity. Online, through the v0.3 network policy: each DOI against Crossref `works/<DOI>` —
+  unresolved, a title below 0.8 normalized-token Jaccard similarity, a year more than one out, and
+  a retraction, which blocks. Findings land as `citation` reviews with one `audit` event; a
+  lookup Crossref does not answer is a warning rather than a finding on file.
+- **`phdude health [--save] [--trend] [--json]`.** Eight deterministic dimensions — literature
+  coverage, evidence strength, methodological integrity, citation quality, freshness,
+  reproducibility, consistency and academic prose quality — each 0-100 with the observations and
+  ids behind it, weighted into an overall by `health.weights` in the research policy. A dimension
+  the workspace cannot answer for is `null`, never a free 100. `--save` writes `reports/health.yaml`
+  and records one `health` event; `--trend` reports what moved. It is never a detector or
+  "humanity" score, and refuses any flag that names one (PRD §30c).
+- **`phdude ready [--profile <venue>] [--json]`.** The submission verdict: the venue profile's
+  blocking findings, Research Health against `ready.min_health`, each requirement in
+  `ready.require` (`no-open-conflicts`, `no-disputed-pairs`, `no-block-reviews`,
+  `all-sections-approved`, `figures-alt`, `repro-clean`, `citations-clean`) and the high-severity
+  gaps no requirement already covers. Every blocking item carries the command that fixes it, and
+  what passed is printed too. Exit 0 ready, 2 not. It never writes and records no event, and it
+  never runs the citation auditor — it reads the recorded `citation` reviews and the read-only
+  offline `cite check`.
+- **`phdude skills list|install <path|https url>|remove <name> [--allow-network] [--force]`.**
+  Installing copies a skill directory in — files only, nothing in a skill is ever executed —
+  validates its contract against the loader before a byte lands in the workspace, refuses one
+  whose declared permissions the policy has not opened, and records `{name, source, hash,
+  installed_at}` in `.phdude/skills-lock.yaml` (`schemas/skills-lock.json`, `phdude.skills-lock`
+  v1) with one `skills` event. A git URL requires `--allow-network` and is cloned with
+  `execFile('git', ['clone', '--depth', '1', …])`, https only, no credentials, `.git` excluded. A
+  skill whose front-matter name or description matches detector evasion or humanizing is refused
+  with POLICY. `phdude doctor` lists external skills with their source and warns when one has been
+  edited since it was installed.
+- **Review modes that change behaviour, not records.** `ruthless` promotes an open `major`
+  finding to `block` where the verdict is computed, so `phdude ready` and `phdude next` both
+  harden without a stored severity being rewritten; `lite` blocks only on `block`-severity items
+  and lists the rest as set aside; `full` is the default and `off` still answers a verdict that
+  was explicitly asked for.
+- **Migration `0004-workspace-v5.mjs`.** Workspace version 5: the `reviews/` directory, and the
+  `health.weights` and `ready.*` keys backfilled into an existing research policy. Idempotent, and
+  it never overwrites a value the researcher chose.
+
+### Changed
+
+- `AGENTS.md` and `CLAUDE.md` now index externally installed skills alongside the shipped ones,
+  marked `(external)`, and `phdude skills install|remove` rewrites both. A skill the agent's own
+  index never names is a skill the agent will never load.
+- Citation Quality no longer charges for an open `citation` review recorded at `note` severity.
+  `phdude audit citations` files an uncited source as exactly that, and `cite check` calls the
+  same thing informational, so charging it would have meant running the auditor cost a workspace
+  points for finding nothing wrong.
+- `phdude cite check` takes an optional pre-loaded snapshot, so `health` and `ready` resolve the
+  citation findings without loading and re-hashing the workspace a second and third time.
+- `src/domain/prose-lint.js` exports its aggregate as `aggregateScore`, which is how Academic
+  Prose Quality re-derives a section's score from the stored sub-scores rather than inventing a
+  second formula.
+- `fetchWithPolicy` gained `allowStatus`, so the DOI lookup can read a 404 as an answer instead of
+  an error.
+- The detector-flag guard also refuses `--humanity`, `--humanity-score` and `--ai-score`.
+- The agent hosts moved behind `src/adapters/agents/hosts.js`, so every command that has to
+  refresh the agent files resolves them the same way from what `phdude init` recorded.
+- The example workspace carries one open `methodology` review, so `next`, `health` and `ready`
+  each have the v0.7 loop to report on; `tests/golden/expected/ready.txt` is new.
+
+### Notes
+
+- Still three runtime dependencies (`yaml`, `ajv`, `fflate`). The only new network path is the
+  Crossref DOI lookup, and it runs only under the v0.3 policy — `network.enabled: true` or
+  `--allow-network` — plus `git clone` for a skill URL, through `execFile` with an argument array
+  and never a shell.
+- PhDude still has no AI-detector, "humanity" or AI score, and never will (PRD §30c). `health`
+  refuses `--detector` like every other command, external skill installation refuses a
+  detector-evasion purpose, and the rule is stated in the README, `docs/cli.md`, ADR 8 and the
+  `academic-prose` skill.
+- `ready` is a verdict, not a gate you cannot open: which checks run and how high the health bar
+  sits are yours, in `ready.require` and `ready.min_health`.
+- Reviews are not knowledge. A `REVIEW-` object has no knowledge state, is not in the lineage
+  graph, and never becomes canonical; it is what a reviewer said and what you decided about it.
+
 ## [0.6.0] — 2026-09-08
 
 The Document Factory. Until now a manuscript was a set of Markdown files and a YAML plan; now it
@@ -604,7 +713,8 @@ First release: the deterministic harness. No model is involved in anything below
 - Requires Node 22 or newer. `pdftotext` (poppler-utils) is optional.
 - No network access and no shell interpolation anywhere in the runtime.
 
-[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/LucioY250/phdude/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/LucioY250/phdude/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/LucioY250/phdude/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/LucioY250/phdude/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/LucioY250/phdude/compare/v0.3.0...v0.4.0
