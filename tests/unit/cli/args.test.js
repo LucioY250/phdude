@@ -383,6 +383,9 @@ const DETECTOR_FLAGS = [
   '--humanize-to=0.2',
   '--no-detection',
   '--ai-detection-score',
+  '--humanity',
+  '--humanity-score',
+  '--ai-score',
 ];
 
 for (const flag of DETECTOR_FLAGS) {

@@ -51,6 +51,7 @@ my-research/
 │   ├── manuscript.<venue>.yaml   # the same sections adapted to a venue, by `phdude adapt --apply`
 │   ├── <section>.md              # the prose, front matter + Markdown body
 │   └── reports/<section>.yaml    # schema phdude.section-report v1: the last gate run
+├── reports/health.yaml           # the last `phdude health --save`; latest only, for --trend
 ├── references.bib                # written by `phdude cite export`; derived, and gitignored
 ├── analysis/       ANALYSIS-*.yaml # declared analysis scripts and their runs
 │   └── out/                      # where a run's results.json and files land
@@ -345,6 +346,29 @@ machine, so the log still says so.
 
 It is committed, append-only, and independent of git history, so a rebase cannot erase who
 recorded what. Git history complements it with the full content of each change.
+
+## The Research Health report
+
+`phdude health` computes the eight-dimension Research Health score from the workspace on every
+run and prints the observations behind each number; nothing is stored unless the researcher
+asks. `phdude health --save` writes `reports/health.yaml` and records one `health` event:
+
+```yaml
+schema: phdude.health
+version: 1
+at: 2026-09-07T12:00:00Z
+overall: 62
+dimensions:
+  - key: literature-coverage
+    score: 67
+    weight: 1
+```
+
+The overall, and each dimension's key, score and weight — and nothing else. The observations are
+recomputed from the workspace every run, so storing them would only be storing a second copy of
+something that can go out of date. There is one saved report, not a series: each save replaces
+the last, and `phdude health --trend` measures this run against it. The formulas, and the rule
+that none of them is ever a detector or "humanity" score, are in ADR 0011.
 
 ## The manuscript
 

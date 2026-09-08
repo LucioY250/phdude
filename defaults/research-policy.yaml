@@ -37,6 +37,17 @@ research:
 
   limit: 20
 
+health:
+  weights:
+    literature-coverage: 1
+    evidence-strength: 1
+    methodological-integrity: 1
+    citation-quality: 1
+    freshness: 1
+    reproducibility: 1
+    consistency: 1
+    prose-quality: 1
+
 execution:
   enabled: false
   runtimes:
@@ -48,17 +59,6 @@ execution:
 skills:
   allow_network: false
   allow_execution: false
-
-health:
-  weights:
-    literature_coverage: 0.15
-    evidence_strength: 0.20
-    methodological_integrity: 0.15
-    citation_quality: 0.15
-    freshness: 0.10
-    reproducibility: 0.10
-    consistency: 0.10
-    prose_quality: 0.05
 
 ready:
   min_health: 70

@@ -29,6 +29,8 @@ const LINES = [
   '  matrix [--format md|csv]          literature matrix: one row per source',
   '         [--question RQ-n]          (optionally filtered to a research question)',
   '  gaps                              research gaps: questions, claims, sources, conflicts',
+  '  health [--save] [--trend]         Research Health: eight explainable dimensions, the',
+  '                                    observations behind each score, and the trend',
   '  data add <path>|list|show <id>|profile <id>',
   '                                    register a file under data/ as a dataset: hash, format',
   '                                    and a deterministic column profile',

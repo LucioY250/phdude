@@ -143,6 +143,13 @@ export const COMMAND_ROWS = [
     'Research gaps: questions, claims, sources, artifacts, and conflicts needing attention.',
   ],
   [
+    'health',
+    'Research Health: eight deterministic dimensions - literature coverage, evidence strength, ' +
+      'methodological integrity, citation quality, freshness, reproducibility, consistency and ' +
+      'academic prose quality - each with the observations behind its score. `--save` records ' +
+      'the latest for `--trend`. Never a detector or humanity score.',
+  ],
+  [
     'data add|list|show|profile',
     'Register a file under data/ as a dataset: its bytes are its identity, and its profile ' +
       'reports rows, column types, missing cells and distinct values.',

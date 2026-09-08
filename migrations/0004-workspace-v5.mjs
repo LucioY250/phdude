@@ -6,18 +6,17 @@ const POLICY_PATH = '.phdude/research-policy.yaml';
 const REVIEWS_KEEP = 'reviews/.gitkeep';
 
 // Kept in step with `defaults/research-policy.yaml`: what the migration writes is what a fresh
-// `phdude init` writes. The weights sum to 1.00 and are ordered by how much of the argument
-// rests on each dimension - evidence first, prose last, because prose that reads well over
-// evidence that does not hold is the failure mode PhDude exists to prevent.
+// `phdude init` writes: every dimension weighs the same until a researcher decides otherwise,
+// and the keys are the dimension keys `phdude health` prints.
 const HEALTH_WEIGHTS = {
-  literature_coverage: 0.15,
-  evidence_strength: 0.2,
-  methodological_integrity: 0.15,
-  citation_quality: 0.15,
-  freshness: 0.1,
-  reproducibility: 0.1,
-  consistency: 0.1,
-  prose_quality: 0.05,
+  'literature-coverage': 1,
+  'evidence-strength': 1,
+  'methodological-integrity': 1,
+  'citation-quality': 1,
+  freshness: 1,
+  reproducibility: 1,
+  consistency: 1,
+  'prose-quality': 1,
 };
 
 // What `phdude ready` refuses to sign off without (spec §3.4). Absent means the reader's own

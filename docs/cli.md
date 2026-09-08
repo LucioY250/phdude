@@ -735,6 +735,63 @@ among the higher-impact rules. `next`'s closing `consistent` line reads
 `N open gap(s); run phdude gaps` whenever the report is not empty, and claims the workspace is
 consistent only when it is.
 
+### `phdude health [--save] [--trend] [--json]`
+
+```
+phdude health
+phdude health --save
+phdude health --trend
+phdude health --json
+```
+
+Research Health (PRD §39, spec §3.3): eight dimensions, each scored 0-100 from what the
+workspace recorded about itself, each printed with the observations its number came from. A
+dimension the workspace cannot answer for scores `null` — printed as `n/a` — rather than a
+number nobody measured, and is left out of the overall.
+
+| Dimension | Formula | Null when |
+|---|---|---|
+| Literature Coverage | Mean of three shares of the research questions: those with a `supported` or `canonical` claim, those with a source behind them (through a claim's evidence), and those whose search is not stale. | No research question is recorded. |
+| Evidence Strength | The mean claim-state score (`canonical` 100, `supported` 80, `candidate` 40, `disputed` 20, `rejected` 0) times the evidence strength factor (`strong` 1, `moderate` 0.75, `weak` and `unknown` 0.5, averaged over every evidence item). With claims recorded and no evidence at all the factor is 0. | No claim is recorded. |
+| Methodological Integrity | Mean of the share of questions that have a method and the share of methods that declare `limitations`, minus 20 per open `methodology` review, floored at 0. | Neither a question nor a method is recorded. |
+| Citation Quality | 100 minus 10 per citation fault, floored at 0: every `cite check` finding that fails the check, plus every open `citation` review. `uncited-source` is informational there and costs nothing here — it is reported, and `phdude gaps` raises it as a gap. | No source and no citation review is recorded. |
+| Freshness | 100 minus the share of research questions whose search has gone stale, a question nobody searched included. | No research question is recorded. |
+| Reproducibility | The share of declared analyses, tables and figures that `repro check` calls `up-to-date`. | Nothing reproducible is declared, so a free 100 cannot carry the overall. |
+| Consistency | 100 minus 25 per open fact conflict and 25 per disputed claim pair, floored at 0. | No fact and no claim is recorded. |
+| Academic Prose Quality | The mean of the section prose reports' aggregate scores, from `manuscript/reports/`. | There is no manuscript, or no section has a prose report yet. |
+
+The overall is the weighted mean over the dimensions that scored, with the weights read from
+`health.weights` in `.phdude/research-policy.yaml`. Every dimension defaults to `1`; a weight of
+`0` drops a dimension from the overall while still printing its score, and a weight that is not
+a number at or above zero falls back to `1` rather than poisoning the mean.
+
+```yaml
+health:
+  weights:
+    literature-coverage: 1
+    evidence-strength: 1
+    methodological-integrity: 1
+    citation-quality: 1
+    freshness: 1
+    reproducibility: 1
+    consistency: 1
+    prose-quality: 1
+```
+
+`--save` writes the latest score to `reports/health.yaml` — the overall, and each dimension's
+key, score and weight, and nothing else, because the observations are recomputed on every run —
+and records one `health` event. It is the only writing form of the command: it refuses on a
+workspace that needs `phdude migrate`, the way every other mutating command does. There is one
+saved report, not a series: each save replaces the last.
+
+`--trend` compares this run to that saved report and prints the overall delta and every
+dimension that moved. With nothing saved yet it says so instead of inventing a baseline. The two
+flags combine: the trend is measured against the report that was on disk before the save.
+
+PhDude has no AI-detector, "humanity" or AI score, and never will (PRD §30c). Every flag naming
+one is refused with exit 3, on this command and on every other, before the command is reached.
+See ADR 0011 for the formulas and that rule.
+
 ### `phdude data add <path> | list | show <id> | profile <id>`
 
 ```

@@ -384,17 +384,19 @@ test('migrate 4 → 5 creates reviews/ and backfills the health and readiness po
 
   const policy = await store.readYaml(POLICY_PATH);
   assert.deepEqual(Object.keys(policy.health.weights).sort(), [
-    'citation_quality',
+    'citation-quality',
     'consistency',
-    'evidence_strength',
+    'evidence-strength',
     'freshness',
-    'literature_coverage',
-    'methodological_integrity',
-    'prose_quality',
+    'literature-coverage',
+    'methodological-integrity',
+    'prose-quality',
     'reproducibility',
   ]);
-  const total = Object.values(policy.health.weights).reduce((sum, w) => sum + w, 0);
-  assert.ok(Math.abs(total - 1) < 1e-9, `the weights sum to 1, not ${total}`);
+  assert.ok(
+    Object.values(policy.health.weights).every((w) => w === 1),
+    'a migrated workspace weighs every dimension the same, like a fresh one',
+  );
 
   assert.equal(policy.ready.min_health, 70);
   assert.deepEqual(policy.ready.require, [

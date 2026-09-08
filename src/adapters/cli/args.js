@@ -91,6 +91,7 @@ export const COMMAND_OPTIONS = {
     'allow-additions': { type: 'boolean' },
   },
   gaps: {},
+  health: { save: { type: 'boolean' }, trend: { type: 'boolean' } },
   data: {},
   analyze: { 'allow-exec': { type: 'boolean' } },
   table: { format: { type: 'string' } },
@@ -127,7 +128,7 @@ export const COMMAND_OPTIONS = {
 // take a flag that names one. The guard is global and matches on the option name alone, before
 // any command-specific parsing: refusing `--humanize-to` only where it was expected would leave
 // every other command to answer for it.
-const DETECTOR_OPTION = /detect|humaniz/i;
+const DETECTOR_OPTION = /detect|humaniz|humanity|ai-score/i;
 
 function optionName(arg) {
   if (typeof arg !== 'string' || !arg.startsWith('--') || arg === '--') return null;
@@ -371,6 +372,8 @@ function build(
       change: values.change,
       noGit: values['no-git'] === true,
       dryRun: values['dry-run'] === true,
+      save: values.save === true,
+      trend: values.trend === true,
       help: values.help === true,
       version: values.version === true,
     },

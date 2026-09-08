@@ -42,6 +42,7 @@ import edit from './commands/edit.js';
 import figure from './commands/figure.js';
 import freshness from './commands/freshness.js';
 import gaps from './commands/gaps.js';
+import health from './commands/health.js';
 import help, { usage } from './commands/help.js';
 import ingest from './commands/ingest.js';
 import init from './commands/init.js';
@@ -84,6 +85,7 @@ const COMMANDS = {
   figure,
   freshness,
   gaps,
+  health,
   ingest,
   init,
   knowledge,
