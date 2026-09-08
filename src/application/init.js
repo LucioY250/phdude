@@ -56,24 +56,26 @@ const POLICY_FILES = [
   'author-profile.yaml',
 ];
 
-// Paths AgentHost implementations (claude-code, codex) may write. Snapshotting only these -
-// never the whole workspace, and never `.git` or `.phdude/cache` - lets initWorkspace tell
-// whether a path a host reports as `written` is a brand-new file (created) or one it rewrote
-// (updated), without walking the tree.
-const AGENT_HOST_COMMANDS_DIR = join('.claude', 'commands');
+// Paths AgentHost implementations (claude-code, codex, opencode) may write. Snapshotting only
+// these - never the whole workspace, and never `.git` or `.phdude/cache` - lets initWorkspace
+// tell whether a path a host reports as `written` is a brand-new file (created) or one it
+// rewrote (updated), without walking the tree.
+const AGENT_HOST_COMMAND_DIRS = [join('.claude', 'commands'), join('.opencode', 'command')];
 
 async function snapshotAgentHostFiles(store) {
   const paths = new Set();
   for (const rel of ['AGENTS.md', 'CLAUDE.md']) {
     if (await store.exists(rel)) paths.add(rel);
   }
-  let entries = [];
-  try {
-    entries = await readdir(join(store.root, AGENT_HOST_COMMANDS_DIR));
-  } catch (err) {
-    if (err.code !== 'ENOENT') throw err;
+  for (const dir of AGENT_HOST_COMMAND_DIRS) {
+    let entries = [];
+    try {
+      entries = await readdir(join(store.root, dir));
+    } catch (err) {
+      if (err.code !== 'ENOENT') throw err;
+    }
+    for (const name of entries) paths.add(join(dir, name));
   }
-  for (const name of entries) paths.add(join(AGENT_HOST_COMMANDS_DIR, name));
   return paths;
 }
 

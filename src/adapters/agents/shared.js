@@ -42,6 +42,18 @@ export function isPhdudeManaged(text) {
   return parseFrontMatter(text).meta?.['phdude-managed'] === true;
 }
 
+// The slash-command templates a host mirrors into its own command directory. Both hosts that
+// have commands read the same directory, and a missing one is not an error: a package installed
+// without `commands/` simply has no commands to write.
+export async function listCommandFiles(commandsDir) {
+  try {
+    return (await readdir(commandsDir)).filter((f) => f.endsWith('.md')).sort();
+  } catch (err) {
+    if (err.code === 'ENOENT') return [];
+    throw err;
+  }
+}
+
 export async function readFileOrNull(path) {
   try {
     return await readFile(path, 'utf8');
