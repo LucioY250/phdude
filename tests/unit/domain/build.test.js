@@ -207,6 +207,24 @@ test('assetReferences finds the figures the prose shows and the tables it includ
   });
 });
 
+test('assetReferences never reaches outside figures/out or tables/out', () => {
+  const markdown = [
+    '![escape](figures/out/../../../etc/passwd)',
+    '![dot](figures/out/./x.svg)',
+    '![empty](figures/out//x.svg)',
+    '![bare](figures/out/)',
+    '',
+    '[t](tables/out/../../secret.txt)',
+    '',
+    '[ok](tables/out/mean-weight.md)',
+    '![ok](figures/out/adoption.svg)',
+  ].join('\n');
+  assert.deepEqual(assetReferences(markdown), {
+    figures: ['figures/out/adoption.svg'],
+    tables: ['tables/out/mean-weight.md'],
+  });
+});
+
 test('a table link inside a sentence is a reference, not an include', () => {
   const markdown = 'The numbers are in [Table 1](tables/out/mean-weight.md), which is unchanged.';
   assert.deepEqual(assetReferences(markdown).tables, []);

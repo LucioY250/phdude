@@ -181,19 +181,27 @@ export function assetReferences(markdown) {
   const tables = [];
 
   for (const match of source.matchAll(IMAGE_RE)) {
-    if (match[2].startsWith(FIGURE_DIR) && !figures.includes(match[2])) figures.push(match[2]);
+    if (assetUnder(match[2], FIGURE_DIR) && !figures.includes(match[2])) figures.push(match[2]);
   }
   // A table is included by a link on a line of its own; a link inside a sentence is a reference
   // to the file, and replacing it with a whole table would break the paragraph around it.
   for (const line of source.split('\n')) {
     const trimmed = line.trim();
     const match = WHOLE_LINK_RE.exec(trimmed);
-    if (match && match[2].startsWith(TABLE_DIR) && !tables.includes(match[2])) {
+    if (match && assetUnder(match[2], TABLE_DIR) && !tables.includes(match[2])) {
       tables.push(match[2]);
     }
   }
 
   return { figures, tables };
+}
+
+// A reference is a plain relative path that stays under its output directory: a `..` segment,
+// an absolute path or a URL is prose about a file, never a file the build reads.
+function assetUnder(path, dir) {
+  if (!path.startsWith(dir) || path.length === dir.length) return false;
+  const segments = path.split('/');
+  return !segments.some((segment) => segment === '..' || segment === '' || segment === '.');
 }
 
 function rewriteAssets(markdown, { figures = new Map(), tables = new Map() } = {}) {
