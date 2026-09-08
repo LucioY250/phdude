@@ -5,7 +5,8 @@
 //
 // `gate-profile` sees one section at a time and `profile check` sees all of them, so the
 // per-section rules live in `checkSection` and both go through it. That is the only way the two
-// reports can agree about the same section.
+// reports can agree about the same section. Where the venue puts a section is not one of them: it
+// is a fact about the manuscript as a whole, and only `checkProfile` can see it.
 
 import { words } from './textstats.js';
 
@@ -47,16 +48,15 @@ function finding(severity, code, message, hint = null) {
 }
 
 /**
- * The rules that need one section and nothing else: is it a section this venue has, is it where
- * the venue puts it, and does its prose fit the limit. Word counts come from `words`, which
- * strips citations, markers and Markdown first, so a citation-dense paragraph is measured as the
- * prose it is.
+ * The rules that need one section and nothing else: is it a section this venue has, and does its
+ * prose fit the limit. Word counts come from `words`, which strips citations, markers and
+ * Markdown first, so a citation-dense paragraph is measured as the prose it is.
  *
  * @param {object} profile
- * @param {{section: string, sectionOrder?: number|null, text?: string|null}} input
+ * @param {{section: string, text?: string|null}} input
  * @returns {{severity: string, code: string, message: string, hint: string|null}[]}
  */
-export function checkSection(profile, { section, sectionOrder = null, text = null } = {}) {
+export function checkSection(profile, { section, text = null } = {}) {
   const sections = orderedSections(profile);
   const index = sections.findIndex((entry) => entry.id === section);
   const findings = [];
@@ -68,15 +68,6 @@ export function checkSection(profile, { section, sectionOrder = null, text = nul
         'section-unknown',
         `${profile.name} does not list a "${section}" section`,
         `${profile.name} expects: ${sections.map((s) => s.id).join(', ') || '(no sections)'}`,
-      ),
-    );
-  } else if (typeof sectionOrder === 'number' && sectionOrder !== index + 1) {
-    findings.push(
-      finding(
-        'warn',
-        'section-order',
-        `${profile.name} puts ${section} at position ${index + 1}; the manuscript has it at ${sectionOrder}`,
-        'reorder the manuscript sections, or drop target_profile from manuscript.yaml',
       ),
     );
   }
@@ -97,6 +88,36 @@ export function checkSection(profile, { section, sectionOrder = null, text = nul
   }
 
   return findings;
+}
+
+/**
+ * A venue asks for a relative order, not for absolute positions: a section the manuscript does
+ * not have leaves no gap behind it, and a section the venue does not list holds no place in it.
+ * So the comparison is between the sections both of them have, in manuscript order, and the same
+ * sections in venue order - and the first place the two disagree names the pair that is reversed.
+ *
+ * @param {object} profile
+ * @param {{id: string}[]} entries - the manuscript's sections, in manuscript order
+ * @returns {object[]} one finding, or none
+ */
+function orderFindings(profile, entries) {
+  const ranks = new Map(orderedSections(profile).map((section, index) => [section.id, index]));
+  const manuscript = entries.map((entry) => entry.id).filter((id) => ranks.has(id));
+  const venue = [...manuscript].sort((a, b) => ranks.get(a) - ranks.get(b));
+
+  const at = manuscript.findIndex((id, index) => id !== venue[index]);
+  if (at === -1) return [];
+  return [
+    {
+      ...finding(
+        'warn',
+        'section-order',
+        `${profile.name} puts ${venue[at]} before ${manuscript[at]}; the manuscript has ${manuscript[at]} first`,
+        'reorder the manuscript sections, or drop target_profile from manuscript.yaml',
+      ),
+      section: null,
+    },
+  ];
 }
 
 function figureFindings(profile, figures) {
@@ -190,13 +211,11 @@ export function checkProfile(manuscript, sections, profile, { figures = [] } = {
     );
   }
 
+  findings.push(...orderFindings(profile, entries));
+
   for (const entry of entries) {
     const body = bodies.get(entry.id) ?? null;
-    for (const item of checkSection(profile, {
-      section: entry.id,
-      sectionOrder: entry.order,
-      text: body,
-    })) {
+    for (const item of checkSection(profile, { section: entry.id, text: body })) {
       findings.push({ ...item, section: entry.id });
     }
 
