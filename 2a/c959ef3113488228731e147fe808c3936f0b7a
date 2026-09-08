@@ -1,0 +1,27 @@
+.gitattributes
+  s_946fc7502759d8::t_179afc3722622a 1-9
+src/ports/analysis-runner.js
+  s_946fc7502759d8::t_decc7dbc2214f3 117-119
+tests/contracts/cli-json-shape.test.js
+  s_946fc7502759d8::t_9e5820cfa72481 70-72
+tests/unit/adapters/local-runner.test.js
+  s_946fc7502759d8::t_e6ccda9acaf676 88-90
+tests/unit/adapters/search.test.js
+  s_946fc7502759d8::t_3c5311eb521a2d 4,566
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "2ac959ef3113488228731e147fe808c3936f0b7a",
+  "prompts": {},
+  "sessions": {
+    "s_946fc7502759d8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2e197d26-b969-4775-a1ff-c4dafb90c125",
+        "model": "claude-fable-5-1"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
