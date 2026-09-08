@@ -34,7 +34,7 @@
         },
         "formats": {
           "type": "array",
-          "items": { "enum": ["md", "latex", "csv"] },
+          "items": { "enum": ["md", "latex", "csv", "xlsx", "docx"] },
           "minItems": 1,
           "uniqueItems": true
         },
@@ -43,7 +43,9 @@
           "properties": {
             "md": { "type": "string" },
             "latex": { "type": "string" },
-            "csv": { "type": "string" }
+            "csv": { "type": "string" },
+            "xlsx": { "type": "string" },
+            "docx": { "type": "string" }
           },
           "additionalProperties": false
         },

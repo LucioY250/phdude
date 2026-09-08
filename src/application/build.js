@@ -327,6 +327,10 @@ export async function build(deps, opts = {}) {
     };
   }
 
+  // The renderer runs with the output directory as its working directory, so relative figure
+  // links resolve from the document. An external tool will not create it, and neither will
+  // spawning one into a directory that is not there.
+  await store.ensureDir(paths.dir);
   await store.writeTextAtomic(paths.source, assembled.markdown);
   await exportRegistry({ store, format: 'bibtex', path: paths.bib });
   for (const copy of figures.copies) {

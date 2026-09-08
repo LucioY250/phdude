@@ -1,9 +1,19 @@
+import { dirname, join } from 'node:path';
 import { newTable } from '../domain/entities.js';
 import { PhdudeError } from '../domain/errors.js';
 import { sha256 } from '../domain/hash.js';
 import { parseId } from '../domain/ids.js';
 import { stableStringify } from '../domain/normalize.js';
-import { renderTable, rowsFrom, tableFormats, tableOutputs } from '../domain/tables.js';
+import { rendererFor } from '../domain/renderers.js';
+import {
+  TEXT_TABLE_FORMATS,
+  renderMarkdown,
+  renderTable,
+  rowsFrom,
+  tableFormats,
+  tableOutputs,
+  tableSheet,
+} from '../domain/tables.js';
 import { assertUpToDate } from './guard.js';
 
 const ALLOWED_FIELDS = ['name', 'caption', 'source', 'columns', 'formats'];
@@ -166,16 +176,88 @@ export async function show({ store }, id) {
 }
 
 function requestedFormats(table, formats) {
+  if (formats === undefined || formats.length === 0) return tableFormats(table.formats);
   const wanted = tableFormats(formats);
   const undeclared = wanted.filter((f) => !table.formats.includes(f));
-  if (formats !== undefined && formats.length > 0 && undeclared.length > 0) {
+  if (undeclared.length > 0) {
     throw new PhdudeError(
       'VALIDATION',
       `${table.name} does not declare format(s): ${undeclared.join(', ')}`,
       `it declares ${table.formats.join(', ')}`,
     );
   }
-  return wanted.filter((f) => table.formats.includes(f));
+  return wanted;
+}
+
+// A DOCX table is the Markdown table put through the document renderer, so the Markdown has to
+// exist as a file even when the table does not declare the `md` format. It is cache, not
+// output: gitignored, rebuilt on every build that needs it.
+function markdownCachePath(table) {
+  return `.phdude/cache/tables/${table.name}.md`;
+}
+
+async function renderExternal(deps, table, markdown, output) {
+  const { store } = deps;
+  const renderer = rendererFor(deps.renderers, output.format);
+  const availability = renderer === null ? null : await renderer.available();
+  if (renderer === null || !availability?.ok) {
+    throw new PhdudeError(
+      'TOOL_MISSING',
+      `no renderer available for ${output.format}`,
+      availability?.hint ?? `install pandoc to build ${output.format} tables`,
+    );
+  }
+
+  const markdownPath = markdownCachePath(table);
+  await store.writeTextAtomic(markdownPath, markdown);
+  await store.ensureDir(dirname(output.path));
+  const result = await renderer.render({
+    input: { markdownPath: join(store.root, markdownPath), metadata: { title: table.caption } },
+    output: { path: join(store.root, output.path), format: output.format },
+    cwd: store.root,
+  });
+
+  const bytes = await store.readBytes(output.path);
+  if (bytes === null) {
+    throw new PhdudeError(
+      'EXECUTION',
+      `${renderer.name} reported success but wrote no ${output.path}`,
+      'check the renderer',
+    );
+  }
+  return { hash: sha256(bytes), warnings: result?.warnings ?? [] };
+}
+
+// What each requested format would write. A text format and a spreadsheet are both decided
+// here, before anything is written, so an up-to-date build can compare them against the files
+// on disk; a format an external renderer produces cannot be known without running it, so its
+// only comparison is the hash the last run recorded.
+function plan(writeXlsx, table, spec, rows, wanted) {
+  return wanted.map((format) => {
+    const path = table.outputs[format];
+    if (TEXT_TABLE_FORMATS.includes(format)) {
+      const text = renderTable(spec, rows, format);
+      return { format, path, text, bytes: null, hash: sha256(text) };
+    }
+    if (format === 'xlsx') {
+      const bytes = writeXlsx({ sheets: [tableSheet(spec, rows)] });
+      return { format, path, text: null, bytes, hash: sha256(bytes) };
+    }
+    return { format, path, text: null, bytes: null, hash: null, external: true };
+  });
+}
+
+async function isUnchanged(store, outputs, lastRun) {
+  for (const output of outputs) {
+    if (output.text !== null) {
+      if ((await store.readText(output.path)) !== output.text) return false;
+      continue;
+    }
+    const bytes = await store.readBytes(output.path);
+    const want = output.hash ?? lastRun.output_hashes[output.path];
+    if (bytes === null || want === undefined || sha256(bytes) !== want) return false;
+  }
+  return true;
 }
 
 /**
@@ -192,7 +274,7 @@ function requestedFormats(table, formats) {
  *   outputs: {format: string, path: string, hash: string}[]}>}
  */
 export async function build(deps, id, { formats, force = false } = {}) {
-  const { store, clock, actor } = deps;
+  const { store, clock, actor, writeXlsx } = deps;
   assertUpToDate(await store.readProject());
 
   const table = await show(deps, id);
@@ -204,30 +286,42 @@ export async function build(deps, id, { formats, force = false } = {}) {
     caption: table.caption,
     columns: table.columns.length > 0 ? table.columns : columns,
   };
-  const outputs = wanted.map((format) => {
-    const text = renderTable(spec, rows, format);
-    return { format, path: table.outputs[format], text, hash: sha256(text) };
-  });
+  const outputs = plan(writeXlsx, table, spec, rows, wanted);
 
   const lastRun = table.runs.at(-1) ?? null;
   const unchanged =
     !force &&
     lastRun !== null &&
     lastRun.source_hash === hash &&
-    (await Promise.all(outputs.map((o) => store.readText(o.path)))).every(
-      (onDisk, i) => onDisk === outputs[i].text,
-    );
+    (await isUnchanged(store, outputs, lastRun));
   if (unchanged) {
     return {
       table,
       built: false,
       reason: 'up to date',
       sourceHash: hash,
-      outputs: outputs.map(({ format, path, hash: h }) => ({ format, path, hash: h })),
+      outputs: outputs.map(({ format, path, hash: h }) => ({
+        format,
+        path,
+        hash: h ?? lastRun.output_hashes[path],
+      })),
+      warnings: [],
     };
   }
 
-  for (const output of outputs) await store.writeTextAtomic(output.path, output.text);
+  const markdown = renderMarkdown(spec, rows);
+  const warnings = [];
+  for (const output of outputs) {
+    if (output.text !== null) {
+      await store.writeTextAtomic(output.path, output.text);
+    } else if (output.bytes !== null) {
+      await store.writeBytesAtomic(output.path, output.bytes);
+    } else {
+      const rendered = await renderExternal(deps, table, markdown, output);
+      output.hash = rendered.hash;
+      warnings.push(...rendered.warnings);
+    }
+  }
 
   const at = clock();
   const built = {
@@ -256,6 +350,7 @@ export async function build(deps, id, { formats, force = false } = {}) {
     reason: null,
     sourceHash: hash,
     outputs: outputs.map(({ format, path, hash: h }) => ({ format, path, hash: h })),
+    warnings,
   };
 }
 

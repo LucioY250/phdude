@@ -100,6 +100,8 @@ export const COMMAND_OPTIONS = {
     sections: { type: 'string' },
     'include-drafts': { type: 'boolean' },
   },
+  present: { from: { type: 'string' }, profile: { type: 'string' } },
+  template: { kind: { type: 'string' }, for: { type: 'string' } },
   figure: { 'allow-exec': { type: 'boolean' } },
   repro: {},
   authors: {
@@ -339,7 +341,9 @@ function build(
       to: variadicTo ? to : values.to,
       contradicts: values.contradicts,
       format: values.format,
+      kind: values.kind,
       profile: values.profile,
+      for: values.for,
       sections: parseList(values.sections),
       includeDrafts: values['include-drafts'] === true,
       lang: values.lang,

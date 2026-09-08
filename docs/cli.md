@@ -900,7 +900,7 @@ reader months later can tell which numbers a table in the manuscript came from.
 | `caption` | The sentence under the table. Required. |
 | `source` | Exactly one of `{"result":"RESULT-…"}` or `{"dataset":"DATASET-…","columns":["…"],"limit":n}`. |
 | `columns` | `[{"key":…,"label":…,"format":…}]`. Omit it and every key the source has becomes a column. |
-| `formats` | Any of `md`, `latex`, `csv`. All three when omitted. |
+| `formats` | Any of `md`, `latex`, `csv`, `xlsx`, `docx`. The three text formats when omitted. |
 
 `format` is `text`, `number:<0-9>` or `percent:<0-9>`. `number:2` prints `71.40`; `percent:1`
 reads the value as a fraction and prints `42.4%`. A cell the format cannot read as a number is
@@ -922,12 +922,82 @@ and a declaration identical to the recorded one writes nothing and records no ev
 `build` is up to date, and writes nothing, when the source hashes to what the last run recorded
 *and* every output file already holds exactly the bytes this build would write. `--force` builds
 anyway. `--format` narrows the build to some of the formats the table declares; a format it does
-not declare exits 2. One `table` event per declaration and per build; `list` and `show` write
-nothing.
+not declare exits 2. A bare `build` renders every format the table declares. One `table` event per
+declaration and per build; `list` and `show` write nothing.
+
+`xlsx` and `docx` are the two formats a declaration has to ask for by name. `xlsx` is written by
+PhDude itself - a minimal SpreadsheetML workbook with one sheet named after the table, the column
+labels as its first row, and numeric columns written as numbers so a spreadsheet can compute with
+them (a percent column carries the number without the sign, and the caption is not a row). The
+same rows always produce the same bytes. `docx` is the Markdown table put through Pandoc; without
+it the build exits 4 and says what to install. A DOCX build compares the file on disk against the
+hash the last run recorded rather than re-rendering to find out whether anything changed.
 
 The recorded `source_hash` is the source as it is now: a dataset hashes to the bytes on disk, not
 to the bytes registered with `phdude data add`. Editing the file is what has to make everything
 built from it stale, and nothing watches the file for that to happen.
+
+### `phdude present outline [--from manuscript|claims] [--profile <venue>] [--force]`
+
+```
+phdude present outline
+phdude present outline --from claims
+phdude present outline --profile ieee --force
+```
+
+The talk, from what the research already says. `--from manuscript` (the default) writes one slide
+per **approved** section, in manuscript order; `--from claims` writes one slide per supported or
+canonical claim. The bullets are the claim's strongest evidence: up to three excerpts, strongest
+first, each with its locator, ties broken by id so the same research always produces the same
+file. A section with nothing linked to it gets one bullet saying so rather than an empty slide.
+
+The outline is written to `outputs/<slug>/outline.md`, where `<slug>` is the manuscript title. With
+a document renderer installed it is also rendered to `outputs/<slug>/outline.pptx`, through the
+PPTX template registered for `--profile` (see `phdude template use`). Without one, the Markdown is
+still written and the missing tool is named in the output - PhDude never pretends a slide deck was
+produced.
+
+An outline whose Markdown already says exactly this, and whose PPTX is on disk when one is
+expected, reports `up to date`, writes nothing and records no event. `--force` writes anyway. One
+`present` event per write. Nothing under `outputs/` is canonical: it is rebuilt from the
+manuscript and the knowledge graph, never read back as knowledge, and never edited by hand.
+
+Exits 2 when there is nothing approved to outline, and says whether to approve a section or to
+outline the claims instead.
+
+### `phdude template list | add <path> [--kind docx|pptx|latex] | use <name> --for <profile> | check <name>`
+
+```
+phdude template list
+phdude template add templates/university/Thesis Template.docx
+phdude template add templates/ieee.tex --kind latex
+phdude template use thesis-template --for generic-thesis
+phdude template check thesis-template
+```
+
+The templates a build renders through. `add` copies the file into `templates/<kind>/` and records
+it in `.phdude/templates.yaml` by `name`, `kind`, `path` and `hash`. The name is the slug of the
+file it came from and it is the identity: adding a changed file under the same name corrects the
+entry in place and keeps the profile it was bound to, and adding the same bytes again writes
+nothing and records no event. The kind is read from the extension (`.docx`, `.pptx`, `.tex` or
+`.latex`) unless `--kind` says otherwise, and a `--kind` that disagrees with the file exits 2.
+
+The path must be inside the workspace - copy the template under `templates/` first. A path that
+leaves the workspace, or a symlink that points out of it, exits 1.
+
+`use <name> --for <profile>` records which publication profile the template belongs to, and that
+is what a build and `phdude present outline` look for. With nothing bound, a single registered
+template of the right kind is used; with two, none is - choosing between them would be PhDude
+deciding which template you meant.
+
+`check <name>` unzips `word/styles.xml` and reports the styles Pandoc writes with - `Heading 1`,
+`Heading 2`, `Heading 3`, `Body Text` and `Caption` - that the template does not declare, matching
+a style under either its Word name (`heading 1`) or its style id (`Heading1`). It also reports a
+registered file whose bytes have changed since it was registered. It exits 2 when the template is
+not ready to render with. A PPTX or LaTeX template declares no Word styles, so `check` says that
+rather than passing it silently.
+
+One `template` event per registration and per binding; `list` and `check` write nothing.
 
 ### `phdude figure add --json '<declaration>' | list | show <id> | build <id> | check`
 

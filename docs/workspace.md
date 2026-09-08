@@ -53,11 +53,13 @@ my-research/
 ├── analysis/       ANALYSIS-*.yaml # declared analysis scripts and their runs
 │   └── out/                      # where a run's results.json and files land
 ├── data/                         # your data files; registered ones become DATASET records
-├── templates/                    # DOCX/PPTX/LaTeX templates a build renders through
-├── outputs/<slug>/               # what `phdude build` delivers, generated
+├── templates/                    # document templates; `phdude template add` files them by kind
+│   └── docx|pptx|latex/          #   the copies the registry made, named after the template
+├── outputs/<slug>/               # what `phdude build` and `phdude present outline` deliver, generated
 │   ├── manuscript.<ext>          # the document: .md, .docx, .pdf, .tex or .html
 │   ├── references.bib            # the citation registry, regenerated for this build
-│   └── figures/                  # the figures the prose shows, converted where the venue asks
+│   ├── figures/                  # the figures the prose shows, converted where the venue asks
+│   └── outline.md|.pptx          # the presentation outline
 └── .gitignore
 ```
 
@@ -130,7 +132,7 @@ Every object carries `schema`, `version`, `id`, `created`, `actor` and free-form
 | Result | `RESULT-<hash10>` | `summary`, `from`, `values{}`, `ext.analysis?{key,run_at,unit}`, `superseded_by?` |
 | Analysis | `ANALYSIS-<hash10>` | `name`, `runtime`, `script`, `args[]`, `inputs[]`, `outputs{results,files[]}`, `params`, `runs[]` |
 | Dataset | `DATASET-<hash10>` | `path`, `hash`, `bytes`, `format`, `profile{rows,columns[]}`, `description?`, `license?`, `sensitive`, `versions_of?`, `latest` |
-| Table | `TABLE-<hash10>` | `name`, `caption`, `source{result}\|{dataset,columns?,limit?}`, `columns[]`, `formats[]`, `outputs{md,latex,csv}`, `runs[]` |
+| Table | `TABLE-<hash10>` | `name`, `caption`, `source{result}\|{dataset,columns?,limit?}`, `columns[]`, `formats[]`, `outputs{md,latex,csv,xlsx,docx}`, `runs[]` |
 | Figure | `FIG-<hash10>` | `name`, `caption`, `alt`, `generator{runtime,script,args[]}`, `inputs[]`, `outputs[{path,format}]`, `runs[]` |
 | ResearchQuestion | `RQ-<n>` | `text`, `objectives[]` |
 | Hypothesis | `H-<n>` | `text`, `questions[]` |
@@ -376,11 +378,26 @@ the contract the draft has to meet. `phdude deslop <section>` is the revision ha
 what to change, and takes the revision back through the gates with meaning preservation on.
 Neither writes prose; both leave that to `submit` and to `deslop --file`.
 
+## The templates registry
+
+`.phdude/templates.yaml` (schema `phdude.templates` v1) is the list of document
+templates the workspace holds: one entry per template with its `name`, its `kind` (`docx`,
+`pptx` or `latex`), the `path` of the copy under `templates/<kind>/`, the `hash` of its bytes,
+and the profile it is bound `for` once `phdude template use` says so. A build and
+`phdude present outline` read it to decide which file to hand the renderer.
+
+The registry is a record, not a cache: it is committed, and `phdude template check` reports a
+template whose bytes no longer hash to what was registered. The templates themselves are yours —
+a university's thesis DOCX, a conference's LaTeX class — and PhDude never edits one.
+
 ## Derived files
 
-Three things in the workspace are outputs rather than knowledge, and each can be deleted and
-rebuilt: `.phdude/cache/` (below), `references.bib` / `references.json`, written at the
-workspace root by `phdude cite export`, and `outputs/`, written by `phdude build`.
+Three things in the workspace are outputs rather than knowledge, and all of them can be deleted
+and rebuilt: `.phdude/cache/` (below), `outputs/` (what `phdude build` and `phdude present outline`
+write), and `references.bib` / `references.json`, written at the workspace root by
+`phdude cite export`. Nothing under `outputs/` is ever read back as knowledge or cited: it is
+rebuilt from the manuscript, the knowledge graph and the profile, so editing it by hand loses
+the edit at the next build.
 
 The default `.gitignore` covers both, since committing a file that is one command away from
 being regenerated only creates merge conflicts. The export covers every source, cited or not. It

@@ -25,6 +25,7 @@ const ENTITY_DIRS = {
   decision: 'decisions',
 };
 
+const TEMPLATES_FILE = join('.phdude', 'templates.yaml');
 const MANUSCRIPT_DIR = 'manuscript';
 const MANUSCRIPT_FILE = join(MANUSCRIPT_DIR, 'manuscript.yaml');
 const REPORTS_DIR = join(MANUSCRIPT_DIR, 'reports');
@@ -114,6 +115,18 @@ export class FsStore {
   // re-encoded and stop being a package a reader can open.
   async writeBytesAtomic(relPath, bytes) {
     await writeFileAtomic(join(this.root, relPath), bytes);
+  }
+
+  async readTemplates() {
+    const obj = await this.readYaml(TEMPLATES_FILE);
+    if (obj !== null) assertValid('templates-registry', obj);
+    return obj;
+  }
+
+  async writeTemplates(registry) {
+    assertValid('templates-registry', registry);
+    await this.writeYamlAtomic(TEMPLATES_FILE, registry);
+    return join(this.root, TEMPLATES_FILE);
   }
 
   async readProject() {

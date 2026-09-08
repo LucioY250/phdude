@@ -92,6 +92,8 @@ export default async function tableCommand(ctx) {
         actor: deps.actor,
         readBytes: deps.readBytes,
         parseTable: deps.parseTable,
+        writeXlsx: deps.writeXlsx,
+        renderers: deps.renderers,
       },
       id,
       { formats, force: flags.force },

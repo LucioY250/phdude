@@ -1,0 +1,12 @@
+{
+  "schema": "phdude.templates",
+  "version": 1,
+  "templates": [
+    {
+      "name": "thesis",
+      "kind": "odt",
+      "path": "/etc/passwd",
+      "hash": "not-a-hash"
+    }
+  ]
+}

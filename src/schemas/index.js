@@ -34,6 +34,7 @@ export const SCHEMA_TYPES = [
   'decision',
   'manuscript',
   'section-report',
+  'templates-registry',
   'author-profile',
   'pack',
   'skill',

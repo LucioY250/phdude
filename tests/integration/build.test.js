@@ -677,3 +677,50 @@ test('a cache record nobody can read means the build has not been made, not an e
   assert.equal(rebuilt.built, true);
   assert.deepEqual(rebuilt.changed, ['*']);
 });
+
+// Pandoc runs with the output directory as its working directory, and an external tool neither
+// creates that directory nor survives being spawned into one that is not there.
+test('the output directory exists before the renderer is handed a path in it', async (t) => {
+  const deps = await workspace(t);
+  await section(deps, 'introduction', 'One paragraph.');
+
+  let cwdExisted = null;
+  const checking = {
+    ...deps,
+    renderers: [
+      {
+        name: 'pandoc',
+        formats: ['html'],
+        available: async () => ({ ok: true, version: '3.6.4' }),
+        render: async ({ output, cwd }) => {
+          cwdExisted = await exists(cwd);
+          await writeFile(output.path, '<p/>');
+          return { path: output.path, warnings: [] };
+        },
+      },
+    ],
+  };
+
+  assert.equal(await exists(join(deps.store.root, 'outputs', 'edge-scheduling')), false);
+  await build(checking, { format: 'html' });
+  assert.equal(cwdExisted, true, 'the renderer was given a working directory that exists');
+});
+
+// `phdude present outline` writes outline.md / outline.pptx into the same directory, so the two
+// commands must not be able to overwrite each other.
+test('the build owns file names distinct from the ones present outline writes', async (t) => {
+  const deps = await workspace(t);
+  await section(deps, 'introduction', 'One paragraph.');
+  await deps.store.writeTextAtomic('outputs/edge-scheduling/outline.md', '# A slide\n');
+
+  const result = await build(deps, {});
+  for (const name of ['manuscript.md', 'references.bib']) {
+    assert.equal(result.output.path === `outputs/edge-scheduling/outline.md`, false);
+    assert.ok(await exists(join(deps.store.root, 'outputs', 'edge-scheduling', name)));
+  }
+  assert.equal(
+    await deps.store.readText('outputs/edge-scheduling/outline.md'),
+    '# A slide\n',
+    'a build leaves an outline beside it untouched',
+  );
+});

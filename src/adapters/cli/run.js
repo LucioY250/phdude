@@ -6,6 +6,8 @@ import { PhdudeError, exitCodeFor } from '../../domain/errors.js';
 import { SCHEMA_TYPES } from '../../schemas/index.js';
 import { gitAdapter } from '../git.js';
 import { detectKind, parseTable, parserFor, PARSERS } from '../documents/index.js';
+import { ooxmlStyleNames } from '../documents/ooxml.js';
+import { writeXlsx } from '../render/xlsx.js';
 import {
   DEFAULT_PACKS_DIR,
   discoverPacks,
@@ -51,6 +53,7 @@ import mode from './commands/mode.js';
 import next from './commands/next.js';
 import packs from './commands/packs.js';
 import profileCommand from './commands/profile.js';
+import present from './commands/present.js';
 import promote from './commands/promote.js';
 import prose from './commands/prose.js';
 import repro from './commands/repro.js';
@@ -58,6 +61,7 @@ import research from './commands/research.js';
 import researchFresh from './commands/research-fresh.js';
 import status from './commands/status.js';
 import table from './commands/table.js';
+import template from './commands/template.js';
 import write from './commands/write.js';
 
 const { version } = createRequire(import.meta.url)('../../../package.json');
@@ -88,6 +92,7 @@ const COMMANDS = {
   next,
   packs,
   profile: profileCommand,
+  present,
   promote,
   prose,
   repro,
@@ -95,6 +100,7 @@ const COMMANDS = {
   'research-fresh': researchFresh,
   status,
   table,
+  template,
   write,
 };
 
@@ -150,6 +156,8 @@ async function buildContext(cli, { cwd, env, stdout, stderr }) {
     fs: { walk, read, realpath },
     parsers: { detectKind, parserFor },
     parserAdapters: PARSERS,
+    ooxmlStyles: ooxmlStyleNames,
+    writeXlsx,
     readBytes: (rel) => read(join(workspace, rel)),
     parseTable,
     runner: localRunner,

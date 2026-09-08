@@ -156,7 +156,19 @@ export const COMMAND_ROWS = [
   [
     'table add|list|show|build',
     'Render a RESULT or a DATASET as a Markdown, LaTeX and CSV table under tables/out/; each ' +
-      'build records the hash of what it read and what it wrote.',
+      'build records the hash of what it read and what it wrote. A table that declares them ' +
+      'also builds xlsx (no tool needed) and docx (through pandoc).',
+  ],
+  [
+    'present outline',
+    'Write the presentation outline under outputs/: one slide per approved section, or per ' +
+      'claim the evidence supports, with its strongest excerpts as bullets. PPTX too, when ' +
+      'pandoc is installed.',
+  ],
+  [
+    'template list|add|use|check',
+    'Register the DOCX, PPTX and LaTeX templates a build renders through, bind one to a ' +
+      'publication profile, and check that a DOCX declares the styles Pandoc writes with.',
   ],
   [
     'figure add|list|show|build|check',
