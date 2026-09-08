@@ -1,0 +1,10 @@
+{
+  "name": "phdude-renderer-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A third-party PhDude DocumentRenderer that renders a manuscript to plain text.",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.js",
+  "exports": "./index.js"
+}
