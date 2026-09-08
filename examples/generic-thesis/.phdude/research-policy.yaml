@@ -37,6 +37,17 @@ research:
 
   limit: 20
 
+health:
+  weights:
+    literature-coverage: 1
+    evidence-strength: 1
+    methodological-integrity: 1
+    citation-quality: 1
+    freshness: 1
+    reproducibility: 1
+    consistency: 1
+    prose-quality: 1
+
 execution:
   enabled: false
   runtimes:

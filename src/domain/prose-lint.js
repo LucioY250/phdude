@@ -345,11 +345,19 @@ function computeScores(observations, measurements, markers, profile) {
   };
 }
 
-function aggregateOf(scores) {
+/**
+ * The weighted mean of the six sub-scores, renormalised over the ones that were measured. A
+ * sub-score that is null - or, in a stored section report, absent - drops out, so the aggregate
+ * always describes exactly what was measured. `phdude health` reads it back off the stored
+ * reports, which is why it is exported rather than folded into `lint`.
+ * @param {object} scores
+ * @returns {number|null}
+ */
+export function aggregateScore(scores) {
   let weighted = 0;
   let total = 0;
   for (const name of SCORES) {
-    if (scores[name] === null) continue;
+    if (typeof scores?.[name] !== 'number') continue;
     weighted += scores[name] * WEIGHTS[name];
     total += WEIGHTS[name];
   }
@@ -444,7 +452,7 @@ export function lint(text, { lang = 'en', mode = 'full', markers = null, profile
     observations,
     scores,
     formulas: { ...FORMULAS },
-    aggregate: aggregateOf(scores),
+    aggregate: aggregateScore(scores),
     lang: normalizeLang(lang),
     stats: measurements,
     // What the caller supplied, so a renderer can say why a score is null rather than printing
