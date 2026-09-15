@@ -163,12 +163,17 @@ test('a later root overrides a built-in pack with the same name', async (t) => {
   assert.equal(humanities.description, 'overridden');
 });
 
-test('the three shipped venues are exactly generic-thesis, ieee and acm', async () => {
+test('the four shipped venues include separate IEEE conference and Access profiles', async () => {
   assert.deepEqual(
     (await discoverProfiles([DEFAULT_PACKS_DIR])).map((profile) => profile.name),
-    ['acm', 'generic-thesis', 'ieee'],
+    ['acm', 'generic-thesis', 'ieee', 'ieee-access'],
   );
-  assert.deepEqual(venueDirs.map((dir) => basename(dir)).sort(), ['acm', 'generic-thesis', 'ieee']);
+  assert.deepEqual(venueDirs.map((dir) => basename(dir)).sort(), [
+    'acm',
+    'generic-thesis',
+    'ieee',
+    'ieee-access',
+  ]);
 });
 
 for (const dir of venueDirs) {
@@ -187,7 +192,7 @@ for (const dir of venueDirs) {
     });
   });
 
-  test(`the ${name} venue expects the six standard sections, in order, each with a limit`, async () => {
+  test(`the ${name} venue expects the six standard sections in order`, async () => {
     const profile = await loadProfile(name);
     assert.deepEqual(
       profile.sections.map((section) => section.id),
@@ -199,9 +204,11 @@ for (const dir of venueDirs) {
     );
     for (const section of profile.sections) {
       assert.equal(section.required, true, `${section.id} is required`);
-      const limit = sectionLimit(profile, section);
-      assert.ok(limit > 0, `${section.id} has a word limit`);
+      if (name !== 'ieee-access') {
+        assert.ok(sectionLimit(profile, section) > 0, `${section.id} has a word limit`);
+      }
     }
+    assert.ok(sectionLimit(profile, profile.sections[0]) > 0, 'abstract has a word limit');
   });
 
   test(`the ${name} venue pack vendors its CSL style with the CC BY-SA notice intact`, async () => {
@@ -212,8 +219,12 @@ for (const dir of venueDirs) {
     assert.match(csl, /^<\?xml/);
   });
 
-  test(`the ${name} venue pack ships the LaTeX template its document class needs`, async () => {
+  test(`the ${name} venue pack's bundled LaTeX template matches its document class`, async () => {
     const profile = await loadProfile(name);
+    if (name === 'ieee-access') {
+      assert.equal(profile.templatePaths.latex, undefined);
+      return;
+    }
     const template = readFileSync(profile.templatePaths.latex, 'utf8');
     assert.match(template, /\$body\$/, 'a pandoc template renders the body');
     assert.match(
@@ -229,6 +240,18 @@ for (const dir of venueDirs) {
     assert.deepEqual(pack.skills, []);
   });
 }
+
+test('IEEE Access has journal headings and no conference page limit or bundled template', async () => {
+  const profile = await loadProfile('ieee-access');
+  assert.equal(profile.sections.find((section) => section.id === 'methods').title, 'Methodology');
+  assert.equal(
+    profile.sections.find((section) => section.id === 'conclusions').title,
+    'Conclusions',
+  );
+  assert.equal(profile.abstract.max_words, 250);
+  assert.equal(profile.page_limit, undefined);
+  assert.deepEqual(profile.templatePaths, {});
+});
 
 test('the packs/venues README states the CSL licence the shipped styles carry', () => {
   const readme = readFileSync(join(DEFAULT_PACKS_DIR, 'venues', 'README.md'), 'utf8');
