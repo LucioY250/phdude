@@ -1,0 +1,53 @@
+schema: phdude.profile
+version: 1
+name: ieee-access
+display: IEEE Access journal article
+description: >-
+  Structural validation for IEEE Access. The author must separately register an official IEEE
+  Access Word or LaTeX template; this profile does not substitute the conference IEEEtran template.
+document_class: ieeeaccess
+citation_style: csl/ieee.csl
+sections:
+  - { id: abstract, title: Abstract, required: true, order: 1, synonyms: [summary] }
+  - {
+      id: introduction,
+      title: Introduction,
+      required: true,
+      order: 2,
+      synonyms: [intro, background, related-work, literature-review],
+    }
+  - {
+      id: methods,
+      title: Methodology,
+      required: true,
+      order: 3,
+      synonyms: [method, methodology, materials-and-methods, approach, solution],
+    }
+  - {
+      id: results,
+      title: Results,
+      required: true,
+      order: 4,
+      synonyms: [result, findings, evaluation, experiments],
+    }
+  - { id: discussion, title: Discussion, required: true, order: 5 }
+  - {
+      id: conclusions,
+      title: Conclusions,
+      required: true,
+      order: 6,
+      synonyms: [conclusion, concluding-remarks, closing, future-work],
+    }
+abstract:
+  max_words: 250
+figures:
+  formats: [pdf, png]
+tables:
+  style: ieee-access
+references:
+  style: IEEE
+writing:
+  first_person: sparing
+  tense_abstract: past
+  terminology_map:
+    Figure: Fig.
