@@ -1,0 +1,24 @@
+tests/integration/template.test.js
+  s_81bf62597beb77::t_81042d9db21b6f 178-193
+src/domain/templates.js
+  s_81bf62597beb77::t_81042d9db21b6f 131-132,141-143,146-149
+  s_81bf62597beb77::t_47d93ab3c76c06 144-145
+tests/unit/domain/templates.test.js
+  s_81bf62597beb77::t_81042d9db21b6f 90-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "ba326a2c79b306f72926741b554ca4f352c800ef",
+  "prompts": {},
+  "sessions": {
+    "s_81bf62597beb77": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a09634-16f5-7683-8dee-23f8ff5526b5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
