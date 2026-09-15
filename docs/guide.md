@@ -216,12 +216,14 @@ phdude status                                  # what exists, what conflicts, wh
 phdude next                                    # the highest-impact next action, with reasons
 ```
 
-Nothing above states anything as fact. A claim starts as `candidate`, earns `supported` when
-evidence is attached, and becomes `canonical` only behind a Decision you approved:
+Nothing above states anything as fact. A claim starts as `candidate`, moves to `supported` once
+evidence is attached and you promote it (`phdude promote CLAIM-… --to supported`, no decision
+needed), and becomes `canonical` only behind a Decision you approved:
 
 ```
 phdude add evidence --json '{"source":"SRC-…","excerpt":"p99 fell 34% (n=1200)"}'
 phdude link CLAIM-… --to EVID-…
+phdude promote CLAIM-… --to supported
 phdude decide propose --title "Adopt adaptive scheduling as the headline finding" \
   --rationale "Two independent measurements agree" --affects CLAIM-…
 phdude decide approve DEC-… --by lucio
