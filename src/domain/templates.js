@@ -128,7 +128,8 @@ export function upsertTemplate(registry, entry) {
  * @returns {object} a new registry
  */
 export function bindTemplate(registry, name, profile) {
-  if (!findTemplate(registry, name)) {
+  const selected = findTemplate(registry, name);
+  if (!selected) {
     throw new PhdudeError(
       'VALIDATION',
       `no template named ${name}`,
@@ -137,7 +138,15 @@ export function bindTemplate(registry, name, profile) {
   }
   return {
     ...registry,
-    templates: registry.templates.map((t) => (t.name === name ? { ...t, for: profile } : t)),
+    templates: registry.templates.map((t) => {
+      if (t.name === name) return { ...t, for: profile };
+      if (t.kind === selected.kind && t.for === profile) {
+        const unbound = { ...t };
+        delete unbound.for;
+        return unbound;
+      }
+      return t;
+    }),
   };
 }
 
