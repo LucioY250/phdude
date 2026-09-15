@@ -7,11 +7,53 @@ import { fileURLToPath } from 'node:url';
 import { markdownRenderer } from '../../../src/adapters/render/markdown.js';
 import { pandocRenderer } from '../../../src/adapters/render/pandoc.js';
 import { latexRenderer } from '../../../src/adapters/render/latex.js';
+import {
+  ieeeAccessDocumentXml,
+  ieeeAccessStylesXml,
+} from '../../../src/adapters/render/ieee-access-docx.js';
 
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'fixtures', 'render');
 const SAMPLE = join(FIXTURES, 'sample.md');
 const CITED = join(FIXTURES, 'cited.md');
 const BIB = join(FIXTURES, 'references.bib');
+
+test('IEEE Access DOCX formatting creates a full-width frontmatter and two-column body', () => {
+  const document = [
+    '<w:document><w:body>',
+    '<w:p><w:r><w:t>Abstract text</w:t></w:r></w:p>',
+    '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Introduction</w:t></w:r></w:p>',
+    '<w:p><w:r><w:t>Body</w:t></w:r></w:p>',
+    '<w:sectPr><w:headerReference r:id="rId9"/><w:pgSz w:w="11520" w:h="15660"/><w:pgMar w:left="740"/><w:cols w:space="720"/><w:docGrid w:linePitch="360"/></w:sectPr>',
+    '</w:body></w:document>',
+  ].join('');
+  const formatted = ieeeAccessDocumentXml(document);
+  assert.match(
+    formatted,
+    /Abstract text[\s\S]*?<w:sectPr><w:type w:val="continuous"\/><w:pgSz[^>]*\/><w:pgMar[^>]*\/><w:cols w:num="1"\/><w:docGrid[^>]*\/><\/w:sectPr>[\s\S]*?Heading1/,
+  );
+  assert.match(formatted, /<w:headerReference r:id="rId9"\/>/);
+  assert.doesNotMatch(
+    formatted.match(/<w:sectPr><w:type[\s\S]*?<\/w:sectPr>/)[0],
+    /headerReference|footerReference/,
+  );
+  assert.match(
+    formatted,
+    /<w:headerReference r:id="rId9"\/><w:type w:val="continuous"\/>[\s\S]*?<w:cols w:num="2" w:space="400"\/><w:docGrid/,
+  );
+});
+
+test('IEEE Access DOCX formatting sets inherited and explicit first-paragraph text to 10 pt', () => {
+  const styles =
+    '<w:styles><w:style w:styleId="Normal"><w:rPr><w:b/><w:sz w:val="24"/><w:szCs w:val="24"/></w:rPr></w:style><w:style w:styleId="FirstParagraph"><w:basedOn w:val="Normal"/></w:style></w:styles>';
+  const formatted = ieeeAccessStylesXml(styles);
+  assert.match(formatted, /w:styleId="Normal"[\s\S]*?<w:sz w:val="20"\/><w:szCs w:val="20"\/>/);
+  assert.match(
+    formatted,
+    /w:styleId="FirstParagraph"[\s\S]*?<w:rPr><w:sz w:val="20"\/><w:szCs w:val="20"\/><\/w:rPr>/,
+  );
+  assert.doesNotMatch(formatted, /w:val="24"/);
+  assert.equal(ieeeAccessStylesXml(formatted), formatted);
+});
 
 async function withTempDir(body) {
   const dir = await mkdtemp(join(tmpdir(), 'phdude-render-unit-'));

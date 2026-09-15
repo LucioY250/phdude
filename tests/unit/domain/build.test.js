@@ -256,6 +256,25 @@ test('assemble writes one heading per section under the venue title, abstract ex
   assert.equal(metadata.draft, undefined);
 });
 
+test('IEEE Access assembly leaves numbering to the official heading styles', () => {
+  const manuscript = manuscriptWith({ introduction: 'approved' });
+  const sections = [
+    {
+      id: 'introduction',
+      title: 'Introduction',
+      file: 'manuscript/introduction.md',
+      body: '# 2. Related Work\n\n## 2.1 Evidence\n\n## 2026 Findings\n\n2026 remains in prose.',
+    },
+  ];
+  const profile = { ...PROFILE, name: 'ieee-access' };
+  const snapshot = { project: null, authors: [] };
+  assert.match(
+    assemble(snapshot, manuscript, sections, profile).markdown,
+    /# Related Work\n\n## Evidence\n\n## 2026 Findings\n\n2026 remains in prose\./,
+  );
+  assert.match(assemble(snapshot, manuscript, sections, PROFILE).markdown, /# 2\. Related Work/);
+});
+
 test('assemble reports the section files it read, hashed the way the manuscript hashes them', () => {
   const manuscript = manuscriptWith({ introduction: 'approved' });
   const { inputs } = assemble(

@@ -1,5 +1,6 @@
 import { basename } from 'node:path';
 import { PhdudeError } from '../../domain/errors.js';
+import { formatIeeeAccessDocx } from './ieee-access-docx.js';
 import {
   assertFormat,
   execFileAsync,
@@ -114,6 +115,10 @@ export function pandocRenderer({ execFile, env = {}, path } = {}) {
           'run the same conversion by hand to see the whole message; the assembled Markdown is under outputs/',
           logTail(err.stdout, err.stderr),
         );
+      }
+
+      if (format === 'docx' && input.profile === 'ieee-access') {
+        await formatIeeeAccessDocx(target);
       }
 
       // Hashing whatever happens to be at the path would record a render that did not happen.
