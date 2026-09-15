@@ -1,0 +1,21 @@
+src/application/build.js
+  s_81bf62597beb77::t_9b87e322de53ea 18,300
+tests/integration/build.test.js
+  s_81bf62597beb77::t_49f38b9a75fe88 304-329
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "504965e03d10ef7520279747cb3b06ffed7e745a",
+  "prompts": {},
+  "sessions": {
+    "s_81bf62597beb77": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a09634-16f5-7683-8dee-23f8ff5526b5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
