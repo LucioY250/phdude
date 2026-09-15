@@ -1248,13 +1248,13 @@ in [docs/cli.md](cli.md).
 
 ## Packs
 
-Ten packs ship today: four fields (`computer-science`, `business`, `medicine`, `humanities`),
-three methods (`quantitative`, `qualitative`, `systematic-review`) and three venues
-(`generic-thesis`, `ieee`, `acm`). A field or method pack brings terminology, reviewers,
+Eleven packs ship today: four fields (`computer-science`, `business`, `medicine`, `humanities`),
+three methods (`quantitative`, `qualitative`, `systematic-review`) and four venues
+(`generic-thesis`, `ieee`, `ieee-access`, `acm`). A field or method pack brings terminology, reviewers,
 recommended checks and a skill with concrete review questions and the epistemic norms of its
 discipline, so "demonstrates" and "suggests" are used the way that field uses them. A venue
-pack brings a publication profile instead: the sections, the limits, the citation style and the
-template a build renders through. `phdude packs detect` recommends field and method packs from
+pack brings a publication profile instead: the sections, the limits, the citation style and, when bundled, the
+template a build renders through. IEEE Access requires a separately registered official template. `phdude packs detect` recommends field and method packs from
 what it finds in your sources — never a venue, which is your decision about where the work is
 going — and nothing is applied until you say so.
 
