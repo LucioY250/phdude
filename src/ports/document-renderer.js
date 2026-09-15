@@ -23,6 +23,7 @@ import { join } from 'node:path';
  * @property {string} [cslPath]
  * @property {string} [referenceDoc]
  * @property {string} [template]
+ * @property {string} [profile]
  * @property {Record<string, string|number|(string|number)[]>} [metadata]
  */
 

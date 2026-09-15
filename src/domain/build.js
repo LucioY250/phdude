@@ -38,6 +38,7 @@ const TABLE_DIR = 'tables/out/';
 // reach a built artifact. A title after the path (`(path "caption")`) is kept as written.
 const IMAGE_RE = /!\[([^\]]*)\]\(([^)\s]+)((?:\s+[^)]*)?)\)/g;
 const WHOLE_LINK_RE = /^\[([^\]]*)\]\(([^)\s]+)((?:\s+[^)]*)?)\)$/;
+const NUMBERED_HEADING_RE = /^(#{1,6}\s+)(?:\d+\.|\d+(?:\.\d+)+\.?)\s+(?=\S)/gm;
 
 /**
  * @param {string|null|undefined} format
@@ -260,7 +261,8 @@ export function assemble(snapshot, manuscript, sections, profile, opts = {}) {
   let abstract = null;
 
   for (const section of sections) {
-    const body = rewriteAssets(String(section.body ?? '').trim(), { figures, tables });
+    let body = rewriteAssets(String(section.body ?? '').trim(), { figures, tables });
+    if (profile?.name === 'ieee-access') body = body.replace(NUMBERED_HEADING_RE, '$1');
     inputs[section.file] = sectionHash(section.body ?? '');
     if (section.id === ABSTRACT) {
       abstract = body;

@@ -357,6 +357,7 @@ export async function build(deps, opts = {}) {
       cslPath: cslPath ?? undefined,
       referenceDoc: template && TEMPLATE_KINDS[format] === 'docx' ? template.path : undefined,
       template: template && TEMPLATE_KINDS[format] === 'latex' ? template.path : undefined,
+      profile: profile.name,
       metadata: assembled.metadata,
     },
     output: { path: join(store.root, paths.document), format },
