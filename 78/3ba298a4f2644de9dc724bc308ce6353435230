@@ -1,0 +1,33 @@
+tests/unit/adapters/render.test.js
+  s_81bf62597beb77::t_49ec6699e0077d 39
+  s_81bf62597beb77::t_4e5acdacb3466e 26-27,41-43
+  s_81bf62597beb77::t_9f0747638e6614 66-67
+  s_81bf62597beb77::t_4bac3c20725118 37-38,40,44
+  s_81bf62597beb77::t_7fc4d43cabb63d 28
+  s_81bf62597beb77::t_a36370ba3fee81 65
+  s_81bf62597beb77::t_5c550cbccbd17e 316
+src/adapters/render/pandoc.js
+  s_81bf62597beb77::t_4e5acdacb3466e 87-94
+src/adapters/render/ieee-access-docx.js
+  s_81bf62597beb77::t_82591caeaa0356 103
+  s_81bf62597beb77::t_056f7937fb86eb 56-64,67-78,111
+  s_81bf62597beb77::t_1be82292e2eff4 65-66
+  s_81bf62597beb77::t_4e5acdacb3466e 21-26,89,96-97,102
+  s_81bf62597beb77::t_b18865a62c510a 98-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "783ba298a4f2644de9dc724bc308ce6353435230",
+  "prompts": {},
+  "sessions": {
+    "s_81bf62597beb77": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a09634-16f5-7683-8dee-23f8ff5526b5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
