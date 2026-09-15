@@ -87,6 +87,23 @@ test('binding a template that was never registered is a validation error', () =>
   assert.throws(() => bindTemplate(emptyRegistry(), 'ghost', 'ieee'), PhdudeError);
 });
 
+test('binding a new template replaces only the same kind for that profile', () => {
+  let registry = upsertTemplate(emptyRegistry(), entry({ name: 'old' }));
+  registry = upsertTemplate(registry, entry({ name: 'new' }));
+  registry = upsertTemplate(registry, entry({ name: 'slides', kind: 'pptx' }));
+  registry = upsertTemplate(registry, entry({ name: 'other-profile' }));
+  registry = bindTemplate(registry, 'old', 'ieee-access');
+  registry = bindTemplate(registry, 'slides', 'ieee-access');
+  registry = bindTemplate(registry, 'other-profile', 'generic-thesis');
+
+  registry = bindTemplate(registry, 'new', 'ieee-access');
+
+  assert.equal(templateFor(registry, { kind: 'docx', profile: 'ieee-access' }).name, 'new');
+  assert.equal(findTemplate(registry, 'old').for, undefined);
+  assert.equal(findTemplate(registry, 'slides').for, 'ieee-access');
+  assert.equal(findTemplate(registry, 'other-profile').for, 'generic-thesis');
+});
+
 test('the template for a profile is the one bound to it', () => {
   let registry = upsertTemplate(emptyRegistry(), entry({ name: 'plain', kind: 'pptx' }));
   registry = upsertTemplate(registry, entry({ name: 'ieee-slides', kind: 'pptx' }));

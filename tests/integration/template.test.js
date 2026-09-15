@@ -175,6 +175,22 @@ test('use binds a template to a profile and records one event', async () => {
   assert.equal((await deps.store.readEvents()).length, 2);
 });
 
+test('use replaces the prior template bound to the same kind and profile', async () => {
+  const root = await newRoot();
+  const deps = makeDeps(root);
+  await withDocx(root);
+  await withDocx(root, 'templates/university/Replacement.docx');
+  await template.add(deps, 'templates/university/Thesis Template.docx');
+  await template.add(deps, 'templates/university/Replacement.docx');
+  await template.use(deps, 'thesis-template', { profile: 'ieee-access' });
+
+  await template.use(deps, 'replacement', { profile: 'ieee-access' });
+
+  const registered = await template.list(deps);
+  assert.equal(registered.find((item) => item.name === 'thesis-template').for, undefined);
+  assert.equal(registered.find((item) => item.name === 'replacement').for, 'ieee-access');
+});
+
 test('use on a name that was never registered says how to see the names', async () => {
   const deps = makeDeps(await newRoot());
   await assert.rejects(
