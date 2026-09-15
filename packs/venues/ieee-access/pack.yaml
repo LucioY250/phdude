@@ -1,0 +1,14 @@
+schema: phdude.pack
+version: 1
+name: ieee-access
+kind: venue
+description: >-
+  IEEE Access journal articles: IEEE numbered references, a 150--250-word abstract, and the
+  journal's required official Word or LaTeX template supplied by the author.
+terminology: [index terms, multidisciplinary journal, article template]
+detect:
+  keywords: []
+reviewers: [venue-fit]
+recommended_checks: [required-sections, abstract-length]
+skills: []
+schemas: []

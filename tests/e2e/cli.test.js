@@ -2455,7 +2455,7 @@ test('e2e: packs apply a venue, profile list, show, use and a blocking check', a
   const before = await runJson(ws, ['profile', 'list']);
   assert.deepEqual(
     before.map((venue) => venue.name),
-    ['acm', 'generic-thesis', 'ieee'],
+    ['acm', 'generic-thesis', 'ieee', 'ieee-access'],
   );
   assert.equal(
     before.every((venue) => venue.applied === false && venue.active === false),

@@ -142,13 +142,13 @@ test('discoverProfiles lists every venue that ships a profile, sorted, later roo
   const shipped = await discoverProfiles([DEFAULT_PACKS_DIR]);
   assert.deepEqual(
     shipped.map((profile) => profile.name),
-    ['acm', 'generic-thesis', 'ieee'],
+    ['acm', 'generic-thesis', 'ieee', 'ieee-access'],
   );
 
   const both = await discoverProfiles([DEFAULT_PACKS_DIR, root]);
   assert.deepEqual(
     both.map((profile) => profile.name),
-    ['acm', 'generic-thesis', 'ieee', 'tiny-venue'],
+    ['acm', 'generic-thesis', 'ieee', 'ieee-access', 'tiny-venue'],
   );
 });
 

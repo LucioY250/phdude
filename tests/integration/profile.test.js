@@ -76,7 +76,7 @@ test('list names every shipped venue and marks none applied or active on a fresh
 
   assert.deepEqual(
     venues.map((venue) => venue.name),
-    ['acm', 'generic-thesis', 'ieee'],
+    ['acm', 'generic-thesis', 'ieee', 'ieee-access'],
   );
   assert.equal(
     venues.every((venue) => venue.applied === false && venue.active === false),
