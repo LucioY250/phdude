@@ -148,6 +148,8 @@ Decision), an identity field (the id is derived from it, so record the correctio
 `phdude add` and leave the original as the history of what was believed), and a field the
 schema does not know. `state` is not editable either — that is `phdude promote`. Never work
 around a refusal by editing the YAML.
+Set an editable optional field to `null` to remove it. Required-field removal still fails schema
+validation, and `null` does not bypass the canonical or identity-field guards.
 
 ## Contradictions are recorded, not resolved by you
 

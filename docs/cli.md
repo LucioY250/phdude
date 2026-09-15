@@ -716,12 +716,16 @@ Stability: stable
 ```
 phdude edit CLAIM-… --json '{"tags":["method"],"sections":["methods"]}'
 phdude edit SRC-… --json '{"venue":"Journal of Reproducibility"}'
+phdude edit SRC-… --json '{"doi":null}'
 phdude edit ART-… --file role.json
 ```
 
 Corrects the non-identity fields of a recorded object in place, and writes one `edit` event
 naming the fields that changed. Fields come from `--json '<object>'` or `--file <path>.json`,
 the same two carriers `phdude add` takes.
+An editable top-level field set to `null` is removed, following JSON merge-patch null semantics.
+Removal of a required field fails schema validation; canonical and identity-field guards still
+apply first.
 
 Three refusals, and they are the point of the command:
 
