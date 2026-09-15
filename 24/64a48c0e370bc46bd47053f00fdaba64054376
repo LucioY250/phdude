@@ -1,0 +1,42 @@
+src/domain/build.js
+  s_81bf62597beb77::t_367778d7b15453 41
+  s_81bf62597beb77::t_89827de1792ed2 264-265
+src/ports/document-renderer.js
+  s_81bf62597beb77::t_89827de1792ed2 26
+tests/unit/domain/build.test.js
+  s_81bf62597beb77::t_b0fb6e0c8f51ae 259-260,269,271,274,276-277
+  s_81bf62597beb77::t_367778d7b15453 266,273
+  s_81bf62597beb77::t_55c3aca2311273 261-265,267-268,270,272,275
+src/adapters/render/ieee-access-docx.js
+  s_81bf62597beb77::t_367778d7b15453 6-7,25,28-30,35,56-59,75-77
+  s_81bf62597beb77::t_dce9dda00121a8 17-18,31,33-34,62-64
+  s_81bf62597beb77::t_89827de1792ed2 1-5,8-16,19-24,26-27,36-55,60-61,65-74,78-95
+  s_81bf62597beb77::t_51db7aedb1db99 32
+src/adapters/render/pandoc.js
+  s_81bf62597beb77::t_89827de1792ed2 3,120-121
+  s_81bf62597beb77::t_934fecc9e1f19b 122-123
+src/application/build.js
+  s_81bf62597beb77::t_89827de1792ed2 360
+tests/unit/adapters/render.test.js
+  s_81bf62597beb77::t_74d134fa7f174c 32,41
+  s_81bf62597beb77::t_ec0390bd93fd28 55
+  s_81bf62597beb77::t_b0fb6e0c8f51ae 10-13,20-31,33-38,43-44,48,54,56
+  s_81bf62597beb77::t_367778d7b15453 39-40,42,45-47,49-53
+  s_81bf62597beb77::t_78f5beb660b164 57
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2464a48c0e370bc46bd47053f00fdaba64054376",
+  "prompts": {},
+  "sessions": {
+    "s_81bf62597beb77": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a09634-16f5-7683-8dee-23f8ff5526b5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "Lucio <lucioyen1@gmail.com>"
+    }
+  }
+}
