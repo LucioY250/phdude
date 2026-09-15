@@ -23,6 +23,9 @@ test('IEEE Access DOCX formatting creates a full-width frontmatter and two-colum
     '<w:p><w:r><w:t>Abstract text</w:t></w:r></w:p>',
     '<w:p><w:pPr><w:pStyle w:val="Heading1"/></w:pPr><w:r><w:t>Introduction</w:t></w:r></w:p>',
     '<w:p><w:r><w:t>Body</w:t></w:r></w:p>',
+    '<w:p><w:pPr><w:pStyle w:val="CaptionedFigure"/></w:pPr><w:r><w:drawing/></w:r></w:p>',
+    '<w:p><w:pPr><w:pStyle w:val="ImageCaption"/></w:pPr><w:r><w:t>Caption</w:t></w:r></w:p>',
+    '<w:tbl><w:tblPr><w:tblLayout w:type="fixed"/></w:tblPr><w:tblGrid><w:gridCol w:w="2160"/><w:gridCol w:w="2880"/><w:gridCol w:w="2880"/></w:tblGrid><w:tr><w:tc><w:tcPr></w:tcPr><w:p/></w:tc><w:tc><w:tcPr></w:tcPr><w:p/></w:tc><w:tc><w:tcPr></w:tcPr></w:tc></w:tr></w:tbl>',
     '<w:sectPr><w:headerReference r:id="rId9"/><w:pgSz w:w="11520" w:h="15660"/><w:pgMar w:left="740"/><w:cols w:space="720"/><w:docGrid w:linePitch="360"/></w:sectPr>',
     '</w:body></w:document>',
   ].join('');
@@ -30,6 +33,14 @@ test('IEEE Access DOCX formatting creates a full-width frontmatter and two-colum
   assert.match(
     formatted,
     /Abstract text[\s\S]*?<w:sectPr><w:type w:val="continuous"\/><w:pgSz[^>]*\/><w:pgMar[^>]*\/><w:cols w:num="1"\/><w:docGrid[^>]*\/><\/w:sectPr>[\s\S]*?Heading1/,
+  );
+  assert.match(
+    formatted,
+    /w:num="2" w:space="400"[\s\S]*?<w:tbl>[\s\S]*?<w:gridCol w:w="2160"\/>[\s\S]*?<\/w:tbl>[\s\S]*?w:num="1"/,
+  );
+  assert.match(
+    formatted,
+    /w:num="2" w:space="400"[\s\S]*?CaptionedFigure[\s\S]*?ImageCaption[\s\S]*?w:num="1"/,
   );
   assert.match(formatted, /<w:headerReference r:id="rId9"\/>/);
   assert.doesNotMatch(
@@ -51,6 +62,9 @@ test('IEEE Access DOCX formatting sets inherited and explicit first-paragraph te
     formatted,
     /w:styleId="FirstParagraph"[\s\S]*?<w:rPr><w:sz w:val="20"\/><w:szCs w:val="20"\/><\/w:rPr>/,
   );
+  for (const id of ['Table', 'Compact', 'ImageCaption', 'Figure', 'CaptionedFigure']) {
+    assert.match(formatted, new RegExp(`w:styleId="${id}"`));
+  }
   assert.doesNotMatch(formatted, /w:val="24"/);
   assert.equal(ieeeAccessStylesXml(formatted), formatted);
 });
@@ -299,7 +313,7 @@ test('pandoc: the argument array carries the bibliography, the CSL and the refer
     const { args, options } = execFile.calls.at(-1);
     assert.deepEqual(args, [
       '--from',
-      'markdown',
+      'markdown+tex_math_single_backslash',
       '--to',
       'docx',
       '--output',

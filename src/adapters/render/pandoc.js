@@ -84,7 +84,14 @@ export function pandocRenderer({ execFile, env = {}, path } = {}) {
 
       const format = output.format;
       const warnings = [];
-      const args = ['--from', 'markdown', '--to', PANDOC_FORMAT[format], '--output', target];
+      const args = [
+        '--from',
+        'markdown+tex_math_single_backslash',
+        '--to',
+        PANDOC_FORMAT[format],
+        '--output',
+        target,
+      ];
       if (STANDALONE.has(format)) args.push('--standalone');
       if (paths.bibPath) args.push('--citeproc', '--bibliography', paths.bibPath);
       if (paths.cslPath) args.push('--csl', paths.cslPath);
