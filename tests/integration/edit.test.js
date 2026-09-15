@@ -57,6 +57,64 @@ test('edit: changes a non-identity field, keeps the id, and writes one edit even
   assert.equal(events[0].summary, `edited ${source.id}: tags, venue`);
 });
 
+test('edit: null removes an optional field and records that field in the edit event', async () => {
+  const deps = makeDeps(await newRoot());
+  const source = await aSource(deps, { doi: '' });
+
+  const updated = await edit(deps, source.id, { doi: null });
+
+  assert.equal(Object.hasOwn(updated, 'doi'), false);
+  assert.equal(Object.hasOwn(await deps.store.readEntity(source.id), 'doi'), false);
+  const events = (await deps.store.readEvents()).filter((event) => event.op === 'edit');
+  assert.equal(events.length, 1);
+  assert.equal(events[0].summary, `edited ${source.id}: doi`);
+});
+
+test('edit: null removes optional provenance without weakening reference validation', async () => {
+  const deps = makeDeps(await newRoot());
+  const source = await aSource(deps);
+
+  const updated = await edit(deps, source.id, { provenance: null });
+  assert.equal(Object.hasOwn(updated, 'provenance'), false);
+  assert.equal(Object.hasOwn(await deps.store.readEntity(source.id), 'provenance'), false);
+
+  await assert.rejects(() => edit(deps, source.id, { artifacts: ['ART-9999999999'] }), {
+    code: 'VALIDATION',
+  });
+  assert.equal(Object.hasOwn(await deps.store.readEntity(source.id), 'provenance'), false);
+});
+
+test('edit: null reference arrays reach normal required-field schema validation', async () => {
+  const deps = makeDeps(await newRoot());
+  const { obj: method } = await addEntity(deps, 'method', { name: 'Cross-sectional survey' });
+
+  await assert.rejects(
+    () => edit(deps, method.id, { questions: null }),
+    (error) => {
+      assert.equal(error.code, 'VALIDATION');
+      assert.match(error.details.join(' '), /required property 'questions'/);
+      assert.doesNotMatch(error.message, /unknown reference/);
+      return true;
+    },
+  );
+  assert.deepEqual((await deps.store.readEntity(method.id)).questions, []);
+});
+
+test('edit: null cannot remove required, identity, or canonical fields and writes nothing', async () => {
+  const deps = makeDeps(await newRoot());
+  const source = await aSource(deps, { doi: '' });
+
+  await assert.rejects(() => edit(deps, source.id, { authors: null }), { code: 'VALIDATION' });
+  await assert.rejects(() => edit(deps, source.id, { title: null }), { code: 'VALIDATION' });
+  assert.deepEqual((await deps.store.readEntity(source.id)).authors, ['A. One']);
+  assert.equal((await deps.store.readEntity(source.id)).doi, '');
+
+  await deps.store.writeEntity({ ...source, state: 'canonical' });
+  await assert.rejects(() => edit(deps, source.id, { doi: null }), { code: 'POLICY' });
+  assert.equal((await deps.store.readEntity(source.id)).doi, '');
+  assert.equal((await deps.store.readEvents()).filter((event) => event.op === 'edit').length, 0);
+});
+
 test('edit: refuses every identity field of every type, naming them', async () => {
   const deps = makeDeps(await newRoot());
   const source = await aSource(deps);

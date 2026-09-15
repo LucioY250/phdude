@@ -78,7 +78,7 @@ async function assertIdExists(store, id) {
 
 async function assertReferencesExist(store, type, fields) {
   for (const name of REFERENCE_FIELDS[type] ?? []) {
-    if (fields[name] === undefined) continue;
+    if (fields[name] === undefined || fields[name] === null) continue;
     const ids = Array.isArray(fields[name]) ? fields[name] : [fields[name]];
     for (const id of ids) await assertIdExists(store, id);
   }
@@ -169,7 +169,15 @@ export async function edit({ store, clock, actor }, id, fields = {}) {
   assertEditableFields(type, fields);
   await assertReferencesExist(store, type, fields);
 
-  const updated = { ...obj, ...fields };
+  // JSON merge-patch semantics for this flat edit surface: null removes an optional field.
+  // Required fields still fail the same schema validation below, after all policy and identity
+  // guards have run. This lets a bad optional value be corrected to absence rather than to a
+  // second sentinel value such as the empty string.
+  const updated = { ...obj };
+  for (const [name, value] of Object.entries(fields)) {
+    if (value === null) delete updated[name];
+    else updated[name] = value;
+  }
   // The store validates against the schema before it writes, so a value of the wrong shape is
   // a VALIDATION error naming the field rather than a corrupted file on disk.
   await store.writeEntity(updated);
