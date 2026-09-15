@@ -1,0 +1,32 @@
+packs/venues/ieee-access/csl/ieee.csl
+  s_81bf62597beb77::t_1d11ef5a354a73 1-519
+tests/contracts/packs.test.js
+  s_81bf62597beb77::t_9cdfb99f0ebf65 250-254
+  s_81bf62597beb77::t_a5553fb4b22225 207-209
+  s_81bf62597beb77::t_d03adef6e427c8 224-227
+  s_81bf62597beb77::t_2c248e314c3b6f 166,169,171-176,195,211,222,244-249,255
+packs/venues/ieee-access/profile.yaml
+  s_81bf62597beb77::t_df111fedf04c4c 1-29
+  s_81bf62597beb77::t_a85ec377456986 30-53
+packs/venues/ieee-access/pack.yaml
+  s_81bf62597beb77::t_df111fedf04c4c 1-14
+packs/venues/README.md
+  s_81bf62597beb77::t_61007379d87cba 4,10,42-44
+  s_81bf62597beb77::t_0719d80e0b089a 14-15,45-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9f8de35e1dc850d9f7c748326b557bfb93a4232a",
+  "prompts": {},
+  "sessions": {
+    "s_81bf62597beb77": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a09634-16f5-7683-8dee-23f8ff5526b5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
