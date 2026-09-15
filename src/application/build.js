@@ -15,6 +15,7 @@ import {
 import { PhdudeError } from '../domain/errors.js';
 import { sha256 } from '../domain/hash.js';
 import { driftNote, parseSectionFile, sectionDrift } from '../domain/manuscript.js';
+import { stableStringify } from '../domain/normalize.js';
 import { rendererFor } from '../domain/renderers.js';
 import { assertUpToDate } from './guard.js';
 import { list as listAuthors } from './authors.js';
@@ -296,6 +297,7 @@ export async function build(deps, opts = {}) {
     ...figures.inputs,
     ...tables.inputs,
     [paths.bib]: sha256(bib.text),
+    metadata: sha256(stableStringify(assembled.metadata)),
     format,
     profile: `${profile.name} ${profileHash(profile)}`,
     renderer: rendererVersion,

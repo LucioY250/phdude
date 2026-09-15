@@ -301,6 +301,32 @@ test('the byline comes from the author profiles under authors/', async (t) => {
   assert.match(await deps.store.readText(result.output.path), /^ {2}- Researcher A$/m);
 });
 
+test('a byline change invalidates one build without prose changes', async (t) => {
+  const deps = await workspace(t);
+  await section(deps, 'introduction', 'One paragraph.');
+  await build(deps, {});
+  await deps.store.writeYamlAtomic('authors/researcher-a.yaml', {
+    schema: 'phdude.author-profile',
+    version: 1,
+    id: 'researcher-a',
+    name: 'Researcher A',
+    language: 'en',
+    tone: { academic: true, assertiveness: 'moderate', first_person: 'sparing' },
+    sentences: { length: 'varied', openings: 'varied' },
+    paragraphs: { density: 'medium' },
+    transitions: 'minimal',
+  });
+
+  const rebuilt = await build(deps, {});
+  assert.equal(rebuilt.built, true);
+  assert.deepEqual(rebuilt.changed, ['metadata']);
+  assert.match(await deps.store.readText(rebuilt.output.path), /^ {2}- Researcher A$/m);
+
+  const unchanged = await build(deps, {});
+  assert.equal(unchanged.built, false);
+  assert.equal(unchanged.reason, 'up to date');
+});
+
 test('a figure the prose shows is copied beside the document and the link rewritten', async (t) => {
   const deps = await workspace(t);
   await deps.store.writeTextAtomic('figures/out/adoption.png', 'not really a png');
