@@ -1,0 +1,29 @@
+src/application/edit.js
+  s_81bf62597beb77::t_e36bf7c275fdee 172-180
+  s_81bf62597beb77::t_bf2ddec625092b 81
+skills/phdude-core/SKILL.md
+  s_81bf62597beb77::t_e36bf7c275fdee 151-152
+tests/integration/edit.test.js
+  s_81bf62597beb77::t_e8b2ef8d637aa8 73,75,77-79,81,84-100
+  s_81bf62597beb77::t_bf2ddec625092b 74,76,80,82-83,101-102
+  s_81bf62597beb77::t_e36bf7c275fdee 60-72,103-117
+docs/cli.md
+  s_81bf62597beb77::t_e36bf7c275fdee 719
+  s_81bf62597beb77::t_fb47b7ba824a7c 726-728
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "fda9088acff650a6200cf5b680ee1a257362f8ee",
+  "prompts": {},
+  "sessions": {
+    "s_81bf62597beb77": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a09634-16f5-7683-8dee-23f8ff5526b5",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": null
+    }
+  }
+}
