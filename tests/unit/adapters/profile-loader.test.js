@@ -148,7 +148,7 @@ test('discoverProfiles lists every venue that ships a profile, sorted, later roo
   const both = await discoverProfiles([DEFAULT_PACKS_DIR, root]);
   assert.deepEqual(
     both.map((profile) => profile.name),
-    ['acm', 'generic-thesis', 'ieee', 'tiny-venue'],
+    ['acm', 'generic-thesis', 'ieee', 'ieee-access', 'tiny-venue'],
   );
 });
 
